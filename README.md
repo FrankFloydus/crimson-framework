@@ -1,56 +1,49 @@
-# godot-cpp template
-This repository serves as a quickstart template for GDExtension development with Godot 4.0+.
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
 
-## Contents
-* Preconfigured source files for C++ development of the GDExtension ([src/](./src/))
-* An empty Godot project in [project/](./project), to test the GDExtension
-* godot-cpp as a submodule (`godot-cpp/`)
-* GitHub Issues template ([.github/ISSUE_TEMPLATE.yml](./.github/ISSUE_TEMPLATE.yml))
-* GitHub CI/CD workflows to publish your library packages when creating a release ([.github/workflows/builds.yml](./.github/workflows/builds.yml))
-* An SConstruct file with various functions, such as boilerplate for [Adding documentation](https://docs.godotengine.org/en/stable/tutorials/scripting/cpp/gdextension_docs_system.html)
+# Crimson Framework
 
-## Usage - Template
+Crimson Framework is a Godot 4.7 C++ GDExtension for offline and multiplayer games. Start with the [public API guide](docs/PUBLIC_API.md) to configure a persistent `CrimsonGame` node, register game-owned state, and run one lifecycle for play, travel, save, and restore. The underlying modules are also available directly. Open `project/project.godot` to inspect the registered classes in Godot.
 
-To use this template, log in to GitHub and click the green "Use this template" button at the top of the repository page. This will let you create a copy of this repository with a clean git history.
+## Modules
 
-To get started with your new GDExtension, do the following:
+| Module | Source | Responsibility |
+| --- | --- | --- |
+| Inventory | [Inventory module](src/modules/inventory/README.md) | Grid placement and snapshots, stack operations, containers, sorting, equipment, staging, wallet balances, and trade. |
+| Save | [Save module](src/modules/save/README.md) | SaveCoordinator, detached capture and restore, schema migration, generation storage, provider ABI, and save metadata and previews. |
+| Game session | [Game session module](src/modules/session/README.md) | Offline sessions, ENet host and join, peer lifecycle, connection admission, and server authority. |
+| Scene loading | [Scene load module](src/modules/scene_load/README.md) | Threaded scene preparation and server-coordinated world transitions over the current Godot multiplayer API. |
+| Match runtime | [Runtime API](docs/ARCHITECTURE.md) | Public transactions, player bindings, possession, and authority-side command dispatch. |
+| Replication | [Replication API](src/modules/replication/README.md) | Recipient-specific world baselines and committed state deltas. |
+| Game Flow integration | [Public API](docs/PUBLIC_API.md) | `CrimsonGame` composes the modules and owns session, scene, and checkpoint coordination. |
 
-* clone your repository to your local computer
-* initialize the godot-cpp git submodule via `git submodule update --init`
-* change the name of the compiled library file inside the [SConstruct](./SConstruct) file by modifying the `libname` string.
-  * change the paths of the to be loaded library name inside the [project/bin/example.gdextension](./project/bin/example.gdextension) file, by replacing `EXTENSION-NAME` with the name you chose for `libname`.
-* change the `entry_symbol` string inside [project/bin/example.gdextension](./project/bin/example.gdextension) file.
-  * rename the `example_library_init` function in [src/register_types.cpp](./src/register_types.cpp) to the same name you chose for `entry_symbol`.
-* change the name of the `project/bin/example.gdextension` file
+A game owns the rules for how inventory state becomes a checkpoint participant. Keep gameplay IDs stable across saves. Use the host or server as the authority for shared state if you integrate the framework into a multiplayer game.
 
-Now, you can build the project with the following command:
+[Crimson Framework architecture](docs/ARCHITECTURE.md) maps module dependencies, the transaction contract, and the current multiplayer lifecycle.
 
-```shell
-scons
+## Build
+
+Use Godot 4.7 stable for Windows x86-64 single precision, with MSVC, the Windows SDK, Python and SCons. The godot-cpp submodule is pinned to `507ed9d840c01a3c5b2a39af8bb4000bfac30bf5` and the build selects API 4.7.
+
+```powershell
+git submodule update --init --recursive
+scons platform=windows arch=x86_64 target=template_debug
+scons platform=windows arch=x86_64 target=template_release
 ```
 
-If the build command worked, you can test it with the [project](./project) project. Import it into Godot, open it, and launch the main scene. You should see it print the following line in the console:
+Copy [the crimson-framework addon](project/addons/crimson-framework) into the destination game's `addons/` directory after building. Its descriptor uses relative paths to the two DLLs. Use one extension that registers the `SpatialInventory` and `SaveCoordinator` class names in a project. Remove the original standalone descriptors from the destination project when migrating to Crimson.
 
-```
-Type: 24
-```
+For CMake with Visual Studio, configure an x64 build directory. Choose `template_debug` or `template_release` with `GODOTCPP_TARGET`. Both build systems place the DLL under `project/addons/crimson-framework/bin`.
 
-### Configuring an IDE
-You can develop your own extension with any text editor and by invoking scons on the command line, but if you want to work with an IDE (Integrated Development Environment), you can use a compilation database file called `compile_commands.json`. Most IDEs should automatically identify this file, and self-configure appropriately.
-To generate the database file, you can run one of the following commands in the project root directory:
-```shell
-# Generate compile_commands.json while compiling
-scons compiledb=yes
+## Multiplayer integration
 
-# Generate compile_commands.json without compiling
-scons compiledb=yes compile_commands.json
+Place `CrimsonGame` at the same persistent path relative to the multiplayer root on the host and clients, and give each peer the same world catalog. The server hosts a lobby, binds connected peers to verified game identities, then starts the first world. The game becomes ready once the scene and required peer baselines are confirmed. Projects that supply their own orchestration can compose `CrimsonGameSession`, `CrimsonSceneLoadManager`, and `CrimsonReplication` directly.
+
+Run the headless test harness from the repository root with PowerShell 7 after building both DLLs. It checks the native modules and runs ENet host/client checks in separate Godot processes. Test scripts and fixtures live under `project/tests`.
+
+```powershell
+.\scripts\Test-Multiplayer.ps1 -GodotExe 'C:\Path\To\Godot_v4.7-stable_win64_console.exe'
 ```
 
-## Usage - Actions
+## Origin
 
-This repository comes with continuous integration (CI) through a GitHub action that tests building the GDExtension.
-It triggers automatically for each pushed change. You can find and edit it in [builds.yml](.github/workflows/ci.yml).
-
-There is also a workflow ([make_build.yml](.github/workflows/make_build.yml)) that builds the GDExtension for all supported platforms that you can use to create releases.
-You can trigger this workflow manually from the `Actions` tab on GitHub.
-After it is complete, you can find the file `godot-cpp-template.zip` in the `Artifacts` section of the workflow run.
+The repository starts from the official [godot-cpp-template](https://github.com/godotengine/godot-cpp-template) at `d36f9d03e9e02dad22829f1faf4e03a347616df5`. Inventory and persistence derive from the existing Spatial Inventory and Godot Save System projects. Redistribution notices are included in [the addon](project/addons/crimson-framework/licenses).

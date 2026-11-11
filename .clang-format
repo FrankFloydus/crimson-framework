@@ -1,3 +1,5 @@
+# Copyright Francesco Di Blasi 2026 - All Rights Reserved
+
 # Commented out parameters are those with the same value as base LLVM style.
 # We can uncomment them if we want to change their value, or enforce the
 # chosen value in case the base style changes (last sync: Clang 14.0).

@@ -1,0 +1,200 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="SpatialInventory" inherits="RefCounted" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://raw.githubusercontent.com/godotengine/godot/master/doc/class.xsd">
+	<brief_description>
+		A native grid inventory keyed by game-supplied item instance IDs.
+	</brief_description>
+	<description>
+		Stores rectangular footprints, their zero-based top-left cells, and rotation. The game owns the item records and provides a stable, nonempty [StringName] instance ID for each placement. A rotated footprint swaps width and height.
+		Call [method configure] or [method import_snapshot] before placing items. Use the grid from the main thread.
+	</description>
+	<methods>
+		<method name="apply_placement_changes" qualifiers="static">
+			<return type="int" enum="Error" />
+			<param index="0" name="changes" type="Array" />
+			<description>
+				Compares current placements with expected values and atomically applies the changes across grids. Each row is a dictionary containing [code]inventory[/code], [code]id[/code], [code]before[/code], and [code]after[/code]. Use placement dictionaries from [method get_placement] or an empty dictionary for absence. A stale expected placement returns [code]ERR_BUSY[/code]. If any row fails validation, every grid keeps its previous state.
+			</description>
+		</method>
+		<method name="check_move" qualifiers="const">
+			<return type="int" enum="Error" />
+			<param index="0" name="id" type="StringName" />
+			<param index="1" name="origin" type="Vector2i" />
+			<param index="2" name="rotated" type="bool" />
+			<description>
+				Returns [code]OK[/code] if the item can move to [param origin] with the requested rotation. The item's current cells are treated as free.
+			</description>
+		</method>
+		<method name="check_placement" qualifiers="const">
+			<return type="int" enum="Error" />
+			<param index="0" name="footprint" type="Vector2i" />
+			<param index="1" name="origin" type="Vector2i" />
+			<param index="2" name="rotated" type="bool" default="false" />
+			<description>
+				Returns [code]OK[/code] if the footprint fits within the grid at [param origin] and every cell it covers is free.
+			</description>
+		</method>
+		<method name="check_transfer" qualifiers="const">
+			<return type="int" enum="Error" />
+			<param index="0" name="id" type="StringName" />
+			<param index="1" name="destination" type="SpatialInventory" />
+			<param index="2" name="origin" type="Vector2i" />
+			<param index="3" name="rotated" type="bool" />
+			<description>
+				Returns [code]OK[/code] if the item can transfer to [param destination]. The destination needs room for the footprint and an unused instance ID. A transfer to this grid uses [method check_move].
+			</description>
+		</method>
+		<method name="configure">
+			<return type="int" enum="Error" />
+			<param index="0" name="size" type="Vector2i" />
+			<description>
+				Sets the grid dimensions. Both dimensions must be positive and the grid can hold up to 1,048,576 cells. Changing the dimensions of a populated grid returns [code]ERR_BUSY[/code].
+			</description>
+		</method>
+		<method name="export_snapshot" qualifiers="const">
+			<return type="Dictionary" />
+			<description>
+				Returns a version 1 snapshot with [code]version[/code], [code]grid_size[/code], and [code]placements[/code]. The placement dictionaries use the fields documented in [method get_placement].
+			</description>
+		</method>
+		<method name="find_first_fit" qualifiers="const">
+			<return type="Vector2i" />
+			<param index="0" name="footprint" type="Vector2i" />
+			<param index="1" name="rotated" type="bool" default="false" />
+			<param index="2" name="start" type="Vector2i" default="Vector2i(0, 0)" />
+			<description>
+				Returns the first valid top-left cell at or after [param start], scanning left to right and top to bottom. If [param start] is past the last possible origin on its row, the search continues on the next row. Returns [code]Vector2i(-1, -1)[/code] for invalid geometry, a negative start, or no fit.
+			</description>
+		</method>
+		<method name="get_grid_size" qualifiers="const">
+			<return type="Vector2i" />
+			<description>
+				Returns the grid dimensions in cells.
+			</description>
+		</method>
+		<method name="get_item_at" qualifiers="const">
+			<return type="StringName" />
+			<param index="0" name="cell" type="Vector2i" />
+			<description>
+				Returns the instance ID at [param cell]. A free cell or a cell outside the grid returns an empty [StringName].
+			</description>
+		</method>
+		<method name="get_placement" qualifiers="const">
+			<return type="Dictionary" />
+			<param index="0" name="id" type="StringName" />
+			<description>
+				Returns a dictionary with [code]id[/code] ([StringName]), [code]footprint[/code] ([Vector2i]), [code]origin[/code] ([Vector2i]), and [code]rotated[/code] ([bool]). The footprint is the size before rotation. An unknown ID returns an empty dictionary.
+			</description>
+		</method>
+		<method name="get_placement_revision" qualifiers="const">
+			<return type="int" />
+			<description>
+				Returns a counter for this live grid. Actual changes to its placements or dimensions advance the counter before change signals run. Compare revisions on the same grid to detect edits. The counter is independent of snapshots.
+			</description>
+		</method>
+		<method name="get_placements" qualifiers="const">
+			<return type="Array" />
+			<description>
+				Returns an array of placement dictionaries in the format documented in [method get_placement].
+			</description>
+		</method>
+		<method name="import_snapshot">
+			<return type="int" enum="Error" />
+			<param index="0" name="snapshot" type="Dictionary" />
+			<description>
+				Validates a snapshot from [method export_snapshot] and replaces the current grid on success. An invalid snapshot preserves the current grid.
+			</description>
+		</method>
+		<method name="remove">
+			<return type="int" enum="Error" />
+			<param index="0" name="id" type="StringName" />
+			<description>
+				Removes the placement with the given instance ID, freeing its cells.
+			</description>
+		</method>
+		<method name="try_move">
+			<return type="int" enum="Error" />
+			<param index="0" name="id" type="StringName" />
+			<param index="1" name="origin" type="Vector2i" />
+			<param index="2" name="rotated" type="bool" />
+			<description>
+				Moves or rotates the item if the resulting placement fits. An unsuccessful move preserves the current placement.
+			</description>
+		</method>
+		<method name="try_place">
+			<return type="int" enum="Error" />
+			<param index="0" name="id" type="StringName" />
+			<param index="1" name="footprint" type="Vector2i" />
+			<param index="2" name="origin" type="Vector2i" />
+			<param index="3" name="rotated" type="bool" default="false" />
+			<description>
+				Places a new item if its ID is unused in this grid and the footprint fits. Pass the footprint before rotation.
+			</description>
+		</method>
+		<method name="try_resize_item">
+			<return type="int" enum="Error" />
+			<param index="0" name="id" type="StringName" />
+			<param index="1" name="footprint" type="Vector2i" />
+			<description>
+				Applies a new unrotated footprint if it fits at the item's current origin and rotation. An unsuccessful resize preserves the current placement.
+			</description>
+		</method>
+		<method name="try_transfer">
+			<return type="int" enum="Error" />
+			<param index="0" name="id" type="StringName" />
+			<param index="1" name="destination" type="SpatialInventory" />
+			<param index="2" name="origin" type="Vector2i" />
+			<param index="3" name="rotated" type="bool" />
+			<description>
+				Moves the item to [param destination] if the placement is valid. Commits both grids before either emits [signal changed]. An unsuccessful transfer preserves the source placement. A transfer to this grid uses [method try_move].
+			</description>
+		</method>
+		<method name="get_swap_target" qualifiers="const">
+			<return type="StringName" />
+			<param index="0" name="footprint" type="Vector2i" />
+			<param index="1" name="origin" type="Vector2i" />
+			<param index="2" name="rotated" type="bool" default="false" />
+			<description>
+				Returns the instance ID of the sole item overlapped by this in-bounds footprint. Returns an empty [StringName] if the footprint covers free cells only, overlaps multiple items, or has invalid geometry.
+			</description>
+		</method>
+		<method name="try_swap_in">
+			<return type="Dictionary" />
+			<param index="0" name="id" type="StringName" />
+			<param index="1" name="footprint" type="Vector2i" />
+			<param index="2" name="origin" type="Vector2i" />
+			<param index="3" name="rotated" type="bool" />
+			<param index="4" name="expected_id" type="StringName" />
+			<description>
+				Places the held item if its ID is unused in this grid and the in-bounds footprint overlaps only [param expected_id]. Returns the displaced placement in the format documented in [method get_placement] and emits [signal changed] once after committing. Returns an empty dictionary on failure and preserves the grid.
+			</description>
+		</method>
+		<method name="is_placement_deltas_enabled" qualifiers="const">
+			<return type="bool" />
+			<description>
+				Returns whether this grid emits [signal placements_changed].
+			</description>
+		</method>
+		<method name="set_placement_deltas_enabled">
+			<return type="void" />
+			<param index="0" name="enabled" type="bool" />
+			<description>
+				Enables or disables [signal placements_changed]. Grid views enable this when bound to a model. The [signal changed] signal is always emitted for mutations.
+			</description>
+		</method>
+	</methods>
+	<signals>
+		<signal name="changed">
+			<description>
+				Emitted after the grid changes.
+			</description>
+		</signal>
+		<signal name="placements_changed">
+			<param index="0" name="ids" type="Array" />
+			<param index="1" name="full_refresh" type="bool" />
+			<description>
+				Emitted when placement deltas are enabled. [param ids] lists the affected instance IDs. Configure and snapshot import request a full refresh by setting [param full_refresh] to [code]true[/code]. Transfers and batch edits finish mutating all affected grids before notifying listeners.
+			</description>
+		</signal>
+	</signals>
+</class>

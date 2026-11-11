@@ -1,0 +1,7 @@
+[gd_scene format=3]
+; Copyright Francesco Di Blasi 2026 - All Rights Reserved
+
+[node name="CobaltFixture" type="Node"]
+metadata/test_marker = "cobalt"
+
+[node name="OnlyInCobalt" type="Node" parent="."]

@@ -1,64 +1,37 @@
-#!/usr/bin/env python
+# Copyright Francesco Di Blasi 2026 - All Rights Reserved
+
 import os
-import sys
 
 from methods import print_error
 
+root = Dir("#").abspath
+if not os.path.isfile(os.path.join(root, "godot-cpp", "SConstruct")):
+    print_error("Initialize godot-cpp with git submodule update --init.")
+    Exit(1)
 
-libname = "EXTENSION-NAME"
-projectdir = "project"
-
-localEnv = Environment(tools=["default"], PLATFORM="")
-
-# Build profiles can be used to decrease compile times.
-# You can either specify "disabled_classes", OR
-# explicitly specify "enabled_classes" which disables all other classes.
-# Modify the example file as needed and uncomment the line below or
-# manually specify the build_profile parameter when running SCons.
-
-# localEnv["build_profile"] = "build_profile.json"
-
-customs = ["custom.py"]
-customs = [os.path.abspath(path) for path in customs]
-
-opts = Variables(customs, ARGUMENTS)
-opts.Update(localEnv)
-
-Help(opts.GenerateHelpText(localEnv))
-
-env = localEnv.Clone()
-
-if not (os.path.isdir("godot-cpp") and os.listdir("godot-cpp")):
-    print_error("""godot-cpp is not available within this folder, as Git submodules haven't been initialized.
-Run the following command to download godot-cpp:
-
-    git submodule update --init --recursive""")
-    sys.exit(1)
-
-env = SConscript("godot-cpp/SConstruct", {"api_version": 4.3, "env": env, "customs": customs})
-
-env.Append(CPPPATH=["src/"])
-sources = Glob("src/*.cpp")
-
-if env["target"] in ["editor", "template_debug"]:
-    try:
-        doc_data = env.GodotCPPDocData("src/gen/doc_data.gen.cpp", source=Glob("doc_classes/*.xml"))
-        sources.append(doc_data)
-    except AttributeError:
-        print("Not including class reference as we're targeting a pre-4.3 baseline.")
-
-# .dev doesn't inhibit compatibility, so we don't need to key it.
-# .universal just means "compatible with all relevant arches" so we don't need to key it.
-suffix = env['suffix'].replace(".dev", "").replace(".universal", "")
-
-lib_filename = "{}{}{}{}".format(env.subst('$SHLIBPREFIX'), libname, suffix, env.subst('$SHLIBSUFFIX'))
-
-library = env.SharedLibrary(
-    "bin/{}/{}".format(env['platform'], lib_filename),
-    source=sources,
+local_env = Environment(
+    tools=["default"],
+    PLATFORM="",
+    build_profile=os.path.join(root, "build_profile.json"),
+    disable_exceptions=False,
 )
+env = SConscript("godot-cpp/SConstruct", {"env": local_env, "api_version": "4.7"})
 
-copy = env.Install("{}/bin/{}/".format(projectdir, env["platform"]), library)
+if (env["platform"] != "windows" or env["arch"] != "x86_64"
+        or env["precision"] != "single" or env["target"] not in ("template_debug", "template_release")):
+    print_error("Build Crimson Framework for Windows x86-64 single precision with target=template_debug or target=template_release.")
+    Exit(1)
 
-default_args = [library, copy]
-Default(*default_args)
+env.Append(CPPPATH=["#src", "#src/modules/save/third_party"], LIBS=["bcrypt"])
+sources = Glob("src/*.cpp")
+for module in ("inventory", "save", "session", "scene_load", "match_runtime", "replication"):
+    sources += Glob(f"src/modules/{module}/*.cpp")
+sources += Glob("src/integration/*.cpp")
+doc_xml = Glob("src/modules/inventory/doc_classes/*.xml")
+if env["target"] == "template_debug" and doc_xml:
+    sources.append(env.GodotCPPDocData("src/gen/doc_data.gen.cpp", source=doc_xml))
+addon = "project/addons/crimson-framework/bin"
+suffix = env["suffix"].replace(".dev", "")
+filename = f"crimson_framework{suffix}{env['SHLIBSUFFIX']}"
+library = env.SharedLibrary(f"bin/windows/{filename}", source=sources)
+Default(env.InstallAs(f"{addon}/{filename}", library[0]))

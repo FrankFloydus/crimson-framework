@@ -1,90 +1,58 @@
-# Using the same minimum as the godot-cpp project
-cmake_minimum_required(VERSION 3.17)
+# Copyright Francesco Di Blasi 2026 - All Rights Reserved
 
-# Silence unused variable warning when specified from toolchain
-if(CMAKE_C_COMPILER)
+cmake_minimum_required(VERSION 3.20)
+project(crimson-framework VERSION 0.1.0 LANGUAGES CXX)
+
+if(NOT WIN32 OR NOT CMAKE_SIZEOF_VOID_P EQUAL 8)
+    message(FATAL_ERROR "Crimson Framework targets Windows x86-64.")
 endif()
 
-set(LIBNAME "EXTENSION-NAME") # "The name of the library"
-set(GODOT_PROJECT_DIR "project" CACHE STRING "The directory of a Godot project folder")
-
-# Make sure all the dependencies are satisfied
-find_package(Python3 3.4 REQUIRED)
-find_program(GIT git REQUIRED)
-
-# Ensure godot-cpp submodule has been updated
-if(NOT EXISTS "${CMAKE_CURRENT_LIST_DIR}/godot-cpp/src")
-    message(NOTICE "godot-cpp bindings source not found")
-    message(NOTICE "initializing/updating the godot-cpp submodule...")
-
-    # update the c++ bindings submodule to populate it with the necessary source for the library
-    execute_process(
-        COMMAND git submodule update --init godot-cpp
-        WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}
-        COMMAND_ERROR_IS_FATAL ANY
-    )
+set(GODOTCPP_API_VERSION "4.7")
+set(GODOTCPP_PRECISION "single")
+set(GODOTCPP_BUILD_PROFILE "${CMAKE_CURRENT_SOURCE_DIR}/build_profile.json")
+set(GODOTCPP_DISABLE_EXCEPTIONS OFF)
+set(GODOTCPP_TARGET "template_debug" CACHE STRING "Godot library target")
+set_property(CACHE GODOTCPP_TARGET PROPERTY STRINGS "template_debug" "template_release")
+if(NOT GODOTCPP_TARGET MATCHES "^(template_debug|template_release)$")
+    message(FATAL_ERROR "Set GODOTCPP_TARGET to template_debug or template_release.")
 endif()
-add_subdirectory(godot-cpp SYSTEM)
+if(NOT EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/godot-cpp/SConstruct")
+    message(FATAL_ERROR "Initialize godot-cpp with git submodule update --init.")
+endif()
 
-# When compiling for emscripten, this toolchainhack needs to be included.
-# set(CMAKE_PROJECT_<project-name>_INCLUDE ${godot-cpp_SOURCE_DIR}/cmake/emsdkHack.cmake)
+add_subdirectory(godot-cpp)
+get_target_property(binding_arch godot::cpp GODOTCPP_ARCH)
+if(NOT binding_arch STREQUAL "x86_64")
+    message(FATAL_ERROR "Select a Windows x86-64 toolchain.")
+endif()
+get_target_property(binding_suffix godot::cpp GODOTCPP_SUFFIX)
 
-# Create the gen directory at configure time so IDEs can see generated headers immediately after generate_bindings
-file(MAKE_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/godot-cpp/gen/include")
-
-# Add godot-cpp's module path and include the exported functions.
-# This is made available for documentation generation
-set(CMAKE_MODULE_PATH "${CMAKE_MODULE_PATH};${godot-cpp_SOURCE_DIR}/cmake")
-include(GodotCPPModule)
-
-# The godot-cpp target has some of useful properties attached that can be retrieved like so.
-get_target_property(GODOTCPP_SUFFIX godot::cpp GODOTCPP_SUFFIX)
-get_target_property(GODOTCPP_PLATFORM godot::cpp GODOTCPP_PLATFORM)
-
-# Now we can specify our own project which will inherit any global cmake properties or variables that have been defined.
-project(godot-cpp-template
-    VERSION 1.0
-    DESCRIPTION "This repository serves as a quickstart template for GDExtension development with Godot 4.0+."
-    HOMEPAGE_URL "https://github.com/enetheru/godot-cpp-template/tree/main"
-    LANGUAGES CXX
+file(GLOB module_sources CONFIGURE_DEPENDS
+    "src/modules/inventory/*.cpp"
+    "src/modules/save/*.cpp"
+    "src/modules/session/*.cpp"
+    "src/modules/scene_load/*.cpp"
+    "src/modules/match_runtime/*.cpp"
+    "src/modules/replication/*.cpp"
+    "src/integration/*.cpp"
 )
-
-add_library(${LIBNAME} SHARED)
-
-target_sources(${LIBNAME}
-    PRIVATE
-    src/register_types.cpp
-    src/register_types.h
-    src/example_class.cpp
-    src/example_class.h
-)
-
-# Fetch a list of the xml files to use for documentation and add to our target
-file(GLOB_RECURSE DOC_XML LIST_DIRECTORIES NO CONFIGURE_DEPENDS "${PROJECT_SOURCE_DIR}/doc_classes/*.xml")
-
-# conditionally add doc data to compile output
-if(DOC_XML)
-    if(GODOTCPP_TARGET MATCHES "editor|template_debug")
-        target_doc_sources(${LIBNAME} "${DOC_XML}")
-    endif()
+add_library(crimson_framework SHARED src/register_types.cpp ${module_sources})
+file(GLOB module_docs CONFIGURE_DEPENDS "src/modules/inventory/doc_classes/*.xml")
+if(GODOTCPP_TARGET STREQUAL "template_debug" AND module_docs)
+    include("${CMAKE_CURRENT_SOURCE_DIR}/godot-cpp/cmake/GodotCPPModule.cmake")
+    target_doc_sources(crimson_framework ${module_docs})
 endif()
-
-target_link_libraries(${LIBNAME} PRIVATE godot-cpp)
-
-# Require at least C++17 for this target
-set_property(TARGET ${LIBNAME} PROPERTY CXX_STANDARD 17)
-
-set_target_properties(${LIBNAME}
-    PROPERTIES
-    # The generator expression here prevents msvc from adding a Debug or Release subdir.
-    RUNTIME_OUTPUT_DIRECTORY "$<1:${PROJECT_SOURCE_DIR}/bin/${GODOTCPP_PLATFORM}>"
-
+target_compile_features(crimson_framework PRIVATE cxx_std_17)
+target_include_directories(crimson_framework PRIVATE src src/modules/save/third_party)
+target_link_libraries(crimson_framework PRIVATE godot::cpp bcrypt)
+set_target_properties(crimson_framework PROPERTIES
     PREFIX ""
-    OUTPUT_NAME "${LIBNAME}${GODOTCPP_SUFFIX}"
+    OUTPUT_NAME "crimson_framework${binding_suffix}"
+    RUNTIME_OUTPUT_DIRECTORY "$<1:${CMAKE_CURRENT_BINARY_DIR}/bin>"
 )
-
-set(GODOT_PROJECT_BINARY_DIR "${PROJECT_SOURCE_DIR}/${GODOT_PROJECT_DIR}/bin/${GODOTCPP_PLATFORM}")
-
-add_custom_command(TARGET ${LIBNAME} POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy "$<TARGET_FILE:${LIBNAME}>" "${GODOT_PROJECT_BINARY_DIR}/$<TARGET_FILE_NAME:${LIBNAME}>"
+set(addon_bin "${CMAKE_CURRENT_SOURCE_DIR}/project/addons/crimson-framework/bin")
+add_custom_command(TARGET crimson_framework POST_BUILD
+    COMMAND "${CMAKE_COMMAND}" -E make_directory "${addon_bin}"
+    COMMAND "${CMAKE_COMMAND}" -E copy_if_different "$<TARGET_FILE:crimson_framework>" "${addon_bin}/"
+    VERBATIM
 )

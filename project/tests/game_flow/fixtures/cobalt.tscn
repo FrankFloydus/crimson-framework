@@ -1,0 +1,8 @@
+[gd_scene format=3]
+; Copyright Francesco Di Blasi 2026 - All Rights Reserved
+
+[ext_resource type="Script" path="res://tests/game_flow/fixtures/world_probe.gd" id="1"]
+
+[node name="CobaltWorld" type="Node"]
+script = ExtResource("1")
+metadata/fixture_layout = "cobalt"

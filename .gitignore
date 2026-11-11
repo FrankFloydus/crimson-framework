@@ -1,10 +1,12 @@
+# Copyright Francesco Di Blasi 2026 - All Rights Reserved
+
 # Godot auto generated files
 *.gen.*
 .godot/
 
 # Ignore library files but not the gdextension file
 /bin/**
-!project/bin/*.gdextension
+/project/addons/crimson-framework/bin/
 
 # Ignore scons database
 .sconsign*.dblite

@@ -1,4 +1,5 @@
 {
+    "$comment": "Copyright Francesco Di Blasi 2026 - All Rights Reserved",
     "recommendations": [
         "ms-vscode.cpptools-extension-pack",
         "ms-python.python"
