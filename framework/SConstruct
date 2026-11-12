@@ -1,0 +1,71 @@
+# Copyright Francesco Di Blasi 2026 - All Rights Reserved
+
+import os
+
+from methods import print_error
+
+root = Dir("#").abspath
+if not os.path.isfile(os.path.join(root, "godot-cpp", "SConstruct")):
+    print_error("Initialize godot-cpp with git submodule update --init.")
+    Exit(1)
+
+local_env = Environment(
+    tools=["default"],
+    PLATFORM="",
+    build_profile=os.path.join(root, "build_profile.json"),
+    disable_exceptions=False,
+)
+env = SConscript("godot-cpp/SConstruct", {"env": local_env, "api_version": "4.7"})
+
+if (env["platform"] != "windows" or env["arch"] != "x86_64"
+        or env["precision"] != "single" or env["target"] not in ("template_debug", "template_release")):
+    print_error("Build Crimson Framework for Windows x86-64 single precision with target=template_debug or target=template_release.")
+    Exit(1)
+
+env.Append(CPPPATH=["#src", "#src/modules/save/third_party"], LIBS=["bcrypt"])
+eos_default = os.path.join(root, "vendor", "eos", "SDK")
+eos_override = ARGUMENTS.get("eos_sdk") or os.environ.get("CRIMSON_EOS_SDK")
+eos_sdk = eos_override or eos_default
+eos_dll = None
+if eos_sdk.lower() != "off" and (eos_override or os.path.isdir(eos_sdk)):
+    eos_sdk = os.path.abspath(eos_sdk)
+    eos_include = os.path.join(eos_sdk, "Include")
+    eos_dll = os.path.join(eos_sdk, "Bin", "EOSSDK-Win64-Shipping.dll")
+    if not os.path.isfile(os.path.join(eos_include, "eos_sdk.h")) or not os.path.isfile(eos_dll):
+        print_error("Set eos_sdk to the extracted EOS C SDK's SDK directory, or set eos_sdk=off.")
+        Exit(1)
+    env.Append(CPPPATH=[eos_include], CPPDEFINES=["CRIMSON_WITH_EOS"])
+steam_default = os.path.join(root, "vendor", "steamworks", "sdk")
+steam_headers = os.path.join(root, "vendor", "steamworks", "proton-1.65")
+if not os.path.isdir(steam_default) and os.path.isdir(steam_headers):
+    steam_default = steam_headers
+steam_override = ARGUMENTS.get("steam_sdk") or os.environ.get("CRIMSON_STEAMWORKS_SDK")
+steam_sdk = steam_override or steam_default
+steam_dll = None
+if steam_sdk.lower() != "off" and (steam_override or os.path.isdir(steam_sdk)):
+    steam_sdk = os.path.abspath(steam_sdk)
+    steam_include = os.path.join(steam_sdk, "public", "steam")
+    if not os.path.isfile(os.path.join(steam_include, "steam_api_flat.h")):
+        print_error("Set steam_sdk to a Steamworks SDK root containing public/steam, or set steam_sdk=off.")
+        Exit(1)
+    env.Append(CPPPATH=[os.path.dirname(steam_include), steam_include], CPPDEFINES=["CRIMSON_WITH_STEAM"])
+    steam_dll = os.path.join(steam_sdk, "redistributable_bin", "win64", "steam_api64.dll")
+sources = Glob("src/*.cpp")
+for module in ("inventory", "save", "session", "scene_load", "match_runtime", "replication"):
+    sources += Glob(f"src/modules/{module}/*.cpp")
+sources += ["src/integration/register_integration.cpp"]
+doc_xml = Glob("src/modules/inventory/doc_classes/*.xml")
+for area in ("game", "world_session", "adapters", "online", "online/steam", "online/eos"):
+    sources += Glob(f"src/integration/{area}/*.cpp")
+    doc_xml += Glob(f"src/integration/{area}/doc_classes/*.xml")
+if env["target"] == "template_debug" and doc_xml:
+    sources.append(env.GodotCPPDocData("src/gen/doc_data.gen.cpp", source=doc_xml))
+addon = "project/addons/crimson-framework/bin"
+suffix = env["suffix"].replace(".dev", "")
+filename = f"crimson_framework{suffix}{env['SHLIBSUFFIX']}"
+library = env.SharedLibrary(f"bin/windows/{filename}", source=sources)
+Default(env.InstallAs(f"{addon}/{filename}", library[0]))
+if eos_dll:
+    Default(env.InstallAs(f"{addon}/EOSSDK-Win64-Shipping.dll", eos_dll))
+if steam_dll and os.path.isfile(steam_dll):
+    Default(env.InstallAs(f"{addon}/steam_api64.dll", steam_dll))

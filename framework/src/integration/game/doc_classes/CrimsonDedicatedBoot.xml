@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="CrimsonDedicatedBoot" inherits="Node">
+	<brief_description>
+		Starts a configured Crimson game as a dedicated server.
+	</brief_description>
+	<members>
+		<member name="game" type="CrimsonGame" setter="set_game" getter="get_game">
+			The game in this boot scene that owns the dedicated match. Assign a game with a starting world and multiplayer rules. The server starts when the process receives the explicit server role.
+		</member>
+	</members>
+</class>

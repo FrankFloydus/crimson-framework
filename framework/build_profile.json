@@ -1,0 +1,32 @@
+{
+  "$comment": "Copyright Francesco Di Blasi 2026 - All Rights Reserved",
+  "enabled_classes": [
+    "Camera3D",
+    "Crypto",
+    "ENetMultiplayerPeer",
+    "ENetPacketPeer",
+    "FileAccess",
+    "Image",
+    "ImageTexture",
+    "JSON",
+    "Marshalls",
+    "Marker3D",
+    "MultiplayerAPI",
+    "MultiplayerPeer",
+    "MultiplayerPeerExtension",
+    "Node",
+    "Node3D",
+    "OfflineMultiplayerPeer",
+    "OS",
+    "PackedScene",
+    "ProjectSettings",
+    "RefCounted",
+    "ResourceLoader",
+    "SceneMultiplayer",
+    "SceneTree",
+    "SceneTreeTimer",
+    "Texture2D",
+    "Time",
+    "WorkerThreadPool"
+  ]
+}

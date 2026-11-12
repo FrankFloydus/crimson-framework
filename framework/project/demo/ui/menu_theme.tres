@@ -1,0 +1,96 @@
+[gd_resource type="Theme" format=3 uid="uid://bm81e767nsce1"]
+
+[sub_resource type="StyleBoxFlat" id="ButtonDisabled"]
+content_margin_left = 22.0
+content_margin_top = 9.0
+content_margin_right = 16.0
+content_margin_bottom = 9.0
+bg_color = Color(0.056, 0.065, 0.065, 0.85)
+border_width_left = 4
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.177, 0.188, 0.179, 1)
+anti_aliasing = false
+
+[sub_resource type="StyleBoxFlat" id="Focus"]
+draw_center = false
+border_width_left = 5
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.87, 0.66, 0.45, 1)
+anti_aliasing = false
+
+[sub_resource type="StyleBoxFlat" id="ButtonHover"]
+content_margin_left = 22.0
+content_margin_top = 9.0
+content_margin_right = 16.0
+content_margin_bottom = 9.0
+bg_color = Color(0.17, 0.107, 0.083, 1)
+border_width_left = 4
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.733, 0.4, 0.23, 1)
+anti_aliasing = false
+
+[sub_resource type="StyleBoxFlat" id="ButtonNormal"]
+content_margin_left = 22.0
+content_margin_top = 9.0
+content_margin_right = 16.0
+content_margin_bottom = 9.0
+bg_color = Color(0.071, 0.082, 0.082, 0.94)
+border_width_left = 4
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.273, 0.288, 0.267, 1)
+anti_aliasing = false
+
+[sub_resource type="StyleBoxFlat" id="ButtonPressed"]
+content_margin_left = 22.0
+content_margin_top = 9.0
+content_margin_right = 16.0
+content_margin_bottom = 9.0
+bg_color = Color(0.244, 0.139, 0.091, 1)
+border_width_left = 4
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.9, 0.51, 0.27, 1)
+anti_aliasing = false
+
+[sub_resource type="StyleBoxFlat" id="AddressField"]
+content_margin_left = 13.0
+content_margin_top = 8.0
+content_margin_right = 13.0
+content_margin_bottom = 8.0
+bg_color = Color(0.032, 0.04, 0.041, 1)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.394, 0.41, 0.385, 1)
+anti_aliasing = false
+
+[resource]
+default_font_size = 22
+Button/colors/font_color = Color(0.913, 0.875, 0.808, 1)
+Button/colors/font_disabled_color = Color(0.55, 0.56, 0.52, 1)
+Button/colors/font_focus_color = Color(1, 0.9, 0.77, 1)
+Button/colors/font_hover_color = Color(1, 0.9, 0.77, 1)
+Button/colors/font_pressed_color = Color(1, 0.95, 0.86, 1)
+Button/styles/disabled = SubResource("ButtonDisabled")
+Button/styles/focus = SubResource("Focus")
+Button/styles/hover = SubResource("ButtonHover")
+Button/styles/normal = SubResource("ButtonNormal")
+Button/styles/pressed = SubResource("ButtonPressed")
+Label/colors/font_color = Color(0.913, 0.875, 0.808, 1)
+LineEdit/colors/caret_color = Color(1, 0.81, 0.59, 1)
+LineEdit/colors/font_color = Color(0.95, 0.89, 0.79, 1)
+LineEdit/colors/font_placeholder_color = Color(0.57, 0.59, 0.54, 1)
+LineEdit/colors/font_selected_color = Color(0.1, 0.06, 0.04, 1)
+LineEdit/colors/selection_color = Color(0.94, 0.62, 0.36, 1)
+LineEdit/styles/focus = SubResource("Focus")
+LineEdit/styles/normal = SubResource("AddressField")

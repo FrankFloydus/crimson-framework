@@ -1,0 +1,2997 @@
+[gd_scene format=3 uid="uid://cwgtay4wyogyj"]
+
+[ext_resource type="Texture2D" uid="uid://kv73fkxlqm5g" path="res://demo/hub/textures/blackened_steel.png" id="blackened_steel"]
+[ext_resource type="Texture2D" uid="uid://bwhay7mtukxin" path="res://demo/hub/textures/cast_concrete.png" id="cast_concrete"]
+[ext_resource type="Shader" uid="uid://c007qc7mdbkn4" path="res://demo/hub/concrete_wall.gdshader" id="concrete_wall"]
+[ext_resource type="Texture2D" uid="uid://dgnsfm4fx6vej" path="res://demo/hub/textures/deck_slabs.png" id="deck_slabs"]
+[ext_resource type="Texture2D" uid="uid://d2o8gxcce16nk" path="res://demo/hub/textures/oxidized_steel.png" id="oxidized_steel"]
+[ext_resource type="PackedScene" uid="uid://c0ya8st8or5nl" path="res://demo/hub/portal/portal.tscn" id="portal"]
+
+[sub_resource type="Environment" id="HubEnvironment"]
+resource_name = "Transfer Hall"
+background_mode = 1
+background_color = Color(0.035, 0.048, 0.055, 1)
+ambient_light_source = 3
+ambient_light_color = Color(0.48, 0.55, 0.61, 1)
+ambient_light_energy = 0.57
+reflected_light_source = 2
+tonemap_mode = 3
+tonemap_exposure = 1.14
+ssao_enabled = true
+sdfgi_enabled = true
+sdfgi_use_occlusion = true
+fog_enabled = true
+fog_light_color = Color(0.20887208, 0.24269891, 0.18132797, 1)
+fog_light_energy = 2.6
+fog_density = 0.0195
+fog_sky_affect = 0.0
+
+[sub_resource type="StandardMaterial3D" id="Deck"]
+resource_name = "Deck"
+albedo_color = Color(1, 1, 0.98, 1)
+albedo_texture = ExtResource("deck_slabs")
+metallic_specular = 0.12
+roughness = 0.93
+uv1_scale = Vector3(0.45, 0.45, 0.45)
+uv1_triplanar = true
+uv1_world_triplanar = true
+texture_filter = 2
+
+[sub_resource type="StandardMaterial3D" id="Concrete"]
+resource_name = "Concrete"
+albedo_color = Color(1, 1, 0.98, 1)
+albedo_texture = ExtResource("cast_concrete")
+metallic_specular = 0.12
+roughness = 0.93
+uv1_scale = Vector3(0.31, 0.31, 0.31)
+uv1_triplanar = true
+uv1_world_triplanar = true
+texture_filter = 2
+
+[sub_resource type="ShaderMaterial" id="ConcreteWall"]
+resource_name = "Board-formed concrete"
+render_priority = 0
+shader = ExtResource("concrete_wall")
+shader_parameter/concrete = ExtResource("cast_concrete")
+
+[sub_resource type="BoxMesh" id="UnitBox"]
+
+[sub_resource type="StandardMaterial3D" id="Steel"]
+resource_name = "Steel"
+albedo_color = Color(1, 0.99, 0.94, 1)
+albedo_texture = ExtResource("blackened_steel")
+metallic_specular = 0.12
+roughness = 0.93
+uv1_scale = Vector3(0.46, 0.46, 0.46)
+uv1_triplanar = true
+uv1_world_triplanar = true
+texture_filter = 2
+
+[sub_resource type="StandardMaterial3D" id="Rubber"]
+resource_name = "Rubber"
+albedo_color = Color(0.09, 0.09, 0.085, 1)
+metallic_specular = 0.12
+roughness = 0.93
+
+[sub_resource type="StandardMaterial3D" id="SafetyPaint"]
+resource_name = "SafetyPaint"
+albedo_color = Color(0.37, 0.295, 0.17, 1)
+metallic_specular = 0.12
+roughness = 0.93
+
+[sub_resource type="StandardMaterial3D" id="Frame"]
+resource_name = "Frame"
+albedo_color = Color(0.94, 0.92, 0.9, 1)
+albedo_texture = ExtResource("oxidized_steel")
+metallic_specular = 0.12
+roughness = 0.93
+uv1_scale = Vector3(0.5, 0.5, 0.5)
+uv1_triplanar = true
+uv1_world_triplanar = true
+texture_filter = 2
+
+[sub_resource type="StandardMaterial3D" id="WarmLamp"]
+resource_name = "WarmLamp"
+albedo_color = Color(0.63, 0.52, 0.36, 1)
+metallic_specular = 0.12
+roughness = 0.93
+emission_enabled = true
+emission = Color(0.64, 0.49, 0.3, 1)
+emission_energy_multiplier = 1.15
+
+[sub_resource type="StandardMaterial3D" id="ColdLamp"]
+resource_name = "ColdLamp"
+albedo_color = Color(0.47, 0.5, 0.48, 1)
+metallic_specular = 0.12
+roughness = 0.93
+emission_enabled = true
+emission = Color(0.42, 0.47, 0.43, 1)
+emission_energy_multiplier = 1.15
+
+[sub_resource type="StandardMaterial3D" id="GuidePaint"]
+resource_name = "GuidePaint"
+albedo_color = Color(0.4, 0.37, 0.31, 1)
+metallic_specular = 0.12
+roughness = 0.93
+
+[node name="StartingHub" type="Node3D" unique_id=1667129613]
+
+[node name="Environment" type="WorldEnvironment" parent="." unique_id=1291015199]
+environment = SubResource("HubEnvironment")
+
+[node name="CentralRoom" type="Node3D" parent="." unique_id=624123255]
+
+[node name="Lighting" type="Node3D" parent="CentralRoom" unique_id=1215273530]
+
+[node name="RoofWash0_-1" type="OmniLight3D" parent="CentralRoom/Lighting" unique_id=1370906757]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4.15, 5.72, -5.6)
+light_color = Color(1, 0.82, 0.65, 1)
+light_energy = 1.04
+shadow_enabled = true
+omni_range = 10.7
+omni_attenuation = 1.25
+
+[node name="RoofWash0_1" type="OmniLight3D" parent="CentralRoom/Lighting" unique_id=1499411176]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.15, 5.72, -5.6)
+light_color = Color(1, 0.82, 0.65, 1)
+light_energy = 1.04
+shadow_enabled = true
+omni_range = 10.7
+omni_attenuation = 1.25
+
+[node name="RoofWash1_-1" type="OmniLight3D" parent="CentralRoom/Lighting" unique_id=677752518]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4.15, 5.72, 0)
+light_color = Color(1, 0.82, 0.65, 1)
+light_energy = 1.04
+shadow_enabled = true
+omni_range = 10.7
+omni_attenuation = 1.25
+
+[node name="RoofWash1_1" type="OmniLight3D" parent="CentralRoom/Lighting" unique_id=2029638392]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.15, 5.72, 0)
+light_color = Color(1, 0.82, 0.65, 1)
+light_energy = 1.04
+shadow_enabled = true
+omni_range = 10.7
+omni_attenuation = 1.25
+
+[node name="RoofWash2_-1" type="OmniLight3D" parent="CentralRoom/Lighting" unique_id=70016902]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4.15, 5.72, 5.6)
+light_color = Color(0.63, 0.71, 0.75, 1)
+light_energy = 1.04
+shadow_enabled = true
+omni_range = 10.7
+omni_attenuation = 1.25
+
+[node name="RoofWash2_1" type="OmniLight3D" parent="CentralRoom/Lighting" unique_id=116011089]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.15, 5.72, 5.6)
+light_color = Color(0.63, 0.71, 0.75, 1)
+light_energy = 1.04
+omni_range = 10.7
+omni_attenuation = 1.25
+
+[node name="NorthLWash" type="OmniLight3D" parent="CentralRoom/Lighting" unique_id=412270045]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3.16, 2.76, -7.55)
+light_color = Color(1, 0.76, 0.55, 1)
+light_energy = 0.68
+shadow_enabled = true
+omni_range = 7.1
+omni_attenuation = 1.25
+
+[node name="NorthRWash" type="OmniLight3D" parent="CentralRoom/Lighting" unique_id=2078796359]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.16, 2.76, -7.55)
+light_color = Color(1, 0.76, 0.55, 1)
+light_energy = 0.68
+shadow_enabled = true
+omni_range = 7.1
+omni_attenuation = 1.25
+
+[node name="NorthInteriorWash" type="OmniLight3D" parent="CentralRoom/Lighting" unique_id=1810724578]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3.9, -9.9)
+light_color = Color(0.67, 0.78, 0.79, 1)
+light_energy = 1.05
+shadow_enabled = true
+omni_range = 8.7
+omni_attenuation = 1.25
+
+[node name="EastLWash" type="OmniLight3D" parent="CentralRoom/Lighting" unique_id=1933241171]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9.05, 2.76, -6.76)
+light_color = Color(1, 0.76, 0.55, 1)
+light_energy = 0.68
+shadow_enabled = true
+omni_range = 7.1
+omni_attenuation = 1.25
+
+[node name="EastRWash" type="OmniLight3D" parent="CentralRoom/Lighting" unique_id=1349453333]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9.05, 2.76, -0.44)
+light_color = Color(1, 0.76, 0.55, 1)
+light_energy = 0.68
+shadow_enabled = true
+omni_range = 7.1
+omni_attenuation = 1.25
+
+[node name="EastInteriorWash" type="OmniLight3D" parent="CentralRoom/Lighting" unique_id=1980163538]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 11.4, 3.9, -3.6)
+light_color = Color(1, 0.77, 0.53, 1)
+light_energy = 1.05
+shadow_enabled = true
+omni_range = 8.7
+omni_attenuation = 1.25
+
+[node name="WestLWash" type="OmniLight3D" parent="CentralRoom/Lighting" unique_id=655740292]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -9.05, 2.76, -0.44)
+light_color = Color(1, 0.76, 0.55, 1)
+light_energy = 0.68
+shadow_enabled = true
+omni_range = 7.1
+omni_attenuation = 1.25
+
+[node name="WestRWash" type="OmniLight3D" parent="CentralRoom/Lighting" unique_id=875168208]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -9.05, 2.76, -6.76)
+light_color = Color(1, 0.76, 0.55, 1)
+light_energy = 0.68
+shadow_enabled = true
+omni_range = 7.1
+omni_attenuation = 1.25
+
+[node name="WestInteriorWash" type="OmniLight3D" parent="CentralRoom/Lighting" unique_id=339060862]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -11.4, 3.9, -3.6)
+light_color = Color(0.77, 0.74, 0.82, 1)
+light_energy = 1.05
+shadow_enabled = true
+omni_range = 8.7
+omni_attenuation = 1.25
+
+[node name="Foundation" type="CSGBox3D" parent="CentralRoom" unique_id=520252167]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.24, 0)
+use_collision = true
+size = Vector3(21, 0.48, 18)
+material = SubResource("Deck")
+
+[node name="Ceiling" type="CSGBox3D" parent="CentralRoom" unique_id=1041519476]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 7.37, 0)
+use_collision = true
+size = Vector3(21, 0.54, 18)
+material = SubResource("Concrete")
+
+[node name="SouthWall" type="CSGBox3D" parent="CentralRoom" unique_id=1164173071]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3.57, 9.27)
+use_collision = true
+size = Vector3(22.08, 7.14, 0.54)
+material = SubResource("ConcreteWall")
+
+[node name="NorthMasonryWest" type="CSGBox3D" parent="CentralRoom" unique_id=1268961944]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6.65, 3.57, -9.27)
+use_collision = true
+size = Vector3(7.7, 7.14, 0.54)
+material = SubResource("ConcreteWall")
+
+[node name="WestMasonryNorth" type="CSGBox3D" parent="CentralRoom" unique_id=369349675]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10.77, 3.57, -7.7)
+use_collision = true
+size = Vector3(0.54, 7.14, 2.6)
+material = SubResource("ConcreteWall")
+
+[node name="WestMasonrySouth" type="CSGBox3D" parent="CentralRoom" unique_id=1885811510]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10.77, 3.57, 4.1)
+use_collision = true
+size = Vector3(0.54, 7.14, 9.8)
+material = SubResource("ConcreteWall")
+
+[node name="WestUpperWall" type="CSGBox3D" parent="CentralRoom" unique_id=621880756]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10.77, 6.2, -3.6)
+use_collision = true
+size = Vector3(0.54, 2.8, 5.6)
+material = SubResource("Concrete")
+
+[node name="PierWestFront" type="MeshInstance3D" parent="CentralRoom" unique_id=26228139]
+transform = Transform3D(1.4, 0, 0, 0, 7.04, 0, 0, 0, 1.5, -8.95, 3.52, -7.65)
+material_override = SubResource("Concrete")
+mesh = SubResource("UnitBox")
+
+[node name="PierFootWestFront" type="MeshInstance3D" parent="CentralRoom" unique_id=1610103104]
+transform = Transform3D(1.75, 0, 0, 0, 0.72, 0, 0, 0, 1.8, -8.95, 0.36, -7.65)
+material_override = SubResource("Steel")
+mesh = SubResource("UnitBox")
+
+[node name="PierCollarWestFront" type="MeshInstance3D" parent="CentralRoom" unique_id=702143687]
+transform = Transform3D(1.65, 0, 0, 0, 0.42, 0, 0, 0, 1.69, -8.95, 5.4, -7.65)
+material_override = SubResource("Steel")
+mesh = SubResource("UnitBox")
+
+[node name="PierWestRear" type="MeshInstance3D" parent="CentralRoom" unique_id=51359220]
+transform = Transform3D(1.4, 0, 0, 0, 7.04, 0, 0, 0, 1.5, -8.95, 3.52, 7.75)
+material_override = SubResource("Concrete")
+mesh = SubResource("UnitBox")
+
+[node name="PierFootWestRear" type="MeshInstance3D" parent="CentralRoom" unique_id=2087516795]
+transform = Transform3D(1.75, 0, 0, 0, 0.72, 0, 0, 0, 1.8, -8.95, 0.36, 7.75)
+material_override = SubResource("Steel")
+mesh = SubResource("UnitBox")
+
+[node name="PierCollarWestRear" type="MeshInstance3D" parent="CentralRoom" unique_id=1808936387]
+transform = Transform3D(1.65, 0, 0, 0, 0.42, 0, 0, 0, 1.69, -8.95, 5.4, 7.75)
+material_override = SubResource("Steel")
+mesh = SubResource("UnitBox")
+
+[node name="NorthGrilleWest0" type="MeshInstance3D" parent="CentralRoom" unique_id=1535463985]
+transform = Transform3D(1.26, 0, 0, 0, 3.18, 0, 0, 0, 0.13, -4.35, 2.55, -8.92)
+material_override = SubResource("Rubber")
+mesh = SubResource("UnitBox")
+
+[node name="NorthLouverWest0_0" type="MeshInstance3D" parent="CentralRoom" unique_id=1573221490]
+transform = Transform3D(1.14, 0, 0, 0, 0.12, 0, 0, 0, 0.17, -4.35, 1.3, -8.81)
+material_override = SubResource("Steel")
+mesh = SubResource("UnitBox")
+
+[node name="NorthLouverWest0_1" type="MeshInstance3D" parent="CentralRoom" unique_id=161969898]
+transform = Transform3D(1.14, 0, 0, 0, 0.12, 0, 0, 0, 0.17, -4.35, 1.7, -8.81)
+material_override = SubResource("Steel")
+mesh = SubResource("UnitBox")
+
+[node name="NorthLouverWest0_2" type="MeshInstance3D" parent="CentralRoom" unique_id=78101936]
+transform = Transform3D(1.14, 0, 0, 0, 0.12, 0, 0, 0, 0.17, -4.35, 2.1, -8.81)
+material_override = SubResource("Steel")
+mesh = SubResource("UnitBox")
+
+[node name="NorthLouverWest0_3" type="MeshInstance3D" parent="CentralRoom" unique_id=1522442878]
+transform = Transform3D(1.14, 0, 0, 0, 0.12, 0, 0, 0, 0.17, -4.35, 2.5, -8.81)
+material_override = SubResource("Steel")
+mesh = SubResource("UnitBox")
+
+[node name="NorthLouverWest0_4" type="MeshInstance3D" parent="CentralRoom" unique_id=1245882066]
+transform = Transform3D(1.14, 0, 0, 0, 0.12, 0, 0, 0, 0.17, -4.35, 2.9, -8.81)
+material_override = SubResource("Steel")
+mesh = SubResource("UnitBox")
+
+[node name="NorthLouverWest0_5" type="MeshInstance3D" parent="CentralRoom" unique_id=694493069]
+transform = Transform3D(1.14, 0, 0, 0, 0.12, 0, 0, 0, 0.17, -4.35, 3.3, -8.81)
+material_override = SubResource("Steel")
+mesh = SubResource("UnitBox")
+
+[node name="NorthLouverWest0_6" type="MeshInstance3D" parent="CentralRoom" unique_id=862366439]
+transform = Transform3D(1.14, 0, 0, 0, 0.12, 0, 0, 0, 0.17, -4.35, 3.7, -8.81)
+material_override = SubResource("Steel")
+mesh = SubResource("UnitBox")
+
+[node name="NorthGrilleWest1" type="MeshInstance3D" parent="CentralRoom" unique_id=1729179831]
+transform = Transform3D(1.26, 0, 0, 0, 3.18, 0, 0, 0, 0.13, -5.99, 2.55, -8.92)
+material_override = SubResource("Rubber")
+mesh = SubResource("UnitBox")
+
+[node name="NorthLouverWest1_0" type="MeshInstance3D" parent="CentralRoom" unique_id=1891637547]
+transform = Transform3D(1.14, 0, 0, 0, 0.12, 0, 0, 0, 0.17, -5.99, 1.3, -8.81)
+material_override = SubResource("Steel")
+mesh = SubResource("UnitBox")
+
+[node name="NorthLouverWest1_1" type="MeshInstance3D" parent="CentralRoom" unique_id=405191532]
+transform = Transform3D(1.14, 0, 0, 0, 0.12, 0, 0, 0, 0.17, -5.99, 1.7, -8.81)
+material_override = SubResource("Steel")
+mesh = SubResource("UnitBox")
+
+[node name="NorthLouverWest1_2" type="MeshInstance3D" parent="CentralRoom" unique_id=2014757782]
+transform = Transform3D(1.14, 0, 0, 0, 0.12, 0, 0, 0, 0.17, -5.99, 2.1, -8.81)
+material_override = SubResource("Steel")
+mesh = SubResource("UnitBox")
+
+[node name="NorthLouverWest1_3" type="MeshInstance3D" parent="CentralRoom" unique_id=370961135]
+transform = Transform3D(1.14, 0, 0, 0, 0.12, 0, 0, 0, 0.17, -5.99, 2.5, -8.81)
+material_override = SubResource("Steel")
+mesh = SubResource("UnitBox")
+
+[node name="NorthLouverWest1_4" type="MeshInstance3D" parent="CentralRoom" unique_id=2046719108]
+transform = Transform3D(1.14, 0, 0, 0, 0.12, 0, 0, 0, 0.17, -5.99, 2.9, -8.81)
+material_override = SubResource("Steel")
+mesh = SubResource("UnitBox")
+
+[node name="NorthLouverWest1_5" type="MeshInstance3D" parent="CentralRoom" unique_id=379647612]
+transform = Transform3D(1.14, 0, 0, 0, 0.12, 0, 0, 0, 0.17, -5.99, 3.3, -8.81)
+material_override = SubResource("Steel")
+mesh = SubResource("UnitBox")
+
+[node name="NorthLouverWest1_6" type="MeshInstance3D" parent="CentralRoom" unique_id=476559401]
+transform = Transform3D(1.14, 0, 0, 0, 0.12, 0, 0, 0, 0.17, -5.99, 3.7, -8.81)
+material_override = SubResource("Steel")
+mesh = SubResource("UnitBox")
+
+[node name="NorthGrilleWest2" type="MeshInstance3D" parent="CentralRoom" unique_id=2000035822]
+transform = Transform3D(1.26, 0, 0, 0, 3.18, 0, 0, 0, 0.13, -7.63, 2.55, -8.92)
+material_override = SubResource("Rubber")
+mesh = SubResource("UnitBox")
+
+[node name="NorthLouverWest2_0" type="MeshInstance3D" parent="CentralRoom" unique_id=818803995]
+transform = Transform3D(1.14, 0, 0, 0, 0.12, 0, 0, 0, 0.17, -7.63, 1.3, -8.81)
+material_override = SubResource("Steel")
+mesh = SubResource("UnitBox")
+
+[node name="NorthLouverWest2_1" type="MeshInstance3D" parent="CentralRoom" unique_id=1852271894]
+transform = Transform3D(1.14, 0, 0, 0, 0.12, 0, 0, 0, 0.17, -7.63, 1.7, -8.81)
+material_override = SubResource("Steel")
+mesh = SubResource("UnitBox")
+
+[node name="NorthLouverWest2_2" type="MeshInstance3D" parent="CentralRoom" unique_id=434423049]
+transform = Transform3D(1.14, 0, 0, 0, 0.12, 0, 0, 0, 0.17, -7.63, 2.1, -8.81)
+material_override = SubResource("Steel")
+mesh = SubResource("UnitBox")
+
+[node name="NorthLouverWest2_3" type="MeshInstance3D" parent="CentralRoom" unique_id=1925523402]
+transform = Transform3D(1.14, 0, 0, 0, 0.12, 0, 0, 0, 0.17, -7.63, 2.5, -8.81)
+material_override = SubResource("Steel")
+mesh = SubResource("UnitBox")
+
+[node name="NorthLouverWest2_4" type="MeshInstance3D" parent="CentralRoom" unique_id=2098607776]
+transform = Transform3D(1.14, 0, 0, 0, 0.12, 0, 0, 0, 0.17, -7.63, 2.9, -8.81)
+material_override = SubResource("Steel")
+mesh = SubResource("UnitBox")
+
+[node name="NorthLouverWest2_5" type="MeshInstance3D" parent="CentralRoom" unique_id=1348729570]
+transform = Transform3D(1.14, 0, 0, 0, 0.12, 0, 0, 0, 0.17, -7.63, 3.3, -8.81)
+material_override = SubResource("Steel")
+mesh = SubResource("UnitBox")
+
+[node name="NorthLouverWest2_6" type="MeshInstance3D" parent="CentralRoom" unique_id=1344248386]
+transform = Transform3D(1.14, 0, 0, 0, 0.12, 0, 0, 0, 0.17, -7.63, 3.7, -8.81)
+material_override = SubResource("Steel")
+mesh = SubResource("UnitBox")
+
+[node name="NorthSkirtWest" type="MeshInstance3D" parent="CentralRoom" unique_id=1270839743]
+transform = Transform3D(7.56, 0, 0, 0, 0.84, 0, 0, 0, 0.32, -6.68, 0.42, -8.83)
+material_override = SubResource("Concrete")
+mesh = SubResource("UnitBox")
+
+[node name="ServiceConduitWest" type="MeshInstance3D" parent="CentralRoom" unique_id=1026167411]
+transform = Transform3D(0.27, 0, 0, 0, 0.32, 0, 0, 0, 17.7, -10.28, 5.55, 0.15)
+material_override = SubResource("Steel")
+mesh = SubResource("UnitBox")
+
+[node name="ConduitTrackWest" type="MeshInstance3D" parent="CentralRoom" unique_id=864689359]
+transform = Transform3D(0.08, 0, 0, 0, 0.075, 0, 0, 0, 17.7, -10.13, 5.48, 0.15)
+material_override = SubResource("SafetyPaint")
+mesh = SubResource("UnitBox")
+
+[node name="NorthMasonryEast" type="CSGBox3D" parent="CentralRoom" unique_id=295724904]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6.65, 3.57, -9.27)
+use_collision = true
+size = Vector3(7.7, 7.14, 0.54)
+material = SubResource("ConcreteWall")
+
+[node name="EastMasonryNorth" type="CSGBox3D" parent="CentralRoom" unique_id=716048741]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10.77, 3.57, -7.7)
+use_collision = true
+size = Vector3(0.54, 7.14, 2.6)
+material = SubResource("ConcreteWall")
+
+[node name="EastMasonrySouth" type="CSGBox3D" parent="CentralRoom" unique_id=196038631]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10.77, 3.57, 4.1)
+use_collision = true
+size = Vector3(0.54, 7.14, 9.8)
+material = SubResource("ConcreteWall")
+
+[node name="EastUpperWall" type="CSGBox3D" parent="CentralRoom" unique_id=969805048]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10.77, 6.2, -3.6)
+use_collision = true
+size = Vector3(0.54, 2.8, 5.6)
+material = SubResource("Concrete")
+
+[node name="PierEastFront" type="MeshInstance3D" parent="CentralRoom" unique_id=1936402999]
+transform = Transform3D(1.4, 0, 0, 0, 7.04, 0, 0, 0, 1.5, 8.95, 3.52, -7.65)
+material_override = SubResource("Concrete")
+mesh = SubResource("UnitBox")
+
+[node name="PierFootEastFront" type="MeshInstance3D" parent="CentralRoom" unique_id=1767580359]
+transform = Transform3D(1.75, 0, 0, 0, 0.72, 0, 0, 0, 1.8, 8.95, 0.36, -7.65)
+material_override = SubResource("Steel")
+mesh = SubResource("UnitBox")
+
+[node name="PierCollarEastFront" type="MeshInstance3D" parent="CentralRoom" unique_id=1683876743]
+transform = Transform3D(1.65, 0, 0, 0, 0.42, 0, 0, 0, 1.69, 8.95, 5.4, -7.65)
+material_override = SubResource("Steel")
+mesh = SubResource("UnitBox")
+
+[node name="PierEastRear" type="MeshInstance3D" parent="CentralRoom" unique_id=1908239773]
+transform = Transform3D(1.4, 0, 0, 0, 7.04, 0, 0, 0, 1.5, 8.95, 3.52, 7.75)
+material_override = SubResource("Concrete")
+mesh = SubResource("UnitBox")
+
+[node name="PierFootEastRear" type="MeshInstance3D" parent="CentralRoom" unique_id=236113589]
+transform = Transform3D(1.75, 0, 0, 0, 0.72, 0, 0, 0, 1.8, 8.95, 0.36, 7.75)
+material_override = SubResource("Steel")
+mesh = SubResource("UnitBox")
+
+[node name="PierCollarEastRear" type="MeshInstance3D" parent="CentralRoom" unique_id=1976754839]
+transform = Transform3D(1.65, 0, 0, 0, 0.42, 0, 0, 0, 1.69, 8.95, 5.4, 7.75)
+material_override = SubResource("Steel")
+mesh = SubResource("UnitBox")
+
+[node name="NorthGrilleEast0" type="MeshInstance3D" parent="CentralRoom" unique_id=811143199]
+transform = Transform3D(1.26, 0, 0, 0, 3.18, 0, 0, 0, 0.13, 4.35, 2.55, -8.92)
+material_override = SubResource("Rubber")
+mesh = SubResource("UnitBox")
+
+[node name="NorthLouverEast0_0" type="MeshInstance3D" parent="CentralRoom" unique_id=144085026]
+transform = Transform3D(1.14, 0, 0, 0, 0.12, 0, 0, 0, 0.17, 4.35, 1.3, -8.81)
+material_override = SubResource("Steel")
+mesh = SubResource("UnitBox")
+
+[node name="NorthLouverEast0_1" type="MeshInstance3D" parent="CentralRoom" unique_id=1036918436]
+transform = Transform3D(1.14, 0, 0, 0, 0.12, 0, 0, 0, 0.17, 4.35, 1.7, -8.81)
+material_override = SubResource("Steel")
+mesh = SubResource("UnitBox")
+
+[node name="NorthLouverEast0_2" type="MeshInstance3D" parent="CentralRoom" unique_id=1010293522]
+transform = Transform3D(1.14, 0, 0, 0, 0.12, 0, 0, 0, 0.17, 4.35, 2.1, -8.81)
+material_override = SubResource("Steel")
+mesh = SubResource("UnitBox")
+
+[node name="NorthLouverEast0_3" type="MeshInstance3D" parent="CentralRoom" unique_id=286715997]
+transform = Transform3D(1.14, 0, 0, 0, 0.12, 0, 0, 0, 0.17, 4.35, 2.5, -8.81)
+material_override = SubResource("Steel")
+mesh = SubResource("UnitBox")
+
+[node name="NorthLouverEast0_4" type="MeshInstance3D" parent="CentralRoom" unique_id=1874217632]
+transform = Transform3D(1.14, 0, 0, 0, 0.12, 0, 0, 0, 0.17, 4.35, 2.9, -8.81)
+material_override = SubResource("Steel")
+mesh = SubResource("UnitBox")
+
+[node name="NorthLouverEast0_5" type="MeshInstance3D" parent="CentralRoom" unique_id=334627432]
+transform = Transform3D(1.14, 0, 0, 0, 0.12, 0, 0, 0, 0.17, 4.35, 3.3, -8.81)
+material_override = SubResource("Steel")
+mesh = SubResource("UnitBox")
+
+[node name="NorthLouverEast0_6" type="MeshInstance3D" parent="CentralRoom" unique_id=1647346566]
+transform = Transform3D(1.14, 0, 0, 0, 0.12, 0, 0, 0, 0.17, 4.35, 3.7, -8.81)
+material_override = SubResource("Steel")
+mesh = SubResource("UnitBox")
+
+[node name="NorthGrilleEast1" type="MeshInstance3D" parent="CentralRoom" unique_id=685130967]
+transform = Transform3D(1.26, 0, 0, 0, 3.18, 0, 0, 0, 0.13, 5.99, 2.55, -8.92)
+material_override = SubResource("Rubber")
+mesh = SubResource("UnitBox")
+
+[node name="NorthLouverEast1_0" type="MeshInstance3D" parent="CentralRoom" unique_id=193878957]
+transform = Transform3D(1.14, 0, 0, 0, 0.12, 0, 0, 0, 0.17, 5.99, 1.3, -8.81)
+material_override = SubResource("Steel")
+mesh = SubResource("UnitBox")
+
+[node name="NorthLouverEast1_1" type="MeshInstance3D" parent="CentralRoom" unique_id=1369467678]
+transform = Transform3D(1.14, 0, 0, 0, 0.12, 0, 0, 0, 0.17, 5.99, 1.7, -8.81)
+material_override = SubResource("Steel")
+mesh = SubResource("UnitBox")
+
+[node name="NorthLouverEast1_2" type="MeshInstance3D" parent="CentralRoom" unique_id=524524993]
+transform = Transform3D(1.14, 0, 0, 0, 0.12, 0, 0, 0, 0.17, 5.99, 2.1, -8.81)
+material_override = SubResource("Steel")
+mesh = SubResource("UnitBox")
+
+[node name="NorthLouverEast1_3" type="MeshInstance3D" parent="CentralRoom" unique_id=776857779]
+transform = Transform3D(1.14, 0, 0, 0, 0.12, 0, 0, 0, 0.17, 5.99, 2.5, -8.81)
+material_override = SubResource("Steel")
+mesh = SubResource("UnitBox")
+
+[node name="NorthLouverEast1_4" type="MeshInstance3D" parent="CentralRoom" unique_id=220047192]
+transform = Transform3D(1.14, 0, 0, 0, 0.12, 0, 0, 0, 0.17, 5.99, 2.9, -8.81)
+material_override = SubResource("Steel")
+mesh = SubResource("UnitBox")
+
+[node name="NorthLouverEast1_5" type="MeshInstance3D" parent="CentralRoom" unique_id=1855858428]
+transform = Transform3D(1.14, 0, 0, 0, 0.12, 0, 0, 0, 0.17, 5.99, 3.3, -8.81)
+material_override = SubResource("Steel")
+mesh = SubResource("UnitBox")
+
+[node name="NorthLouverEast1_6" type="MeshInstance3D" parent="CentralRoom" unique_id=2141748957]
+transform = Transform3D(1.14, 0, 0, 0, 0.12, 0, 0, 0, 0.17, 5.99, 3.7, -8.81)
+material_override = SubResource("Steel")
+mesh = SubResource("UnitBox")
+
+[node name="NorthGrilleEast2" type="MeshInstance3D" parent="CentralRoom" unique_id=1276197306]
+transform = Transform3D(1.26, 0, 0, 0, 3.18, 0, 0, 0, 0.13, 7.63, 2.55, -8.92)
+material_override = SubResource("Rubber")
+mesh = SubResource("UnitBox")
+
+[node name="NorthLouverEast2_0" type="MeshInstance3D" parent="CentralRoom" unique_id=1455995438]
+transform = Transform3D(1.14, 0, 0, 0, 0.12, 0, 0, 0, 0.17, 7.63, 1.3, -8.81)
+material_override = SubResource("Steel")
+mesh = SubResource("UnitBox")
+
+[node name="NorthLouverEast2_1" type="MeshInstance3D" parent="CentralRoom" unique_id=334520599]
+transform = Transform3D(1.14, 0, 0, 0, 0.12, 0, 0, 0, 0.17, 7.63, 1.7, -8.81)
+material_override = SubResource("Steel")
+mesh = SubResource("UnitBox")
+
+[node name="NorthLouverEast2_2" type="MeshInstance3D" parent="CentralRoom" unique_id=883947446]
+transform = Transform3D(1.14, 0, 0, 0, 0.12, 0, 0, 0, 0.17, 7.63, 2.1, -8.81)
+material_override = SubResource("Steel")
+mesh = SubResource("UnitBox")
+
+[node name="NorthLouverEast2_3" type="MeshInstance3D" parent="CentralRoom" unique_id=148071189]
+transform = Transform3D(1.14, 0, 0, 0, 0.12, 0, 0, 0, 0.17, 7.63, 2.5, -8.81)
+material_override = SubResource("Steel")
+mesh = SubResource("UnitBox")
+
+[node name="NorthLouverEast2_4" type="MeshInstance3D" parent="CentralRoom" unique_id=1172180786]
+transform = Transform3D(1.14, 0, 0, 0, 0.12, 0, 0, 0, 0.17, 7.63, 2.9, -8.81)
+material_override = SubResource("Steel")
+mesh = SubResource("UnitBox")
+
+[node name="NorthLouverEast2_5" type="MeshInstance3D" parent="CentralRoom" unique_id=154172990]
+transform = Transform3D(1.14, 0, 0, 0, 0.12, 0, 0, 0, 0.17, 7.63, 3.3, -8.81)
+material_override = SubResource("Steel")
+mesh = SubResource("UnitBox")
+
+[node name="NorthLouverEast2_6" type="MeshInstance3D" parent="CentralRoom" unique_id=1680362217]
+transform = Transform3D(1.14, 0, 0, 0, 0.12, 0, 0, 0, 0.17, 7.63, 3.7, -8.81)
+material_override = SubResource("Steel")
+mesh = SubResource("UnitBox")
+
+[node name="NorthSkirtEast" type="MeshInstance3D" parent="CentralRoom" unique_id=2089574653]
+transform = Transform3D(7.56, 0, 0, 0, 0.84, 0, 0, 0, 0.32, 6.68, 0.42, -8.83)
+material_override = SubResource("Concrete")
+mesh = SubResource("UnitBox")
+
+[node name="ServiceConduitEast" type="MeshInstance3D" parent="CentralRoom" unique_id=558276999]
+transform = Transform3D(0.27, 0, 0, 0, 0.32, 0, 0, 0, 17.7, 10.28, 5.55, 0.15)
+material_override = SubResource("Steel")
+mesh = SubResource("UnitBox")
+
+[node name="ConduitTrackEast" type="MeshInstance3D" parent="CentralRoom" unique_id=1548934911]
+transform = Transform3D(0.08, 0, 0, 0, 0.075, 0, 0, 0, 17.7, 10.13, 5.48, 0.15)
+material_override = SubResource("SafetyPaint")
+mesh = SubResource("UnitBox")
+
+[node name="NorthUpperWall" type="CSGBox3D" parent="CentralRoom" unique_id=729196364]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 6.16, -9.27)
+use_collision = true
+size = Vector3(5.6, 2.72, 0.54)
+material = SubResource("Concrete")
+
+[node name="RoofBeam0" type="MeshInstance3D" parent="CentralRoom" unique_id=234454004]
+transform = Transform3D(20.95, 0, 0, 0, 0.76, 0, 0, 0, 0.78, 0, 6.72, -5.6)
+material_override = SubResource("Steel")
+mesh = SubResource("UnitBox")
+
+[node name="RoofBeamTrim0" type="MeshInstance3D" parent="CentralRoom" unique_id=125325354]
+transform = Transform3D(17.95, 0, 0, 0, 0.12, 0, 0, 0, 0.37, 0, 6.28, -5.6)
+material_override = SubResource("Frame")
+mesh = SubResource("UnitBox")
+
+[node name="RoofLightMount0_-1" type="MeshInstance3D" parent="CentralRoom" unique_id=1251275254]
+transform = Transform3D(3.2, 0, 0, 0, 0.25, 0, 0, 0, 0.71, -4.15, 6.17, -5.6)
+material_override = SubResource("Rubber")
+mesh = SubResource("UnitBox")
+
+[node name="RoofLight0_-1" type="MeshInstance3D" parent="CentralRoom" unique_id=630580557]
+transform = Transform3D(2.86, 0, 0, 0, 0.075, 0, 0, 0, 0.32, -4.15, 6.02, -5.6)
+material_override = SubResource("WarmLamp")
+mesh = SubResource("UnitBox")
+
+[node name="RoofLightMount0_1" type="MeshInstance3D" parent="CentralRoom" unique_id=365437622]
+transform = Transform3D(3.2, 0, 0, 0, 0.25, 0, 0, 0, 0.71, 4.15, 6.17, -5.6)
+material_override = SubResource("Rubber")
+mesh = SubResource("UnitBox")
+
+[node name="RoofLight0_1" type="MeshInstance3D" parent="CentralRoom" unique_id=1702713173]
+transform = Transform3D(2.86, 0, 0, 0, 0.075, 0, 0, 0, 0.32, 4.15, 6.02, -5.6)
+material_override = SubResource("WarmLamp")
+mesh = SubResource("UnitBox")
+
+[node name="RoofBeam1" type="MeshInstance3D" parent="CentralRoom" unique_id=1191757059]
+transform = Transform3D(20.95, 0, 0, 0, 0.76, 0, 0, 0, 0.78, 0, 6.72, 0)
+material_override = SubResource("Steel")
+mesh = SubResource("UnitBox")
+
+[node name="RoofBeamTrim1" type="MeshInstance3D" parent="CentralRoom" unique_id=2114667717]
+transform = Transform3D(17.95, 0, 0, 0, 0.12, 0, 0, 0, 0.37, 0, 6.28, 0)
+material_override = SubResource("Frame")
+mesh = SubResource("UnitBox")
+
+[node name="RoofLightMount1_-1" type="MeshInstance3D" parent="CentralRoom" unique_id=387810469]
+transform = Transform3D(3.2, 0, 0, 0, 0.25, 0, 0, 0, 0.71, -4.15, 6.17, 0)
+material_override = SubResource("Rubber")
+mesh = SubResource("UnitBox")
+
+[node name="RoofLight1_-1" type="MeshInstance3D" parent="CentralRoom" unique_id=439043757]
+transform = Transform3D(2.86, 0, 0, 0, 0.075, 0, 0, 0, 0.32, -4.15, 6.02, 0)
+material_override = SubResource("WarmLamp")
+mesh = SubResource("UnitBox")
+
+[node name="RoofLightMount1_1" type="MeshInstance3D" parent="CentralRoom" unique_id=1178662294]
+transform = Transform3D(3.2, 0, 0, 0, 0.25, 0, 0, 0, 0.71, 4.15, 6.17, 0)
+material_override = SubResource("Rubber")
+mesh = SubResource("UnitBox")
+
+[node name="RoofLight1_1" type="MeshInstance3D" parent="CentralRoom" unique_id=862172411]
+transform = Transform3D(2.86, 0, 0, 0, 0.075, 0, 0, 0, 0.32, 4.15, 6.02, 0)
+material_override = SubResource("WarmLamp")
+mesh = SubResource("UnitBox")
+
+[node name="RoofBeam2" type="MeshInstance3D" parent="CentralRoom" unique_id=954069393]
+transform = Transform3D(20.95, 0, 0, 0, 0.76, 0, 0, 0, 0.78, 0, 6.72, 5.6)
+material_override = SubResource("Steel")
+mesh = SubResource("UnitBox")
+
+[node name="RoofBeamTrim2" type="MeshInstance3D" parent="CentralRoom" unique_id=397768727]
+transform = Transform3D(17.95, 0, 0, 0, 0.12, 0, 0, 0, 0.37, 0, 6.28, 5.6)
+material_override = SubResource("Frame")
+mesh = SubResource("UnitBox")
+
+[node name="RoofLightMount2_-1" type="MeshInstance3D" parent="CentralRoom" unique_id=58367558]
+transform = Transform3D(3.2, 0, 0, 0, 0.25, 0, 0, 0, 0.71, -4.15, 6.17, 5.6)
+material_override = SubResource("Rubber")
+mesh = SubResource("UnitBox")
+
+[node name="RoofLight2_-1" type="MeshInstance3D" parent="CentralRoom" unique_id=1754495022]
+transform = Transform3D(2.86, 0, 0, 0, 0.075, 0, 0, 0, 0.32, -4.15, 6.02, 5.6)
+material_override = SubResource("ColdLamp")
+mesh = SubResource("UnitBox")
+
+[node name="RoofLightMount2_1" type="MeshInstance3D" parent="CentralRoom" unique_id=552792888]
+transform = Transform3D(3.2, 0, 0, 0, 0.25, 0, 0, 0, 0.71, 4.15, 6.17, 5.6)
+material_override = SubResource("Rubber")
+mesh = SubResource("UnitBox")
+
+[node name="RoofLight2_1" type="MeshInstance3D" parent="CentralRoom" unique_id=540245405]
+transform = Transform3D(2.86, 0, 0, 0, 0.075, 0, 0, 0, 0.32, 4.15, 6.02, 5.6)
+material_override = SubResource("ColdLamp")
+mesh = SubResource("UnitBox")
+
+[node name="TransferDeck" type="CSGPolygon3D" parent="CentralRoom" unique_id=1646171066]
+transform = Transform3D(1, 0, 0, 0, -3.6199901e-06, 1, 0, -1, -3.6199901e-06, 0, 0.065, 0)
+polygon = PackedVector2Array(-3.9, 1.8, -2.8, 2.9, 2.8, 2.9, 3.9, 1.8, 3.9, -1.8, 2.8, -2.9, -2.8, -2.9, -3.9, -1.8)
+depth = 0.105
+material = SubResource("Frame")
+
+[node name="TransferDeckInset" type="CSGPolygon3D" parent="CentralRoom" unique_id=180364570]
+transform = Transform3D(1, 0, 0, 0, -3.6199901e-06, 1, 0, -1, -3.6199901e-06, 0, 0.073, 0)
+polygon = PackedVector2Array(-3.549, 1.584, -2.548, 2.552, 2.548, 2.552, 3.549, 1.584, 3.549, -1.584, 2.548, -2.552, -2.548, -2.552, -3.549, -1.584)
+depth = 0.04
+material = SubResource("Rubber")
+
+[node name="TransferDeckPlate" type="CSGPolygon3D" parent="CentralRoom" unique_id=987225517]
+transform = Transform3D(1, 0, 0, 0, -3.6199901e-06, 1, 0, -1, -3.6199901e-06, 0, 0.082, 0)
+polygon = PackedVector2Array(-3.393, 1.494, -2.436, 2.407, 2.436, 2.407, 3.393, 1.494, 3.393, -1.494, 2.436, -2.407, -2.436, -2.407, -3.393, -1.494)
+depth = 0.04
+material = SubResource("Steel")
+
+[node name="TransferDeckBus-1" type="MeshInstance3D" parent="CentralRoom" unique_id=407963485]
+transform = Transform3D(0.13, 0, 0, 0, 0.015, 0, 0, 0, 4.18, -2.16, 0.089, 0)
+material_override = SubResource("SafetyPaint")
+mesh = SubResource("UnitBox")
+
+[node name="TransferDeckLamp-1_0" type="MeshInstance3D" parent="CentralRoom" unique_id=1443342617]
+transform = Transform3D(0.2, 0, 0, 0, 0.019, 0, 0, 0, 0.33, -3.1, 0.089, -1.005)
+material_override = SubResource("ColdLamp")
+mesh = SubResource("UnitBox")
+
+[node name="TransferDeckLamp-1_1" type="MeshInstance3D" parent="CentralRoom" unique_id=1397827152]
+transform = Transform3D(0.2, 0, 0, 0, 0.019, 0, 0, 0, 0.33, -3.1, 0.089, -0.335)
+material_override = SubResource("ColdLamp")
+mesh = SubResource("UnitBox")
+
+[node name="TransferDeckLamp-1_2" type="MeshInstance3D" parent="CentralRoom" unique_id=932059774]
+transform = Transform3D(0.2, 0, 0, 0, 0.019, 0, 0, 0, 0.33, -3.1, 0.089, 0.335)
+material_override = SubResource("ColdLamp")
+mesh = SubResource("UnitBox")
+
+[node name="TransferDeckLamp-1_3" type="MeshInstance3D" parent="CentralRoom" unique_id=1933333160]
+transform = Transform3D(0.2, 0, 0, 0, 0.019, 0, 0, 0, 0.33, -3.1, 0.089, 1.005)
+material_override = SubResource("ColdLamp")
+mesh = SubResource("UnitBox")
+
+[node name="NorthPath-1" type="MeshInstance3D" parent="CentralRoom" unique_id=298149486]
+transform = Transform3D(0.085, 0, 0, 0, 0.022, 0, 0, 0, 5.77, -1.55, 0.013, -5.95)
+material_override = SubResource("GuidePaint")
+mesh = SubResource("UnitBox")
+
+[node name="NorthPathGuard-1" type="MeshInstance3D" parent="CentralRoom" unique_id=1276798098]
+transform = Transform3D(0.047, 0, 0, 0, 0.022, 0, 0, 0, 5.77, -1.71, 0.012, -5.95)
+material_override = SubResource("Rubber")
+mesh = SubResource("UnitBox")
+
+[node name="TransferDeckBus1" type="MeshInstance3D" parent="CentralRoom" unique_id=1461217727]
+transform = Transform3D(0.13, 0, 0, 0, 0.015, 0, 0, 0, 4.18, 2.16, 0.089, 0)
+material_override = SubResource("SafetyPaint")
+mesh = SubResource("UnitBox")
+
+[node name="TransferDeckLamp1_0" type="MeshInstance3D" parent="CentralRoom" unique_id=400405200]
+transform = Transform3D(0.2, 0, 0, 0, 0.019, 0, 0, 0, 0.33, 3.1, 0.089, -1.005)
+material_override = SubResource("ColdLamp")
+mesh = SubResource("UnitBox")
+
+[node name="TransferDeckLamp1_1" type="MeshInstance3D" parent="CentralRoom" unique_id=610805277]
+transform = Transform3D(0.2, 0, 0, 0, 0.019, 0, 0, 0, 0.33, 3.1, 0.089, -0.335)
+material_override = SubResource("ColdLamp")
+mesh = SubResource("UnitBox")
+
+[node name="TransferDeckLamp1_2" type="MeshInstance3D" parent="CentralRoom" unique_id=310882600]
+transform = Transform3D(0.2, 0, 0, 0, 0.019, 0, 0, 0, 0.33, 3.1, 0.089, 0.335)
+material_override = SubResource("ColdLamp")
+mesh = SubResource("UnitBox")
+
+[node name="TransferDeckLamp1_3" type="MeshInstance3D" parent="CentralRoom" unique_id=950492993]
+transform = Transform3D(0.2, 0, 0, 0, 0.019, 0, 0, 0, 0.33, 3.1, 0.089, 1.005)
+material_override = SubResource("ColdLamp")
+mesh = SubResource("UnitBox")
+
+[node name="NorthPath1" type="MeshInstance3D" parent="CentralRoom" unique_id=1114554472]
+transform = Transform3D(0.085, 0, 0, 0, 0.022, 0, 0, 0, 5.77, 1.55, 0.013, -5.95)
+material_override = SubResource("GuidePaint")
+mesh = SubResource("UnitBox")
+
+[node name="NorthPathGuard1" type="MeshInstance3D" parent="CentralRoom" unique_id=2034614341]
+transform = Transform3D(0.047, 0, 0, 0, 0.022, 0, 0, 0, 5.77, 1.71, 0.012, -5.95)
+material_override = SubResource("Rubber")
+mesh = SubResource("UnitBox")
+
+[node name="LateralPath-1_-1" type="MeshInstance3D" parent="CentralRoom" unique_id=2080393541]
+transform = Transform3D(6.05, 0, 0, 0, 0.022, 0, 0, 0, 0.085, -7.16, 0.013, -5.13)
+material_override = SubResource("GuidePaint")
+mesh = SubResource("UnitBox")
+
+[node name="LateralPathGuard-1_-1" type="MeshInstance3D" parent="CentralRoom" unique_id=1877209550]
+transform = Transform3D(6.05, 0, 0, 0, 0.022, 0, 0, 0, 0.047, -7.16, 0.012, -5.29)
+material_override = SubResource("Rubber")
+mesh = SubResource("UnitBox")
+
+[node name="LateralPath-1_1" type="MeshInstance3D" parent="CentralRoom" unique_id=1037291330]
+transform = Transform3D(6.05, 0, 0, 0, 0.022, 0, 0, 0, 0.085, -7.16, 0.013, -2.07)
+material_override = SubResource("GuidePaint")
+mesh = SubResource("UnitBox")
+
+[node name="LateralPathGuard-1_1" type="MeshInstance3D" parent="CentralRoom" unique_id=1719634975]
+transform = Transform3D(6.05, 0, 0, 0, 0.022, 0, 0, 0, 0.047, -7.16, 0.012, -1.91)
+material_override = SubResource("Rubber")
+mesh = SubResource("UnitBox")
+
+[node name="LateralPath1_-1" type="MeshInstance3D" parent="CentralRoom" unique_id=515118496]
+transform = Transform3D(6.05, 0, 0, 0, 0.022, 0, 0, 0, 0.085, 7.16, 0.013, -5.13)
+material_override = SubResource("SafetyPaint")
+mesh = SubResource("UnitBox")
+
+[node name="LateralPathGuard1_-1" type="MeshInstance3D" parent="CentralRoom" unique_id=1036219206]
+transform = Transform3D(6.05, 0, 0, 0, 0.022, 0, 0, 0, 0.047, 7.16, 0.012, -5.29)
+material_override = SubResource("Rubber")
+mesh = SubResource("UnitBox")
+
+[node name="LateralPath1_1" type="MeshInstance3D" parent="CentralRoom" unique_id=2026658123]
+transform = Transform3D(6.05, 0, 0, 0, 0.022, 0, 0, 0, 0.085, 7.16, 0.013, -2.07)
+material_override = SubResource("SafetyPaint")
+mesh = SubResource("UnitBox")
+
+[node name="LateralPathGuard1_1" type="MeshInstance3D" parent="CentralRoom" unique_id=985549739]
+transform = Transform3D(6.05, 0, 0, 0, 0.022, 0, 0, 0, 0.047, 7.16, 0.012, -1.91)
+material_override = SubResource("Rubber")
+mesh = SubResource("UnitBox")
+
+[node name="RearDrain0" type="MeshInstance3D" parent="CentralRoom" unique_id=1284451172]
+transform = Transform3D(1.05, 0, 0, 0, 0.019, 0, 0, 0, 2.85, -7, 0.011, 4.3)
+material_override = SubResource("Rubber")
+mesh = SubResource("UnitBox")
+
+[node name="RearDrainBar0_0" type="MeshInstance3D" parent="CentralRoom" unique_id=1488758410]
+transform = Transform3D(0.94, 0, 0, 0, 0.026, 0, 0, 0, 0.11, -7, 0.023, 3.07)
+material_override = SubResource("Frame")
+mesh = SubResource("UnitBox")
+
+[node name="RearDrainBar0_1" type="MeshInstance3D" parent="CentralRoom" unique_id=155623813]
+transform = Transform3D(0.94, 0, 0, 0, 0.026, 0, 0, 0, 0.11, -7, 0.023, 3.37)
+material_override = SubResource("Frame")
+mesh = SubResource("UnitBox")
+
+[node name="RearDrainBar0_2" type="MeshInstance3D" parent="CentralRoom" unique_id=1711487945]
+transform = Transform3D(0.94, 0, 0, 0, 0.026, 0, 0, 0, 0.11, -7, 0.023, 3.67)
+material_override = SubResource("Frame")
+mesh = SubResource("UnitBox")
+
+[node name="RearDrainBar0_3" type="MeshInstance3D" parent="CentralRoom" unique_id=332444877]
+transform = Transform3D(0.94, 0, 0, 0, 0.026, 0, 0, 0, 0.11, -7, 0.023, 3.97)
+material_override = SubResource("Frame")
+mesh = SubResource("UnitBox")
+
+[node name="RearDrainBar0_4" type="MeshInstance3D" parent="CentralRoom" unique_id=1454784496]
+transform = Transform3D(0.94, 0, 0, 0, 0.026, 0, 0, 0, 0.11, -7, 0.023, 4.27)
+material_override = SubResource("Frame")
+mesh = SubResource("UnitBox")
+
+[node name="RearDrainBar0_5" type="MeshInstance3D" parent="CentralRoom" unique_id=1492553204]
+transform = Transform3D(0.94, 0, 0, 0, 0.026, 0, 0, 0, 0.11, -7, 0.023, 4.57)
+material_override = SubResource("Frame")
+mesh = SubResource("UnitBox")
+
+[node name="RearDrainBar0_6" type="MeshInstance3D" parent="CentralRoom" unique_id=862343467]
+transform = Transform3D(0.94, 0, 0, 0, 0.026, 0, 0, 0, 0.11, -7, 0.023, 4.87)
+material_override = SubResource("Frame")
+mesh = SubResource("UnitBox")
+
+[node name="RearDrainBar0_7" type="MeshInstance3D" parent="CentralRoom" unique_id=1591365819]
+transform = Transform3D(0.94, 0, 0, 0, 0.026, 0, 0, 0, 0.11, -7, 0.023, 5.17)
+material_override = SubResource("Frame")
+mesh = SubResource("UnitBox")
+
+[node name="RearDrainBar0_8" type="MeshInstance3D" parent="CentralRoom" unique_id=1025231694]
+transform = Transform3D(0.94, 0, 0, 0, 0.026, 0, 0, 0, 0.11, -7, 0.023, 5.47)
+material_override = SubResource("Frame")
+mesh = SubResource("UnitBox")
+
+[node name="RearDrain1" type="MeshInstance3D" parent="CentralRoom" unique_id=1527415205]
+transform = Transform3D(1.05, 0, 0, 0, 0.019, 0, 0, 0, 2.85, -5.3, 0.011, 4.3)
+material_override = SubResource("Rubber")
+mesh = SubResource("UnitBox")
+
+[node name="RearDrainBar1_0" type="MeshInstance3D" parent="CentralRoom" unique_id=1368333775]
+transform = Transform3D(0.94, 0, 0, 0, 0.026, 0, 0, 0, 0.11, -5.3, 0.023, 3.07)
+material_override = SubResource("Frame")
+mesh = SubResource("UnitBox")
+
+[node name="RearDrainBar1_1" type="MeshInstance3D" parent="CentralRoom" unique_id=175900639]
+transform = Transform3D(0.94, 0, 0, 0, 0.026, 0, 0, 0, 0.11, -5.3, 0.023, 3.37)
+material_override = SubResource("Frame")
+mesh = SubResource("UnitBox")
+
+[node name="RearDrainBar1_2" type="MeshInstance3D" parent="CentralRoom" unique_id=2015422332]
+transform = Transform3D(0.94, 0, 0, 0, 0.026, 0, 0, 0, 0.11, -5.3, 0.023, 3.67)
+material_override = SubResource("Frame")
+mesh = SubResource("UnitBox")
+
+[node name="RearDrainBar1_3" type="MeshInstance3D" parent="CentralRoom" unique_id=1185334880]
+transform = Transform3D(0.94, 0, 0, 0, 0.026, 0, 0, 0, 0.11, -5.3, 0.023, 3.97)
+material_override = SubResource("Frame")
+mesh = SubResource("UnitBox")
+
+[node name="RearDrainBar1_4" type="MeshInstance3D" parent="CentralRoom" unique_id=1281981926]
+transform = Transform3D(0.94, 0, 0, 0, 0.026, 0, 0, 0, 0.11, -5.3, 0.023, 4.27)
+material_override = SubResource("Frame")
+mesh = SubResource("UnitBox")
+
+[node name="RearDrainBar1_5" type="MeshInstance3D" parent="CentralRoom" unique_id=1776072881]
+transform = Transform3D(0.94, 0, 0, 0, 0.026, 0, 0, 0, 0.11, -5.3, 0.023, 4.57)
+material_override = SubResource("Frame")
+mesh = SubResource("UnitBox")
+
+[node name="RearDrainBar1_6" type="MeshInstance3D" parent="CentralRoom" unique_id=442905161]
+transform = Transform3D(0.94, 0, 0, 0, 0.026, 0, 0, 0, 0.11, -5.3, 0.023, 4.87)
+material_override = SubResource("Frame")
+mesh = SubResource("UnitBox")
+
+[node name="RearDrainBar1_7" type="MeshInstance3D" parent="CentralRoom" unique_id=2040653217]
+transform = Transform3D(0.94, 0, 0, 0, 0.026, 0, 0, 0, 0.11, -5.3, 0.023, 5.17)
+material_override = SubResource("Frame")
+mesh = SubResource("UnitBox")
+
+[node name="RearDrainBar1_8" type="MeshInstance3D" parent="CentralRoom" unique_id=954905040]
+transform = Transform3D(0.94, 0, 0, 0, 0.026, 0, 0, 0, 0.11, -5.3, 0.023, 5.47)
+material_override = SubResource("Frame")
+mesh = SubResource("UnitBox")
+
+[node name="RearDrain2" type="MeshInstance3D" parent="CentralRoom" unique_id=924562540]
+transform = Transform3D(1.05, 0, 0, 0, 0.019, 0, 0, 0, 2.85, 5.3, 0.011, 4.3)
+material_override = SubResource("Rubber")
+mesh = SubResource("UnitBox")
+
+[node name="RearDrainBar2_0" type="MeshInstance3D" parent="CentralRoom" unique_id=430762533]
+transform = Transform3D(0.94, 0, 0, 0, 0.026, 0, 0, 0, 0.11, 5.3, 0.023, 3.07)
+material_override = SubResource("Frame")
+mesh = SubResource("UnitBox")
+
+[node name="RearDrainBar2_1" type="MeshInstance3D" parent="CentralRoom" unique_id=1143687705]
+transform = Transform3D(0.94, 0, 0, 0, 0.026, 0, 0, 0, 0.11, 5.3, 0.023, 3.37)
+material_override = SubResource("Frame")
+mesh = SubResource("UnitBox")
+
+[node name="RearDrainBar2_2" type="MeshInstance3D" parent="CentralRoom" unique_id=1197038997]
+transform = Transform3D(0.94, 0, 0, 0, 0.026, 0, 0, 0, 0.11, 5.3, 0.023, 3.67)
+material_override = SubResource("Frame")
+mesh = SubResource("UnitBox")
+
+[node name="RearDrainBar2_3" type="MeshInstance3D" parent="CentralRoom" unique_id=1564072735]
+transform = Transform3D(0.94, 0, 0, 0, 0.026, 0, 0, 0, 0.11, 5.3, 0.023, 3.97)
+material_override = SubResource("Frame")
+mesh = SubResource("UnitBox")
+
+[node name="RearDrainBar2_4" type="MeshInstance3D" parent="CentralRoom" unique_id=2095188494]
+transform = Transform3D(0.94, 0, 0, 0, 0.026, 0, 0, 0, 0.11, 5.3, 0.023, 4.27)
+material_override = SubResource("Frame")
+mesh = SubResource("UnitBox")
+
+[node name="RearDrainBar2_5" type="MeshInstance3D" parent="CentralRoom" unique_id=276985261]
+transform = Transform3D(0.94, 0, 0, 0, 0.026, 0, 0, 0, 0.11, 5.3, 0.023, 4.57)
+material_override = SubResource("Frame")
+mesh = SubResource("UnitBox")
+
+[node name="RearDrainBar2_6" type="MeshInstance3D" parent="CentralRoom" unique_id=1604674807]
+transform = Transform3D(0.94, 0, 0, 0, 0.026, 0, 0, 0, 0.11, 5.3, 0.023, 4.87)
+material_override = SubResource("Frame")
+mesh = SubResource("UnitBox")
+
+[node name="RearDrainBar2_7" type="MeshInstance3D" parent="CentralRoom" unique_id=1624141813]
+transform = Transform3D(0.94, 0, 0, 0, 0.026, 0, 0, 0, 0.11, 5.3, 0.023, 5.17)
+material_override = SubResource("Frame")
+mesh = SubResource("UnitBox")
+
+[node name="RearDrainBar2_8" type="MeshInstance3D" parent="CentralRoom" unique_id=1783039615]
+transform = Transform3D(0.94, 0, 0, 0, 0.026, 0, 0, 0, 0.11, 5.3, 0.023, 5.47)
+material_override = SubResource("Frame")
+mesh = SubResource("UnitBox")
+
+[node name="RearDrain3" type="MeshInstance3D" parent="CentralRoom" unique_id=1578070129]
+transform = Transform3D(1.05, 0, 0, 0, 0.019, 0, 0, 0, 2.85, 7, 0.011, 4.3)
+material_override = SubResource("Rubber")
+mesh = SubResource("UnitBox")
+
+[node name="RearDrainBar3_0" type="MeshInstance3D" parent="CentralRoom" unique_id=669848062]
+transform = Transform3D(0.94, 0, 0, 0, 0.026, 0, 0, 0, 0.11, 7, 0.023, 3.07)
+material_override = SubResource("Frame")
+mesh = SubResource("UnitBox")
+
+[node name="RearDrainBar3_1" type="MeshInstance3D" parent="CentralRoom" unique_id=750002509]
+transform = Transform3D(0.94, 0, 0, 0, 0.026, 0, 0, 0, 0.11, 7, 0.023, 3.37)
+material_override = SubResource("Frame")
+mesh = SubResource("UnitBox")
+
+[node name="RearDrainBar3_2" type="MeshInstance3D" parent="CentralRoom" unique_id=456185854]
+transform = Transform3D(0.94, 0, 0, 0, 0.026, 0, 0, 0, 0.11, 7, 0.023, 3.67)
+material_override = SubResource("Frame")
+mesh = SubResource("UnitBox")
+
+[node name="RearDrainBar3_3" type="MeshInstance3D" parent="CentralRoom" unique_id=140916321]
+transform = Transform3D(0.94, 0, 0, 0, 0.026, 0, 0, 0, 0.11, 7, 0.023, 3.97)
+material_override = SubResource("Frame")
+mesh = SubResource("UnitBox")
+
+[node name="RearDrainBar3_4" type="MeshInstance3D" parent="CentralRoom" unique_id=1240675088]
+transform = Transform3D(0.94, 0, 0, 0, 0.026, 0, 0, 0, 0.11, 7, 0.023, 4.27)
+material_override = SubResource("Frame")
+mesh = SubResource("UnitBox")
+
+[node name="RearDrainBar3_5" type="MeshInstance3D" parent="CentralRoom" unique_id=1846478475]
+transform = Transform3D(0.94, 0, 0, 0, 0.026, 0, 0, 0, 0.11, 7, 0.023, 4.57)
+material_override = SubResource("Frame")
+mesh = SubResource("UnitBox")
+
+[node name="RearDrainBar3_6" type="MeshInstance3D" parent="CentralRoom" unique_id=1482533521]
+transform = Transform3D(0.94, 0, 0, 0, 0.026, 0, 0, 0, 0.11, 7, 0.023, 4.87)
+material_override = SubResource("Frame")
+mesh = SubResource("UnitBox")
+
+[node name="RearDrainBar3_7" type="MeshInstance3D" parent="CentralRoom" unique_id=1194968837]
+transform = Transform3D(0.94, 0, 0, 0, 0.026, 0, 0, 0, 0.11, 7, 0.023, 5.17)
+material_override = SubResource("Frame")
+mesh = SubResource("UnitBox")
+
+[node name="RearDrainBar3_8" type="MeshInstance3D" parent="CentralRoom" unique_id=660391328]
+transform = Transform3D(0.94, 0, 0, 0, 0.026, 0, 0, 0, 0.11, 7, 0.023, 5.47)
+material_override = SubResource("Frame")
+mesh = SubResource("UnitBox")
+
+[node name="NorthLButtress" type="MeshInstance3D" parent="CentralRoom" unique_id=1854043359]
+transform = Transform3D(1.09, 0, 0, 0, 4.42, 0, 0, 0, 1.12, -3.28, 2.21, -8.86)
+material_override = SubResource("Concrete")
+mesh = SubResource("UnitBox")
+
+[node name="NorthLJamb" type="MeshInstance3D" parent="CentralRoom" unique_id=1865298600]
+transform = Transform3D(0.38, 0, 0, 0, 3.58, 0, 0, 0, 0.86, -2.61, 1.79, -8.8)
+material_override = SubResource("Frame")
+mesh = SubResource("UnitBox")
+
+[node name="NorthLHaunch" type="MeshInstance3D" parent="CentralRoom" unique_id=1064828166]
+transform = Transform3D(0.29698431, 1.0323778, 0, -0.2969854, 1.032374, 0, 0, 0, 0.86, -2.13, 4.07, -8.8)
+material_override = SubResource("Frame")
+mesh = SubResource("UnitBox")
+
+[node name="NorthLLampCage" type="MeshInstance3D" parent="CentralRoom" unique_id=253559377]
+transform = Transform3D(0.55, 0, 0, 0, 1.54, 0, 0, 0, 0.28, -3.21, 2.67, -8.24)
+material_override = SubResource("Rubber")
+mesh = SubResource("UnitBox")
+
+[node name="NorthLLamp" type="MeshInstance3D" parent="CentralRoom" unique_id=927668779]
+transform = Transform3D(0.15, 0, 0, 0, 1.1, 0, 0, 0, 0.085, -3.21, 2.67, -8.08)
+material_override = SubResource("WarmLamp")
+mesh = SubResource("UnitBox")
+
+[node name="NorthLSafetyPanel" type="MeshInstance3D" parent="CentralRoom" unique_id=1243298468]
+transform = Transform3D(0.55, 0, 0, 0, 0.71, 0, 0, 0, 0.12, -3.21, 0.75, -8.23)
+material_override = SubResource("GuidePaint")
+mesh = SubResource("UnitBox")
+
+[node name="NorthRButtress" type="MeshInstance3D" parent="CentralRoom" unique_id=199408312]
+transform = Transform3D(1.09, 0, 0, 0, 4.42, 0, 0, 0, 1.12, 3.28, 2.21, -8.86)
+material_override = SubResource("Concrete")
+mesh = SubResource("UnitBox")
+
+[node name="NorthRJamb" type="MeshInstance3D" parent="CentralRoom" unique_id=1655008956]
+transform = Transform3D(0.38, 0, 0, 0, 3.58, 0, 0, 0, 0.86, 2.61, 1.79, -8.8)
+material_override = SubResource("Frame")
+mesh = SubResource("UnitBox")
+
+[node name="NorthRHaunch" type="MeshInstance3D" parent="CentralRoom" unique_id=1362063934]
+transform = Transform3D(0.29698431, -1.0323778, 0, 0.2969854, 1.032374, 0, 0, 0, 0.86, 2.13, 4.07, -8.8)
+material_override = SubResource("Frame")
+mesh = SubResource("UnitBox")
+
+[node name="NorthRLampCage" type="MeshInstance3D" parent="CentralRoom" unique_id=380381909]
+transform = Transform3D(0.55, 0, 0, 0, 1.54, 0, 0, 0, 0.28, 3.21, 2.67, -8.24)
+material_override = SubResource("Rubber")
+mesh = SubResource("UnitBox")
+
+[node name="NorthRLamp" type="MeshInstance3D" parent="CentralRoom" unique_id=1190149654]
+transform = Transform3D(0.15, 0, 0, 0, 1.1, 0, 0, 0, 0.085, 3.21, 2.67, -8.08)
+material_override = SubResource("WarmLamp")
+mesh = SubResource("UnitBox")
+
+[node name="NorthRSafetyPanel" type="MeshInstance3D" parent="CentralRoom" unique_id=432066815]
+transform = Transform3D(0.55, 0, 0, 0, 0.71, 0, 0, 0, 0.12, 3.21, 0.75, -8.23)
+material_override = SubResource("GuidePaint")
+mesh = SubResource("UnitBox")
+
+[node name="NorthHeader" type="MeshInstance3D" parent="CentralRoom" unique_id=231068246]
+transform = Transform3D(4.27, 0, 0, 0, 0.78, 0, 0, 0, 0.86, 0, 4.63, -8.76)
+material_override = SubResource("Frame")
+mesh = SubResource("UnitBox")
+
+[node name="NorthHeaderFace" type="MeshInstance3D" parent="CentralRoom" unique_id=1197610893]
+transform = Transform3D(3.72, 0, 0, 0, 0.49, 0, 0, 0, 0.14, 0, 4.64, -8.29)
+material_override = SubResource("Steel")
+mesh = SubResource("UnitBox")
+
+[node name="NorthHeaderJoint" type="MeshInstance3D" parent="CentralRoom" unique_id=1787437265]
+transform = Transform3D(3.38, 0, 0, 0, 0.038, 0, 0, 0, 0.06, 0, 4.43, -8.2)
+material_override = SubResource("Rubber")
+mesh = SubResource("UnitBox")
+
+[node name="NorthHeaderFastener-1" type="MeshInstance3D" parent="CentralRoom" unique_id=367826524]
+transform = Transform3D(0.12, 0, 0, 0, 0.12, 0, 0, 0, 0.09, -1.64, 4.67, -8.19)
+material_override = SubResource("Frame")
+mesh = SubResource("UnitBox")
+
+[node name="NorthHeaderFastener1" type="MeshInstance3D" parent="CentralRoom" unique_id=398945477]
+transform = Transform3D(0.12, 0, 0, 0, 0.12, 0, 0, 0, 0.09, 1.64, 4.67, -8.19)
+material_override = SubResource("Frame")
+mesh = SubResource("UnitBox")
+
+[node name="NorthThreshold" type="MeshInstance3D" parent="CentralRoom" unique_id=304063468]
+transform = Transform3D(4.95, 0, 0, 0, 0.05, 0, 0, 0, 0.85, 0, 0.025, -8.81)
+material_override = SubResource("Frame")
+mesh = SubResource("UnitBox")
+
+[node name="NorthThresholdStripe-1" type="MeshInstance3D" parent="CentralRoom" unique_id=978341192]
+transform = Transform3D(0.14, 0, 0, 0, 0.014, 0, 0, 0, 0.67, -1.9, 0.054, -8.75)
+material_override = SubResource("GuidePaint")
+mesh = SubResource("UnitBox")
+
+[node name="NorthThresholdStripe1" type="MeshInstance3D" parent="CentralRoom" unique_id=1928947347]
+transform = Transform3D(0.14, 0, 0, 0, 0.014, 0, 0, 0, 0.67, 1.9, 0.054, -8.75)
+material_override = SubResource("GuidePaint")
+mesh = SubResource("UnitBox")
+
+[node name="EastLButtress" type="MeshInstance3D" parent="CentralRoom" unique_id=1111539478]
+transform = Transform3D(-3.9457896e-06, 0, -1.12, 0, 4.42, 0, 1.09, 0, -4.054389e-06, 10.36, 2.21, -6.88)
+material_override = SubResource("Concrete")
+mesh = SubResource("UnitBox")
+
+[node name="EastLJamb" type="MeshInstance3D" parent="CentralRoom" unique_id=1988601974]
+transform = Transform3D(-1.3755962e-06, 0, -0.86, 0, 3.58, 0, 0.38, 0, -3.1131915e-06, 10.3, 1.79, -6.21)
+material_override = SubResource("Frame")
+mesh = SubResource("UnitBox")
+
+[node name="EastLHaunch" type="MeshInstance3D" parent="CentralRoom" unique_id=1266701368]
+transform = Transform3D(-1.0750803e-06, -3.7371974e-06, -0.86, -0.2969854, 1.032374, 0, 0.29698431, 1.0323778, -3.1131915e-06, 10.3, 4.07, -5.73)
+material_override = SubResource("Frame")
+mesh = SubResource("UnitBox")
+
+[node name="EastLLampCage" type="MeshInstance3D" parent="CentralRoom" unique_id=925668563]
+transform = Transform3D(-1.9909946e-06, 0, -0.28, 0, 1.54, 0, 0.55, 0, -1.0135973e-06, 9.74, 2.67, -6.81)
+material_override = SubResource("Rubber")
+mesh = SubResource("UnitBox")
+
+[node name="EastLLamp" type="MeshInstance3D" parent="CentralRoom" unique_id=301267318]
+transform = Transform3D(-5.429985e-07, 0, -0.085, 0, 1.1, 0, 0.15, 0, -3.0769917e-07, 9.58, 2.67, -6.81)
+material_override = SubResource("WarmLamp")
+mesh = SubResource("UnitBox")
+
+[node name="EastLSafetyPanel" type="MeshInstance3D" parent="CentralRoom" unique_id=1466069164]
+transform = Transform3D(-1.9909946e-06, 0, -0.12, 0, 0.71, 0, 0.55, 0, -4.343988e-07, 9.73, 0.75, -6.81)
+material_override = SubResource("SafetyPaint")
+mesh = SubResource("UnitBox")
+
+[node name="EastRButtress" type="MeshInstance3D" parent="CentralRoom" unique_id=1195936871]
+transform = Transform3D(-3.9457896e-06, 0, -1.12, 0, 4.42, 0, 1.09, 0, -4.054389e-06, 10.36, 2.21, -0.32)
+material_override = SubResource("Concrete")
+mesh = SubResource("UnitBox")
+
+[node name="EastRJamb" type="MeshInstance3D" parent="CentralRoom" unique_id=750291973]
+transform = Transform3D(-1.3755962e-06, 0, -0.86, 0, 3.58, 0, 0.38, 0, -3.1131915e-06, 10.3, 1.79, -0.99)
+material_override = SubResource("Frame")
+mesh = SubResource("UnitBox")
+
+[node name="EastRHaunch" type="MeshInstance3D" parent="CentralRoom" unique_id=245090149]
+transform = Transform3D(-1.0750803e-06, 3.7371974e-06, -0.86, 0.2969854, 1.032374, 0, 0.29698431, -1.0323778, -3.1131915e-06, 10.3, 4.07, -1.47)
+material_override = SubResource("Frame")
+mesh = SubResource("UnitBox")
+
+[node name="EastRLampCage" type="MeshInstance3D" parent="CentralRoom" unique_id=1648850026]
+transform = Transform3D(-1.9909946e-06, 0, -0.28, 0, 1.54, 0, 0.55, 0, -1.0135973e-06, 9.74, 2.67, -0.39)
+material_override = SubResource("Rubber")
+mesh = SubResource("UnitBox")
+
+[node name="EastRLamp" type="MeshInstance3D" parent="CentralRoom" unique_id=94581563]
+transform = Transform3D(-5.429985e-07, 0, -0.085, 0, 1.1, 0, 0.15, 0, -3.0769917e-07, 9.58, 2.67, -0.39)
+material_override = SubResource("WarmLamp")
+mesh = SubResource("UnitBox")
+
+[node name="EastRSafetyPanel" type="MeshInstance3D" parent="CentralRoom" unique_id=2101398677]
+transform = Transform3D(-1.9909946e-06, 0, -0.12, 0, 0.71, 0, 0.55, 0, -4.343988e-07, 9.73, 0.75, -0.39)
+material_override = SubResource("SafetyPaint")
+mesh = SubResource("UnitBox")
+
+[node name="EastHeader" type="MeshInstance3D" parent="CentralRoom" unique_id=604262273]
+transform = Transform3D(-1.5457357e-05, 0, -0.86, 0, 0.78, 0, 4.27, 0, -3.1131915e-06, 10.26, 4.63, -3.6)
+material_override = SubResource("Frame")
+mesh = SubResource("UnitBox")
+
+[node name="EastHeaderFace" type="MeshInstance3D" parent="CentralRoom" unique_id=329193245]
+transform = Transform3D(-1.3466363e-05, 0, -0.14, 0, 0.49, 0, 3.72, 0, -5.0679864e-07, 9.79, 4.64, -3.6)
+material_override = SubResource("Steel")
+mesh = SubResource("UnitBox")
+
+[node name="EastHeaderJoint" type="MeshInstance3D" parent="CentralRoom" unique_id=1185460762]
+transform = Transform3D(-1.2235567e-05, 0, -0.06, 0, 0.038, 0, 3.38, 0, -2.171994e-07, 9.7, 4.43, -3.6)
+material_override = SubResource("Rubber")
+mesh = SubResource("UnitBox")
+
+[node name="EastHeaderFastener-1" type="MeshInstance3D" parent="CentralRoom" unique_id=427993782]
+transform = Transform3D(-4.343988e-07, 0, -0.09, 0, 0.12, 0, 0.12, 0, -3.2579914e-07, 9.69, 4.67, -5.24)
+material_override = SubResource("Frame")
+mesh = SubResource("UnitBox")
+
+[node name="EastHeaderFastener1" type="MeshInstance3D" parent="CentralRoom" unique_id=313035762]
+transform = Transform3D(-4.343988e-07, 0, -0.09, 0, 0.12, 0, 0.12, 0, -3.2579914e-07, 9.69, 4.67, -1.96)
+material_override = SubResource("Frame")
+mesh = SubResource("UnitBox")
+
+[node name="EastThreshold" type="MeshInstance3D" parent="CentralRoom" unique_id=1604361484]
+transform = Transform3D(-1.791895e-05, 0, -0.85, 0, 0.05, 0, 4.95, 0, -3.0769918e-06, 10.31, 0.025, -3.6)
+material_override = SubResource("Frame")
+mesh = SubResource("UnitBox")
+
+[node name="EastThresholdStripe-1" type="MeshInstance3D" parent="CentralRoom" unique_id=1093917442]
+transform = Transform3D(-5.0679864e-07, 0, -0.67, 0, 0.014, 0, 0.14, 0, -2.4253934e-06, 10.25, 0.054, -5.5)
+material_override = SubResource("SafetyPaint")
+mesh = SubResource("UnitBox")
+
+[node name="EastThresholdStripe1" type="MeshInstance3D" parent="CentralRoom" unique_id=1941943415]
+transform = Transform3D(-5.0679864e-07, 0, -0.67, 0, 0.014, 0, 0.14, 0, -2.4253934e-06, 10.25, 0.054, -1.7)
+material_override = SubResource("SafetyPaint")
+mesh = SubResource("UnitBox")
+
+[node name="WestLButtress" type="MeshInstance3D" parent="CentralRoom" unique_id=1228112720]
+transform = Transform3D(-3.9457896e-06, 0, 1.12, 0, 4.42, 0, -1.09, 0, -4.054389e-06, -10.36, 2.21, -0.32)
+material_override = SubResource("Concrete")
+mesh = SubResource("UnitBox")
+
+[node name="WestLJamb" type="MeshInstance3D" parent="CentralRoom" unique_id=1925249820]
+transform = Transform3D(-1.3755962e-06, 0, 0.86, 0, 3.58, 0, -0.38, 0, -3.1131915e-06, -10.3, 1.79, -0.99)
+material_override = SubResource("Frame")
+mesh = SubResource("UnitBox")
+
+[node name="WestLHaunch" type="MeshInstance3D" parent="CentralRoom" unique_id=603625270]
+transform = Transform3D(-1.0750803e-06, -3.7371974e-06, 0.86, -0.2969854, 1.032374, 0, -0.29698431, -1.0323778, -3.1131915e-06, -10.3, 4.07, -1.47)
+material_override = SubResource("Frame")
+mesh = SubResource("UnitBox")
+
+[node name="WestLLampCage" type="MeshInstance3D" parent="CentralRoom" unique_id=2109943872]
+transform = Transform3D(-1.9909946e-06, 0, 0.28, 0, 1.54, 0, -0.55, 0, -1.0135973e-06, -9.74, 2.67, -0.39)
+material_override = SubResource("Rubber")
+mesh = SubResource("UnitBox")
+
+[node name="WestLLamp" type="MeshInstance3D" parent="CentralRoom" unique_id=2119743312]
+transform = Transform3D(-5.429985e-07, 0, 0.085, 0, 1.1, 0, -0.15, 0, -3.0769917e-07, -9.58, 2.67, -0.39)
+material_override = SubResource("WarmLamp")
+mesh = SubResource("UnitBox")
+
+[node name="WestLSafetyPanel" type="MeshInstance3D" parent="CentralRoom" unique_id=1784833001]
+transform = Transform3D(-1.9909946e-06, 0, 0.12, 0, 0.71, 0, -0.55, 0, -4.343988e-07, -9.73, 0.75, -0.39)
+material_override = SubResource("GuidePaint")
+mesh = SubResource("UnitBox")
+
+[node name="WestRButtress" type="MeshInstance3D" parent="CentralRoom" unique_id=1838707864]
+transform = Transform3D(-3.9457896e-06, 0, 1.12, 0, 4.42, 0, -1.09, 0, -4.054389e-06, -10.36, 2.21, -6.88)
+material_override = SubResource("Concrete")
+mesh = SubResource("UnitBox")
+
+[node name="WestRJamb" type="MeshInstance3D" parent="CentralRoom" unique_id=1668244022]
+transform = Transform3D(-1.3755962e-06, 0, 0.86, 0, 3.58, 0, -0.38, 0, -3.1131915e-06, -10.3, 1.79, -6.21)
+material_override = SubResource("Frame")
+mesh = SubResource("UnitBox")
+
+[node name="WestRHaunch" type="MeshInstance3D" parent="CentralRoom" unique_id=1924374386]
+transform = Transform3D(-1.0750803e-06, 3.7371974e-06, 0.86, 0.2969854, 1.032374, 0, -0.29698431, 1.0323778, -3.1131915e-06, -10.3, 4.07, -5.73)
+material_override = SubResource("Frame")
+mesh = SubResource("UnitBox")
+
+[node name="WestRLampCage" type="MeshInstance3D" parent="CentralRoom" unique_id=1764088062]
+transform = Transform3D(-1.9909946e-06, 0, 0.28, 0, 1.54, 0, -0.55, 0, -1.0135973e-06, -9.74, 2.67, -6.81)
+material_override = SubResource("Rubber")
+mesh = SubResource("UnitBox")
+
+[node name="WestRLamp" type="MeshInstance3D" parent="CentralRoom" unique_id=1551132253]
+transform = Transform3D(-5.429985e-07, 0, 0.085, 0, 1.1, 0, -0.15, 0, -3.0769917e-07, -9.58, 2.67, -6.81)
+material_override = SubResource("WarmLamp")
+mesh = SubResource("UnitBox")
+
+[node name="WestRSafetyPanel" type="MeshInstance3D" parent="CentralRoom" unique_id=865191055]
+transform = Transform3D(-1.9909946e-06, 0, 0.12, 0, 0.71, 0, -0.55, 0, -4.343988e-07, -9.73, 0.75, -6.81)
+material_override = SubResource("GuidePaint")
+mesh = SubResource("UnitBox")
+
+[node name="WestHeader" type="MeshInstance3D" parent="CentralRoom" unique_id=618160465]
+transform = Transform3D(-1.5457357e-05, 0, 0.86, 0, 0.78, 0, -4.27, 0, -3.1131915e-06, -10.26, 4.63, -3.6)
+material_override = SubResource("Frame")
+mesh = SubResource("UnitBox")
+
+[node name="WestHeaderFace" type="MeshInstance3D" parent="CentralRoom" unique_id=517892448]
+transform = Transform3D(-1.3466363e-05, 0, 0.14, 0, 0.49, 0, -3.72, 0, -5.0679864e-07, -9.79, 4.64, -3.6)
+material_override = SubResource("Steel")
+mesh = SubResource("UnitBox")
+
+[node name="WestHeaderJoint" type="MeshInstance3D" parent="CentralRoom" unique_id=677920548]
+transform = Transform3D(-1.2235567e-05, 0, 0.06, 0, 0.038, 0, -3.38, 0, -2.171994e-07, -9.7, 4.43, -3.6)
+material_override = SubResource("Rubber")
+mesh = SubResource("UnitBox")
+
+[node name="WestHeaderFastener-1" type="MeshInstance3D" parent="CentralRoom" unique_id=1768165222]
+transform = Transform3D(-4.343988e-07, 0, 0.09, 0, 0.12, 0, -0.12, 0, -3.2579914e-07, -9.69, 4.67, -1.96)
+material_override = SubResource("Frame")
+mesh = SubResource("UnitBox")
+
+[node name="WestHeaderFastener1" type="MeshInstance3D" parent="CentralRoom" unique_id=1779967742]
+transform = Transform3D(-4.343988e-07, 0, 0.09, 0, 0.12, 0, -0.12, 0, -3.2579914e-07, -9.69, 4.67, -5.24)
+material_override = SubResource("Frame")
+mesh = SubResource("UnitBox")
+
+[node name="WestThreshold" type="MeshInstance3D" parent="CentralRoom" unique_id=244664167]
+transform = Transform3D(-1.791895e-05, 0, 0.85, 0, 0.05, 0, -4.95, 0, -3.0769918e-06, -10.31, 0.025, -3.6)
+material_override = SubResource("Frame")
+mesh = SubResource("UnitBox")
+
+[node name="WestThresholdStripe-1" type="MeshInstance3D" parent="CentralRoom" unique_id=812689426]
+transform = Transform3D(-5.0679864e-07, 0, 0.67, 0, 0.014, 0, -0.14, 0, -2.4253934e-06, -10.25, 0.054, -1.7)
+material_override = SubResource("GuidePaint")
+mesh = SubResource("UnitBox")
+
+[node name="WestThresholdStripe1" type="MeshInstance3D" parent="CentralRoom" unique_id=827772511]
+transform = Transform3D(-5.0679864e-07, 0, 0.67, 0, 0.014, 0, -0.14, 0, -2.4253934e-06, -10.25, 0.054, -5.5)
+material_override = SubResource("GuidePaint")
+mesh = SubResource("UnitBox")
+
+[node name="NorthTunnel" type="Node3D" parent="." unique_id=99769824]
+
+[node name="Lighting" type="Node3D" parent="NorthTunnel" unique_id=274132254]
+
+[node name="Rib0Light" type="OmniLight3D" parent="NorthTunnel/Lighting" unique_id=614582528]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3.63, -12.5)
+light_color = Color(1, 0.81, 0.6, 1)
+light_energy = 1.29
+omni_range = 7.9
+omni_attenuation = 1.25
+
+[node name="Rib1Light" type="OmniLight3D" parent="NorthTunnel/Lighting" unique_id=813194048]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.35, 3.63, -19)
+light_color = Color(0.68, 0.76, 0.79, 1)
+light_energy = 1.29
+omni_range = 7.9
+omni_attenuation = 1.25
+
+[node name="Rib2Light" type="OmniLight3D" parent="NorthTunnel/Lighting" unique_id=308627339]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.7, 3.63, -25)
+light_color = Color(1, 0.81, 0.6, 1)
+light_energy = 1.29
+omni_range = 7.9
+omni_attenuation = 1.25
+
+[node name="Rib3Light" type="OmniLight3D" parent="NorthTunnel/Lighting" unique_id=738929071]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.95, 3.63, -31)
+light_color = Color(0.68, 0.76, 0.79, 1)
+light_energy = 1.29
+omni_range = 7.9
+omni_attenuation = 1.25
+
+[node name="Rib4Light" type="OmniLight3D" parent="NorthTunnel/Lighting" unique_id=1527157530]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.2, 3.63, -37.5)
+light_color = Color(1, 0.81, 0.6, 1)
+light_energy = 1.29
+omni_range = 7.9
+omni_attenuation = 1.25
+
+[node name="Floor" type="CSGPolygon3D" parent="NorthTunnel" unique_id=737796689]
+transform = Transform3D(1, 0, 0, 0, -3.6199901e-06, 1, 0, -1, -3.6199901e-06, 0, 0, 0)
+use_collision = true
+polygon = PackedVector2Array(2.8, 9, 2.8, 15.0339, 7.5, 21.0339, 7.5, 28.757, 4, 34.757, 4, 41, -1.6, 41, -1.6, 33.243, 1.9, 27.243, 1.9, 22.9661, -2.8, 16.9661, -2.8, 9)
+depth = 0.38
+material = SubResource("Deck")
+
+[node name="Ceiling" type="CSGPolygon3D" parent="NorthTunnel" unique_id=1513450192]
+transform = Transform3D(1, 0, 0, 0, -3.6199901e-06, 1, 0, -1, -3.6199901e-06, 0, 5.07, 0)
+use_collision = true
+polygon = PackedVector2Array(2.8, 9, 2.8, 15.0339, 7.5, 21.0339, 7.5, 28.757, 4, 34.757, 4, 41, -1.6, 41, -1.6, 33.243, 1.9, 27.243, 1.9, 22.9661, -2.8, 16.9661, -2.8, 9)
+depth = 0.27
+material = SubResource("Concrete")
+
+[node name="Masonry0_0" type="CSGPolygon3D" parent="NorthTunnel" unique_id=949350355]
+transform = Transform3D(1, 0, 0, 0, -3.6199901e-06, -1, 0, 1, -3.6199901e-06, 0, 0, 0)
+instance_shader_parameters/run_axis = Vector2(0, -1)
+instance_shader_parameters/run_offset = -9.0
+use_collision = true
+polygon = PackedVector2Array(2.8, -9, 2.8, -15.0339, 3.17, -14.9062, 3.17, -9)
+depth = 4.8
+material = SubResource("ConcreteWall")
+
+[node name="Masonry0_1" type="CSGPolygon3D" parent="NorthTunnel" unique_id=1233382041]
+transform = Transform3D(1, 0, 0, 0, -3.6199901e-06, -1, 0, 1, -3.6199901e-06, 0, 0, 0)
+instance_shader_parameters/run_axis = Vector2(0.616662, -0.7872281)
+instance_shader_parameters/run_offset = -7.5278614
+use_collision = true
+polygon = PackedVector2Array(2.8, -15.0339, 7.5, -21.0339, 7.87, -20.9062, 3.17, -14.9062)
+depth = 4.8
+material = SubResource("ConcreteWall")
+
+[node name="Masonry0_2" type="CSGPolygon3D" parent="NorthTunnel" unique_id=693099929]
+transform = Transform3D(1, 0, 0, 0, -3.6199901e-06, -1, 0, 1, -3.6199901e-06, 0, 0, 0)
+instance_shader_parameters/run_axis = Vector2(0, -1)
+instance_shader_parameters/run_offset = -7.3783204
+use_collision = true
+polygon = PackedVector2Array(7.5, -21.0339, 7.5, -28.757, 7.87, -28.857, 7.87, -20.9062)
+depth = 4.8
+material = SubResource("ConcreteWall")
+
+[node name="Masonry0_3" type="CSGPolygon3D" parent="NorthTunnel" unique_id=58572835]
+transform = Transform3D(1, 0, 0, 0, -3.6199901e-06, -1, 0, 1, -3.6199901e-06, 0, 0, 0)
+instance_shader_parameters/run_axis = Vector2(-0.503871, -0.8637789)
+instance_shader_parameters/run_offset = 0.3180224
+use_collision = true
+polygon = PackedVector2Array(7.5, -28.757, 4, -34.757, 4.37, -34.857, 7.87, -28.857)
+depth = 4.8
+material = SubResource("ConcreteWall")
+
+[node name="Masonry0_4" type="CSGPolygon3D" parent="NorthTunnel" unique_id=278436654]
+transform = Transform3D(1, 0, 0, 0, -3.6199901e-06, -1, 0, 1, -3.6199901e-06, 0, 0, 0)
+instance_shader_parameters/run_axis = Vector2(0, -1)
+instance_shader_parameters/run_offset = -6.4320984
+use_collision = true
+polygon = PackedVector2Array(4, -34.757, 4, -41, 4.37, -41, 4.37, -34.857)
+depth = 4.8
+material = SubResource("ConcreteWall")
+
+[node name="Skirting0" type="CSGPolygon3D" parent="NorthTunnel" unique_id=101528282]
+transform = Transform3D(1, 0, 0, 0, -3.6199901e-06, -1, 0, 1, -3.6199901e-06, 0, 0, 0)
+polygon = PackedVector2Array(2.59, -9, 2.59, -15.1064, 7.29, -21.1064, 7.29, -28.7002, 3.79, -34.7002, 3.79, -41, 4, -41, 4, -34.757, 7.5, -28.757, 7.5, -21.0339, 2.8, -15.0339, 2.8, -9)
+depth = 0.48
+material = SubResource("Steel")
+
+[node name="Masonry1_0" type="CSGPolygon3D" parent="NorthTunnel" unique_id=1135456166]
+transform = Transform3D(1, 0, 0, 0, -3.6199901e-06, -1, 0, 1, -3.6199901e-06, 0, 0, 0)
+instance_shader_parameters/run_axis = Vector2(0, -1)
+instance_shader_parameters/run_offset = -9.0
+use_collision = true
+polygon = PackedVector2Array(-2.8, -9, -2.8, -16.9661, -3.17, -17.0938, -3.17, -9)
+depth = 4.8
+material = SubResource("ConcreteWall")
+
+[node name="Masonry1_1" type="CSGPolygon3D" parent="NorthTunnel" unique_id=387233038]
+transform = Transform3D(1, 0, 0, 0, -3.6199901e-06, -1, 0, 1, -3.6199901e-06, 0, 0, 0)
+instance_shader_parameters/run_axis = Vector2(0.616662, -0.7872281)
+instance_shader_parameters/run_offset = -3.6634363
+use_collision = true
+polygon = PackedVector2Array(-2.8, -16.9661, 1.9, -22.9661, 1.53, -23.0938, -3.17, -17.0938)
+depth = 4.8
+material = SubResource("ConcreteWall")
+
+[node name="Masonry1_2" type="CSGPolygon3D" parent="NorthTunnel" unique_id=725793879]
+transform = Transform3D(1, 0, 0, 0, -3.6199901e-06, -1, 0, 1, -3.6199901e-06, 0, 0, 0)
+instance_shader_parameters/run_axis = Vector2(0, -1)
+instance_shader_parameters/run_offset = -7.3783204
+use_collision = true
+polygon = PackedVector2Array(1.9, -22.9661, 1.9, -27.243, 1.53, -27.143, 1.53, -23.0938)
+depth = 4.8
+material = SubResource("ConcreteWall")
+
+[node name="Masonry1_3" type="CSGPolygon3D" parent="NorthTunnel" unique_id=1135109655]
+transform = Transform3D(1, 0, 0, 0, -3.6199901e-06, -1, 0, 1, -3.6199901e-06, 0, 0, 0)
+instance_shader_parameters/run_axis = Vector2(-0.503871, -0.8637789)
+instance_shader_parameters/run_offset = -2.709894
+use_collision = true
+polygon = PackedVector2Array(1.9, -27.243, -1.6, -33.243, -1.97, -33.143, 1.53, -27.143)
+depth = 4.8
+material = SubResource("ConcreteWall")
+
+[node name="Masonry1_4" type="CSGPolygon3D" parent="NorthTunnel" unique_id=1481133888]
+transform = Transform3D(1, 0, 0, 0, -3.6199901e-06, -1, 0, 1, -3.6199901e-06, 0, 0, 0)
+instance_shader_parameters/run_axis = Vector2(0, -1)
+instance_shader_parameters/run_offset = -6.4320984
+use_collision = true
+polygon = PackedVector2Array(-1.6, -33.243, -1.6, -41, -1.97, -41, -1.97, -33.143)
+depth = 4.8
+material = SubResource("ConcreteWall")
+
+[node name="Skirting1" type="CSGPolygon3D" parent="NorthTunnel" unique_id=776102299]
+transform = Transform3D(1, 0, 0, 0, -3.6199901e-06, -1, 0, 1, -3.6199901e-06, 0, 0, 0)
+polygon = PackedVector2Array(-2.59, -9, -2.59, -16.8936, 2.11, -22.8936, 2.11, -27.2998, -1.39, -33.2998, -1.39, -41, -1.6, -41, -1.6, -33.243, 1.9, -27.243, 1.9, -22.9661, -2.8, -16.9661, -2.8, -9)
+depth = 0.48
+material = SubResource("Steel")
+
+[node name="EndWall" type="CSGBox3D" parent="NorthTunnel" unique_id=1221185833]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.2, 2.4, -41.17)
+use_collision = true
+size = Vector3(6.36, 4.8, 0.34)
+material = SubResource("ConcreteWall")
+
+[node name="Portal" parent="NorthTunnel" unique_id=1525002474 instance=ExtResource("portal")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.2, 0, -39.8)
+energy_color = Color(0.31, 0.59, 0.64, 1)
+
+[node name="Rib0LUpright" type="MeshInstance3D" parent="NorthTunnel" unique_id=1193661898]
+transform = Transform3D(0.37, 0, 0, 0, 3.26, 0, 0, 0, 0.64, -2.58, 1.63, -12.5)
+material_override = SubResource("Frame")
+mesh = SubResource("UnitBox")
+
+[node name="Rib0LHaunch" type="MeshInstance3D" parent="NorthTunnel" unique_id=184026218]
+transform = Transform3D(0.254558, 1.0182357, 0, -0.25455892, 1.018232, 0, 0, 0, 0.64, -2.14, 3.76, -12.5)
+material_override = SubResource("Frame")
+mesh = SubResource("UnitBox")
+
+[node name="Rib0LFoot" type="MeshInstance3D" parent="NorthTunnel" unique_id=1917890455]
+transform = Transform3D(0.48, 0, 0, 0, 0.46, 0, 0, 0, 0.79, -2.53, 0.23, -12.5)
+material_override = SubResource("Steel")
+mesh = SubResource("UnitBox")
+
+[node name="Rib0LInlay" type="MeshInstance3D" parent="NorthTunnel" unique_id=1944252198]
+transform = Transform3D(0.07, 0, 0, 0, 0.018, 0, 0, 0, 2.47, -2.08, 0.017, -12.47)
+material_override = SubResource("GuidePaint")
+mesh = SubResource("UnitBox")
+
+[node name="Rib0LWallBase" type="MeshInstance3D" parent="NorthTunnel" unique_id=380911690]
+transform = Transform3D(0.18, 0, 0, 0, 0.83, 0, 0, 0, 0.45, -2.57, 2.35, -12.06)
+material_override = SubResource("Rubber")
+mesh = SubResource("UnitBox")
+
+[node name="Rib0LLamp" type="MeshInstance3D" parent="NorthTunnel" unique_id=1371953452]
+transform = Transform3D(0.09, 0, 0, 0, 0.57, 0, 0, 0, 0.18, -2.45, 2.35, -12.06)
+material_override = SubResource("WarmLamp")
+mesh = SubResource("UnitBox")
+
+[node name="Rib0RUpright" type="MeshInstance3D" parent="NorthTunnel" unique_id=609493737]
+transform = Transform3D(0.37, 0, 0, 0, 3.26, 0, 0, 0, 0.64, 2.58, 1.63, -12.5)
+material_override = SubResource("Frame")
+mesh = SubResource("UnitBox")
+
+[node name="Rib0RHaunch" type="MeshInstance3D" parent="NorthTunnel" unique_id=670783616]
+transform = Transform3D(0.254558, -1.0182357, 0, 0.25455892, 1.018232, 0, 0, 0, 0.64, 2.14, 3.76, -12.5)
+material_override = SubResource("Frame")
+mesh = SubResource("UnitBox")
+
+[node name="Rib0RFoot" type="MeshInstance3D" parent="NorthTunnel" unique_id=636922655]
+transform = Transform3D(0.48, 0, 0, 0, 0.46, 0, 0, 0, 0.79, 2.53, 0.23, -12.5)
+material_override = SubResource("Steel")
+mesh = SubResource("UnitBox")
+
+[node name="Rib0RInlay" type="MeshInstance3D" parent="NorthTunnel" unique_id=883360032]
+transform = Transform3D(0.07, 0, 0, 0, 0.018, 0, 0, 0, 2.47, 2.08, 0.017, -12.47)
+material_override = SubResource("GuidePaint")
+mesh = SubResource("UnitBox")
+
+[node name="Rib0RWallBase" type="MeshInstance3D" parent="NorthTunnel" unique_id=1890517527]
+transform = Transform3D(0.18, 0, 0, 0, 0.83, 0, 0, 0, 0.45, 2.57, 2.35, -12.06)
+material_override = SubResource("Rubber")
+mesh = SubResource("UnitBox")
+
+[node name="Rib0RLamp" type="MeshInstance3D" parent="NorthTunnel" unique_id=1488064626]
+transform = Transform3D(0.09, 0, 0, 0, 0.57, 0, 0, 0, 0.18, 2.45, 2.35, -12.06)
+material_override = SubResource("WarmLamp")
+mesh = SubResource("UnitBox")
+
+[node name="Rib0Header" type="MeshInstance3D" parent="NorthTunnel" unique_id=1255972420]
+transform = Transform3D(4.35, 0, 0, 0, 0.47, 0, 0, 0, 0.66, 0, 4.38, -12.5)
+material_override = SubResource("Frame")
+mesh = SubResource("UnitBox")
+
+[node name="Rib0LampHousing" type="MeshInstance3D" parent="NorthTunnel" unique_id=1063052675]
+transform = Transform3D(2.63, 0, 0, 0, 0.17, 0, 0, 0, 0.55, 0, 4.08, -12.5)
+material_override = SubResource("Rubber")
+mesh = SubResource("UnitBox")
+
+[node name="Rib0Lamp" type="MeshInstance3D" parent="NorthTunnel" unique_id=637279232]
+transform = Transform3D(2.42, 0, 0, 0, 0.075, 0, 0, 0, 0.31, 0, 3.97, -12.5)
+material_override = SubResource("WarmLamp")
+mesh = SubResource("UnitBox")
+
+[node name="Rib1LUpright" type="MeshInstance3D" parent="NorthTunnel" unique_id=1674026038]
+transform = Transform3D(0.29127336, 0, -0.394666, 0, 3.26, 0, 0.22816628, 0, 0.5038242, 0.319, 1.63, -20.591)
+material_override = SubResource("Frame")
+mesh = SubResource("UnitBox")
+
+[node name="Rib1LHaunch" type="MeshInstance3D" parent="NorthTunnel" unique_id=620310087]
+transform = Transform3D(0.20039447, 0.8015808, -0.394666, -0.25455892, 1.018232, 0, 0.15697716, 0.6279109, 0.5038242, 0.6653, 3.76, -20.3197)
+material_override = SubResource("Frame")
+mesh = SubResource("UnitBox")
+
+[node name="Rib1LFoot" type="MeshInstance3D" parent="NorthTunnel" unique_id=1223522972]
+transform = Transform3D(0.37786812, 0, -0.48716584, 0, 0.46, 0, 0.29599947, 0, 0.62190795, 0.3583, 0.23, -20.5602)
+material_override = SubResource("Steel")
+mesh = SubResource("UnitBox")
+
+[node name="Rib1LInlay" type="MeshInstance3D" parent="NorthTunnel" unique_id=665626673]
+transform = Transform3D(0.05510577, 0, -1.523164, 0, 0.018, 0, 0.043166593, 0, 1.9444463, 0.6941, 0.017, -20.259)
+material_override = SubResource("GuidePaint")
+mesh = SubResource("UnitBox")
+
+[node name="Rib1LWallBase" type="MeshInstance3D" parent="NorthTunnel" unique_id=316170103]
+transform = Transform3D(0.14170055, 0, -0.27749953, 0, 0.83, 0, 0.110999815, 0, 0.35425135, 0.0555, 2.35, -20.2384)
+material_override = SubResource("Rubber")
+mesh = SubResource("UnitBox")
+
+[node name="Rib1LLamp" type="MeshInstance3D" parent="NorthTunnel" unique_id=1098732917]
+transform = Transform3D(0.070850275, 0, -0.110999815, 0, 0.57, 0, 0.055499908, 0, 0.14170055, 0.15, 2.35, -20.1644)
+material_override = SubResource("ColdLamp")
+mesh = SubResource("UnitBox")
+
+[node name="Rib1RUpright" type="MeshInstance3D" parent="NorthTunnel" unique_id=2049461243]
+transform = Transform3D(0.29127336, 0, -0.394666, 0, 3.26, 0, 0.22816628, 0, 0.5038242, 4.381, 1.63, -17.409)
+material_override = SubResource("Frame")
+mesh = SubResource("UnitBox")
+
+[node name="Rib1RHaunch" type="MeshInstance3D" parent="NorthTunnel" unique_id=1034095400]
+transform = Transform3D(0.20039447, -0.8015808, -0.394666, 0.25455892, 1.018232, 0, 0.15697716, -0.6279109, 0.5038242, 4.0347, 3.76, -17.6803)
+material_override = SubResource("Frame")
+mesh = SubResource("UnitBox")
+
+[node name="Rib1RFoot" type="MeshInstance3D" parent="NorthTunnel" unique_id=278798153]
+transform = Transform3D(0.37786812, 0, -0.48716584, 0, 0.46, 0, 0.29599947, 0, 0.62190795, 4.3417, 0.23, -17.4398)
+material_override = SubResource("Steel")
+mesh = SubResource("UnitBox")
+
+[node name="Rib1RInlay" type="MeshInstance3D" parent="NorthTunnel" unique_id=1333910974]
+transform = Transform3D(0.05510577, 0, -1.523164, 0, 0.018, 0, 0.043166593, 0, 1.9444463, 3.9689, 0.017, -17.6937)
+material_override = SubResource("GuidePaint")
+mesh = SubResource("UnitBox")
+
+[node name="Rib1RWallBase" type="MeshInstance3D" parent="NorthTunnel" unique_id=1840949420]
+transform = Transform3D(0.14170055, 0, -0.27749953, 0, 0.83, 0, 0.110999815, 0, 0.35425135, 4.1018, 2.35, -17.0688)
+material_override = SubResource("Rubber")
+mesh = SubResource("UnitBox")
+
+[node name="Rib1RLamp" type="MeshInstance3D" parent="NorthTunnel" unique_id=1771180029]
+transform = Transform3D(0.070850275, 0, -0.110999815, 0, 0.57, 0, 0.055499908, 0, 0.14170055, 4.0074, 2.35, -17.1428)
+material_override = SubResource("ColdLamp")
+mesh = SubResource("UnitBox")
+
+[node name="Rib1Header" type="MeshInstance3D" parent="NorthTunnel" unique_id=859364442]
+transform = Transform3D(3.4244297, 0, -0.40699932, 0, 0.47, 0, 2.6824954, 0, 0.5195687, 2.35, 4.38, -19)
+material_override = SubResource("Frame")
+mesh = SubResource("UnitBox")
+
+[node name="Rib1LampHousing" type="MeshInstance3D" parent="NorthTunnel" unique_id=574756785]
+transform = Transform3D(2.0704024, 0, -0.33916607, 0, 0.17, 0, 1.6218306, 0, 0.4329739, 2.35, 4.08, -19)
+material_override = SubResource("Rubber")
+mesh = SubResource("UnitBox")
+
+[node name="Rib1Lamp" type="MeshInstance3D" parent="NorthTunnel" unique_id=421398318]
+transform = Transform3D(1.9050852, 0, -0.19116634, 0, 0.075, 0, 1.4923308, 0, 0.24403983, 2.35, 3.97, -19)
+material_override = SubResource("ColdLamp")
+mesh = SubResource("UnitBox")
+
+[node name="Rib2LUpright" type="MeshInstance3D" parent="NorthTunnel" unique_id=1658090897]
+transform = Transform3D(0.37, 0, 0, 0, 3.26, 0, 0, 0, 0.64, 2.12, 1.63, -25)
+material_override = SubResource("Frame")
+mesh = SubResource("UnitBox")
+
+[node name="Rib2LHaunch" type="MeshInstance3D" parent="NorthTunnel" unique_id=1275880593]
+transform = Transform3D(0.254558, 1.0182357, 0, -0.25455892, 1.018232, 0, 0, 0, 0.64, 2.56, 3.76, -25)
+material_override = SubResource("Frame")
+mesh = SubResource("UnitBox")
+
+[node name="Rib2LFoot" type="MeshInstance3D" parent="NorthTunnel" unique_id=667646694]
+transform = Transform3D(0.48, 0, 0, 0, 0.46, 0, 0, 0, 0.79, 2.17, 0.23, -25)
+material_override = SubResource("Steel")
+mesh = SubResource("UnitBox")
+
+[node name="Rib2LInlay" type="MeshInstance3D" parent="NorthTunnel" unique_id=2030278634]
+transform = Transform3D(0.07, 0, 0, 0, 0.018, 0, 0, 0, 2.47, 2.62, 0.017, -24.97)
+material_override = SubResource("GuidePaint")
+mesh = SubResource("UnitBox")
+
+[node name="Rib2LWallBase" type="MeshInstance3D" parent="NorthTunnel" unique_id=1049780141]
+transform = Transform3D(0.18, 0, 0, 0, 0.83, 0, 0, 0, 0.45, 2.13, 2.35, -24.56)
+material_override = SubResource("Rubber")
+mesh = SubResource("UnitBox")
+
+[node name="Rib2LLamp" type="MeshInstance3D" parent="NorthTunnel" unique_id=36726509]
+transform = Transform3D(0.09, 0, 0, 0, 0.57, 0, 0, 0, 0.18, 2.25, 2.35, -24.56)
+material_override = SubResource("WarmLamp")
+mesh = SubResource("UnitBox")
+
+[node name="Rib2RUpright" type="MeshInstance3D" parent="NorthTunnel" unique_id=46429426]
+transform = Transform3D(0.37, 0, 0, 0, 3.26, 0, 0, 0, 0.64, 7.28, 1.63, -25)
+material_override = SubResource("Frame")
+mesh = SubResource("UnitBox")
+
+[node name="Rib2RHaunch" type="MeshInstance3D" parent="NorthTunnel" unique_id=566917778]
+transform = Transform3D(0.254558, -1.0182357, 0, 0.25455892, 1.018232, 0, 0, 0, 0.64, 6.84, 3.76, -25)
+material_override = SubResource("Frame")
+mesh = SubResource("UnitBox")
+
+[node name="Rib2RFoot" type="MeshInstance3D" parent="NorthTunnel" unique_id=1456715817]
+transform = Transform3D(0.48, 0, 0, 0, 0.46, 0, 0, 0, 0.79, 7.23, 0.23, -25)
+material_override = SubResource("Steel")
+mesh = SubResource("UnitBox")
+
+[node name="Rib2RInlay" type="MeshInstance3D" parent="NorthTunnel" unique_id=1267276223]
+transform = Transform3D(0.07, 0, 0, 0, 0.018, 0, 0, 0, 2.47, 6.78, 0.017, -24.97)
+material_override = SubResource("GuidePaint")
+mesh = SubResource("UnitBox")
+
+[node name="Rib2RWallBase" type="MeshInstance3D" parent="NorthTunnel" unique_id=1432396059]
+transform = Transform3D(0.18, 0, 0, 0, 0.83, 0, 0, 0, 0.45, 7.27, 2.35, -24.56)
+material_override = SubResource("Rubber")
+mesh = SubResource("UnitBox")
+
+[node name="Rib2RLamp" type="MeshInstance3D" parent="NorthTunnel" unique_id=1483449103]
+transform = Transform3D(0.09, 0, 0, 0, 0.57, 0, 0, 0, 0.18, 7.15, 2.35, -24.56)
+material_override = SubResource("WarmLamp")
+mesh = SubResource("UnitBox")
+
+[node name="Rib2Header" type="MeshInstance3D" parent="NorthTunnel" unique_id=1353252713]
+transform = Transform3D(4.35, 0, 0, 0, 0.47, 0, 0, 0, 0.66, 4.7, 4.38, -25)
+material_override = SubResource("Frame")
+mesh = SubResource("UnitBox")
+
+[node name="Rib2LampHousing" type="MeshInstance3D" parent="NorthTunnel" unique_id=971764500]
+transform = Transform3D(2.63, 0, 0, 0, 0.17, 0, 0, 0, 0.55, 4.7, 4.08, -25)
+material_override = SubResource("Rubber")
+mesh = SubResource("UnitBox")
+
+[node name="Rib2Lamp" type="MeshInstance3D" parent="NorthTunnel" unique_id=1358875002]
+transform = Transform3D(2.42, 0, 0, 0, 0.075, 0, 0, 0, 0.31, 4.7, 3.97, -25)
+material_override = SubResource("WarmLamp")
+mesh = SubResource("UnitBox")
+
+[node name="Rib3LUpright" type="MeshInstance3D" parent="NorthTunnel" unique_id=2104193189]
+transform = Transform3D(0.31959343, 0, 0.3224916, 0, 3.26, 0, -0.18644047, 0, 0.55281025, 0.7215, 1.63, -29.7)
+material_override = SubResource("Frame")
+mesh = SubResource("UnitBox")
+
+[node name="Rib3LHaunch" type="MeshInstance3D" parent="NorthTunnel" unique_id=9228847]
+transform = Transform3D(0.21987855, 0.8795174, 0.3224916, -0.25455892, 1.018232, 0, -0.12827003, -0.51308197, 0.55281025, 1.1015, 3.76, -29.9217)
+material_override = SubResource("Frame")
+mesh = SubResource("UnitBox")
+
+[node name="Rib3LFoot" type="MeshInstance3D" parent="NorthTunnel" unique_id=1390529470]
+transform = Transform3D(0.41460767, 0, 0.39807558, 0, 0.46, 0, -0.2418687, 0, 0.6823752, 0.7646, 0.23, -29.7252)
+material_override = SubResource("Steel")
+mesh = SubResource("UnitBox")
+
+[node name="Rib3LInlay" type="MeshInstance3D" parent="NorthTunnel" unique_id=2132379566]
+transform = Transform3D(0.060463622, 0, 1.244616, 0, 0.018, 0, -0.03527252, 0, 2.133502, 1.1685, 0.017, -29.926)
+material_override = SubResource("GuidePaint")
+mesh = SubResource("UnitBox")
+
+[node name="Rib3LWallBase" type="MeshInstance3D" parent="NorthTunnel" unique_id=2110347946]
+transform = Transform3D(0.15547788, 0, 0.22675191, 0, 0.83, 0, -0.09070077, 0, 0.3886947, 0.9518, 2.35, -29.325)
+material_override = SubResource("Rubber")
+mesh = SubResource("UnitBox")
+
+[node name="Rib3LLamp" type="MeshInstance3D" parent="NorthTunnel" unique_id=658175486]
+transform = Transform3D(0.07773894, 0, 0.09070077, 0, 0.57, 0, -0.045350384, 0, 0.15547788, 1.0554, 2.35, -29.3855)
+material_override = SubResource("ColdLamp")
+mesh = SubResource("UnitBox")
+
+[node name="Rib3RUpright" type="MeshInstance3D" parent="NorthTunnel" unique_id=1513746304]
+transform = Transform3D(0.31959343, 0, 0.3224916, 0, 3.26, 0, -0.18644047, 0, 0.55281025, 5.1785, 1.63, -32.3)
+material_override = SubResource("Frame")
+mesh = SubResource("UnitBox")
+
+[node name="Rib3RHaunch" type="MeshInstance3D" parent="NorthTunnel" unique_id=683140593]
+transform = Transform3D(0.21987855, -0.8795174, 0.3224916, 0.25455892, 1.018232, 0, -0.12827003, 0.51308197, 0.55281025, 4.7985, 3.76, -32.0783)
+material_override = SubResource("Frame")
+mesh = SubResource("UnitBox")
+
+[node name="Rib3RFoot" type="MeshInstance3D" parent="NorthTunnel" unique_id=298711938]
+transform = Transform3D(0.41460767, 0, 0.39807558, 0, 0.46, 0, -0.2418687, 0, 0.6823752, 5.1354, 0.23, -32.2748)
+material_override = SubResource("Steel")
+mesh = SubResource("UnitBox")
+
+[node name="Rib3RInlay" type="MeshInstance3D" parent="NorthTunnel" unique_id=278887652]
+transform = Transform3D(0.060463622, 0, 1.244616, 0, 0.018, 0, -0.03527252, 0, 2.133502, 4.7618, 0.017, -32.0221)
+material_override = SubResource("GuidePaint")
+mesh = SubResource("UnitBox")
+
+[node name="Rib3RWallBase" type="MeshInstance3D" parent="NorthTunnel" unique_id=379234292]
+transform = Transform3D(0.15547788, 0, 0.22675191, 0, 0.83, 0, -0.09070077, 0, 0.3886947, 5.3916, 2.35, -31.9149)
+material_override = SubResource("Rubber")
+mesh = SubResource("UnitBox")
+
+[node name="Rib3RLamp" type="MeshInstance3D" parent="NorthTunnel" unique_id=936147181]
+transform = Transform3D(0.07773894, 0, 0.09070077, 0, 0.57, 0, -0.045350384, 0, 0.15547788, 5.288, 2.35, -31.8544)
+material_override = SubResource("ColdLamp")
+mesh = SubResource("UnitBox")
+
+[node name="Rib3Header" type="MeshInstance3D" parent="NorthTunnel" unique_id=1698949975]
+transform = Transform3D(3.7573822, 0, 0.33256948, 0, 0.47, 0, -2.191935, 0, 0.5700856, 2.95, 4.38, -31)
+material_override = SubResource("Frame")
+mesh = SubResource("UnitBox")
+
+[node name="Rib3LampHousing" type="MeshInstance3D" parent="NorthTunnel" unique_id=839958342]
+transform = Transform3D(2.2717047, 0, 0.27714124, 0, 0.17, 0, -1.3252391, 0, 0.4750713, 2.95, 4.08, -31)
+material_override = SubResource("Rubber")
+mesh = SubResource("UnitBox")
+
+[node name="Rib3Lamp" type="MeshInstance3D" parent="NorthTunnel" unique_id=421040011]
+transform = Transform3D(2.090314, 0, 0.15620688, 0, 0.075, 0, -1.2194214, 0, 0.26776746, 2.95, 3.97, -31)
+material_override = SubResource("ColdLamp")
+mesh = SubResource("UnitBox")
+
+[node name="Rib4LUpright" type="MeshInstance3D" parent="NorthTunnel" unique_id=1461754631]
+transform = Transform3D(0.37, 0, 0, 0, 3.26, 0, 0, 0, 0.64, -1.38, 1.63, -37.5)
+material_override = SubResource("Frame")
+mesh = SubResource("UnitBox")
+
+[node name="Rib4LHaunch" type="MeshInstance3D" parent="NorthTunnel" unique_id=849162861]
+transform = Transform3D(0.254558, 1.0182357, 0, -0.25455892, 1.018232, 0, 0, 0, 0.64, -0.94, 3.76, -37.5)
+material_override = SubResource("Frame")
+mesh = SubResource("UnitBox")
+
+[node name="Rib4LFoot" type="MeshInstance3D" parent="NorthTunnel" unique_id=22884126]
+transform = Transform3D(0.48, 0, 0, 0, 0.46, 0, 0, 0, 0.79, -1.33, 0.23, -37.5)
+material_override = SubResource("Steel")
+mesh = SubResource("UnitBox")
+
+[node name="Rib4LInlay" type="MeshInstance3D" parent="NorthTunnel" unique_id=1472783237]
+transform = Transform3D(0.07, 0, 0, 0, 0.018, 0, 0, 0, 2.47, -0.88, 0.017, -37.47)
+material_override = SubResource("GuidePaint")
+mesh = SubResource("UnitBox")
+
+[node name="Rib4LWallBase" type="MeshInstance3D" parent="NorthTunnel" unique_id=151013345]
+transform = Transform3D(0.18, 0, 0, 0, 0.83, 0, 0, 0, 0.45, -1.37, 2.35, -37.06)
+material_override = SubResource("Rubber")
+mesh = SubResource("UnitBox")
+
+[node name="Rib4LLamp" type="MeshInstance3D" parent="NorthTunnel" unique_id=893323805]
+transform = Transform3D(0.09, 0, 0, 0, 0.57, 0, 0, 0, 0.18, -1.25, 2.35, -37.06)
+material_override = SubResource("WarmLamp")
+mesh = SubResource("UnitBox")
+
+[node name="Rib4RUpright" type="MeshInstance3D" parent="NorthTunnel" unique_id=63916101]
+transform = Transform3D(0.37, 0, 0, 0, 3.26, 0, 0, 0, 0.64, 3.78, 1.63, -37.5)
+material_override = SubResource("Frame")
+mesh = SubResource("UnitBox")
+
+[node name="Rib4RHaunch" type="MeshInstance3D" parent="NorthTunnel" unique_id=1090678837]
+transform = Transform3D(0.254558, -1.0182357, 0, 0.25455892, 1.018232, 0, 0, 0, 0.64, 3.34, 3.76, -37.5)
+material_override = SubResource("Frame")
+mesh = SubResource("UnitBox")
+
+[node name="Rib4RFoot" type="MeshInstance3D" parent="NorthTunnel" unique_id=1718798296]
+transform = Transform3D(0.48, 0, 0, 0, 0.46, 0, 0, 0, 0.79, 3.73, 0.23, -37.5)
+material_override = SubResource("Steel")
+mesh = SubResource("UnitBox")
+
+[node name="Rib4RInlay" type="MeshInstance3D" parent="NorthTunnel" unique_id=1085839841]
+transform = Transform3D(0.07, 0, 0, 0, 0.018, 0, 0, 0, 2.47, 3.28, 0.017, -37.47)
+material_override = SubResource("GuidePaint")
+mesh = SubResource("UnitBox")
+
+[node name="Rib4RWallBase" type="MeshInstance3D" parent="NorthTunnel" unique_id=1191129990]
+transform = Transform3D(0.18, 0, 0, 0, 0.83, 0, 0, 0, 0.45, 3.77, 2.35, -37.06)
+material_override = SubResource("Rubber")
+mesh = SubResource("UnitBox")
+
+[node name="Rib4RLamp" type="MeshInstance3D" parent="NorthTunnel" unique_id=1969934651]
+transform = Transform3D(0.09, 0, 0, 0, 0.57, 0, 0, 0, 0.18, 3.65, 2.35, -37.06)
+material_override = SubResource("WarmLamp")
+mesh = SubResource("UnitBox")
+
+[node name="Rib4Header" type="MeshInstance3D" parent="NorthTunnel" unique_id=877923783]
+transform = Transform3D(4.35, 0, 0, 0, 0.47, 0, 0, 0, 0.66, 1.2, 4.38, -37.5)
+material_override = SubResource("Frame")
+mesh = SubResource("UnitBox")
+
+[node name="Rib4LampHousing" type="MeshInstance3D" parent="NorthTunnel" unique_id=1973757708]
+transform = Transform3D(2.63, 0, 0, 0, 0.17, 0, 0, 0, 0.55, 1.2, 4.08, -37.5)
+material_override = SubResource("Rubber")
+mesh = SubResource("UnitBox")
+
+[node name="Rib4Lamp" type="MeshInstance3D" parent="NorthTunnel" unique_id=1059452984]
+transform = Transform3D(2.42, 0, 0, 0, 0.075, 0, 0, 0, 0.31, 1.2, 3.97, -37.5)
+material_override = SubResource("WarmLamp")
+mesh = SubResource("UnitBox")
+
+[node name="EastTunnel" type="Node3D" parent="." unique_id=374787491]
+
+[node name="Lighting" type="Node3D" parent="EastTunnel" unique_id=403086393]
+
+[node name="Rib0Light" type="OmniLight3D" parent="EastTunnel/Lighting" unique_id=1286056620]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 13.75, 3.63, -3.6)
+light_color = Color(1, 0.81, 0.6, 1)
+light_energy = 1.29
+omni_range = 7.9
+omni_attenuation = 1.25
+
+[node name="Rib1Light" type="OmniLight3D" parent="EastTunnel/Lighting" unique_id=424973885]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 20, 3.63, -1.25)
+light_color = Color(0.68, 0.76, 0.79, 1)
+light_energy = 1.29
+omni_range = 7.9
+omni_attenuation = 1.25
+
+[node name="Rib2Light" type="OmniLight3D" parent="EastTunnel/Lighting" unique_id=1399661374]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 26, 3.63, 1.1)
+light_color = Color(1, 0.81, 0.6, 1)
+light_energy = 1.29
+omni_range = 7.9
+omni_attenuation = 1.25
+
+[node name="Rib3Light" type="OmniLight3D" parent="EastTunnel/Lighting" unique_id=620825803]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 31.5, 3.63, -0.95)
+light_color = Color(0.68, 0.76, 0.79, 1)
+light_energy = 1.29
+omni_range = 7.9
+omni_attenuation = 1.25
+
+[node name="Rib4Light" type="OmniLight3D" parent="EastTunnel/Lighting" unique_id=1430337736]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 37.5, 3.63, -3)
+light_color = Color(1, 0.81, 0.6, 1)
+light_energy = 1.29
+omni_range = 7.9
+omni_attenuation = 1.25
+
+[node name="Floor" type="CSGPolygon3D" parent="EastTunnel" unique_id=1400428888]
+transform = Transform3D(1, 0, 0, 0, -3.6199901e-06, 1, 0, -1, -3.6199901e-06, 0, 0, 0)
+use_collision = true
+polygon = PackedVector2Array(10.5, 0.8, 16.0339, 0.8, 22.0339, -3.9, 30.0012, -3.9, 35.0012, 0.2, 41, 0.2, 41, 5.8, 32.9988, 5.8, 27.9988, 1.7, 23.9661, 1.7, 17.9661, 6.4, 10.5, 6.4)
+depth = 0.38
+material = SubResource("Deck")
+
+[node name="Ceiling" type="CSGPolygon3D" parent="EastTunnel" unique_id=931103768]
+transform = Transform3D(1, 0, 0, 0, -3.6199901e-06, 1, 0, -1, -3.6199901e-06, 0, 5.07, 0)
+use_collision = true
+polygon = PackedVector2Array(10.5, 0.8, 16.0339, 0.8, 22.0339, -3.9, 30.0012, -3.9, 35.0012, 0.2, 41, 0.2, 41, 5.8, 32.9988, 5.8, 27.9988, 1.7, 23.9661, 1.7, 17.9661, 6.4, 10.5, 6.4)
+depth = 0.27
+material = SubResource("Concrete")
+
+[node name="Masonry0_0" type="CSGPolygon3D" parent="EastTunnel" unique_id=1854348549]
+transform = Transform3D(1, 0, 0, 0, -3.6199901e-06, -1, 0, 1, -3.6199901e-06, 0, 0, 0)
+instance_shader_parameters/run_axis = Vector2(1, 0)
+instance_shader_parameters/run_offset = -10.5
+use_collision = true
+polygon = PackedVector2Array(10.5, -0.8, 16.0339, -0.8, 15.9062, -0.43, 10.5, -0.43)
+depth = 4.8
+material = SubResource("ConcreteWall")
+
+[node name="Masonry0_1" type="CSGPolygon3D" parent="EastTunnel" unique_id=1465992017]
+transform = Transform3D(1, 0, 0, 0, -3.6199901e-06, -1, 0, 1, -3.6199901e-06, 0, 0, 0)
+instance_shader_parameters/run_axis = Vector2(0.7872281, 0.616662)
+instance_shader_parameters/run_offset = -6.5951063
+use_collision = true
+polygon = PackedVector2Array(16.0339, -0.8, 22.0339, 3.9, 21.9062, 4.27, 15.9062, -0.43)
+depth = 4.8
+material = SubResource("ConcreteWall")
+
+[node name="Masonry0_2" type="CSGPolygon3D" parent="EastTunnel" unique_id=1338653984]
+transform = Transform3D(1, 0, 0, 0, -3.6199901e-06, -1, 0, 1, -3.6199901e-06, 0, 0, 0)
+instance_shader_parameters/run_axis = Vector2(1, 0)
+instance_shader_parameters/run_offset = -8.8783204
+use_collision = true
+polygon = PackedVector2Array(22.0339, 3.9, 30.0012, 3.9, 30.1335, 4.27, 21.9062, 4.27)
+depth = 4.8
+material = SubResource("ConcreteWall")
+
+[node name="Masonry0_3" type="CSGPolygon3D" parent="EastTunnel" unique_id=143039956]
+transform = Transform3D(1, 0, 0, 0, -3.6199901e-06, -1, 0, 1, -3.6199901e-06, 0, 0, 0)
+instance_shader_parameters/run_axis = Vector2(0.7732678, -0.6340796)
+instance_shader_parameters/run_offset = 0.3968284
+use_collision = true
+polygon = PackedVector2Array(30.0012, 3.9, 35.0012, -0.2, 35.1335, 0.17, 30.1335, 4.27)
+depth = 4.8
+material = SubResource("ConcreteWall")
+
+[node name="Masonry0_4" type="CSGPolygon3D" parent="EastTunnel" unique_id=2051375590]
+transform = Transform3D(1, 0, 0, 0, -3.6199901e-06, -1, 0, 1, -3.6199901e-06, 0, 0, 0)
+instance_shader_parameters/run_axis = Vector2(1, 0)
+instance_shader_parameters/run_offset = -7.4122551
+use_collision = true
+polygon = PackedVector2Array(35.0012, -0.2, 41, -0.2, 41, 0.17, 35.1335, 0.17)
+depth = 4.8
+material = SubResource("ConcreteWall")
+
+[node name="Skirting0" type="CSGPolygon3D" parent="EastTunnel" unique_id=856583171]
+transform = Transform3D(1, 0, 0, 0, -3.6199901e-06, -1, 0, 1, -3.6199901e-06, 0, 0, 0)
+polygon = PackedVector2Array(10.5, -1.01, 16.1064, -1.01, 22.1064, 3.69, 29.9261, 3.69, 34.9261, -0.41, 41, -0.41, 41, -0.2, 35.0012, -0.2, 30.0012, 3.9, 22.0339, 3.9, 16.0339, -0.8, 10.5, -0.8)
+depth = 0.48
+material = SubResource("Steel")
+
+[node name="Masonry1_0" type="CSGPolygon3D" parent="EastTunnel" unique_id=5060361]
+transform = Transform3D(1, 0, 0, 0, -3.6199901e-06, -1, 0, 1, -3.6199901e-06, 0, 0, 0)
+instance_shader_parameters/run_axis = Vector2(1, 0)
+instance_shader_parameters/run_offset = -10.5
+use_collision = true
+polygon = PackedVector2Array(10.5, -6.4, 17.9661, -6.4, 18.0938, -6.77, 10.5, -6.77)
+depth = 4.8
+material = SubResource("ConcreteWall")
+
+[node name="Masonry1_1" type="CSGPolygon3D" parent="EastTunnel" unique_id=4257402]
+transform = Transform3D(1, 0, 0, 0, -3.6199901e-06, -1, 0, 1, -3.6199901e-06, 0, 0, 0)
+instance_shader_parameters/run_axis = Vector2(0.7872281, 0.616662)
+instance_shader_parameters/run_offset = -2.7306813
+use_collision = true
+polygon = PackedVector2Array(17.9661, -6.4, 23.9661, -1.7, 24.0938, -2.07, 18.0938, -6.77)
+depth = 4.8
+material = SubResource("ConcreteWall")
+
+[node name="Masonry1_2" type="CSGPolygon3D" parent="EastTunnel" unique_id=452838401]
+transform = Transform3D(1, 0, 0, 0, -3.6199901e-06, -1, 0, 1, -3.6199901e-06, 0, 0, 0)
+instance_shader_parameters/run_axis = Vector2(1, 0)
+instance_shader_parameters/run_offset = -8.8783204
+use_collision = true
+polygon = PackedVector2Array(23.9661, -1.7, 27.9988, -1.7, 27.8665, -2.07, 24.0938, -2.07)
+depth = 4.8
+material = SubResource("ConcreteWall")
+
+[node name="Masonry1_3" type="CSGPolygon3D" parent="EastTunnel" unique_id=1686850909]
+transform = Transform3D(1, 0, 0, 0, -3.6199901e-06, -1, 0, 1, -3.6199901e-06, 0, 0, 0)
+instance_shader_parameters/run_axis = Vector2(0.7732678, -0.6340796)
+instance_shader_parameters/run_offset = -3.6080259
+use_collision = true
+polygon = PackedVector2Array(27.9988, -1.7, 32.9988, -5.8, 32.8665, -6.17, 27.8665, -2.07)
+depth = 4.8
+material = SubResource("ConcreteWall")
+
+[node name="Masonry1_4" type="CSGPolygon3D" parent="EastTunnel" unique_id=52365205]
+transform = Transform3D(1, 0, 0, 0, -3.6199901e-06, -1, 0, 1, -3.6199901e-06, 0, 0, 0)
+instance_shader_parameters/run_axis = Vector2(1, 0)
+instance_shader_parameters/run_offset = -7.4122551
+use_collision = true
+polygon = PackedVector2Array(32.9988, -5.8, 41, -5.8, 41, -6.17, 32.8665, -6.17)
+depth = 4.8
+material = SubResource("ConcreteWall")
+
+[node name="Skirting1" type="CSGPolygon3D" parent="EastTunnel" unique_id=216347134]
+transform = Transform3D(1, 0, 0, 0, -3.6199901e-06, -1, 0, 1, -3.6199901e-06, 0, 0, 0)
+polygon = PackedVector2Array(10.5, -6.19, 17.8936, -6.19, 23.8936, -1.49, 28.0739, -1.49, 33.0739, -5.59, 41, -5.59, 41, -5.8, 32.9988, -5.8, 27.9988, -1.7, 23.9661, -1.7, 17.9661, -6.4, 10.5, -6.4)
+depth = 0.48
+material = SubResource("Steel")
+
+[node name="EndWall" type="CSGBox3D" parent="EastTunnel" unique_id=1934059781]
+transform = Transform3D(-3.6199901e-06, 0, -1, 0, 1, 0, 1, 0, -3.6199901e-06, 41.17, 2.4, -3)
+use_collision = true
+size = Vector3(6.36, 4.8, 0.34)
+material = SubResource("ConcreteWall")
+
+[node name="Portal" parent="EastTunnel" unique_id=1681714370 instance=ExtResource("portal")]
+transform = Transform3D(-3.6199901e-06, 0, -1, 0, 1, 0, 1, 0, -3.6199901e-06, 39.8, 0, -3)
+energy_color = Color(0.87751216, 0.2096526, 0.10095734, 1)
+
+[node name="Rib0LUpright" type="MeshInstance3D" parent="EastTunnel" unique_id=1057478434]
+transform = Transform3D(-1.3393964e-06, 0, -0.64, 0, 3.26, 0, 0.37, 0, -2.3167936e-06, 13.75, 1.63, -6.18)
+material_override = SubResource("Frame")
+mesh = SubResource("UnitBox")
+
+[node name="Rib0LHaunch" type="MeshInstance3D" parent="EastTunnel" unique_id=782331498]
+transform = Transform3D(-9.214975e-07, -3.6860029e-06, -0.64, -0.25455892, 1.018232, 0, 0.254558, 1.0182357, -2.3167936e-06, 13.75, 3.76, -5.74)
+material_override = SubResource("Frame")
+mesh = SubResource("UnitBox")
+
+[node name="Rib0LFoot" type="MeshInstance3D" parent="EastTunnel" unique_id=1123147687]
+transform = Transform3D(-1.7375952e-06, 0, -0.79, 0, 0.46, 0, 0.48, 0, -2.8597922e-06, 13.75, 0.23, -6.13)
+material_override = SubResource("Steel")
+mesh = SubResource("UnitBox")
+
+[node name="Rib0LInlay" type="MeshInstance3D" parent="EastTunnel" unique_id=1397321967]
+transform = Transform3D(-2.5339932e-07, 0, -2.47, 0, 0.018, 0, 0.07, 0, -8.941376e-06, 13.72, 0.017, -5.68)
+material_override = SubResource("SafetyPaint")
+mesh = SubResource("UnitBox")
+
+[node name="Rib0LWallBase" type="MeshInstance3D" parent="EastTunnel" unique_id=248772038]
+transform = Transform3D(-6.5159827e-07, 0, -0.45, 0, 0.83, 0, 0.18, 0, -1.6289955e-06, 13.31, 2.35, -6.17)
+material_override = SubResource("Rubber")
+mesh = SubResource("UnitBox")
+
+[node name="Rib0LLamp" type="MeshInstance3D" parent="EastTunnel" unique_id=1036318640]
+transform = Transform3D(-3.2579914e-07, 0, -0.18, 0, 0.57, 0, 0.09, 0, -6.5159827e-07, 13.31, 2.35, -6.05)
+material_override = SubResource("WarmLamp")
+mesh = SubResource("UnitBox")
+
+[node name="Rib0RUpright" type="MeshInstance3D" parent="EastTunnel" unique_id=1272088340]
+transform = Transform3D(-1.3393964e-06, 0, -0.64, 0, 3.26, 0, 0.37, 0, -2.3167936e-06, 13.75, 1.63, -1.02)
+material_override = SubResource("Frame")
+mesh = SubResource("UnitBox")
+
+[node name="Rib0RHaunch" type="MeshInstance3D" parent="EastTunnel" unique_id=801599426]
+transform = Transform3D(-9.214975e-07, 3.6860029e-06, -0.64, 0.25455892, 1.018232, 0, 0.254558, -1.0182357, -2.3167936e-06, 13.75, 3.76, -1.46)
+material_override = SubResource("Frame")
+mesh = SubResource("UnitBox")
+
+[node name="Rib0RFoot" type="MeshInstance3D" parent="EastTunnel" unique_id=1665404342]
+transform = Transform3D(-1.7375952e-06, 0, -0.79, 0, 0.46, 0, 0.48, 0, -2.8597922e-06, 13.75, 0.23, -1.07)
+material_override = SubResource("Steel")
+mesh = SubResource("UnitBox")
+
+[node name="Rib0RInlay" type="MeshInstance3D" parent="EastTunnel" unique_id=2123414113]
+transform = Transform3D(-2.5339932e-07, 0, -2.47, 0, 0.018, 0, 0.07, 0, -8.941376e-06, 13.72, 0.017, -1.52)
+material_override = SubResource("SafetyPaint")
+mesh = SubResource("UnitBox")
+
+[node name="Rib0RWallBase" type="MeshInstance3D" parent="EastTunnel" unique_id=408247321]
+transform = Transform3D(-6.5159827e-07, 0, -0.45, 0, 0.83, 0, 0.18, 0, -1.6289955e-06, 13.31, 2.35, -1.03)
+material_override = SubResource("Rubber")
+mesh = SubResource("UnitBox")
+
+[node name="Rib0RLamp" type="MeshInstance3D" parent="EastTunnel" unique_id=335031065]
+transform = Transform3D(-3.2579914e-07, 0, -0.18, 0, 0.57, 0, 0.09, 0, -6.5159827e-07, 13.31, 2.35, -1.15)
+material_override = SubResource("WarmLamp")
+mesh = SubResource("UnitBox")
+
+[node name="Rib0Header" type="MeshInstance3D" parent="EastTunnel" unique_id=170895529]
+transform = Transform3D(-1.5746957e-05, 0, -0.66, 0, 0.47, 0, 4.35, 0, -2.3891937e-06, 13.75, 4.38, -3.6)
+material_override = SubResource("Frame")
+mesh = SubResource("UnitBox")
+
+[node name="Rib0LampHousing" type="MeshInstance3D" parent="EastTunnel" unique_id=894276825]
+transform = Transform3D(-9.520574e-06, 0, -0.55, 0, 0.17, 0, 2.63, 0, -1.9909946e-06, 13.75, 4.08, -3.6)
+material_override = SubResource("Rubber")
+mesh = SubResource("UnitBox")
+
+[node name="Rib0Lamp" type="MeshInstance3D" parent="EastTunnel" unique_id=588962372]
+transform = Transform3D(-8.760377e-06, 0, -0.31, 0, 0.075, 0, 2.42, 0, -1.122197e-06, 13.75, 3.97, -3.6)
+material_override = SubResource("WarmLamp")
+mesh = SubResource("UnitBox")
+
+[node name="Rib1LUpright" type="MeshInstance3D" parent="EastTunnel" unique_id=2060910346]
+transform = Transform3D(-0.22816736, 0, -0.5038227, 0, 3.26, 0, 0.2912725, 0, -0.39466783, 21.591, 1.63, -3.281)
+material_override = SubResource("Frame")
+mesh = SubResource("UnitBox")
+
+[node name="Rib1LHaunch" type="MeshInstance3D" parent="EastTunnel" unique_id=619607413]
+transform = Transform3D(-0.15697789, -0.6279139, -0.5038227, -0.25455892, 1.018232, 0, 0.2003939, 0.8015785, -0.39466783, 21.3197, 3.76, -2.9347)
+material_override = SubResource("Frame")
+mesh = SubResource("UnitBox")
+
+[node name="Rib1LFoot" type="MeshInstance3D" parent="EastTunnel" unique_id=1176949138]
+transform = Transform3D(-0.2960009, 0, -0.6219061, 0, 0.46, 0, 0.37786698, 0, -0.48716813, 21.5602, 0.23, -3.2417)
+material_override = SubResource("Steel")
+mesh = SubResource("UnitBox")
+
+[node name="Rib1LInlay" type="MeshInstance3D" parent="EastTunnel" unique_id=886492253]
+transform = Transform3D(-0.043166798, 0, -1.9444406, 0, 0.018, 0, 0.055105604, 0, -1.5231713, 21.259, 0.017, -2.9059)
+material_override = SubResource("SafetyPaint")
+mesh = SubResource("UnitBox")
+
+[node name="Rib1LWallBase" type="MeshInstance3D" parent="EastTunnel" unique_id=385854557]
+transform = Transform3D(-0.11100034, 0, -0.3542503, 0, 0.83, 0, 0.14170013, 0, -0.27750084, 21.2384, 2.35, -3.5445)
+material_override = SubResource("Rubber")
+mesh = SubResource("UnitBox")
+
+[node name="Rib1LLamp" type="MeshInstance3D" parent="EastTunnel" unique_id=2046103151]
+transform = Transform3D(-0.05550017, 0, -0.14170013, 0, 0.57, 0, 0.07085007, 0, -0.11100034, 21.1644, 2.35, -3.45)
+material_override = SubResource("ColdLamp")
+mesh = SubResource("UnitBox")
+
+[node name="Rib1RUpright" type="MeshInstance3D" parent="EastTunnel" unique_id=211121419]
+transform = Transform3D(-0.22816736, 0, -0.5038227, 0, 3.26, 0, 0.2912725, 0, -0.39466783, 18.409, 1.63, 0.781)
+material_override = SubResource("Frame")
+mesh = SubResource("UnitBox")
+
+[node name="Rib1RHaunch" type="MeshInstance3D" parent="EastTunnel" unique_id=1151821170]
+transform = Transform3D(-0.15697789, 0.6279139, -0.5038227, 0.25455892, 1.018232, 0, 0.2003939, -0.8015785, -0.39466783, 18.6803, 3.76, 0.4347)
+material_override = SubResource("Frame")
+mesh = SubResource("UnitBox")
+
+[node name="Rib1RFoot" type="MeshInstance3D" parent="EastTunnel" unique_id=1227518945]
+transform = Transform3D(-0.2960009, 0, -0.6219061, 0, 0.46, 0, 0.37786698, 0, -0.48716813, 18.4398, 0.23, 0.7417)
+material_override = SubResource("Steel")
+mesh = SubResource("UnitBox")
+
+[node name="Rib1RInlay" type="MeshInstance3D" parent="EastTunnel" unique_id=950902403]
+transform = Transform3D(-0.043166798, 0, -1.9444406, 0, 0.018, 0, 0.055105604, 0, -1.5231713, 18.6937, 0.017, 0.3689)
+material_override = SubResource("SafetyPaint")
+mesh = SubResource("UnitBox")
+
+[node name="Rib1RWallBase" type="MeshInstance3D" parent="EastTunnel" unique_id=1651281997]
+transform = Transform3D(-0.11100034, 0, -0.3542503, 0, 0.83, 0, 0.14170013, 0, -0.27750084, 18.0688, 2.35, 0.5018)
+material_override = SubResource("Rubber")
+mesh = SubResource("UnitBox")
+
+[node name="Rib1RLamp" type="MeshInstance3D" parent="EastTunnel" unique_id=80935356]
+transform = Transform3D(-0.05550017, 0, -0.14170013, 0, 0.57, 0, 0.07085007, 0, -0.11100034, 18.1428, 2.35, 0.4074)
+material_override = SubResource("ColdLamp")
+mesh = SubResource("UnitBox")
+
+[node name="Rib1Header" type="MeshInstance3D" parent="EastTunnel" unique_id=122991660]
+transform = Transform3D(-2.682508, 0, -0.51956713, 0, 0.47, 0, 3.4244196, 0, -0.40700123, 20, 4.38, -1.25)
+material_override = SubResource("Frame")
+mesh = SubResource("UnitBox")
+
+[node name="Rib1LampHousing" type="MeshInstance3D" parent="EastTunnel" unique_id=962966189]
+transform = Transform3D(-1.6218383, 0, -0.4329726, 0, 0.17, 0, 2.0703964, 0, -0.33916768, 20, 4.08, -1.25)
+material_override = SubResource("Rubber")
+mesh = SubResource("UnitBox")
+
+[node name="Rib1Lamp" type="MeshInstance3D" parent="EastTunnel" unique_id=1171299465]
+transform = Transform3D(-1.4923378, 0, -0.2440391, 0, 0.075, 0, 1.9050795, 0, -0.19116725, 20, 3.97, -1.25)
+material_override = SubResource("ColdLamp")
+mesh = SubResource("UnitBox")
+
+[node name="Rib2LUpright" type="MeshInstance3D" parent="EastTunnel" unique_id=946667046]
+transform = Transform3D(-1.3393964e-06, 0, -0.64, 0, 3.26, 0, 0.37, 0, -2.3167936e-06, 26, 1.63, -1.48)
+material_override = SubResource("Frame")
+mesh = SubResource("UnitBox")
+
+[node name="Rib2LHaunch" type="MeshInstance3D" parent="EastTunnel" unique_id=1916219241]
+transform = Transform3D(-9.214975e-07, -3.6860029e-06, -0.64, -0.25455892, 1.018232, 0, 0.254558, 1.0182357, -2.3167936e-06, 26, 3.76, -1.04)
+material_override = SubResource("Frame")
+mesh = SubResource("UnitBox")
+
+[node name="Rib2LFoot" type="MeshInstance3D" parent="EastTunnel" unique_id=1505780834]
+transform = Transform3D(-1.7375952e-06, 0, -0.79, 0, 0.46, 0, 0.48, 0, -2.8597922e-06, 26, 0.23, -1.43)
+material_override = SubResource("Steel")
+mesh = SubResource("UnitBox")
+
+[node name="Rib2LInlay" type="MeshInstance3D" parent="EastTunnel" unique_id=1882809580]
+transform = Transform3D(-2.5339932e-07, 0, -2.47, 0, 0.018, 0, 0.07, 0, -8.941376e-06, 25.97, 0.017, -0.98)
+material_override = SubResource("SafetyPaint")
+mesh = SubResource("UnitBox")
+
+[node name="Rib2LWallBase" type="MeshInstance3D" parent="EastTunnel" unique_id=1589743312]
+transform = Transform3D(-6.5159827e-07, 0, -0.45, 0, 0.83, 0, 0.18, 0, -1.6289955e-06, 25.56, 2.35, -1.47)
+material_override = SubResource("Rubber")
+mesh = SubResource("UnitBox")
+
+[node name="Rib2LLamp" type="MeshInstance3D" parent="EastTunnel" unique_id=1722852291]
+transform = Transform3D(-3.2579914e-07, 0, -0.18, 0, 0.57, 0, 0.09, 0, -6.5159827e-07, 25.56, 2.35, -1.35)
+material_override = SubResource("WarmLamp")
+mesh = SubResource("UnitBox")
+
+[node name="Rib2RUpright" type="MeshInstance3D" parent="EastTunnel" unique_id=190773317]
+transform = Transform3D(-1.3393964e-06, 0, -0.64, 0, 3.26, 0, 0.37, 0, -2.3167936e-06, 26, 1.63, 3.68)
+material_override = SubResource("Frame")
+mesh = SubResource("UnitBox")
+
+[node name="Rib2RHaunch" type="MeshInstance3D" parent="EastTunnel" unique_id=308368650]
+transform = Transform3D(-9.214975e-07, 3.6860029e-06, -0.64, 0.25455892, 1.018232, 0, 0.254558, -1.0182357, -2.3167936e-06, 26, 3.76, 3.24)
+material_override = SubResource("Frame")
+mesh = SubResource("UnitBox")
+
+[node name="Rib2RFoot" type="MeshInstance3D" parent="EastTunnel" unique_id=1563015726]
+transform = Transform3D(-1.7375952e-06, 0, -0.79, 0, 0.46, 0, 0.48, 0, -2.8597922e-06, 26, 0.23, 3.63)
+material_override = SubResource("Steel")
+mesh = SubResource("UnitBox")
+
+[node name="Rib2RInlay" type="MeshInstance3D" parent="EastTunnel" unique_id=1458006392]
+transform = Transform3D(-2.5339932e-07, 0, -2.47, 0, 0.018, 0, 0.07, 0, -8.941376e-06, 25.97, 0.017, 3.18)
+material_override = SubResource("SafetyPaint")
+mesh = SubResource("UnitBox")
+
+[node name="Rib2RWallBase" type="MeshInstance3D" parent="EastTunnel" unique_id=1846053120]
+transform = Transform3D(-6.5159827e-07, 0, -0.45, 0, 0.83, 0, 0.18, 0, -1.6289955e-06, 25.56, 2.35, 3.67)
+material_override = SubResource("Rubber")
+mesh = SubResource("UnitBox")
+
+[node name="Rib2RLamp" type="MeshInstance3D" parent="EastTunnel" unique_id=358109285]
+transform = Transform3D(-3.2579914e-07, 0, -0.18, 0, 0.57, 0, 0.09, 0, -6.5159827e-07, 25.56, 2.35, 3.55)
+material_override = SubResource("WarmLamp")
+mesh = SubResource("UnitBox")
+
+[node name="Rib2Header" type="MeshInstance3D" parent="EastTunnel" unique_id=718103814]
+transform = Transform3D(-1.5746957e-05, 0, -0.66, 0, 0.47, 0, 4.35, 0, -2.3891937e-06, 26, 4.38, 1.1)
+material_override = SubResource("Frame")
+mesh = SubResource("UnitBox")
+
+[node name="Rib2LampHousing" type="MeshInstance3D" parent="EastTunnel" unique_id=2031653628]
+transform = Transform3D(-9.520574e-06, 0, -0.55, 0, 0.17, 0, 2.63, 0, -1.9909946e-06, 26, 4.08, 1.1)
+material_override = SubResource("Rubber")
+mesh = SubResource("UnitBox")
+
+[node name="Rib2Lamp" type="MeshInstance3D" parent="EastTunnel" unique_id=1608272003]
+transform = Transform3D(-8.760377e-06, 0, -0.31, 0, 0.075, 0, 2.42, 0, -1.122197e-06, 26, 3.97, 1.1)
+material_override = SubResource("WarmLamp")
+mesh = SubResource("UnitBox")
+
+[node name="Rib3LUpright" type="MeshInstance3D" parent="EastTunnel" unique_id=1243231198]
+transform = Transform3D(0.23460336, 0, -0.49490005, 0, 3.26, 0, 0.2861141, 0, 0.4058004, 29.8641, 1.63, -2.945)
+material_override = SubResource("Frame")
+mesh = SubResource("UnitBox")
+
+[node name="Rib3LHaunch" type="MeshInstance3D" parent="EastTunnel" unique_id=164326074]
+transform = Transform3D(0.16140585, 0.64562565, -0.49490005, -0.25455892, 1.018232, 0, 0.19684495, 0.7873826, 0.4058004, 30.1431, 3.76, -2.6048)
+material_override = SubResource("Frame")
+mesh = SubResource("UnitBox")
+
+[node name="Rib3LFoot" type="MeshInstance3D" parent="EastTunnel" unique_id=559650776]
+transform = Transform3D(0.3043503, 0, -0.6108923, 0, 0.46, 0, 0.37117502, 0, 0.50090986, 29.8958, 0.23, -2.9064)
+material_override = SubResource("Steel")
+mesh = SubResource("UnitBox")
+
+[node name="Rib3LInlay" type="MeshInstance3D" parent="EastTunnel" unique_id=967691088]
+transform = Transform3D(0.04438442, 0, -1.910005, 0, 0.018, 0, 0.054129694, 0, 1.5661359, 30.1579, 0.017, -2.5394)
+material_override = SubResource("SafetyPaint")
+mesh = SubResource("UnitBox")
+
+[node name="Rib3LWallBase" type="MeshInstance3D" parent="EastTunnel" unique_id=2032771952]
+transform = Transform3D(0.11413137, 0, -0.3479766, 0, 0.83, 0, 0.13919064, 0, 0.2853284, 29.5302, 2.35, -2.6583)
+material_override = SubResource("Rubber")
+mesh = SubResource("UnitBox")
+
+[node name="Rib3LLamp" type="MeshInstance3D" parent="EastTunnel" unique_id=1927335819]
+transform = Transform3D(0.057065684, 0, -0.13919064, 0, 0.57, 0, 0.06959532, 0, 0.11413137, 29.6063, 2.35, -2.5655)
+material_override = SubResource("ColdLamp")
+mesh = SubResource("UnitBox")
+
+[node name="Rib3RUpright" type="MeshInstance3D" parent="EastTunnel" unique_id=791083755]
+transform = Transform3D(0.23460336, 0, -0.49490005, 0, 3.26, 0, 0.2861141, 0, 0.4058004, 33.1359, 1.63, 1.045)
+material_override = SubResource("Frame")
+mesh = SubResource("UnitBox")
+
+[node name="Rib3RHaunch" type="MeshInstance3D" parent="EastTunnel" unique_id=500722819]
+transform = Transform3D(0.16140585, -0.64562565, -0.49490005, 0.25455892, 1.018232, 0, 0.19684495, -0.7873826, 0.4058004, 32.8569, 3.76, 0.7048)
+material_override = SubResource("Frame")
+mesh = SubResource("UnitBox")
+
+[node name="Rib3RFoot" type="MeshInstance3D" parent="EastTunnel" unique_id=1596224851]
+transform = Transform3D(0.3043503, 0, -0.6108923, 0, 0.46, 0, 0.37117502, 0, 0.50090986, 33.1042, 0.23, 1.0064)
+material_override = SubResource("Steel")
+mesh = SubResource("UnitBox")
+
+[node name="Rib3RInlay" type="MeshInstance3D" parent="EastTunnel" unique_id=888489719]
+transform = Transform3D(0.04438442, 0, -1.910005, 0, 0.018, 0, 0.054129694, 0, 1.5661359, 32.7957, 0.017, 0.6774)
+material_override = SubResource("SafetyPaint")
+mesh = SubResource("UnitBox")
+
+[node name="Rib3RWallBase" type="MeshInstance3D" parent="EastTunnel" unique_id=324133008]
+transform = Transform3D(0.11413137, 0, -0.3479766, 0, 0.83, 0, 0.13919064, 0, 0.2853284, 32.7893, 2.35, 1.3163)
+material_override = SubResource("Rubber")
+mesh = SubResource("UnitBox")
+
+[node name="Rib3RLamp" type="MeshInstance3D" parent="EastTunnel" unique_id=386017068]
+transform = Transform3D(0.057065684, 0, -0.13919064, 0, 0.57, 0, 0.06959532, 0, 0.11413137, 32.7133, 2.35, 1.2235)
+material_override = SubResource("ColdLamp")
+mesh = SubResource("UnitBox")
+
+[node name="Rib3Header" type="MeshInstance3D" parent="EastTunnel" unique_id=1371517175]
+transform = Transform3D(2.7581744, 0, -0.5103657, 0, 0.47, 0, 3.3637738, 0, 0.41848168, 31.5, 4.38, -0.95)
+material_override = SubResource("Frame")
+mesh = SubResource("UnitBox")
+
+[node name="Rib3LampHousing" type="MeshInstance3D" parent="EastTunnel" unique_id=205582187]
+transform = Transform3D(1.6675861, 0, -0.42530474, 0, 0.17, 0, 2.03373, 0, 0.34873474, 31.5, 4.08, -0.95)
+material_override = SubResource("Rubber")
+mesh = SubResource("UnitBox")
+
+[node name="Rib3Lamp" type="MeshInstance3D" parent="EastTunnel" unique_id=1922140417]
+transform = Transform3D(1.5344328, 0, -0.23971722, 0, 0.075, 0, 1.8713409, 0, 0.19655956, 31.5, 3.97, -0.95)
+material_override = SubResource("ColdLamp")
+mesh = SubResource("UnitBox")
+
+[node name="Rib4LUpright" type="MeshInstance3D" parent="EastTunnel" unique_id=1319992671]
+transform = Transform3D(-1.3393964e-06, 0, -0.64, 0, 3.26, 0, 0.37, 0, -2.3167936e-06, 37.5, 1.63, -5.58)
+material_override = SubResource("Frame")
+mesh = SubResource("UnitBox")
+
+[node name="Rib4LHaunch" type="MeshInstance3D" parent="EastTunnel" unique_id=215883974]
+transform = Transform3D(-9.214975e-07, -3.6860029e-06, -0.64, -0.25455892, 1.018232, 0, 0.254558, 1.0182357, -2.3167936e-06, 37.5, 3.76, -5.14)
+material_override = SubResource("Frame")
+mesh = SubResource("UnitBox")
+
+[node name="Rib4LFoot" type="MeshInstance3D" parent="EastTunnel" unique_id=1533802290]
+transform = Transform3D(-1.7375952e-06, 0, -0.79, 0, 0.46, 0, 0.48, 0, -2.8597922e-06, 37.5, 0.23, -5.53)
+material_override = SubResource("Steel")
+mesh = SubResource("UnitBox")
+
+[node name="Rib4LInlay" type="MeshInstance3D" parent="EastTunnel" unique_id=2046698316]
+transform = Transform3D(-2.5339932e-07, 0, -2.47, 0, 0.018, 0, 0.07, 0, -8.941376e-06, 37.47, 0.017, -5.08)
+material_override = SubResource("SafetyPaint")
+mesh = SubResource("UnitBox")
+
+[node name="Rib4LWallBase" type="MeshInstance3D" parent="EastTunnel" unique_id=799777036]
+transform = Transform3D(-6.5159827e-07, 0, -0.45, 0, 0.83, 0, 0.18, 0, -1.6289955e-06, 37.06, 2.35, -5.57)
+material_override = SubResource("Rubber")
+mesh = SubResource("UnitBox")
+
+[node name="Rib4LLamp" type="MeshInstance3D" parent="EastTunnel" unique_id=1903330849]
+transform = Transform3D(-3.2579914e-07, 0, -0.18, 0, 0.57, 0, 0.09, 0, -6.5159827e-07, 37.06, 2.35, -5.45)
+material_override = SubResource("WarmLamp")
+mesh = SubResource("UnitBox")
+
+[node name="Rib4RUpright" type="MeshInstance3D" parent="EastTunnel" unique_id=835885339]
+transform = Transform3D(-1.3393964e-06, 0, -0.64, 0, 3.26, 0, 0.37, 0, -2.3167936e-06, 37.5, 1.63, -0.42)
+material_override = SubResource("Frame")
+mesh = SubResource("UnitBox")
+
+[node name="Rib4RHaunch" type="MeshInstance3D" parent="EastTunnel" unique_id=2046012863]
+transform = Transform3D(-9.214975e-07, 3.6860029e-06, -0.64, 0.25455892, 1.018232, 0, 0.254558, -1.0182357, -2.3167936e-06, 37.5, 3.76, -0.86)
+material_override = SubResource("Frame")
+mesh = SubResource("UnitBox")
+
+[node name="Rib4RFoot" type="MeshInstance3D" parent="EastTunnel" unique_id=497056148]
+transform = Transform3D(-1.7375952e-06, 0, -0.79, 0, 0.46, 0, 0.48, 0, -2.8597922e-06, 37.5, 0.23, -0.47)
+material_override = SubResource("Steel")
+mesh = SubResource("UnitBox")
+
+[node name="Rib4RInlay" type="MeshInstance3D" parent="EastTunnel" unique_id=1496665640]
+transform = Transform3D(-2.5339932e-07, 0, -2.47, 0, 0.018, 0, 0.07, 0, -8.941376e-06, 37.47, 0.017, -0.92)
+material_override = SubResource("SafetyPaint")
+mesh = SubResource("UnitBox")
+
+[node name="Rib4RWallBase" type="MeshInstance3D" parent="EastTunnel" unique_id=992218557]
+transform = Transform3D(-6.5159827e-07, 0, -0.45, 0, 0.83, 0, 0.18, 0, -1.6289955e-06, 37.06, 2.35, -0.43)
+material_override = SubResource("Rubber")
+mesh = SubResource("UnitBox")
+
+[node name="Rib4RLamp" type="MeshInstance3D" parent="EastTunnel" unique_id=2028042340]
+transform = Transform3D(-3.2579914e-07, 0, -0.18, 0, 0.57, 0, 0.09, 0, -6.5159827e-07, 37.06, 2.35, -0.55)
+material_override = SubResource("WarmLamp")
+mesh = SubResource("UnitBox")
+
+[node name="Rib4Header" type="MeshInstance3D" parent="EastTunnel" unique_id=665735831]
+transform = Transform3D(-1.5746957e-05, 0, -0.66, 0, 0.47, 0, 4.35, 0, -2.3891937e-06, 37.5, 4.38, -3)
+material_override = SubResource("Frame")
+mesh = SubResource("UnitBox")
+
+[node name="Rib4LampHousing" type="MeshInstance3D" parent="EastTunnel" unique_id=1663612191]
+transform = Transform3D(-9.520574e-06, 0, -0.55, 0, 0.17, 0, 2.63, 0, -1.9909946e-06, 37.5, 4.08, -3)
+material_override = SubResource("Rubber")
+mesh = SubResource("UnitBox")
+
+[node name="Rib4Lamp" type="MeshInstance3D" parent="EastTunnel" unique_id=1294741237]
+transform = Transform3D(-8.760377e-06, 0, -0.31, 0, 0.075, 0, 2.42, 0, -1.122197e-06, 37.5, 3.97, -3)
+material_override = SubResource("WarmLamp")
+mesh = SubResource("UnitBox")
+
+[node name="WestTunnel" type="Node3D" parent="." unique_id=1251597531]
+
+[node name="Lighting" type="Node3D" parent="WestTunnel" unique_id=67996733]
+
+[node name="Rib0Light" type="OmniLight3D" parent="WestTunnel/Lighting" unique_id=1079959714]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -13.75, 3.63, -3.6)
+light_color = Color(1, 0.81, 0.6, 1)
+light_energy = 1.29
+omni_range = 7.9
+omni_attenuation = 1.25
+
+[node name="Rib1Light" type="OmniLight3D" parent="WestTunnel/Lighting" unique_id=555163946]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -19.5, 3.63, -5.85)
+light_color = Color(0.68, 0.76, 0.79, 1)
+light_energy = 1.29
+omni_range = 7.9
+omni_attenuation = 1.25
+
+[node name="Rib2Light" type="OmniLight3D" parent="WestTunnel/Lighting" unique_id=1806325717]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -24.5, 3.63, -8.1)
+light_color = Color(1, 0.81, 0.6, 1)
+light_energy = 1.29
+omni_range = 7.9
+omni_attenuation = 1.25
+
+[node name="Rib3Light" type="OmniLight3D" parent="WestTunnel/Lighting" unique_id=324365896]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -30, 3.63, -6)
+light_color = Color(0.68, 0.76, 0.79, 1)
+light_energy = 1.29
+omni_range = 7.9
+omni_attenuation = 1.25
+
+[node name="Rib4Light" type="OmniLight3D" parent="WestTunnel/Lighting" unique_id=70388372]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -36.5, 3.63, -3.9)
+light_color = Color(1, 0.81, 0.6, 1)
+light_energy = 1.29
+omni_range = 7.9
+omni_attenuation = 1.25
+
+[node name="Floor" type="CSGPolygon3D" parent="WestTunnel" unique_id=1021502885]
+transform = Transform3D(1, 0, 0, 0, -3.6199901e-06, 1, 0, -1, -3.6199901e-06, 0, 0, 0)
+use_collision = true
+polygon = PackedVector2Array(-10.5, 6.4, -15.9255, 6.4, -20.9255, 10.9, -27.8826, 10.9, -33.8826, 6.7, -40, 6.7, -40, 1.1, -32.1174, 1.1, -26.1174, 5.3, -23.0745, 5.3, -18.0745, 0.8, -10.5, 0.8)
+depth = 0.38
+material = SubResource("Deck")
+
+[node name="Ceiling" type="CSGPolygon3D" parent="WestTunnel" unique_id=1960139307]
+transform = Transform3D(1, 0, 0, 0, -3.6199901e-06, 1, 0, -1, -3.6199901e-06, 0, 5.07, 0)
+use_collision = true
+polygon = PackedVector2Array(-10.5, 6.4, -15.9255, 6.4, -20.9255, 10.9, -27.8826, 10.9, -33.8826, 6.7, -40, 6.7, -40, 1.1, -32.1174, 1.1, -26.1174, 5.3, -23.0745, 5.3, -18.0745, 0.8, -10.5, 0.8)
+depth = 0.27
+material = SubResource("Concrete")
+
+[node name="Masonry0_0" type="CSGPolygon3D" parent="WestTunnel" unique_id=493529517]
+transform = Transform3D(1, 0, 0, 0, -3.6199901e-06, -1, 0, 1, -3.6199901e-06, 0, 0, 0)
+instance_shader_parameters/run_axis = Vector2(-1, 0)
+instance_shader_parameters/run_offset = -10.5
+use_collision = true
+polygon = PackedVector2Array(-10.5, -6.4, -15.9255, -6.4, -15.7836, -6.77, -10.5, -6.77)
+depth = 4.8
+material = SubResource("ConcreteWall")
+
+[node name="Masonry0_1" type="CSGPolygon3D" parent="WestTunnel" unique_id=95950772]
+transform = Transform3D(1, 0, 0, 0, -3.6199901e-06, -1, 0, 1, -3.6199901e-06, 0, 0, 0)
+instance_shader_parameters/run_axis = Vector2(-0.7432941, -0.6689647)
+instance_shader_parameters/run_offset = -10.6932052
+use_collision = true
+polygon = PackedVector2Array(-15.9255, -6.4, -20.9255, -10.9, -20.7836, -11.27, -15.7836, -6.77)
+depth = 4.8
+material = SubResource("ConcreteWall")
+
+[node name="Masonry0_2" type="CSGPolygon3D" parent="WestTunnel" unique_id=1957440342]
+transform = Transform3D(1, 0, 0, 0, -3.6199901e-06, -1, 0, 1, -3.6199901e-06, 0, 0, 0)
+instance_shader_parameters/run_axis = Vector2(-1, 0)
+instance_shader_parameters/run_offset = -8.773188
+use_collision = true
+polygon = PackedVector2Array(-20.9255, -10.9, -27.8826, -10.9, -27.9993, -11.27, -20.7836, -11.27)
+depth = 4.8
+material = SubResource("ConcreteWall")
+
+[node name="Masonry0_3" type="CSGPolygon3D" parent="WestTunnel" unique_id=1067343224]
+transform = Transform3D(1, 0, 0, 0, -3.6199901e-06, -1, 0, 1, -3.6199901e-06, 0, 0, 0)
+instance_shader_parameters/run_axis = Vector2(-0.8192319, 0.5734623)
+instance_shader_parameters/run_offset = 2.5178356
+use_collision = true
+polygon = PackedVector2Array(-27.8826, -10.9, -33.8826, -6.7, -33.9993, -7.07, -27.9993, -11.27)
+depth = 4.8
+material = SubResource("ConcreteWall")
+
+[node name="Masonry0_4" type="CSGPolygon3D" parent="WestTunnel" unique_id=128440485]
+transform = Transform3D(1, 0, 0, 0, -3.6199901e-06, -1, 0, 1, -3.6199901e-06, 0, 0, 0)
+instance_shader_parameters/run_axis = Vector2(-1, 0)
+instance_shader_parameters/run_offset = -7.4492546
+use_collision = true
+polygon = PackedVector2Array(-33.8826, -6.7, -40, -6.7, -40, -7.07, -33.9993, -7.07)
+depth = 4.8
+material = SubResource("ConcreteWall")
+
+[node name="Skirting0" type="CSGPolygon3D" parent="WestTunnel" unique_id=1161295202]
+transform = Transform3D(1, 0, 0, 0, -3.6199901e-06, -1, 0, 1, -3.6199901e-06, 0, 0, 0)
+polygon = PackedVector2Array(-10.5, -6.19, -16.0061, -6.19, -21.0061, -10.69, -27.8164, -10.69, -33.8164, -6.49, -40, -6.49, -40, -6.7, -33.8826, -6.7, -27.8826, -10.9, -20.9255, -10.9, -15.9255, -6.4, -10.5, -6.4)
+depth = 0.48
+material = SubResource("Steel")
+
+[node name="Masonry1_0" type="CSGPolygon3D" parent="WestTunnel" unique_id=90462143]
+transform = Transform3D(1, 0, 0, 0, -3.6199901e-06, -1, 0, 1, -3.6199901e-06, 0, 0, 0)
+instance_shader_parameters/run_axis = Vector2(-1, 0)
+instance_shader_parameters/run_offset = -10.5
+use_collision = true
+polygon = PackedVector2Array(-10.5, -0.8, -18.0745, -0.8, -18.2164, -0.43, -10.5, -0.43)
+depth = 4.8
+material = SubResource("ConcreteWall")
+
+[node name="Masonry1_1" type="CSGPolygon3D" parent="WestTunnel" unique_id=246441826]
+transform = Transform3D(1, 0, 0, 0, -3.6199901e-06, -1, 0, 1, -3.6199901e-06, 0, 0, 0)
+instance_shader_parameters/run_axis = Vector2(-0.7432941, -0.6689647)
+instance_shader_parameters/run_offset = -6.3953418
+use_collision = true
+polygon = PackedVector2Array(-18.0745, -0.8, -23.0745, -5.3, -23.2164, -4.93, -18.2164, -0.43)
+depth = 4.8
+material = SubResource("ConcreteWall")
+
+[node name="Masonry1_2" type="CSGPolygon3D" parent="WestTunnel" unique_id=1958738117]
+transform = Transform3D(1, 0, 0, 0, -3.6199901e-06, -1, 0, 1, -3.6199901e-06, 0, 0, 0)
+instance_shader_parameters/run_axis = Vector2(-1, 0)
+instance_shader_parameters/run_offset = -8.773188
+use_collision = true
+polygon = PackedVector2Array(-23.0745, -5.3, -26.1174, -5.3, -26.0007, -4.93, -23.2164, -4.93)
+depth = 4.8
+material = SubResource("ConcreteWall")
+
+[node name="Masonry1_3" type="CSGPolygon3D" parent="WestTunnel" unique_id=1362665273]
+transform = Transform3D(1, 0, 0, 0, -3.6199901e-06, -1, 0, 1, -3.6199901e-06, 0, 0, 0)
+instance_shader_parameters/run_axis = Vector2(-0.8192319, 0.5734623)
+instance_shader_parameters/run_offset = -1.0126453
+use_collision = true
+polygon = PackedVector2Array(-26.1174, -5.3, -32.1174, -1.1, -32.0007, -0.73, -26.0007, -4.93)
+depth = 4.8
+material = SubResource("ConcreteWall")
+
+[node name="Masonry1_4" type="CSGPolygon3D" parent="WestTunnel" unique_id=189255119]
+transform = Transform3D(1, 0, 0, 0, -3.6199901e-06, -1, 0, 1, -3.6199901e-06, 0, 0, 0)
+instance_shader_parameters/run_axis = Vector2(-1, 0)
+instance_shader_parameters/run_offset = -7.4492546
+use_collision = true
+polygon = PackedVector2Array(-32.1174, -1.1, -40, -1.1, -40, -0.73, -32.0007, -0.73)
+depth = 4.8
+material = SubResource("ConcreteWall")
+
+[node name="Skirting1" type="CSGPolygon3D" parent="WestTunnel" unique_id=1481763804]
+transform = Transform3D(1, 0, 0, 0, -3.6199901e-06, -1, 0, 1, -3.6199901e-06, 0, 0, 0)
+polygon = PackedVector2Array(-10.5, -1.01, -17.9939, -1.01, -22.9939, -5.51, -26.1836, -5.51, -32.1836, -1.31, -40, -1.31, -40, -1.1, -32.1174, -1.1, -26.1174, -5.3, -23.0745, -5.3, -18.0745, -0.8, -10.5, -0.8)
+depth = 0.48
+material = SubResource("Steel")
+
+[node name="EndWall" type="CSGBox3D" parent="WestTunnel" unique_id=1176551625]
+transform = Transform3D(-3.6199901e-06, 0, 1, 0, 1, 0, -1, 0, -3.6199901e-06, -40.17, 2.4, -3.9)
+use_collision = true
+size = Vector3(6.36, 4.8, 0.34)
+material = SubResource("ConcreteWall")
+
+[node name="Portal" parent="WestTunnel" unique_id=164963039 instance=ExtResource("portal")]
+transform = Transform3D(-3.6199901e-06, 0, 1, 0, 1, 0, -1, 0, -3.6199901e-06, -38.8, 0, -3.9)
+energy_color = Color(0.54, 0.43, 0.68, 1)
+
+[node name="Rib0LUpright" type="MeshInstance3D" parent="WestTunnel" unique_id=114762409]
+transform = Transform3D(-1.3393964e-06, 0, 0.64, 0, 3.26, 0, -0.37, 0, -2.3167936e-06, -13.75, 1.63, -1.02)
+material_override = SubResource("Frame")
+mesh = SubResource("UnitBox")
+
+[node name="Rib0LHaunch" type="MeshInstance3D" parent="WestTunnel" unique_id=1909060328]
+transform = Transform3D(-9.214975e-07, -3.6860029e-06, 0.64, -0.25455892, 1.018232, 0, -0.254558, -1.0182357, -2.3167936e-06, -13.75, 3.76, -1.46)
+material_override = SubResource("Frame")
+mesh = SubResource("UnitBox")
+
+[node name="Rib0LFoot" type="MeshInstance3D" parent="WestTunnel" unique_id=472746755]
+transform = Transform3D(-1.7375952e-06, 0, 0.79, 0, 0.46, 0, -0.48, 0, -2.8597922e-06, -13.75, 0.23, -1.07)
+material_override = SubResource("Steel")
+mesh = SubResource("UnitBox")
+
+[node name="Rib0LInlay" type="MeshInstance3D" parent="WestTunnel" unique_id=502722295]
+transform = Transform3D(-2.5339932e-07, 0, 2.47, 0, 0.018, 0, -0.07, 0, -8.941376e-06, -13.72, 0.017, -1.52)
+material_override = SubResource("GuidePaint")
+mesh = SubResource("UnitBox")
+
+[node name="Rib0LWallBase" type="MeshInstance3D" parent="WestTunnel" unique_id=166783607]
+transform = Transform3D(-6.5159827e-07, 0, 0.45, 0, 0.83, 0, -0.18, 0, -1.6289955e-06, -13.31, 2.35, -1.03)
+material_override = SubResource("Rubber")
+mesh = SubResource("UnitBox")
+
+[node name="Rib0LLamp" type="MeshInstance3D" parent="WestTunnel" unique_id=1916854268]
+transform = Transform3D(-3.2579914e-07, 0, 0.18, 0, 0.57, 0, -0.09, 0, -6.5159827e-07, -13.31, 2.35, -1.15)
+material_override = SubResource("WarmLamp")
+mesh = SubResource("UnitBox")
+
+[node name="Rib0RUpright" type="MeshInstance3D" parent="WestTunnel" unique_id=1138149999]
+transform = Transform3D(-1.3393964e-06, 0, 0.64, 0, 3.26, 0, -0.37, 0, -2.3167936e-06, -13.75, 1.63, -6.18)
+material_override = SubResource("Frame")
+mesh = SubResource("UnitBox")
+
+[node name="Rib0RHaunch" type="MeshInstance3D" parent="WestTunnel" unique_id=771301290]
+transform = Transform3D(-9.214975e-07, 3.6860029e-06, 0.64, 0.25455892, 1.018232, 0, -0.254558, 1.0182357, -2.3167936e-06, -13.75, 3.76, -5.74)
+material_override = SubResource("Frame")
+mesh = SubResource("UnitBox")
+
+[node name="Rib0RFoot" type="MeshInstance3D" parent="WestTunnel" unique_id=336964787]
+transform = Transform3D(-1.7375952e-06, 0, 0.79, 0, 0.46, 0, -0.48, 0, -2.8597922e-06, -13.75, 0.23, -6.13)
+material_override = SubResource("Steel")
+mesh = SubResource("UnitBox")
+
+[node name="Rib0RInlay" type="MeshInstance3D" parent="WestTunnel" unique_id=613587334]
+transform = Transform3D(-2.5339932e-07, 0, 2.47, 0, 0.018, 0, -0.07, 0, -8.941376e-06, -13.72, 0.017, -5.68)
+material_override = SubResource("GuidePaint")
+mesh = SubResource("UnitBox")
+
+[node name="Rib0RWallBase" type="MeshInstance3D" parent="WestTunnel" unique_id=1091859797]
+transform = Transform3D(-6.5159827e-07, 0, 0.45, 0, 0.83, 0, -0.18, 0, -1.6289955e-06, -13.31, 2.35, -6.17)
+material_override = SubResource("Rubber")
+mesh = SubResource("UnitBox")
+
+[node name="Rib0RLamp" type="MeshInstance3D" parent="WestTunnel" unique_id=935433448]
+transform = Transform3D(-3.2579914e-07, 0, 0.18, 0, 0.57, 0, -0.09, 0, -6.5159827e-07, -13.31, 2.35, -6.05)
+material_override = SubResource("WarmLamp")
+mesh = SubResource("UnitBox")
+
+[node name="Rib0Header" type="MeshInstance3D" parent="WestTunnel" unique_id=1040832523]
+transform = Transform3D(-1.5746957e-05, 0, 0.66, 0, 0.47, 0, -4.35, 0, -2.3891937e-06, -13.75, 4.38, -3.6)
+material_override = SubResource("Frame")
+mesh = SubResource("UnitBox")
+
+[node name="Rib0LampHousing" type="MeshInstance3D" parent="WestTunnel" unique_id=312515890]
+transform = Transform3D(-9.520574e-06, 0, 0.55, 0, 0.17, 0, -2.63, 0, -1.9909946e-06, -13.75, 4.08, -3.6)
+material_override = SubResource("Rubber")
+mesh = SubResource("UnitBox")
+
+[node name="Rib0Lamp" type="MeshInstance3D" parent="WestTunnel" unique_id=1650412393]
+transform = Transform3D(-8.760377e-06, 0, 0.31, 0, 0.075, 0, -2.42, 0, -1.122197e-06, -13.75, 3.97, -3.6)
+material_override = SubResource("WarmLamp")
+mesh = SubResource("UnitBox")
+
+[node name="Rib1LUpright" type="MeshInstance3D" parent="WestTunnel" unique_id=906629457]
+transform = Transform3D(0.2475118, 0, 0.47571626, 0, 3.26, 0, -0.2750235, 0, 0.4281285, -21.2259, 1.63, -3.9323)
+material_override = SubResource("Frame")
+mesh = SubResource("UnitBox")
+
+[node name="Rib1LHaunch" type="MeshInstance3D" parent="WestTunnel" unique_id=207739397]
+transform = Transform3D(0.17028677, 0.6811496, 0.47571626, -0.25455892, 1.018232, 0, -0.18921466, -0.7568614, 0.4281285, -20.9316, 3.76, -4.2594)
+material_override = SubResource("Frame")
+mesh = SubResource("UnitBox")
+
+[node name="Rib1LFoot" type="MeshInstance3D" parent="WestTunnel" unique_id=666234724]
+transform = Transform3D(0.32109636, 0, 0.5872123, 0, 0.46, 0, -0.3567872, 0, 0.5284712, -21.1925, 0.23, -3.9695)
+material_override = SubResource("Steel")
+mesh = SubResource("UnitBox")
+
+[node name="Rib1LInlay" type="MeshInstance3D" parent="WestTunnel" unique_id=1353078921]
+transform = Transform3D(0.046826556, 0, 1.8359675, 0, 0.018, 0, -0.05203147, 0, 1.6523085, -20.8691, 0.017, -4.2839)
+material_override = SubResource("GuidePaint")
+mesh = SubResource("UnitBox")
+
+[node name="Rib1LWallBase" type="MeshInstance3D" parent="WestTunnel" unique_id=1091982430]
+transform = Transform3D(0.12041115, 0, 0.334488, 0, 0.83, 0, -0.13379522, 0, 0.30102786, -20.8922, 2.35, -3.6454)
+material_override = SubResource("Rubber")
+mesh = SubResource("UnitBox")
+
+[node name="Rib1LLamp" type="MeshInstance3D" parent="WestTunnel" unique_id=1953025811]
+transform = Transform3D(0.060205575, 0, 0.13379522, 0, 0.57, 0, -0.06689761, 0, 0.12041115, -20.8119, 2.35, -3.7346)
+material_override = SubResource("ColdLamp")
+mesh = SubResource("UnitBox")
+
+[node name="Rib1RUpright" type="MeshInstance3D" parent="WestTunnel" unique_id=341437693]
+transform = Transform3D(0.2475118, 0, 0.47571626, 0, 3.26, 0, -0.2750235, 0, 0.4281285, -17.7741, 1.63, -7.7677)
+material_override = SubResource("Frame")
+mesh = SubResource("UnitBox")
+
+[node name="Rib1RHaunch" type="MeshInstance3D" parent="WestTunnel" unique_id=610900423]
+transform = Transform3D(0.17028677, -0.6811496, 0.47571626, 0.25455892, 1.018232, 0, -0.18921466, 0.7568614, 0.4281285, -18.0684, 3.76, -7.4406)
+material_override = SubResource("Frame")
+mesh = SubResource("UnitBox")
+
+[node name="Rib1RFoot" type="MeshInstance3D" parent="WestTunnel" unique_id=145971804]
+transform = Transform3D(0.32109636, 0, 0.5872123, 0, 0.46, 0, -0.3567872, 0, 0.5284712, -17.8075, 0.23, -7.7305)
+material_override = SubResource("Steel")
+mesh = SubResource("UnitBox")
+
+[node name="Rib1RInlay" type="MeshInstance3D" parent="WestTunnel" unique_id=362700361]
+transform = Transform3D(0.046826556, 0, 1.8359675, 0, 0.018, 0, -0.05203147, 0, 1.6523085, -18.0863, 0.017, -7.376)
+material_override = SubResource("GuidePaint")
+mesh = SubResource("UnitBox")
+
+[node name="Rib1RWallBase" type="MeshInstance3D" parent="WestTunnel" unique_id=976241501]
+transform = Transform3D(0.12041115, 0, 0.334488, 0, 0.83, 0, -0.13379522, 0, 0.30102786, -17.4537, 2.35, -7.4659)
+material_override = SubResource("Rubber")
+mesh = SubResource("UnitBox")
+
+[node name="Rib1RLamp" type="MeshInstance3D" parent="WestTunnel" unique_id=1279699176]
+transform = Transform3D(0.060205575, 0, 0.13379522, 0, 0.57, 0, -0.06689761, 0, 0.12041115, -17.534, 2.35, -7.3767)
+material_override = SubResource("ColdLamp")
+mesh = SubResource("UnitBox")
+
+[node name="Rib1Header" type="MeshInstance3D" parent="WestTunnel" unique_id=748773703]
+transform = Transform3D(2.909936, 0, 0.49058244, 0, 0.47, 0, -3.2333841, 0, 0.44150755, -19.5, 4.38, -5.85)
+material_override = SubResource("Frame")
+mesh = SubResource("UnitBox")
+
+[node name="Rib1LampHousing" type="MeshInstance3D" parent="WestTunnel" unique_id=905193399]
+transform = Transform3D(1.7593406, 0, 0.4088187, 0, 0.17, 0, -1.9548967, 0, 0.36792293, -19.5, 4.08, -5.85)
+material_override = SubResource("Rubber")
+mesh = SubResource("UnitBox")
+
+[node name="Rib1Lamp" type="MeshInstance3D" parent="WestTunnel" unique_id=185356635]
+transform = Transform3D(1.618861, 0, 0.23042507, 0, 0.075, 0, -1.7988023, 0, 0.20737475, -19.5, 3.97, -5.85)
+material_override = SubResource("ColdLamp")
+mesh = SubResource("UnitBox")
+
+[node name="Rib2LUpright" type="MeshInstance3D" parent="WestTunnel" unique_id=1326806898]
+transform = Transform3D(-1.3393964e-06, 0, 0.64, 0, 3.26, 0, -0.37, 0, -2.3167936e-06, -24.5, 1.63, -5.52)
+material_override = SubResource("Frame")
+mesh = SubResource("UnitBox")
+
+[node name="Rib2LHaunch" type="MeshInstance3D" parent="WestTunnel" unique_id=567632391]
+transform = Transform3D(-9.214975e-07, -3.6860029e-06, 0.64, -0.25455892, 1.018232, 0, -0.254558, -1.0182357, -2.3167936e-06, -24.5, 3.76, -5.96)
+material_override = SubResource("Frame")
+mesh = SubResource("UnitBox")
+
+[node name="Rib2LFoot" type="MeshInstance3D" parent="WestTunnel" unique_id=1460764251]
+transform = Transform3D(-1.7375952e-06, 0, 0.79, 0, 0.46, 0, -0.48, 0, -2.8597922e-06, -24.5, 0.23, -5.57)
+material_override = SubResource("Steel")
+mesh = SubResource("UnitBox")
+
+[node name="Rib2LInlay" type="MeshInstance3D" parent="WestTunnel" unique_id=368093505]
+transform = Transform3D(-2.5339932e-07, 0, 2.47, 0, 0.018, 0, -0.07, 0, -8.941376e-06, -24.47, 0.017, -6.02)
+material_override = SubResource("GuidePaint")
+mesh = SubResource("UnitBox")
+
+[node name="Rib2LWallBase" type="MeshInstance3D" parent="WestTunnel" unique_id=114854948]
+transform = Transform3D(-6.5159827e-07, 0, 0.45, 0, 0.83, 0, -0.18, 0, -1.6289955e-06, -24.06, 2.35, -5.53)
+material_override = SubResource("Rubber")
+mesh = SubResource("UnitBox")
+
+[node name="Rib2LLamp" type="MeshInstance3D" parent="WestTunnel" unique_id=1860292991]
+transform = Transform3D(-3.2579914e-07, 0, 0.18, 0, 0.57, 0, -0.09, 0, -6.5159827e-07, -24.06, 2.35, -5.65)
+material_override = SubResource("WarmLamp")
+mesh = SubResource("UnitBox")
+
+[node name="Rib2RUpright" type="MeshInstance3D" parent="WestTunnel" unique_id=1751200393]
+transform = Transform3D(-1.3393964e-06, 0, 0.64, 0, 3.26, 0, -0.37, 0, -2.3167936e-06, -24.5, 1.63, -10.68)
+material_override = SubResource("Frame")
+mesh = SubResource("UnitBox")
+
+[node name="Rib2RHaunch" type="MeshInstance3D" parent="WestTunnel" unique_id=1876391756]
+transform = Transform3D(-9.214975e-07, 3.6860029e-06, 0.64, 0.25455892, 1.018232, 0, -0.254558, 1.0182357, -2.3167936e-06, -24.5, 3.76, -10.24)
+material_override = SubResource("Frame")
+mesh = SubResource("UnitBox")
+
+[node name="Rib2RFoot" type="MeshInstance3D" parent="WestTunnel" unique_id=1392187651]
+transform = Transform3D(-1.7375952e-06, 0, 0.79, 0, 0.46, 0, -0.48, 0, -2.8597922e-06, -24.5, 0.23, -10.63)
+material_override = SubResource("Steel")
+mesh = SubResource("UnitBox")
+
+[node name="Rib2RInlay" type="MeshInstance3D" parent="WestTunnel" unique_id=1944078415]
+transform = Transform3D(-2.5339932e-07, 0, 2.47, 0, 0.018, 0, -0.07, 0, -8.941376e-06, -24.47, 0.017, -10.18)
+material_override = SubResource("GuidePaint")
+mesh = SubResource("UnitBox")
+
+[node name="Rib2RWallBase" type="MeshInstance3D" parent="WestTunnel" unique_id=490294781]
+transform = Transform3D(-6.5159827e-07, 0, 0.45, 0, 0.83, 0, -0.18, 0, -1.6289955e-06, -24.06, 2.35, -10.67)
+material_override = SubResource("Rubber")
+mesh = SubResource("UnitBox")
+
+[node name="Rib2RLamp" type="MeshInstance3D" parent="WestTunnel" unique_id=1995634830]
+transform = Transform3D(-3.2579914e-07, 0, 0.18, 0, 0.57, 0, -0.09, 0, -6.5159827e-07, -24.06, 2.35, -10.55)
+material_override = SubResource("WarmLamp")
+mesh = SubResource("UnitBox")
+
+[node name="Rib2Header" type="MeshInstance3D" parent="WestTunnel" unique_id=1665913640]
+transform = Transform3D(-1.5746957e-05, 0, 0.66, 0, 0.47, 0, -4.35, 0, -2.3891937e-06, -24.5, 4.38, -8.1)
+material_override = SubResource("Frame")
+mesh = SubResource("UnitBox")
+
+[node name="Rib2LampHousing" type="MeshInstance3D" parent="WestTunnel" unique_id=1225821731]
+transform = Transform3D(-9.520574e-06, 0, 0.55, 0, 0.17, 0, -2.63, 0, -1.9909946e-06, -24.5, 4.08, -8.1)
+material_override = SubResource("Rubber")
+mesh = SubResource("UnitBox")
+
+[node name="Rib2Lamp" type="MeshInstance3D" parent="WestTunnel" unique_id=1938058300]
+transform = Transform3D(-8.760377e-06, 0, 0.31, 0, 0.075, 0, -2.42, 0, -1.122197e-06, -24.5, 3.97, -8.1)
+material_override = SubResource("WarmLamp")
+mesh = SubResource("UnitBox")
+
+[node name="Rib3LUpright" type="MeshInstance3D" parent="WestTunnel" unique_id=1146443493]
+transform = Transform3D(-0.21217431, 0, 0.5243166, 0, 3.26, 0, -0.30312055, 0, -0.3670042, -28.5205, 1.63, -3.8864)
+material_override = SubResource("Frame")
+mesh = SubResource("UnitBox")
+
+[node name="Rib3LHaunch" type="MeshInstance3D" parent="WestTunnel" unique_id=1119252926]
+transform = Transform3D(-0.14597477, -0.5839012, 0.5243166, -0.25455892, 1.018232, 0, -0.2085453, -0.8341842, -0.3670042, -28.7728, 3.76, -4.2468)
+material_override = SubResource("Frame")
+mesh = SubResource("UnitBox")
+
+[node name="Rib3LFoot" type="MeshInstance3D" parent="WestTunnel" unique_id=769433858]
+transform = Transform3D(-0.27525315, 0, 0.6472034, 0, 0.46, 0, -0.39323747, 0, -0.45302084, -28.5491, 0.23, -3.9273)
+material_override = SubResource("Steel")
+mesh = SubResource("UnitBox")
+
+[node name="Rib3LInlay" type="MeshInstance3D" parent="WestTunnel" unique_id=309882726]
+transform = Transform3D(-0.040141083, 0, 2.0235345, 0, 0.018, 0, -0.057347134, 0, -1.4164069, -28.7826, 0.017, -4.3132)
+material_override = SubResource("GuidePaint")
+mesh = SubResource("UnitBox")
+
+[node name="Rib3LWallBase" type="MeshInstance3D" parent="WestTunnel" unique_id=699417882]
+transform = Transform3D(-0.103219934, 0, 0.36866012, 0, 0.83, 0, -0.14746407, 0, -0.25804982, -28.1657, 2.35, -4.1469)
+material_override = SubResource("Rubber")
+mesh = SubResource("UnitBox")
+
+[node name="Rib3LLamp" type="MeshInstance3D" parent="WestTunnel" unique_id=1930495193]
+transform = Transform3D(-0.051609967, 0, 0.14746407, 0, 0.57, 0, -0.07373203, 0, -0.103219934, -28.2346, 2.35, -4.2452)
+material_override = SubResource("ColdLamp")
+mesh = SubResource("UnitBox")
+
+[node name="Rib3RUpright" type="MeshInstance3D" parent="WestTunnel" unique_id=972266779]
+transform = Transform3D(-0.21217431, 0, 0.5243166, 0, 3.26, 0, -0.30312055, 0, -0.3670042, -31.4795, 1.63, -8.1136)
+material_override = SubResource("Frame")
+mesh = SubResource("UnitBox")
+
+[node name="Rib3RHaunch" type="MeshInstance3D" parent="WestTunnel" unique_id=70777812]
+transform = Transform3D(-0.14597477, 0.5839012, 0.5243166, 0.25455892, 1.018232, 0, -0.2085453, 0.8341842, -0.3670042, -31.2272, 3.76, -7.7532)
+material_override = SubResource("Frame")
+mesh = SubResource("UnitBox")
+
+[node name="Rib3RFoot" type="MeshInstance3D" parent="WestTunnel" unique_id=1914558724]
+transform = Transform3D(-0.27525315, 0, 0.6472034, 0, 0.46, 0, -0.39323747, 0, -0.45302084, -31.4509, 0.23, -8.0727)
+material_override = SubResource("Steel")
+mesh = SubResource("UnitBox")
+
+[node name="Rib3RInlay" type="MeshInstance3D" parent="WestTunnel" unique_id=42094001]
+transform = Transform3D(-0.040141083, 0, 2.0235345, 0, 0.018, 0, -0.057347134, 0, -1.4164069, -31.1682, 0.017, -7.7212)
+material_override = SubResource("GuidePaint")
+mesh = SubResource("UnitBox")
+
+[node name="Rib3RWallBase" type="MeshInstance3D" parent="WestTunnel" unique_id=837414819]
+transform = Transform3D(-0.103219934, 0, 0.36866012, 0, 0.83, 0, -0.14746407, 0, -0.25804982, -31.1133, 2.35, -8.3577)
+material_override = SubResource("Rubber")
+mesh = SubResource("UnitBox")
+
+[node name="Rib3RLamp" type="MeshInstance3D" parent="WestTunnel" unique_id=1626263065]
+transform = Transform3D(-0.051609967, 0, 0.14746407, 0, 0.57, 0, -0.07373203, 0, -0.103219934, -31.0445, 2.35, -8.2594)
+material_override = SubResource("ColdLamp")
+mesh = SubResource("UnitBox")
+
+[node name="Rib3Header" type="MeshInstance3D" parent="WestTunnel" unique_id=1270049118]
+transform = Transform3D(-2.4944816, 0, 0.54070157, 0, 0.47, 0, -3.5637145, 0, -0.3784731, -30, 4.38, -6)
+material_override = SubResource("Frame")
+mesh = SubResource("UnitBox")
+
+[node name="Rib3LampHousing" type="MeshInstance3D" parent="WestTunnel" unique_id=1554638064]
+transform = Transform3D(-1.508158, 0, 0.45058462, 0, 0.17, 0, -2.1546137, 0, -0.31539425, -30, 4.08, -6)
+material_override = SubResource("Rubber")
+mesh = SubResource("UnitBox")
+
+[node name="Rib3Lamp" type="MeshInstance3D" parent="WestTunnel" unique_id=1826894216]
+transform = Transform3D(-1.3877347, 0, 0.25396588, 0, 0.075, 0, -1.9825723, 0, -0.17776766, -30, 3.97, -6)
+material_override = SubResource("ColdLamp")
+mesh = SubResource("UnitBox")
+
+[node name="Rib4LUpright" type="MeshInstance3D" parent="WestTunnel" unique_id=702896696]
+transform = Transform3D(-1.3393964e-06, 0, 0.64, 0, 3.26, 0, -0.37, 0, -2.3167936e-06, -36.5, 1.63, -1.32)
+material_override = SubResource("Frame")
+mesh = SubResource("UnitBox")
+
+[node name="Rib4LHaunch" type="MeshInstance3D" parent="WestTunnel" unique_id=2080957439]
+transform = Transform3D(-9.214975e-07, -3.6860029e-06, 0.64, -0.25455892, 1.018232, 0, -0.254558, -1.0182357, -2.3167936e-06, -36.5, 3.76, -1.76)
+material_override = SubResource("Frame")
+mesh = SubResource("UnitBox")
+
+[node name="Rib4LFoot" type="MeshInstance3D" parent="WestTunnel" unique_id=497503071]
+transform = Transform3D(-1.7375952e-06, 0, 0.79, 0, 0.46, 0, -0.48, 0, -2.8597922e-06, -36.5, 0.23, -1.37)
+material_override = SubResource("Steel")
+mesh = SubResource("UnitBox")
+
+[node name="Rib4LInlay" type="MeshInstance3D" parent="WestTunnel" unique_id=1644203338]
+transform = Transform3D(-2.5339932e-07, 0, 2.47, 0, 0.018, 0, -0.07, 0, -8.941376e-06, -36.47, 0.017, -1.82)
+material_override = SubResource("GuidePaint")
+mesh = SubResource("UnitBox")
+
+[node name="Rib4LWallBase" type="MeshInstance3D" parent="WestTunnel" unique_id=4985112]
+transform = Transform3D(-6.5159827e-07, 0, 0.45, 0, 0.83, 0, -0.18, 0, -1.6289955e-06, -36.06, 2.35, -1.33)
+material_override = SubResource("Rubber")
+mesh = SubResource("UnitBox")
+
+[node name="Rib4LLamp" type="MeshInstance3D" parent="WestTunnel" unique_id=809056816]
+transform = Transform3D(-3.2579914e-07, 0, 0.18, 0, 0.57, 0, -0.09, 0, -6.5159827e-07, -36.06, 2.35, -1.45)
+material_override = SubResource("WarmLamp")
+mesh = SubResource("UnitBox")
+
+[node name="Rib4RUpright" type="MeshInstance3D" parent="WestTunnel" unique_id=1372651336]
+transform = Transform3D(-1.3393964e-06, 0, 0.64, 0, 3.26, 0, -0.37, 0, -2.3167936e-06, -36.5, 1.63, -6.48)
+material_override = SubResource("Frame")
+mesh = SubResource("UnitBox")
+
+[node name="Rib4RHaunch" type="MeshInstance3D" parent="WestTunnel" unique_id=1852824311]
+transform = Transform3D(-9.214975e-07, 3.6860029e-06, 0.64, 0.25455892, 1.018232, 0, -0.254558, 1.0182357, -2.3167936e-06, -36.5, 3.76, -6.04)
+material_override = SubResource("Frame")
+mesh = SubResource("UnitBox")
+
+[node name="Rib4RFoot" type="MeshInstance3D" parent="WestTunnel" unique_id=270006648]
+transform = Transform3D(-1.7375952e-06, 0, 0.79, 0, 0.46, 0, -0.48, 0, -2.8597922e-06, -36.5, 0.23, -6.43)
+material_override = SubResource("Steel")
+mesh = SubResource("UnitBox")
+
+[node name="Rib4RInlay" type="MeshInstance3D" parent="WestTunnel" unique_id=164177308]
+transform = Transform3D(-2.5339932e-07, 0, 2.47, 0, 0.018, 0, -0.07, 0, -8.941376e-06, -36.47, 0.017, -5.98)
+material_override = SubResource("GuidePaint")
+mesh = SubResource("UnitBox")
+
+[node name="Rib4RWallBase" type="MeshInstance3D" parent="WestTunnel" unique_id=2111807522]
+transform = Transform3D(-6.5159827e-07, 0, 0.45, 0, 0.83, 0, -0.18, 0, -1.6289955e-06, -36.06, 2.35, -6.47)
+material_override = SubResource("Rubber")
+mesh = SubResource("UnitBox")
+
+[node name="Rib4RLamp" type="MeshInstance3D" parent="WestTunnel" unique_id=2117222881]
+transform = Transform3D(-3.2579914e-07, 0, 0.18, 0, 0.57, 0, -0.09, 0, -6.5159827e-07, -36.06, 2.35, -6.35)
+material_override = SubResource("WarmLamp")
+mesh = SubResource("UnitBox")
+
+[node name="Rib4Header" type="MeshInstance3D" parent="WestTunnel" unique_id=1037530924]
+transform = Transform3D(-1.5746957e-05, 0, 0.66, 0, 0.47, 0, -4.35, 0, -2.3891937e-06, -36.5, 4.38, -3.9)
+material_override = SubResource("Frame")
+mesh = SubResource("UnitBox")
+
+[node name="Rib4LampHousing" type="MeshInstance3D" parent="WestTunnel" unique_id=367148668]
+transform = Transform3D(-9.520574e-06, 0, 0.55, 0, 0.17, 0, -2.63, 0, -1.9909946e-06, -36.5, 4.08, -3.9)
+material_override = SubResource("Rubber")
+mesh = SubResource("UnitBox")
+
+[node name="Rib4Lamp" type="MeshInstance3D" parent="WestTunnel" unique_id=1771658552]
+transform = Transform3D(-8.760377e-06, 0, 0.31, 0, 0.075, 0, -2.42, 0, -1.122197e-06, -36.5, 3.97, -3.9)
+material_override = SubResource("WarmLamp")
+mesh = SubResource("UnitBox")
+
+[node name="SpawnPoints" type="Node3D" parent="." unique_id=883120751]
+
+[node name="Spawn1" type="CrimsonSpawnPoint" parent="SpawnPoints" unique_id=1307024178]
+transform = Transform3D(1, 0, 0, 0, 0.9989877, -0.044984818, 0, 0.044984818, 0.9989877, 0, 0.005, 7.65)
+
+[node name="Spawn2" type="CrimsonSpawnPoint" parent="SpawnPoints" unique_id=201841964]
+transform = Transform3D(0.9950042, -0.0044909883, -0.099732354, 0, 0.9989877, -0.044984818, 0.09983342, 0.044760082, 0.9939969, -1.9, 0.005, 6.25)
+
+[node name="Spawn3" type="CrimsonSpawnPoint" parent="SpawnPoints" unique_id=868847461]
+transform = Transform3D(0.9950042, 0.0044909883, 0.099732354, 0, 0.9989877, -0.044984818, -0.09983342, 0.044760082, 0.9939969, 1.9, 0.005, 6.25)
+
+[node name="Spawn4" type="CrimsonSpawnPoint" parent="SpawnPoints" unique_id=1478584875]
+transform = Transform3D(1, 0, 0, 0, 0.9989877, -0.044984818, 0, 0.044984818, 0.9989877, 0, 0.005, 4.85)

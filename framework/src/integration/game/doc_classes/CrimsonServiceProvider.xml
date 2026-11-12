@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="CrimsonServiceProvider" inherits="Resource">
+	<brief_description>
+		Supplies custom services for one Crimson game scope.
+	</brief_description>
+	<methods>
+		<method name="_create_online_directory" qualifiers="virtual">
+			<return type="CrimsonOnlineDirectory" />
+			<description>
+				Returns the optional online directory for this game scope. Configure an authenticator on the session as well to use authenticated online host and join operations.
+			</description>
+		</method>
+		<method name="_create_scene_loader" qualifiers="virtual">
+			<return type="CrimsonSceneLoadManager" />
+			<description>
+				Returns a fresh detached scene loader. The game attaches and owns it. Omit the override to use the default loader.
+			</description>
+		</method>
+		<method name="_create_session" qualifiers="virtual">
+			<return type="CrimsonGameSession" />
+			<description>
+				Returns a fresh detached session. The game attaches and owns it. Omit the override to use the default session.
+			</description>
+		</method>
+	</methods>
+</class>

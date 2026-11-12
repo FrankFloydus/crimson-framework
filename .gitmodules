@@ -1,6 +1,6 @@
 # Copyright Francesco Di Blasi 2026 - All Rights Reserved
 
 [submodule "godot-cpp"]
-	path = godot-cpp
+	path = framework/godot-cpp
 	url = https://github.com/godotengine/godot-cpp.git
 	branch = 4.3

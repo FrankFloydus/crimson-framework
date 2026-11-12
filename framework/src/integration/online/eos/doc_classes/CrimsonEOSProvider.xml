@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="CrimsonEOSProvider" inherits="CrimsonServiceProvider">
+	<brief_description>
+		Native Epic Online Services provider for a developer-signed-in listen host or guest.
+	</brief_description>
+	<description>
+		Configure the private deployment and await [method login_developer] before attaching the game. The provider uses EOS Lobbies to publish and resolve an active world, then verifies EOS Connect identity during P2P admission. The sign-in owner must stay in the scene tree for the lifetime of the game. Configure a separate provider for each active game.
+	</description>
+	<methods>
+		<method name="configure" qualifiers="static">
+			<return type="CrimsonEOSProvider" />
+			<param index="0" name="product_id" type="String" />
+			<param index="1" name="sandbox_id" type="String" />
+			<param index="2" name="deployment_id" type="String" />
+			<param index="3" name="client_id" type="String" />
+			<param index="4" name="client_secret" type="String" />
+			<param index="5" name="force_relay" type="bool" default="false" />
+			<description>
+				Returns a provider for the supplied EOS product, sandbox, deployment, and client policy. Supply the client secret at runtime. The resource does not serialize the secret. Set [param force_relay] to use only the Epic relay for a live transport test.
+			</description>
+		</method>
+		<method name="get_product_user_id" qualifiers="const">
+			<return type="String" />
+			<description>
+				Returns the local EOS Product User ID after sign-in, or an empty string while unavailable.
+			</description>
+		</method>
+		<method name="is_ready" qualifiers="const">
+			<return type="bool" />
+			<description>
+				Returns whether EOS Connect has authenticated the provider's local identity.
+			</description>
+		</method>
+		<method name="login_developer">
+			<return type="CrimsonGameOperation" />
+			<param index="0" name="owner" type="Node" />
+			<param index="1" name="address" type="String" />
+			<param index="2" name="credential_name" type="String" />
+			<description>
+				Signs in through Epic's Developer Authentication Tool and connects the account to the private deployment. Pass a persistent [param owner] already in the scene tree, the tool's host and port, and a credential name configured in the tool. Await success before attaching the game. This method is for development sessions.
+			</description>
+		</method>
+	</methods>
+</class>

@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="CrimsonMultiplayerRules" inherits="Resource">
+	<brief_description>
+		Admission and transport settings for listen and dedicated co-op games.
+	</brief_description>
+	<members>
+		<member name="join_in_progress" type="bool" setter="set_join_in_progress" getter="get_join_in_progress" default="true">
+			Allow guests to join an active world. Keep this enabled for immediate listen and dedicated sessions. Use coordinated lobbies for games that close admission before play.
+		</member>
+		<member name="max_players" type="int" setter="set_max_players" getter="get_max_players" default="4">
+			Total player capacity. Listen hosting uses one seat for the host and requires at least two seats. Dedicated hosting makes every seat available to guests. Spawn points supply placements separately.
+		</member>
+		<member name="port" type="int" setter="set_port" getter="get_port" default="7000">
+			UDP port used to listen for guests and connect to a host. Host and guest must use the same port, from 1 to 65535.
+		</member>
+	</members>
+</class>

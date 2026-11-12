@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="CrimsonWorldSession" inherits="Node">
+	<brief_description>
+		Standalone fixed-world session for existing integrations.
+	</brief_description>
+	<members>
+		<member name="definition" type="CrimsonWorldSessionDefinition" setter="set_definition" getter="get_definition">
+			Standalone scene and spawn settings applied on the next start. For game definitions with explicit multiplayer rules and spawn components, use [CrimsonGame].
+		</member>
+	</members>
+</class>

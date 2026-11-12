@@ -1,0 +1,19 @@
+; Copyright Francesco Di Blasi 2026 - All Rights Reserved
+
+[configuration]
+
+entry_symbol = "crimson_framework_init"
+compatibility_minimum = "4.7"
+reloadable = false
+
+[libraries]
+
+windows.debug.x86_64.single = "./bin/crimson_framework.windows.template_debug.x86_64.dll"
+windows.release.x86_64.single = "./bin/crimson_framework.windows.template_release.x86_64.dll"
+
+[dependencies]
+
+; Godot selects the first matching entry. Keep the combined preset first.
+windows.x86_64.crimson_steam.crimson_eos = {"./bin/steam_api64.dll": "", "./bin/EOSSDK-Win64-Shipping.dll": ""}
+windows.x86_64.crimson_steam = {"./bin/steam_api64.dll": ""}
+windows.x86_64.crimson_eos = {"./bin/EOSSDK-Win64-Shipping.dll": ""}

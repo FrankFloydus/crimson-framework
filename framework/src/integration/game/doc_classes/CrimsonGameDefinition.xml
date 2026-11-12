@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="CrimsonGameDefinition" inherits="Resource">
+	<brief_description>
+		Authored scenes and rules shared by the Inspector and the fluent Crimson game setup.
+	</brief_description>
+	<members>
+		<member name="app_id" type="String" setter="set_app_id" getter="get_app_id" default="&quot;crimson.game&quot;">
+			Stable identifier stored in this game's checkpoints. Choose a project-specific value before publishing saves.
+		</member>
+		<member name="multiplayer_rules" type="CrimsonMultiplayerRules" setter="set_multiplayer_rules" getter="get_multiplayer_rules">
+			Capacity, UDP port, and late-join policy for Host Game and Join Game. Leave empty for a game that starts locally.
+		</member>
+		<member name="player_scene" type="PackedScene" setter="set_player_scene" getter="get_player_scene">
+			The player actor instantiated for each participant in a quick game. Use a Node3D root and author optional camera and local visibility references inside this scene.
+		</member>
+		<member name="save_root" type="String" setter="set_save_root" getter="get_save_root" default="&quot;user://crimson&quot;">
+			Directory used for checkpoints in coordinated games. Use a path under user:// so the exported game can write to it.
+		</member>
+		<member name="schema_version" type="int" setter="set_schema_version" getter="get_schema_version" default="1">
+			Positive version number of the coordinated game's checkpoint schema. Update it when the persisted data format changes.
+		</member>
+		<member name="service_provider" type="CrimsonServiceProvider" setter="set_service_provider" getter="get_service_provider">
+			Optional factories for this game's session and scene loader. Set before the game enters the scene tree. Leave empty to use Crimson's native defaults.
+		</member>
+		<member name="starting_world" type="StringName" setter="set_starting_world" getter="get_starting_world" default="&amp;&quot;&quot;">
+			Stable identifier of the starting world. In coordinated games this is a key in Worlds. Quick games pair it with Starting World Scene.
+		</member>
+		<member name="starting_world_scene" type="PackedScene" setter="set_starting_world_scene" getter="get_starting_world_scene">
+			The 3D scene mounted by Play Solo, Host Game, and Join Game. Place CrimsonSpawnPoint nodes in this scene to supply player placements.
+		</member>
+		<member name="worlds" type="Dictionary" setter="set_worlds" getter="get_worlds" default="{}">
+			Catalog for coordinated world loading and travel. Each stable world ID maps to a scene_id and a local PackedScene resource path.
+		</member>
+	</members>
+</class>

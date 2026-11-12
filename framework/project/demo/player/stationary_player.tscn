@@ -1,0 +1,576 @@
+; Copyright Francesco Di Blasi 2026 - All Rights Reserved
+
+[gd_scene format=3]
+
+[sub_resource type="StandardMaterial3D" id="Material_Fabric"]
+resource_name = "Suit canvas - ochre"
+albedo_color = Color(0.61, 0.41, 0.225, 1)
+metallic_specular = 0.2
+roughness = 0.96
+
+[sub_resource type="StandardMaterial3D" id="Material_Ribbing"]
+resource_name = "Joint webbing - soot"
+albedo_color = Color(0.095, 0.115, 0.117, 1)
+metallic_specular = 0.2
+roughness = 0.98
+
+[sub_resource type="StandardMaterial3D" id="Material_Armor"]
+resource_name = "Powder-coated shell - slate"
+albedo_color = Color(0.21, 0.245, 0.25, 1)
+metallic_specular = 0.2
+roughness = 0.89
+
+[sub_resource type="StandardMaterial3D" id="Material_Trim"]
+resource_name = "Edge plates - warm gray"
+albedo_color = Color(0.49, 0.47, 0.39, 1)
+metallic_specular = 0.2
+roughness = 0.91
+
+[sub_resource type="StandardMaterial3D" id="Material_Seal"]
+resource_name = "Rubber seals - graphite"
+albedo_color = Color(0.06, 0.085, 0.087, 1)
+metallic_specular = 0.2
+roughness = 0.97
+
+[sub_resource type="StandardMaterial3D" id="Material_Glass"]
+resource_name = "Visor - muted blue-green"
+albedo_color = Color(0.11, 0.31, 0.33, 1)
+metallic_specular = 0.2
+roughness = 0.73
+emission_enabled = true
+emission = Color(0.12, 0.34, 0.39, 1)
+emission_energy_multiplier = 0.3
+
+[sub_resource type="StandardMaterial3D" id="Material_Indicator"]
+resource_name = "Service indicators - teal"
+albedo_color = Color(0.33, 0.65, 0.62, 1)
+metallic_specular = 0.2
+roughness = 0.88
+emission_enabled = true
+emission = Color(0.27, 0.66, 0.60, 1)
+emission_energy_multiplier = 0.44
+
+[sub_resource type="BoxMesh" id="Mesh_Box"]
+
+[sub_resource type="CylinderMesh" id="Mesh_Shell"]
+top_radius = 0.46
+bottom_radius = 0.5
+height = 1.0
+radial_segments = 8
+rings = 0
+
+[sub_resource type="CylinderMesh" id="Mesh_Taper"]
+top_radius = 0.5
+bottom_radius = 0.37
+height = 1.0
+radial_segments = 8
+rings = 0
+
+[sub_resource type="SphereMesh" id="Mesh_Round"]
+radius = 0.5
+height = 1.0
+radial_segments = 8
+rings = 4
+
+[node name="StationaryPlayer" type="Node3D"]
+
+[node name="Camera3D" type="Camera3D" parent="."]
+position = Vector3(0, 1.67, 0)
+current = false
+fov = 80.0
+near = 0.05
+
+[node name="LocalView" type="CrimsonLocalView" parent="." node_paths=PackedStringArray("camera", "hidden_visuals")]
+camera = NodePath("../Camera3D")
+hidden_visuals = NodePath("../Visuals")
+
+[node name="Visuals" type="Node3D" parent="."]
+
+[node name="Torso" type="Node3D" parent="Visuals"]
+
+[node name="Undersuit" type="MeshInstance3D" parent="Visuals/Torso"]
+position = Vector3(0, 1.19, 0)
+scale = Vector3(0.53, 0.57, 0.34)
+material_override = SubResource("Material_Ribbing")
+mesh = SubResource("Mesh_Shell")
+
+[node name="InsulatedVest" type="MeshInstance3D" parent="Visuals/Torso"]
+position = Vector3(0, 1.27, 0.012)
+scale = Vector3(0.64, 0.47, 0.42)
+material_override = SubResource("Material_Fabric")
+mesh = SubResource("Mesh_Taper")
+
+[node name="ChestPlate" type="MeshInstance3D" parent="Visuals/Torso"]
+position = Vector3(0, 1.37, -0.142)
+scale = Vector3(0.48, 0.245, 0.145)
+material_override = SubResource("Material_Armor")
+mesh = SubResource("Mesh_Taper")
+
+[node name="LeftHarness" type="MeshInstance3D" parent="Visuals/Torso"]
+position = Vector3(-0.154, 1.3, -0.197)
+rotation = Vector3(0.06, 0, -0.1)
+scale = Vector3(0.064, 0.35, 0.03)
+material_override = SubResource("Material_Trim")
+mesh = SubResource("Mesh_Box")
+
+[node name="RightHarness" type="MeshInstance3D" parent="Visuals/Torso"]
+position = Vector3(0.154, 1.3, -0.197)
+rotation = Vector3(0.06, 0, 0.1)
+scale = Vector3(0.064, 0.35, 0.03)
+material_override = SubResource("Material_Trim")
+mesh = SubResource("Mesh_Box")
+
+[node name="ChestServicePanel" type="MeshInstance3D" parent="Visuals/Torso"]
+position = Vector3(0, 1.33, -0.219)
+scale = Vector3(0.153, 0.075, 0.036)
+material_override = SubResource("Material_Seal")
+mesh = SubResource("Mesh_Box")
+
+[node name="ChestServiceLight" type="MeshInstance3D" parent="Visuals/Torso"]
+position = Vector3(0, 1.347, -0.239)
+scale = Vector3(0.076, 0.012, 0.009)
+material_override = SubResource("Material_Indicator")
+mesh = SubResource("Mesh_Box")
+
+[node name="ChestRelease" type="MeshInstance3D" parent="Visuals/Torso"]
+position = Vector3(0, 1.312, -0.239)
+scale = Vector3(0.056, 0.014, 0.009)
+material_override = SubResource("Material_Trim")
+mesh = SubResource("Mesh_Box")
+
+[node name="UtilityBelt" type="MeshInstance3D" parent="Visuals/Torso"]
+position = Vector3(0, 1.02, 0.004)
+scale = Vector3(0.55, 0.09, 0.4)
+material_override = SubResource("Material_Ribbing")
+mesh = SubResource("Mesh_Shell")
+
+[node name="BeltBuckle" type="MeshInstance3D" parent="Visuals/Torso"]
+position = Vector3(0, 1.02, -0.206)
+scale = Vector3(0.118, 0.063, 0.033)
+material_override = SubResource("Material_Trim")
+mesh = SubResource("Mesh_Box")
+
+[node name="LeftBeltPouch" type="MeshInstance3D" parent="Visuals/Torso"]
+position = Vector3(-0.22, 0.995, -0.137)
+rotation = Vector3(0.11, -0.27, -0.14)
+scale = Vector3(0.106, 0.143, 0.102)
+material_override = SubResource("Material_Armor")
+mesh = SubResource("Mesh_Box")
+
+[node name="RightBeltPouch" type="MeshInstance3D" parent="Visuals/Torso"]
+position = Vector3(0.22, 0.995, -0.137)
+rotation = Vector3(0.11, 0.27, 0.14)
+scale = Vector3(0.106, 0.143, 0.102)
+material_override = SubResource("Material_Armor")
+mesh = SubResource("Mesh_Box")
+
+[node name="BreathingPack" type="MeshInstance3D" parent="Visuals/Torso"]
+position = Vector3(0, 1.27, 0.257)
+scale = Vector3(0.37, 0.43, 0.23)
+material_override = SubResource("Material_Armor")
+mesh = SubResource("Mesh_Shell")
+
+[node name="PackSpine" type="MeshInstance3D" parent="Visuals/Torso"]
+position = Vector3(0, 1.282, 0.375)
+scale = Vector3(0.22, 0.34, 0.034)
+material_override = SubResource("Material_Ribbing")
+mesh = SubResource("Mesh_Box")
+
+[node name="PackVentTop" type="MeshInstance3D" parent="Visuals/Torso"]
+position = Vector3(0, 1.352, 0.397)
+scale = Vector3(0.159, 0.018, 0.015)
+material_override = SubResource("Material_Trim")
+mesh = SubResource("Mesh_Box")
+
+[node name="PackVentMiddle" type="MeshInstance3D" parent="Visuals/Torso"]
+position = Vector3(0, 1.323, 0.397)
+scale = Vector3(0.159, 0.018, 0.015)
+material_override = SubResource("Material_Trim")
+mesh = SubResource("Mesh_Box")
+
+[node name="PackVentLower" type="MeshInstance3D" parent="Visuals/Torso"]
+position = Vector3(0, 1.294, 0.397)
+scale = Vector3(0.159, 0.018, 0.015)
+material_override = SubResource("Material_Trim")
+mesh = SubResource("Mesh_Box")
+
+[node name="PackServiceLight" type="MeshInstance3D" parent="Visuals/Torso"]
+position = Vector3(0, 1.202, 0.397)
+scale = Vector3(0.093, 0.013, 0.015)
+material_override = SubResource("Material_Indicator")
+mesh = SubResource("Mesh_Box")
+
+[node name="Helmet" type="Node3D" parent="Visuals"]
+
+[node name="PressureCollar" type="MeshInstance3D" parent="Visuals/Helmet"]
+position = Vector3(0, 1.526, 0.004)
+scale = Vector3(0.32, 0.105, 0.3)
+material_override = SubResource("Material_Seal")
+mesh = SubResource("Mesh_Shell")
+
+[node name="CollarRim" type="MeshInstance3D" parent="Visuals/Helmet"]
+position = Vector3(0, 1.552, 0.004)
+scale = Vector3(0.305, 0.044, 0.29)
+material_override = SubResource("Material_Trim")
+mesh = SubResource("Mesh_Shell")
+
+[node name="HelmetShell" type="MeshInstance3D" parent="Visuals/Helmet"]
+position = Vector3(0, 1.725, 0.004)
+scale = Vector3(0.385, 0.364, 0.392)
+material_override = SubResource("Material_Armor")
+mesh = SubResource("Mesh_Round")
+
+[node name="HelmetCrown" type="MeshInstance3D" parent="Visuals/Helmet"]
+position = Vector3(0, 1.825, 0.024)
+scale = Vector3(0.302, 0.11, 0.31)
+material_override = SubResource("Material_Trim")
+mesh = SubResource("Mesh_Shell")
+
+[node name="HelmetBrow" type="MeshInstance3D" parent="Visuals/Helmet"]
+position = Vector3(0, 1.769, -0.103)
+rotation = Vector3(-0.13, 0, 0)
+scale = Vector3(0.351, 0.105, 0.25)
+material_override = SubResource("Material_Armor")
+mesh = SubResource("Mesh_Taper")
+
+[node name="VisorGasket" type="MeshInstance3D" parent="Visuals/Helmet"]
+position = Vector3(0, 1.718, -0.124)
+scale = Vector3(0.356, 0.148, 0.267)
+material_override = SubResource("Material_Seal")
+mesh = SubResource("Mesh_Shell")
+
+[node name="Visor" type="MeshInstance3D" parent="Visuals/Helmet"]
+position = Vector3(0, 1.72, -0.153)
+scale = Vector3(0.314, 0.096, 0.225)
+material_override = SubResource("Material_Glass")
+mesh = SubResource("Mesh_Shell")
+
+[node name="VisorGlint" type="MeshInstance3D" parent="Visuals/Helmet"]
+position = Vector3(0, 1.743, -0.26)
+scale = Vector3(0.12, 0.008, 0.009)
+material_override = SubResource("Material_Indicator")
+mesh = SubResource("Mesh_Box")
+
+[node name="ChinGuard" type="MeshInstance3D" parent="Visuals/Helmet"]
+position = Vector3(0, 1.622, -0.077)
+scale = Vector3(0.3, 0.126, 0.31)
+material_override = SubResource("Material_Armor")
+mesh = SubResource("Mesh_Taper")
+
+[node name="FilterMount" type="MeshInstance3D" parent="Visuals/Helmet"]
+position = Vector3(0, 1.622, -0.226)
+scale = Vector3(0.152, 0.072, 0.037)
+material_override = SubResource("Material_Seal")
+mesh = SubResource("Mesh_Box")
+
+[node name="FilterTop" type="MeshInstance3D" parent="Visuals/Helmet"]
+position = Vector3(0, 1.637, -0.249)
+scale = Vector3(0.092, 0.009, 0.01)
+material_override = SubResource("Material_Trim")
+mesh = SubResource("Mesh_Box")
+
+[node name="FilterBottom" type="MeshInstance3D" parent="Visuals/Helmet"]
+position = Vector3(0, 1.61, -0.249)
+scale = Vector3(0.092, 0.009, 0.01)
+material_override = SubResource("Material_Trim")
+mesh = SubResource("Mesh_Box")
+
+[node name="LeftHeadset" type="MeshInstance3D" parent="Visuals/Helmet"]
+position = Vector3(-0.177, 1.71, 0.016)
+rotation = Vector3(0, 0, 1.571)
+scale = Vector3(0.145, 0.065, 0.15)
+material_override = SubResource("Material_Ribbing")
+mesh = SubResource("Mesh_Shell")
+
+[node name="RightHeadset" type="MeshInstance3D" parent="Visuals/Helmet"]
+position = Vector3(0.177, 1.71, 0.016)
+rotation = Vector3(0, 0, 1.571)
+scale = Vector3(0.145, 0.065, 0.15)
+material_override = SubResource("Material_Ribbing")
+mesh = SubResource("Mesh_Shell")
+
+[node name="LeftArm" type="Node3D" parent="Visuals"]
+
+[node name="UpperSleeve" type="MeshInstance3D" parent="Visuals/LeftArm"]
+position = Vector3(-0.347, 1.237, 0.017)
+rotation = Vector3(-0.03, 0, 0.21)
+scale = Vector3(0.219, 0.345, 0.215)
+material_override = SubResource("Material_Fabric")
+mesh = SubResource("Mesh_Taper")
+
+[node name="ShoulderCap" type="MeshInstance3D" parent="Visuals/LeftArm"]
+position = Vector3(-0.335, 1.376, 0.03)
+rotation = Vector3(-0.05, 0, 0.34)
+scale = Vector3(0.255, 0.184, 0.25)
+material_override = SubResource("Material_Armor")
+mesh = SubResource("Mesh_Shell")
+
+[node name="ShoulderPlate" type="MeshInstance3D" parent="Visuals/LeftArm"]
+position = Vector3(-0.354, 1.398, 0.007)
+rotation = Vector3(-0.08, 0, 0.39)
+scale = Vector3(0.228, 0.094, 0.22)
+material_override = SubResource("Material_Trim")
+mesh = SubResource("Mesh_Shell")
+
+[node name="ElbowJoint" type="MeshInstance3D" parent="Visuals/LeftArm"]
+position = Vector3(-0.378, 1.079, 0.037)
+scale = Vector3(0.173, 0.184, 0.171)
+material_override = SubResource("Material_Ribbing")
+mesh = SubResource("Mesh_Round")
+
+[node name="ForearmShell" type="MeshInstance3D" parent="Visuals/LeftArm"]
+position = Vector3(-0.397, 0.99, -0.01)
+rotation = Vector3(-0.23, 0, 0.075)
+scale = Vector3(0.185, 0.262, 0.189)
+material_override = SubResource("Material_Fabric")
+mesh = SubResource("Mesh_Taper")
+
+[node name="ForearmPlate" type="MeshInstance3D" parent="Visuals/LeftArm"]
+position = Vector3(-0.398, 0.987, -0.082)
+rotation = Vector3(-0.22, 0, 0.075)
+scale = Vector3(0.132, 0.143, 0.075)
+material_override = SubResource("Material_Armor")
+mesh = SubResource("Mesh_Box")
+
+[node name="CuffSeal" type="MeshInstance3D" parent="Visuals/LeftArm"]
+position = Vector3(-0.404, 0.875, -0.034)
+rotation = Vector3(-0.24, 0, 0.08)
+scale = Vector3(0.156, 0.067, 0.151)
+material_override = SubResource("Material_Ribbing")
+mesh = SubResource("Mesh_Shell")
+
+[node name="Glove" type="MeshInstance3D" parent="Visuals/LeftArm"]
+position = Vector3(-0.406, 0.808, -0.062)
+rotation = Vector3(-0.21, 0, 0.08)
+scale = Vector3(0.147, 0.165, 0.134)
+material_override = SubResource("Material_Armor")
+mesh = SubResource("Mesh_Round")
+
+[node name="Thumb" type="MeshInstance3D" parent="Visuals/LeftArm"]
+position = Vector3(-0.356, 0.816, -0.103)
+rotation = Vector3(-0.32, 0, 0.28)
+scale = Vector3(0.076, 0.098, 0.066)
+material_override = SubResource("Material_Ribbing")
+mesh = SubResource("Mesh_Round")
+
+[node name="LeftLeg" type="Node3D" parent="Visuals"]
+
+[node name="LegLiner" type="MeshInstance3D" parent="Visuals/LeftLeg"]
+position = Vector3(-0.142, 0.609, -0.028)
+rotation = Vector3(0.017, 0, 0.063)
+scale = Vector3(0.225, 0.77, 0.242)
+material_override = SubResource("Material_Ribbing")
+mesh = SubResource("Mesh_Shell")
+
+[node name="Thigh" type="MeshInstance3D" parent="Visuals/LeftLeg"]
+position = Vector3(-0.133, 0.785, -0.024)
+rotation = Vector3(-0.06, 0, 0.075)
+scale = Vector3(0.271, 0.405, 0.292)
+material_override = SubResource("Material_Fabric")
+mesh = SubResource("Mesh_Taper")
+
+[node name="ThighPlate" type="MeshInstance3D" parent="Visuals/LeftLeg"]
+position = Vector3(-0.182, 0.777, -0.142)
+rotation = Vector3(-0.066, 0.41, 0.075)
+scale = Vector3(0.134, 0.182, 0.088)
+material_override = SubResource("Material_Armor")
+mesh = SubResource("Mesh_Box")
+
+[node name="KneePad" type="MeshInstance3D" parent="Visuals/LeftLeg"]
+position = Vector3(-0.154, 0.508, -0.123)
+rotation = Vector3(-0.16, 0, 0.058)
+scale = Vector3(0.211, 0.158, 0.155)
+material_override = SubResource("Material_Armor")
+mesh = SubResource("Mesh_Taper")
+
+[node name="KneeRim" type="MeshInstance3D" parent="Visuals/LeftLeg"]
+position = Vector3(-0.154, 0.533, -0.202)
+rotation = Vector3(0.12, 0, 0.058)
+scale = Vector3(0.126, 0.029, 0.019)
+material_override = SubResource("Material_Trim")
+mesh = SubResource("Mesh_Box")
+
+[node name="Gaiter" type="MeshInstance3D" parent="Visuals/LeftLeg"]
+position = Vector3(-0.158, 0.337, -0.009)
+rotation = Vector3(0.055, 0, 0.02)
+scale = Vector3(0.24, 0.337, 0.235)
+material_override = SubResource("Material_Fabric")
+mesh = SubResource("Mesh_Taper")
+
+[node name="ShinPlate" type="MeshInstance3D" parent="Visuals/LeftLeg"]
+position = Vector3(-0.159, 0.297, -0.115)
+rotation = Vector3(-0.084, 0, 0.013)
+scale = Vector3(0.149, 0.191, 0.081)
+material_override = SubResource("Material_Armor")
+mesh = SubResource("Mesh_Box")
+
+[node name="BootShaft" type="MeshInstance3D" parent="Visuals/LeftLeg"]
+position = Vector3(-0.167, 0.14, -0.002)
+rotation = Vector3(-0.03, -0.082, 0)
+scale = Vector3(0.237, 0.236, 0.274)
+material_override = SubResource("Material_Ribbing")
+mesh = SubResource("Mesh_Shell")
+
+[node name="BootBody" type="MeshInstance3D" parent="Visuals/LeftLeg"]
+position = Vector3(-0.17, 0.093, -0.086)
+rotation = Vector3(0, -0.082, 0)
+scale = Vector3(0.232, 0.156, 0.379)
+material_override = SubResource("Material_Armor")
+mesh = SubResource("Mesh_Shell")
+
+[node name="BootToe" type="MeshInstance3D" parent="Visuals/LeftLeg"]
+position = Vector3(-0.174, 0.082, -0.233)
+rotation = Vector3(-0.12, -0.082, 0)
+scale = Vector3(0.181, 0.101, 0.1)
+material_override = SubResource("Material_Armor")
+mesh = SubResource("Mesh_Box")
+
+[node name="Tread" type="MeshInstance3D" parent="Visuals/LeftLeg"]
+position = Vector3(-0.17, 0.022, -0.092)
+rotation = Vector3(0, -0.082, 0)
+scale = Vector3(0.236, 0.044, 0.395)
+material_override = SubResource("Material_Seal")
+mesh = SubResource("Mesh_Box")
+
+[node name="RightArm" type="Node3D" parent="Visuals"]
+
+[node name="UpperSleeve" type="MeshInstance3D" parent="Visuals/RightArm"]
+position = Vector3(0.347, 1.237, 0.017)
+rotation = Vector3(-0.03, 0, -0.21)
+scale = Vector3(0.219, 0.345, 0.215)
+material_override = SubResource("Material_Fabric")
+mesh = SubResource("Mesh_Taper")
+
+[node name="ShoulderCap" type="MeshInstance3D" parent="Visuals/RightArm"]
+position = Vector3(0.335, 1.376, 0.03)
+rotation = Vector3(-0.05, 0, -0.34)
+scale = Vector3(0.255, 0.184, 0.25)
+material_override = SubResource("Material_Armor")
+mesh = SubResource("Mesh_Shell")
+
+[node name="ShoulderPlate" type="MeshInstance3D" parent="Visuals/RightArm"]
+position = Vector3(0.354, 1.398, 0.007)
+rotation = Vector3(-0.08, 0, -0.39)
+scale = Vector3(0.228, 0.094, 0.22)
+material_override = SubResource("Material_Trim")
+mesh = SubResource("Mesh_Shell")
+
+[node name="ElbowJoint" type="MeshInstance3D" parent="Visuals/RightArm"]
+position = Vector3(0.378, 1.079, 0.037)
+scale = Vector3(0.173, 0.184, 0.171)
+material_override = SubResource("Material_Ribbing")
+mesh = SubResource("Mesh_Round")
+
+[node name="ForearmShell" type="MeshInstance3D" parent="Visuals/RightArm"]
+position = Vector3(0.397, 0.99, -0.01)
+rotation = Vector3(-0.23, 0, -0.075)
+scale = Vector3(0.185, 0.262, 0.189)
+material_override = SubResource("Material_Fabric")
+mesh = SubResource("Mesh_Taper")
+
+[node name="ForearmPlate" type="MeshInstance3D" parent="Visuals/RightArm"]
+position = Vector3(0.398, 0.987, -0.082)
+rotation = Vector3(-0.22, 0, -0.075)
+scale = Vector3(0.132, 0.143, 0.075)
+material_override = SubResource("Material_Armor")
+mesh = SubResource("Mesh_Box")
+
+[node name="CuffSeal" type="MeshInstance3D" parent="Visuals/RightArm"]
+position = Vector3(0.404, 0.875, -0.034)
+rotation = Vector3(-0.24, 0, -0.08)
+scale = Vector3(0.156, 0.067, 0.151)
+material_override = SubResource("Material_Ribbing")
+mesh = SubResource("Mesh_Shell")
+
+[node name="Glove" type="MeshInstance3D" parent="Visuals/RightArm"]
+position = Vector3(0.406, 0.808, -0.062)
+rotation = Vector3(-0.21, 0, -0.08)
+scale = Vector3(0.147, 0.165, 0.134)
+material_override = SubResource("Material_Armor")
+mesh = SubResource("Mesh_Round")
+
+[node name="Thumb" type="MeshInstance3D" parent="Visuals/RightArm"]
+position = Vector3(0.356, 0.816, -0.103)
+rotation = Vector3(-0.32, 0, -0.28)
+scale = Vector3(0.076, 0.098, 0.066)
+material_override = SubResource("Material_Ribbing")
+mesh = SubResource("Mesh_Round")
+
+[node name="RightLeg" type="Node3D" parent="Visuals"]
+
+[node name="LegLiner" type="MeshInstance3D" parent="Visuals/RightLeg"]
+position = Vector3(0.142, 0.609, 0.041)
+rotation = Vector3(0.017, 0, -0.063)
+scale = Vector3(0.225, 0.77, 0.242)
+material_override = SubResource("Material_Ribbing")
+mesh = SubResource("Mesh_Shell")
+
+[node name="Thigh" type="MeshInstance3D" parent="Visuals/RightLeg"]
+position = Vector3(0.133, 0.785, 0.045)
+rotation = Vector3(-0.06, 0, -0.075)
+scale = Vector3(0.271, 0.405, 0.292)
+material_override = SubResource("Material_Fabric")
+mesh = SubResource("Mesh_Taper")
+
+[node name="ThighPlate" type="MeshInstance3D" parent="Visuals/RightLeg"]
+position = Vector3(0.182, 0.777, -0.073)
+rotation = Vector3(-0.066, -0.41, -0.075)
+scale = Vector3(0.134, 0.182, 0.088)
+material_override = SubResource("Material_Armor")
+mesh = SubResource("Mesh_Box")
+
+[node name="KneePad" type="MeshInstance3D" parent="Visuals/RightLeg"]
+position = Vector3(0.154, 0.508, -0.054)
+rotation = Vector3(-0.16, 0, -0.058)
+scale = Vector3(0.211, 0.158, 0.155)
+material_override = SubResource("Material_Armor")
+mesh = SubResource("Mesh_Taper")
+
+[node name="KneeRim" type="MeshInstance3D" parent="Visuals/RightLeg"]
+position = Vector3(0.154, 0.533, -0.133)
+rotation = Vector3(0.12, 0, -0.058)
+scale = Vector3(0.126, 0.029, 0.019)
+material_override = SubResource("Material_Trim")
+mesh = SubResource("Mesh_Box")
+
+[node name="Gaiter" type="MeshInstance3D" parent="Visuals/RightLeg"]
+position = Vector3(0.158, 0.337, 0.06)
+rotation = Vector3(0.055, 0, -0.02)
+scale = Vector3(0.24, 0.337, 0.235)
+material_override = SubResource("Material_Fabric")
+mesh = SubResource("Mesh_Taper")
+
+[node name="ShinPlate" type="MeshInstance3D" parent="Visuals/RightLeg"]
+position = Vector3(0.159, 0.297, -0.046)
+rotation = Vector3(-0.084, 0, -0.013)
+scale = Vector3(0.149, 0.191, 0.081)
+material_override = SubResource("Material_Armor")
+mesh = SubResource("Mesh_Box")
+
+[node name="BootShaft" type="MeshInstance3D" parent="Visuals/RightLeg"]
+position = Vector3(0.167, 0.14, 0.067)
+rotation = Vector3(-0.03, 0.082, 0)
+scale = Vector3(0.237, 0.236, 0.274)
+material_override = SubResource("Material_Ribbing")
+mesh = SubResource("Mesh_Shell")
+
+[node name="BootBody" type="MeshInstance3D" parent="Visuals/RightLeg"]
+position = Vector3(0.17, 0.093, -0.017)
+rotation = Vector3(0, 0.082, 0)
+scale = Vector3(0.232, 0.156, 0.379)
+material_override = SubResource("Material_Armor")
+mesh = SubResource("Mesh_Shell")
+
+[node name="BootToe" type="MeshInstance3D" parent="Visuals/RightLeg"]
+position = Vector3(0.174, 0.082, -0.164)
+rotation = Vector3(-0.12, 0.082, 0)
+scale = Vector3(0.181, 0.101, 0.1)
+material_override = SubResource("Material_Armor")
+mesh = SubResource("Mesh_Box")
+
+[node name="Tread" type="MeshInstance3D" parent="Visuals/RightLeg"]
+position = Vector3(0.17, 0.022, -0.023)
+rotation = Vector3(0, 0.082, 0)
+scale = Vector3(0.236, 0.044, 0.395)
+material_override = SubResource("Material_Seal")
+mesh = SubResource("Mesh_Box")

@@ -1,0 +1,313 @@
+; Copyright Francesco Di Blasi 2026 - All Rights Reserved
+
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://demo/ui/main_menu.gd" id="1_view"]
+[ext_resource type="Script" path="res://demo/ui/screen_navigator.gd" id="2_screens"]
+[ext_resource type="Theme" path="res://demo/ui/menu_theme.tres" id="3_theme"]
+[ext_resource type="FontFile" path="res://demo/ui/fonts/BarlowCondensed-Black.ttf" id="4_title_font"]
+[ext_resource type="Texture2D" path="res://demo/ui/menu_backdrop.png" id="5_backdrop"]
+
+[sub_resource type="Gradient" id="GradientShade"]
+offsets = PackedFloat32Array(0, 0.34, 0.66, 1)
+colors = PackedColorArray(0.033, 0.043, 0.045, 0.98, 0.033, 0.043, 0.045, 0.85, 0.033, 0.043, 0.045, 0.12, 0.033, 0.043, 0.045, 0.06)
+
+[sub_resource type="GradientTexture2D" id="TextureShade"]
+gradient = SubResource("GradientShade")
+width = 256
+height = 2
+fill_to = Vector2(1, 0)
+
+[node name="MainMenu" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme = ExtResource("3_theme")
+script = ExtResource("1_view")
+
+[node name="Background" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0.048, 0.061, 0.06, 1)
+
+[node name="Backdrop" type="TextureRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+texture = ExtResource("5_backdrop")
+expand_mode = 1
+stretch_mode = 6
+
+[node name="Shade" type="TextureRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+texture = SubResource("TextureShade")
+expand_mode = 1
+
+[node name="SafeArea" type="MarginContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_override_constants/margin_left = 80
+theme_override_constants/margin_top = 32
+theme_override_constants/margin_right = 40
+theme_override_constants/margin_bottom = 32
+
+[node name="Column" type="VBoxContainer" parent="SafeArea"]
+custom_minimum_size = Vector2(424, 0)
+layout_mode = 2
+size_flags_horizontal = 0
+size_flags_vertical = 4
+mouse_filter = 2
+theme_override_constants/separation = 20
+
+[node name="Title" type="Label" parent="SafeArea/Column"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.91, 0.88, 0.82, 1)
+theme_override_colors/font_shadow_color = Color(0.09, 0.075, 0.059, 1)
+theme_override_constants/shadow_offset_x = 0
+theme_override_constants/shadow_offset_y = 2
+theme_override_fonts/font = ExtResource("4_title_font")
+theme_override_font_sizes/font_size = 112
+text = "CRIMSON"
+
+[node name="Rule" type="ColorRect" parent="SafeArea/Column"]
+custom_minimum_size = Vector2(76, 3)
+layout_mode = 2
+size_flags_horizontal = 0
+mouse_filter = 2
+color = Color(0.56, 0.34, 0.23, 1)
+
+[node name="Screens" type="Control" parent="SafeArea/Column"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 266)
+layout_mode = 2
+mouse_filter = 2
+script = ExtResource("2_screens")
+
+[node name="Main" type="VBoxContainer" parent="SafeArea/Column/Screens"]
+unique_name_in_owner = true
+layout_mode = 1
+anchor_right = 1.0
+grow_horizontal = 2
+mouse_filter = 2
+theme_override_constants/separation = 10
+
+[node name="Solo" type="Button" parent="SafeArea/Column/Screens/Main"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 54)
+layout_mode = 2
+focus_neighbor_left = NodePath(".")
+focus_neighbor_top = NodePath("../OpenMultiplayer")
+focus_neighbor_right = NodePath(".")
+focus_neighbor_bottom = NodePath("../OpenMultiplayer")
+focus_next = NodePath("../OpenMultiplayer")
+focus_previous = NodePath("../OpenMultiplayer")
+mouse_default_cursor_shape = 2
+text = "Single Player"
+alignment = 0
+
+[node name="OpenMultiplayer" type="Button" parent="SafeArea/Column/Screens/Main"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 54)
+layout_mode = 2
+focus_neighbor_left = NodePath(".")
+focus_neighbor_top = NodePath("../Solo")
+focus_neighbor_right = NodePath(".")
+focus_neighbor_bottom = NodePath("../Solo")
+focus_next = NodePath("../Solo")
+focus_previous = NodePath("../Solo")
+mouse_default_cursor_shape = 2
+text = "Multiplayer"
+alignment = 0
+
+[node name="Options" type="Button" parent="SafeArea/Column/Screens/Main"]
+custom_minimum_size = Vector2(0, 54)
+layout_mode = 2
+focus_mode = 0
+disabled = true
+text = "Options"
+alignment = 0
+
+[node name="Multiplayer" type="VBoxContainer" parent="SafeArea/Column/Screens"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 1
+anchor_right = 1.0
+grow_horizontal = 2
+mouse_filter = 2
+theme_override_constants/separation = 8
+
+[node name="Heading" type="Label" parent="SafeArea/Column/Screens/Multiplayer"]
+layout_mode = 2
+theme_override_fonts/font = ExtResource("4_title_font")
+theme_override_font_sizes/font_size = 30
+text = "MULTIPLAYER"
+
+[node name="Host" type="Button" parent="SafeArea/Column/Screens/Multiplayer"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 54)
+layout_mode = 2
+focus_neighbor_left = NodePath(".")
+focus_neighbor_top = NodePath("../MultiplayerBack")
+focus_neighbor_right = NodePath(".")
+focus_neighbor_bottom = NodePath("../OpenJoin")
+focus_next = NodePath("../OpenJoin")
+focus_previous = NodePath("../MultiplayerBack")
+mouse_default_cursor_shape = 2
+text = "Host Game"
+alignment = 0
+
+[node name="OpenJoin" type="Button" parent="SafeArea/Column/Screens/Multiplayer"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 54)
+layout_mode = 2
+focus_neighbor_left = NodePath(".")
+focus_neighbor_top = NodePath("../Host")
+focus_neighbor_right = NodePath(".")
+focus_neighbor_bottom = NodePath("../MultiplayerBack")
+focus_next = NodePath("../MultiplayerBack")
+focus_previous = NodePath("../Host")
+mouse_default_cursor_shape = 2
+text = "Join Game"
+alignment = 0
+
+[node name="MultiplayerBack" type="Button" parent="SafeArea/Column/Screens/Multiplayer"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 54)
+layout_mode = 2
+focus_neighbor_left = NodePath(".")
+focus_neighbor_top = NodePath("../OpenJoin")
+focus_neighbor_right = NodePath(".")
+focus_neighbor_bottom = NodePath("../Host")
+focus_next = NodePath("../Host")
+focus_previous = NodePath("../OpenJoin")
+mouse_default_cursor_shape = 2
+text = "Back"
+alignment = 0
+
+[node name="Port" type="Label" parent="SafeArea/Column/Screens/Multiplayer"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.72, 0.72, 0.67, 1)
+theme_override_font_sizes/font_size = 18
+
+[node name="Join" type="VBoxContainer" parent="SafeArea/Column/Screens"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 1
+anchor_right = 1.0
+grow_horizontal = 2
+mouse_filter = 2
+theme_override_constants/separation = 8
+
+[node name="Heading" type="Label" parent="SafeArea/Column/Screens/Join"]
+layout_mode = 2
+theme_override_fonts/font = ExtResource("4_title_font")
+theme_override_font_sizes/font_size = 30
+text = "JOIN GAME"
+
+[node name="AddressLabel" type="Label" parent="SafeArea/Column/Screens/Join"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 19
+text = "Host address"
+
+[node name="Address" type="LineEdit" parent="SafeArea/Column/Screens/Join"]
+unique_name_in_owner = true
+accessibility_labeled_by_nodes = [NodePath("../AddressLabel")]
+custom_minimum_size = Vector2(0, 50)
+layout_mode = 2
+focus_neighbor_left = NodePath(".")
+focus_neighbor_top = NodePath("../JoinBack")
+focus_neighbor_right = NodePath(".")
+focus_neighbor_bottom = NodePath("../Connect")
+focus_next = NodePath("../Connect")
+focus_previous = NodePath("../JoinBack")
+text = "127.0.0.1"
+placeholder_text = "127.0.0.1"
+max_length = 253
+select_all_on_focus = true
+
+[node name="Connect" type="Button" parent="SafeArea/Column/Screens/Join"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 54)
+layout_mode = 2
+focus_neighbor_left = NodePath(".")
+focus_neighbor_top = NodePath("../Address")
+focus_neighbor_right = NodePath(".")
+focus_neighbor_bottom = NodePath("../JoinBack")
+focus_next = NodePath("../JoinBack")
+focus_previous = NodePath("../Address")
+mouse_default_cursor_shape = 2
+text = "Connect"
+alignment = 0
+
+[node name="JoinBack" type="Button" parent="SafeArea/Column/Screens/Join"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 54)
+layout_mode = 2
+focus_neighbor_left = NodePath(".")
+focus_neighbor_top = NodePath("../Connect")
+focus_neighbor_right = NodePath(".")
+focus_neighbor_bottom = NodePath("../Address")
+focus_next = NodePath("../Address")
+focus_previous = NodePath("../Connect")
+mouse_default_cursor_shape = 2
+text = "Back"
+alignment = 0
+
+[node name="Feedback" type="Control" parent="SafeArea/Column"]
+custom_minimum_size = Vector2(0, 114)
+layout_mode = 2
+mouse_filter = 2
+
+[node name="Stack" type="VBoxContainer" parent="SafeArea/Column/Feedback"]
+layout_mode = 1
+anchor_right = 1.0
+grow_horizontal = 2
+mouse_filter = 2
+theme_override_constants/separation = 10
+
+[node name="Status" type="Label" parent="SafeArea/Column/Feedback/Stack"]
+unique_name_in_owner = true
+accessibility_live = 1
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.78, 0.6, 1)
+theme_override_font_sizes/font_size = 19
+autowrap_mode = 3
+
+[node name="Cancel" type="Button" parent="SafeArea/Column/Feedback/Stack"]
+unique_name_in_owner = true
+visible = false
+custom_minimum_size = Vector2(0, 54)
+layout_mode = 2
+focus_neighbor_left = NodePath(".")
+focus_neighbor_top = NodePath(".")
+focus_neighbor_right = NodePath(".")
+focus_neighbor_bottom = NodePath(".")
+focus_next = NodePath(".")
+focus_previous = NodePath(".")
+mouse_default_cursor_shape = 2
+text = "Cancel"
+alignment = 0

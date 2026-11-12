@@ -5,8 +5,12 @@
 .godot/
 
 # Ignore library files but not the gdextension file
-/bin/**
-/project/addons/crimson-framework/bin/
+/framework/bin/**
+/framework/project/addons/crimson-framework/bin/
+
+# Local platform SDKs obtained from their vendors
+/framework/vendor/eos/
+/framework/vendor/steamworks/
 
 # Ignore scons database
 .sconsign*.dblite
@@ -18,7 +22,7 @@ custom.py
 compile_commands.json
 
 # Ignore files generated for documentation
-/src/gen
+/framework/src/gen
 
 # Binaries
 *.o
