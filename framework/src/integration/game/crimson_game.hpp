@@ -22,37 +22,47 @@
 
 namespace crimson::integration {
 
+class GameVoice;
+
 // Composes standalone modules into one Godot game, with an explicit authority and world lifecycle.
-class CrimsonGame : public godot::Node {
-    GDCLASS(CrimsonGame, godot::Node)
+class GameRuntime : public godot::Node {
+    GDCLASS(GameRuntime, godot::Node)
+
+    friend class GameVoice;
 
 public:
     // Public readiness of the integrated game.
     enum Phase { IDLE, LOBBY, TRANSITIONING, RUNNING, RECOVERING };
 
     // Start the shared fluent game definition with Inspector defaults.
-    static godot::Ref<CrimsonGameDefinition> configure();
+    static godot::Ref<GameDefinition> configure();
     // Assign the game definition before the first start, host, or join.
-    void set_definition(const godot::Ref<CrimsonGameDefinition> &value);
+    void set_definition(const godot::Ref<GameDefinition> &value);
     // Return the authoring definition.
-    godot::Ref<CrimsonGameDefinition> get_definition() const;
+    godot::Ref<GameDefinition> get_definition() const;
     // Open offline authority and start the configured world.
-    godot::Ref<CrimsonGameOperation> start_offline();
+    godot::Ref<GameOperation> start_offline();
     // Enter the configured starting world with a local actor.
-    godot::Ref<CrimsonGameOperation> play_solo();
+    godot::Ref<GameOperation> play_solo();
     // Open an immediate listen game and allow guests to join its active world.
-    godot::Ref<CrimsonGameOperation> host_game(const godot::String &bind_address = "*");
+    godot::Ref<GameOperation> host_game(const godot::String &bind_address = "*");
     // Start a dedicated authority with all configured seats available to remote players.
-    godot::Ref<CrimsonGameOperation> start_dedicated(const godot::String &bind_address = "*");
+    godot::Ref<GameOperation> start_dedicated(const godot::String &bind_address = "*");
     // Join an immediate game at the configured port and wait for local readiness.
-    godot::Ref<CrimsonGameOperation> join_game(const godot::String &address);
+    godot::Ref<GameOperation> join_game(const godot::String &address);
     // Mount and publish an authenticated listen game at the advertised address.
-    godot::Ref<CrimsonGameOperation> host_online(const godot::String &public_address = {}, const godot::String &bind_address = "*");
+    godot::Ref<GameOperation> host_online(const godot::String &public_address = {}, const godot::String &bind_address = "*");
     // Mount and publish an authenticated playerless authority.
-    godot::Ref<CrimsonGameOperation> start_dedicated_online(const godot::String &public_address = {},
+    godot::Ref<GameOperation> start_dedicated_online(const godot::String &public_address = {},
             const godot::String &bind_address = "*");
     // Resolve a directory listing and finish after the authenticated late join is ready.
-    godot::Ref<CrimsonGameOperation> join_online(const godot::String &listing_id);
+    godot::Ref<GameOperation> join_online(const godot::String &listing_id);
+    // Validate a provider-owned listing before using the normal online join lifecycle.
+    godot::Ref<GameOperation> join_listing(const godot::Ref<OnlineListing> &listing);
+    // Return the invite gateway attached to this game when its provider supplies one.
+    godot::Ref<GameInvites> invites() const;
+    // Return this Game's voice service when its Steam capability is active.
+    GameVoice *voice() const;
     // Return the active authority's directory listing, or an empty string.
     godot::String get_online_listing() const;
     // Open an offline lobby so a title screen can restore directly into it.
@@ -64,19 +74,19 @@ public:
     // Leave the current game and release its match, transport, and mounted world.
     godot::Error leave();
     // Start the selected or configured world from an authority lobby.
-    godot::Ref<CrimsonGameOperation> start_match(const godot::StringName &world = {});
+    godot::Ref<GameOperation> start_match(const godot::StringName &world = {});
     // Transition a running authority to another registered world.
-    godot::Ref<CrimsonGameOperation> travel_to(const godot::StringName &world);
+    godot::Ref<GameOperation> travel_to(const godot::StringName &world);
     // Select a save slot for fluent capture, history, or restore.
-    godot::Ref<CrimsonSaveSlot> save_slot(const godot::String &profile, const godot::String &slot);
+    godot::Ref<SaveSlot> save_slot(const godot::String &profile, const godot::String &slot);
     // Capture committed match state and publish a new generation.
-    godot::Ref<CrimsonGameOperation> save(const godot::String &profile, const godot::String &slot,
+    godot::Ref<GameOperation> save(const godot::String &profile, const godot::String &slot,
             const godot::Dictionary &metadata = {}, bool autosave = false);
     // Stage the selected generation and activate its destination with its state.
-    godot::Ref<CrimsonGameOperation> restore(const godot::String &profile, const godot::String &slot,
+    godot::Ref<GameOperation> restore(const godot::String &profile, const godot::String &slot,
             const godot::String &sequence = {}, const godot::String &generation_id = {});
     // Read a page from a known save slot.
-    godot::Ref<CrimsonGameOperation> save_history(const godot::String &profile, const godot::String &slot,
+    godot::Ref<GameOperation> save_history(const godot::String &profile, const godot::String &slot,
             const godot::String &before_sequence = {}, const godot::String &before_id = {}, int64_t limit = 16);
     // Associate an admitted peer with an identity supplied by trusted authority code.
     godot::Error bind_player(int64_t peer, const godot::String &player_id);
@@ -86,7 +96,7 @@ public:
     // Declare a client-facing command without installing its authority handler.
     godot::Error declare_command(const godot::String &name, bool requires_primary = false);
     // Route local input through the same command contract offline and online.
-    godot::Ref<CrimsonGameOperation> submit(const godot::String &name, const godot::Dictionary &payload = {});
+    godot::Ref<GameOperation> submit(const godot::String &name, const godot::Dictionary &payload = {});
     // Select the registered stores visible in their entirety to every admitted client.
     godot::Error set_shared_stores(const godot::PackedStringArray &store_ids);
     // Supply a per-player projection returning {ok, view} from committed state.
@@ -104,9 +114,9 @@ public:
     // Return an immediate-play actor by its session-local peer ID.
     godot::Node3D *get_player(int64_t peer_id) const;
     // Return the authority coordinator for game-owned store registration and transactions.
-    godot::Ref<match_runtime::CrimsonTransactionCoordinator> get_transactions() const;
+    godot::Ref<match_runtime::TransactionCoordinator> get_transactions() const;
     // Return the authority service for possession setup and mutations.
-    godot::Ref<match_runtime::CrimsonPossession> get_possession() const;
+    godot::Ref<match_runtime::PlayerPossession> get_possession() const;
     // Return the local player identity from trusted authority state or projection.
     godot::String get_local_player_id() const;
     // Return the local player's current primary character, if any.
@@ -130,20 +140,23 @@ protected:
     static void _bind_methods();
 
 private:
+    // Persistent voice RPC path shared by all peers of this Game.
+    GameVoice *voice_service = nullptr;
+
     // Immediate startup action selected by the caller.
     enum class ImmediateMode { Solo, Host, Join, Dedicated };
     // One online start, from directory resolution or local mount through readiness.
     struct OnlineStart {
         // Terminal game result returned to the caller.
-        godot::Ref<CrimsonGameOperation> operation;
+        godot::Ref<GameOperation> operation;
         // Inner start that uses the same transport, Scene Load and roster as direct games.
-        godot::Ref<CrimsonGameOperation> world_start;
+        godot::Ref<GameOperation> world_start;
         // Publish or resolve result owned by the provider until it completes.
-        godot::Ref<CrimsonOnlineDirectoryRequest> request;
+        godot::Ref<OnlineDirectoryRequest> request;
         // Authenticator selected before directory work, checked again before opening the transport.
-        godot::Ref<session::CrimsonSessionAuthenticator> authenticator;
+        godot::Ref<session::SessionAuthenticator> authenticator;
         // Direct advertised endpoint if the caller supplied one. A platform directory may build its own route.
-        godot::Ref<session::CrimsonSessionEndpoint> publication;
+        godot::Ref<session::SessionEndpoint> publication;
         // Whether this request mounts an authority before publication.
         bool hosting = false;
         // Scene-thread deadline for a pending directory request.
@@ -160,7 +173,7 @@ private:
     // One authority transition from scene preparation through baseline readiness.
     struct Transition {
         // Caller-owned handle settled once the world becomes ready or the request fails.
-        godot::Ref<CrimsonGameOperation> operation;
+        godot::Ref<GameOperation> operation;
         // Game-owned destination, distinct from the reusable scene asset ID.
         godot::StringName target;
         // Reserved transition epoch that becomes active at publication.
@@ -184,17 +197,17 @@ private:
     };
 
     // Authoring definition held until configuration is frozen.
-    godot::Ref<CrimsonGameDefinition> definition;
+    godot::Ref<GameDefinition> definition;
     // Normalized world ID to scene ID mapping used by the running game.
     std::map<godot::StringName, godot::StringName> worlds;
     // Default world captured during configuration.
     godot::StringName starting_world;
     // Scene-tree-owned standalone session.
-    session::CrimsonGameSession *session_node = nullptr;
+    session::GameSession *session_node = nullptr;
     // Lazily allocated world and player backend for immediate play.
-    CrimsonWorldSession *immediate = nullptr;
+    WorldSession *immediate = nullptr;
     // Pending immediate startup operation, settled after the local actor or failure.
-    godot::Ref<CrimsonGameOperation> immediate_start;
+    godot::Ref<GameOperation> immediate_start;
     // Starting-world identity captured for the immediate session.
     godot::StringName immediate_world_id;
     // Whether this game currently owns the immediate backend path.
@@ -202,7 +215,7 @@ private:
     // Startup role used to report a pending operation's terminal failure.
     ImmediateMode immediate_mode = ImmediateMode::Solo;
     // Trusted online directory supplied when this game scope opened.
-    godot::Ref<CrimsonOnlineDirectory> online_directory;
+    godot::Ref<OnlineDirectory> online_directory;
     // Active listing owned by the current authority, retired before teardown notification.
     godot::String online_listing;
     // Listing whose directory membership belongs to the current or pending guest.
@@ -212,25 +225,25 @@ private:
     // Whether the service provider failed to construct the persistent native services.
     bool service_setup_failed = false;
     // Scene-tree-owned standalone loader.
-    scene_load::CrimsonSceneLoadManager *loader = nullptr;
+    scene_load::SceneLoadManager *loader = nullptr;
     // Scene-tree-owned standalone checkpoint coordinator.
     checkpoint::SaveCoordinator *saves = nullptr;
     // Scene-tree-owned per-peer replication transport.
-    replication::CrimsonReplication *replication_node = nullptr;
+    replication::StateReplication *replication_node = nullptr;
     // Scene-tree-owned command and world control transport.
-    CrimsonMatchNetwork *network = nullptr;
+    MatchNetwork *network = nullptr;
     // Persistent parent for the mounted world.
     godot::Node *world_container = nullptr;
     // Checkpoint adapter bound to the current authority stores.
-    godot::Ref<CrimsonMatchCheckpoint> checkpoint_adapter;
+    godot::Ref<MatchCheckpoint> checkpoint_adapter;
     // Current match's authoritative transaction stores.
-    godot::Ref<match_runtime::CrimsonTransactionCoordinator> transactions;
+    godot::Ref<match_runtime::TransactionCoordinator> transactions;
     // Match-level primary character assignments.
-    godot::Ref<match_runtime::CrimsonPossession> possession;
+    godot::Ref<match_runtime::PlayerPossession> possession;
     // Admitted connection generations and stable player identities.
-    godot::Ref<match_runtime::CrimsonPlayerBindings> bindings;
+    godot::Ref<match_runtime::PlayerBindings> bindings;
     // Transport-independent authority command dispatch.
-    godot::Ref<match_runtime::CrimsonCommandRouter> router;
+    godot::Ref<match_runtime::CommandRouter> router;
     // Command declarations retained across game sessions.
     std::map<godot::String, Command> commands;
     // Explicit public stores used by the default projector.
@@ -238,7 +251,7 @@ private:
     // Optional game-owned visibility policy.
     godot::Callable project_view;
     // In-flight reads and writes owned by the checkpoint coordinator.
-    std::map<int64_t, godot::Ref<CrimsonGameOperation>> save_operations;
+    std::map<int64_t, godot::Ref<GameOperation>> save_operations;
     // Saves waiting for the next main-thread capture boundary.
     int64_t pending_captures = 0;
     // Active authority transition, or an empty handle when no transition is in flight.
@@ -275,17 +288,17 @@ private:
     // Validate and freeze the definition for the persistent services.
     godot::Error configure_game();
     // Validate the declaration, open the immediate session, and track the operation.
-    godot::Ref<CrimsonGameOperation> start_immediate(ImmediateMode mode, const godot::String &address = {},
-            const godot::Ref<session::CrimsonSessionEndpoint> &endpoint = {}, bool online = false);
+    godot::Ref<GameOperation> start_immediate(ImmediateMode mode, const godot::String &address = {},
+            const godot::Ref<session::SessionEndpoint> &endpoint = {}, bool online = false);
     // Validate the directory and authenticator before claiming online startup.
-    godot::Ref<CrimsonGameOperation> check_online_start() const;
+    godot::Ref<GameOperation> check_online_start() const;
     // Start a world to publish only after its authority has mounted it.
-    godot::Ref<CrimsonGameOperation> begin_online_host(ImmediateMode mode, const godot::String &public_address,
+    godot::Ref<GameOperation> begin_online_host(ImmediateMode mode, const godot::String &public_address,
             const godot::String &bind_address);
     // Advance completed directory and world operations at the scene-thread boundary.
     void process_online_start();
     // Cancel provider work and remove the pending public handle from the game.
-    godot::Ref<CrimsonGameOperation> retire_online_start();
+    godot::Ref<GameOperation> retire_online_start();
     // Remove the current listing or guest membership exactly once.
     void retire_online_presence();
     // Settle a failed online start and roll back any world mounted for publication.
@@ -301,12 +314,12 @@ private:
     // Update readiness before notifying callers.
     void set_phase(Phase value);
     // Return a new operation already settled with a structured outcome.
-    godot::Ref<CrimsonGameOperation> completed(bool ok, const godot::String &code,
+    godot::Ref<GameOperation> completed(bool ok, const godot::String &code,
             const godot::String &message = {}) const;
     // Build a result shared by lifecycle and command adapters.
     godot::Dictionary outcome(bool ok, const godot::String &code, const godot::String &message = {}) const;
     // Close command and connection admission for an authority transition.
-    godot::Error begin_transition(const godot::Ref<CrimsonGameOperation> &operation);
+    godot::Error begin_transition(const godot::Ref<GameOperation> &operation);
     // Tell participants about the world and request coordinated scene staging.
     void stage_scene(const godot::StringName &target);
     // Publish detached state immediately before the scene loader mounts the new world.
@@ -360,4 +373,4 @@ private:
 
 } // namespace crimson::integration
 
-VARIANT_ENUM_CAST(crimson::integration::CrimsonGame::Phase);
+VARIANT_ENUM_CAST(crimson::integration::GameRuntime::Phase);

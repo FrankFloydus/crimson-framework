@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="SteamRemotePlay" inherits="RefCounted">
+	<brief_description>Steam Remote Play sessions, Together invitations, and optional per-stream input.</brief_description>
+	<description>Resolve this facade with [method SteamClient.remote_play]. Use it on the main thread. A Remote Play Together host runs the game locally and the game owns seat assignment. Steam merges remote keyboard and mouse input by default. Controller handling stays in the game's local input flow.</description>
+	<tutorials>
+		<link title="Steamworks Remote Play">https://partner.steamgames.com/doc/api/ISteamRemotePlay</link>
+	</tutorials>
+	<methods>
+		<method name="is_available" qualifiers="const">
+			<return type="bool" />
+			<description>Return whether this live scope has the Steam Remote Play interface and stream callback routing. The Steam app must enable Together features for invites and separate input.</description>
+		</method>
+		<method name="open_together_overlay" qualifiers="const">
+			<return type="int" enum="Error" />
+			<description>Request Steam's Remote Play Together overlay. Return [constant OK] if Steam accepts, [constant ERR_BUSY] if its overlay is still unavailable for display, or [constant ERR_UNAVAILABLE] if the feature or live scope is unavailable. Use the session signals to observe actual streams.</description>
+		</method>
+		<method name="poll_input" qualifiers="const">
+			<return type="SteamRemotePlayInputEvent[]" />
+			<param index="0" name="limit" type="int" default="64" />
+			<description>Return a read-only batch of newly available keyboard and mouse samples. The owner that enabled separate input can consume up to the requested limit, capped at 256. A nonpositive limit or unavailable scope yields an empty batch. Unknown SDK events are skipped.</description>
+		</method>
+		<method name="send_invite" qualifiers="const">
+			<return type="int" enum="Error" />
+			<param index="0" name="steam_id" type="String" />
+			<description>Submit a Together invitation to an individual friend's decimal SteamID64. A malformed or local ID returns [constant ERR_INVALID_PARAMETER]. Return [constant FAILED] when Steam declines the invitation. Successful submission does not indicate that the guest connected.</description>
+		</method>
+		<method name="sessions" qualifiers="const">
+			<return type="SteamRemotePlaySession[]" />
+			<description>Return a read-only snapshot of currently connected Remote Play streams. An empty list is valid when nobody is connected. Use [method is_available] to distinguish unavailable observation.</description>
+		</method>
+		<method name="set_separate_input">
+			<return type="int" enum="Error" />
+			<param index="0" name="enabled" type="bool" />
+			<description>Enable separate Together keyboard and mouse input for this scope, or restore Steam's merged input. Return [constant ERR_BUSY] while another scope owns the process input mode. Stopping the owner also restores merged input.</description>
+		</method>
+	</methods>
+	<signals>
+		<signal name="session_connected">
+			<param index="0" name="session" type="SteamRemotePlaySession" />
+			<description>Emitted when Steam reports a connected stream. Use its session ID to assign or restore a local seat.</description>
+		</signal>
+		<signal name="session_disconnected">
+			<param index="0" name="session_id" type="int" />
+			<description>Emitted when Steam reports a disconnected stream. Release that seat and clear any held input.</description>
+		</signal>
+	</signals>
+</class>

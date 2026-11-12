@@ -1,0 +1,179 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="SteamTimeline" inherits="RefCounted">
+	<brief_description>
+		Submits gameplay markers and phases to Steam Game Recording.
+	</brief_description>
+	<description>
+		Submits gameplay markers and phases to Steam Game Recording. Get the service from [method SteamClient.timeline]. Markers belong to the issuing facade. The process can have one open phase. A submitted marker does not guarantee footage. Use the recording queries to check for footage.
+	</description>
+	<methods>
+		<method name="add_phase_tag">
+			<return type="int" enum="Error" />
+			<param index="0" name="name" type="String" />
+			<param index="1" name="icon" type="String" />
+			<param index="2" name="group" type="String" />
+			<param index="3" name="priority" type="int" default="0" />
+			<description>
+				Adds a tag to the current phase owned by this facade. An empty group leaves the tag out of group filtering. Priority ranges from 0 through 1000.
+			</description>
+		</method>
+		<method name="clear_tooltip">
+			<return type="int" enum="Error" />
+			<param index="0" name="offset_seconds" type="float" default="0.0" />
+			<description>
+				Clears the process timeline tooltip at the given relative time in seconds.
+			</description>
+		</method>
+		<method name="end_phase">
+			<return type="int" enum="Error" />
+			<description>
+				Closes the active game phase if this facade owns it.
+			</description>
+		</method>
+		<method name="end_range">
+			<return type="int" enum="Error" />
+			<param index="0" name="event" type="SteamTimelineEvent" />
+			<param index="1" name="offset_seconds" type="float" default="0.0" />
+			<description>
+				Ends an open range owned by this service at a relative time in seconds.
+			</description>
+		</method>
+		<method name="is_available" qualifiers="const">
+			<return type="bool" />
+			<description>
+				Returns whether the active main-thread scope can use Steam Timeline.
+			</description>
+		</method>
+		<method name="mark">
+			<return type="SteamTimelineEventResult" />
+			<param index="0" name="title" type="String" />
+			<param index="1" name="options" type="TimelineMarkerOptions" default="null" />
+			<description>
+				Adds an instantaneous marker. A null options object selects the default icon, priority, clip policy, and start time.
+			</description>
+		</method>
+		<method name="mark_range">
+			<return type="SteamTimelineEventResult" />
+			<param index="0" name="title" type="String" />
+			<param index="1" name="duration_seconds" type="float" />
+			<param index="2" name="options" type="TimelineMarkerOptions" default="null" />
+			<description>
+				Marks a fixed duration greater than zero and at most 600 seconds.
+			</description>
+		</method>
+		<method name="open_in_overlay">
+			<return type="int" enum="Error" />
+			<param index="0" name="event" type="SteamTimelineEvent" />
+			<description>
+				Requests the overlay view of an event owned by this facade. Returns [constant ERR_BUSY] if the overlay is disabled or still starting.
+			</description>
+		</method>
+		<method name="open_phase_in_overlay">
+			<return type="int" enum="Error" />
+			<param index="0" name="phase_id" type="String" />
+			<description>
+				Requests that an enabled Steam overlay open the phase associated with this game ID.
+			</description>
+		</method>
+		<method name="phase_recording">
+			<return type="Variant" />
+			<param index="0" name="phase_id" type="String" />
+			<description>
+				Await to receive a [SteamTimelinePhaseResult] for the exact stable phase ID.
+			</description>
+		</method>
+		<method name="recording_exists">
+			<return type="Variant" />
+			<param index="0" name="event" type="SteamTimelineEvent" />
+			<description>
+				Await to receive a [SteamBoolResult] with whether Steam has video for the completed event.
+			</description>
+		</method>
+		<method name="recording_operation">
+			<return type="SteamTimelineOperation" />
+			<param index="0" name="event" type="SteamTimelineEvent" />
+			<description>
+				Starts the same lookup as [method recording_exists] and returns a retained, cancellable operation.
+			</description>
+		</method>
+		<method name="remove_event">
+			<return type="int" enum="Error" />
+			<param index="0" name="event" type="SteamTimelineEvent" />
+			<description>
+				Removes a completed event or discards an open range owned by this service. Invalidates the handle.
+			</description>
+		</method>
+		<method name="set_game_mode">
+			<return type="int" enum="Error" />
+			<param index="0" name="mode" type="int" enum="SteamTimeline.GameMode" />
+			<description>
+				Sets the activity mode for the process timeline.
+			</description>
+		</method>
+		<method name="set_phase_attribute">
+			<return type="int" enum="Error" />
+			<param index="0" name="group" type="String" />
+			<param index="1" name="value" type="String" />
+			<param index="2" name="priority" type="int" default="0" />
+			<description>
+				Replaces an attribute on the current phase owned by this facade. Group and value are nonempty. Priority ranges from 0 through 1000.
+			</description>
+		</method>
+		<method name="set_tooltip">
+			<return type="int" enum="Error" />
+			<param index="0" name="description" type="String" />
+			<param index="1" name="offset_seconds" type="float" default="0.0" />
+			<description>
+				Sets a nonempty localized tooltip of up to 1024 UTF-8 bytes at a relative time in seconds.
+			</description>
+		</method>
+		<method name="start_phase">
+			<return type="int" enum="Error" />
+			<param index="0" name="phase_id" type="String" />
+			<description>
+				Starts the process phase using a stable, nonempty game ID of up to 63 UTF-8 bytes with no ASCII control characters. An already-open phase returns [constant ERR_BUSY].
+			</description>
+		</method>
+		<method name="start_range">
+			<return type="SteamTimelineEventResult" />
+			<param index="0" name="title" type="String" />
+			<param index="1" name="options" type="TimelineMarkerOptions" default="null" />
+			<description>
+				Starts an open range. End it with [method end_range] or discard it with [method remove_event].
+			</description>
+		</method>
+		<method name="update_range">
+			<return type="int" enum="Error" />
+			<param index="0" name="event" type="SteamTimelineEvent" />
+			<param index="1" name="title" type="String" />
+			<param index="2" name="presentation" type="TimelineMarkerPresentation" default="null" />
+			<description>
+				Replaces the display details of an open range owned by this service. Null presentation selects the default details.
+			</description>
+		</method>
+	</methods>
+	<constants>
+		<constant name="PLAYING" value="1" enum="GameMode">
+			The player is actively playing.
+		</constant>
+		<constant name="STAGING" value="2" enum="GameMode">
+			The player is preparing to play, for example in a lobby.
+		</constant>
+		<constant name="MENUS" value="3" enum="GameMode">
+			The player is navigating menus.
+		</constant>
+		<constant name="LOADING_SCREEN" value="4" enum="GameMode">
+			The game is displaying a loading screen.
+		</constant>
+		<constant name="NONE" value="1" enum="ClipPriority">
+			The marker carries no clip suggestion.
+		</constant>
+		<constant name="STANDARD" value="2" enum="ClipPriority">
+			Steam may offer a clip suggestion.
+		</constant>
+		<constant name="FEATURED" value="3" enum="ClipPriority">
+			Steam may feature the clip suggestion.
+		</constant>
+	</constants>
+</class>

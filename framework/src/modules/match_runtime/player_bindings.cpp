@@ -10,14 +10,14 @@ namespace crimson::match_runtime {
 
 using namespace godot;
 
-void CrimsonPlayerBindings::_bind_methods() {
-    ClassDB::bind_method(D_METHOD("bind_peer", "peer_id", "player_id"), &CrimsonPlayerBindings::bind_peer);
-    ClassDB::bind_method(D_METHOD("unbind_peer", "peer_id", "generation"), &CrimsonPlayerBindings::unbind_peer);
-    ClassDB::bind_method(D_METHOD("get_player", "peer_id"), &CrimsonPlayerBindings::get_player);
-    ClassDB::bind_method(D_METHOD("get_binding_generation", "peer_id"), &CrimsonPlayerBindings::get_binding_generation);
+void PlayerBindings::_bind_methods() {
+    ClassDB::bind_method(D_METHOD("bind_peer", "peer_id", "player_id"), &PlayerBindings::bind_peer);
+    ClassDB::bind_method(D_METHOD("unbind_peer", "peer_id", "generation"), &PlayerBindings::unbind_peer);
+    ClassDB::bind_method(D_METHOD("get_player", "peer_id"), &PlayerBindings::get_player);
+    ClassDB::bind_method(D_METHOD("get_binding_generation", "peer_id"), &PlayerBindings::get_binding_generation);
 }
 
-int64_t CrimsonPlayerBindings::bind_peer(int64_t peer_id, const String &player_id) {
+int64_t PlayerBindings::bind_peer(int64_t peer_id, const String &player_id) {
     if (peer_id <= 0 || player_id.strip_edges().is_empty() ||
             bindings.count(peer_id) || peers_by_player.count(player_id) ||
             last_generation == (std::numeric_limits<int64_t>::max)()) {
@@ -29,7 +29,7 @@ int64_t CrimsonPlayerBindings::bind_peer(int64_t peer_id, const String &player_i
     return generation;
 }
 
-bool CrimsonPlayerBindings::unbind_peer(int64_t peer_id, int64_t generation) {
+bool PlayerBindings::unbind_peer(int64_t peer_id, int64_t generation) {
     const auto found = bindings.find(peer_id);
     if (found == bindings.end() || found->second.generation != generation) {
         return false;
@@ -39,12 +39,12 @@ bool CrimsonPlayerBindings::unbind_peer(int64_t peer_id, int64_t generation) {
     return true;
 }
 
-String CrimsonPlayerBindings::get_player(int64_t peer_id) const {
+String PlayerBindings::get_player(int64_t peer_id) const {
     const auto found = bindings.find(peer_id);
     return found == bindings.end() ? String() : found->second.player_id;
 }
 
-int64_t CrimsonPlayerBindings::get_binding_generation(int64_t peer_id) const {
+int64_t PlayerBindings::get_binding_generation(int64_t peer_id) const {
     const auto found = bindings.find(peer_id);
     return found == bindings.end() ? 0 : found->second.generation;
 }

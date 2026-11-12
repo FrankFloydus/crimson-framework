@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="SteamPurchaseCart" inherits="RefCounted">
+	<brief_description>Branchable purchase selection containing game SKUs and quantities.</brief_description>
+	<description>Build a cart with [method with_item]. Crimson assigns its stable checkout ID on first submission. Save it with the original cart to recover a lost response. A different item or quantity creates a different checkout.</description>
+	<methods>
+		<method name="with_item" qualifiers="const">
+			<return type="SteamPurchaseCart" />
+			<param index="0" name="sku" type="StringName" />
+			<param index="1" name="quantity" type="int" />
+			<description>Returns an independent branch with the quantity for this SKU replaced. A SKU uses 1 to 64 letters, digits, dots, dashes, or underscores. A cart holds up to 32 SKUs. Quantities range from 1 through 1000. Invalid selections return null.</description>
+		</method>
+		<method name="with_checkout_id" qualifiers="const">
+			<return type="SteamPurchaseCart" />
+			<param index="0" name="checkout_id" type="String" />
+			<description>Returns the same selection with a previously assigned 32-character lowercase hexadecimal retry ID. Returns null if the ID is invalid.</description>
+		</method>
+		<method name="lines" qualifiers="const">
+			<return type="SteamPurchaseLine[]" />
+			<description>Returns a read-only copy of the typed SKU selections.</description>
+		</method>
+	</methods>
+	<members>
+		<member name="checkout_id" type="String" setter="" getter="get_checkout_id">Stable checkout retry ID. Empty until first checkout assigns it. Read on the main thread.</member>
+	</members>
+</class>

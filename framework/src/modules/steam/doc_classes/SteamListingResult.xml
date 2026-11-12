@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="SteamListingResult" inherits="SteamResult">
+	<brief_description>Terminal result of a Steam lobby lookup.</brief_description>
+	<methods>
+		<method name="get_value" qualifiers="const">
+			<return type="SteamListing" />
+			<description>Return the detached listing when the lookup succeeded.</description>
+		</method>
+	</methods>
+	<members>
+		<member name="value" type="SteamListing" setter="" getter="get_value">Listing returned by the lookup, or null on failure.</member>
+	</members>
+</class>

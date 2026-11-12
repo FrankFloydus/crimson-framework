@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="SteamAnalogInput" inherits="RefCounted">
+	<brief_description>
+		An analog action sample from the current Steam Input frame.
+	</brief_description>
+	<description>
+		Read these fields from a successful [method SteamController.analog] result. Steam's mode determines whether the vector represents joystick axes, pointer deltas, or another configured source. Values for relative pointer motion can exceed the normalized joystick range.
+	</description>
+	<tutorials>
+	</tutorials>
+	<methods>
+		<method name="get_mode" qualifiers="const">
+			<return type="int" enum="SteamAnalogInput.Mode" />
+			<description>
+				Returns Steam's source mode for this sample. Inactive actions return [constant MODE_NONE].
+			</description>
+		</method>
+		<method name="get_value" qualifiers="const">
+			<return type="Vector2" />
+			<description>
+				Returns Steam's horizontal and vertical values in units appropriate for the source mode. Inactive actions return [code]Vector2.ZERO[/code].
+			</description>
+		</method>
+		<method name="is_active" qualifiers="const">
+			<return type="bool" />
+			<description>
+				Returns whether Steam reports that the action is available in the active set.
+			</description>
+		</method>
+	</methods>
+	<members>
+		<member name="active" type="bool" setter="" getter="is_active">
+			Read-only active-set availability for this action.
+		</member>
+		<member name="value" type="Vector2" setter="" getter="get_value">
+			Read-only horizontal and vertical values for the current source mode.
+		</member>
+		<member name="mode" type="int" enum="SteamAnalogInput.Mode" setter="" getter="get_mode">
+			Read-only source mode that describes how to interpret the vector.
+		</member>
+	</members>
+	<constants>
+		<constant name="MODE_UNKNOWN" value="-1" enum="Mode">
+			Steam reported an unrecognized input source mode.
+		</constant>
+		<constant name="MODE_NONE" value="0" enum="Mode">
+			No source mode is active.
+		</constant>
+		<constant name="MODE_DPAD" value="1" enum="Mode">
+			Directional pad input.
+		</constant>
+		<constant name="MODE_BUTTONS" value="2" enum="Mode">
+			Button input.
+		</constant>
+		<constant name="MODE_FOUR_BUTTONS" value="3" enum="Mode">
+			Four-button input.
+		</constant>
+		<constant name="MODE_ABSOLUTE_MOUSE" value="4" enum="Mode">
+			Absolute pointer position.
+		</constant>
+		<constant name="MODE_RELATIVE_MOUSE" value="5" enum="Mode">
+			Relative pointer motion.
+		</constant>
+		<constant name="MODE_JOYSTICK_MOVE" value="6" enum="Mode">
+			Joystick movement axes.
+		</constant>
+		<constant name="MODE_JOYSTICK_MOUSE" value="7" enum="Mode">
+			Joystick mouse emulation.
+		</constant>
+		<constant name="MODE_JOYSTICK_CAMERA" value="8" enum="Mode">
+			Joystick camera control.
+		</constant>
+		<constant name="MODE_SCROLL_WHEEL" value="9" enum="Mode">
+			Scroll wheel input.
+		</constant>
+		<constant name="MODE_TRIGGER" value="10" enum="Mode">
+			Trigger input.
+		</constant>
+		<constant name="MODE_TOUCH_MENU" value="11" enum="Mode">
+			Touch menu input.
+		</constant>
+		<constant name="MODE_MOUSE_JOYSTICK" value="12" enum="Mode">
+			Mouse joystick emulation.
+		</constant>
+		<constant name="MODE_MOUSE_REGION" value="13" enum="Mode">
+			Mouse region input.
+		</constant>
+		<constant name="MODE_RADIAL_MENU" value="14" enum="Mode">
+			Radial menu input.
+		</constant>
+		<constant name="MODE_SINGLE_BUTTON" value="15" enum="Mode">
+			Single-button input.
+		</constant>
+		<constant name="MODE_SWITCHES" value="16" enum="Mode">
+			Switch input.
+		</constant>
+	</constants>
+</class>

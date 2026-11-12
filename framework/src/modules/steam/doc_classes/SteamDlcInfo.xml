@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="SteamDlcInfo" inherits="RefCounted">
+	<brief_description>Detached metadata for a DLC entry in Steam's app catalog.</brief_description>
+	<description>Get these records from a successful [method SteamApps.dlc] query. They describe the catalog at the time of the query.</description>
+	<methods>
+		<method name="get_app_id" qualifiers="const">
+			<return type="int" />
+			<description>Returns the Steam DLC AppID for this record.</description>
+		</method>
+		<method name="get_display_name" qualifiers="const">
+			<return type="String" />
+			<description>Returns the display name copied from Steam.</description>
+		</method>
+		<method name="is_available" qualifiers="const">
+			<return type="bool" />
+			<description>Returns Steam's store visibility flag for this DLC.</description>
+		</method>
+	</methods>
+	<members>
+		<member name="app_id" type="int" setter="" getter="get_app_id">Positive Steam DLC AppID for a catalog entry. An uninitialized record has AppID [code]0[/code].</member>
+		<member name="available" type="bool" setter="" getter="is_available">Read-only Steam store visibility flag. Use [method SteamApps.owns_dlc] to query local ownership.</member>
+		<member name="display_name" type="String" setter="" getter="get_display_name">Read-only name copied from Steam's catalog. Steam can supply an empty name.</member>
+	</members>
+</class>

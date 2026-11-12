@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="SteamStatsSubmission" inherits="RefCounted">
+	<brief_description>
+		The per-edit outcome of a stats draft submitted to the local Steam cache.
+	</brief_description>
+	<methods>
+		<method name="get_applied" qualifiers="const">
+			<return type="int" />
+			<description>Returns how many edits Steam accepted into its local cache.</description>
+		</method>
+		<method name="get_failed_at" qualifiers="const">
+			<return type="int" />
+			<description>Returns the zero-based index of the rejected edit or -1 when there is no individual failure.</description>
+		</method>
+	</methods>
+	<members>
+		<member name="applied" type="int" getter="get_applied">
+			Number of edits Steam accepted into the local cache. This can be positive on failure if a later edit or persistence request was rejected.
+		</member>
+		<member name="failed_at" type="int" getter="get_failed_at">
+			Zero-based index of the first edit that failed preflight or was rejected by a Steam setter. Use -1 as the sentinel for an outcome without an individual failed edit.
+		</member>
+	</members>
+</class>

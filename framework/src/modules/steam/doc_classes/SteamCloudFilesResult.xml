@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="SteamCloudFilesResult" inherits="SteamResult">
+	<brief_description>
+		Outcome and one bounded page of local Steam Cloud files.
+	</brief_description>
+	<methods>
+		<method name="get_total_count" qualifiers="const">
+			<return type="int" />
+			<description>Returns the total number of files Steam reported before copying the page. Returns zero on failure.</description>
+		</method>
+		<method name="get_value" qualifiers="const">
+			<return type="SteamCloudFile[]" />
+			<description>Returns a read-only array of detached file snapshots from the page. Returns an empty array on failure.</description>
+		</method>
+	</methods>
+	<members>
+		<member name="total_count" type="int" setter="" getter="get_total_count">
+			The total number of local files observed for this query, including files outside this page.
+		</member>
+		<member name="value" type="SteamCloudFile[]" setter="" getter="get_value">
+			A read-only array containing the file snapshots from the requested page.
+		</member>
+	</members>
+</class>

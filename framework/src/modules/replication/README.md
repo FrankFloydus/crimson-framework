@@ -2,7 +2,7 @@
 
 # Replication
 
-`CrimsonReplication` sends bounded, recipient-specific committed views over Godot's current `MultiplayerAPI`. Put one persistent node at the same path relative to the multiplayer root on the server and each client. Keep the node's authority at server peer 1 and keep Object decoding disabled in the multiplayer scope.
+`StateReplication` sends bounded, recipient-specific committed views over Godot's current `MultiplayerAPI`. Put one persistent node at the same path relative to the multiplayer root on the server and each client. Keep the node's authority at server peer 1 and keep Object decoding disabled in the multiplayer scope.
 
 The game provides a synchronous projector. It reads the indicated committed revision and returns `{"ok": true, "view": records}`, where `records` contains only what the given player may see. The server supplies the admitted player identity to this callback. A missing or rejected projection fails synchronization for that recipient. The node has no dependency on the session, state, inventory, or scene loader modules.
 

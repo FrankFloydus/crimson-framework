@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="SteamWorkshopItem" inherits="RefCounted">
+	<brief_description>
+		Detached metadata for one Steam Workshop item.
+	</brief_description>
+	<methods>
+		<method name="get_author_steam_id" qualifiers="const">
+			<return type="String" />
+			<description>The Workshop author's unsigned decimal SteamID64. An empty string indicates that Steam supplied no author.</description>
+		</method>
+		<method name="get_description" qualifiers="const">
+			<return type="String" />
+			<description>The description copied from Steam while the query was live.</description>
+		</method>
+		<method name="get_published_id" qualifiers="const">
+			<return type="String" />
+			<description>The exact published file ID as a canonical unsigned decimal string.</description>
+		</method>
+		<method name="get_title" qualifiers="const">
+			<return type="String" />
+			<description>The Workshop title reported by Steam.</description>
+		</method>
+	</methods>
+	<members>
+		<member name="author_steam_id" type="String" setter="" getter="get_author_steam_id">
+			The Workshop author's unsigned decimal SteamID64. An empty string indicates that Steam supplied no author.
+		</member>
+		<member name="description" type="String" setter="" getter="get_description">
+			The description copied from Steam while the query was live.
+		</member>
+		<member name="published_id" type="String" setter="" getter="get_published_id">
+			The exact published file ID as a canonical unsigned decimal string.
+		</member>
+		<member name="title" type="String" setter="" getter="get_title">
+			The Workshop title reported by Steam.
+		</member>
+	</members>
+</class>

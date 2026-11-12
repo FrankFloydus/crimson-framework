@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="SteamSocketListener" inherits="RefCounted">
+	<brief_description>A standalone listener with explicit admission.</brief_description>
+	<description>Observe [signal connection_requested] and apply a local allowlist or equivalent session policy. Pending offers expire after 1.5 seconds and count against this listener's remote limit.</description>
+	<tutorials>
+	</tutorials>
+	<methods>
+		<method name="accept">
+			<return type="SteamSocketConnectionResult" />
+			<param index="0" name="offer" type="SteamSocketOffer" />
+			<description>Accepts the exact live offer on its original listener. Successful acceptance issues a handle that can be closed immediately. Wait for [signal SteamSocketConnection.connected] before using its authenticated identity or sending.</description>
+		</method>
+		<method name="reject">
+			<return type="int" enum="Error" />
+			<param index="0" name="offer" type="SteamSocketOffer" />
+			<description>Rejects and retires the exact pending offer.</description>
+		</method>
+		<method name="close">
+			<return type="int" enum="Error" />
+			<description>Closes this listener and retires its pending offers and accepted connections.</description>
+		</method>
+	</methods>
+	<signals>
+		<signal name="connection_requested">
+			<param index="0" name="offer" type="SteamSocketOffer" />
+			<description>Emitted for a new pending offer. Handle it within its monotonic deadline.</description>
+		</signal>
+	</signals>
+</class>

@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="SteamNotificationSessionResult" inherits="SteamResult">
+	<brief_description>
+		Typed outcome and session receipt.
+	</brief_description>
+	<methods>
+		<method name="get_value" qualifiers="const">
+			<return type="SteamNotificationSession" />
+			<description>The typed receipt on success. If Steam accepted a write and the durable store could not commit it, the known receipt can still be available for trusted reconciliation.</description>
+		</method>
+	</methods>
+	<members>
+		<member name="value" type="SteamNotificationSession" setter="" getter="get_value">
+			The typed receipt on success. If Steam accepted a write and the durable store could not commit it, the known receipt can still be available for trusted reconciliation.
+		</member>
+	</members>
+</class>

@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="SteamNotificationUserState" inherits="RefCounted">
+	<brief_description>
+		One verified recipient's intended state in a notification session.
+	</brief_description>
+	<methods>
+		<method name="create" qualifiers="static">
+			<return type="SteamNotificationUserState" />
+			<param index="0" name="user" type="SteamIdentity" />
+			<param index="1" name="state" type="int" enum="SteamNotificationUserState.State" />
+			<param index="2" name="message" type="SteamLocalizedText" />
+			<description>Creates one recipient's state for a session mutation. Pass the identity minted by the same trusted publisher for this recipient.</description>
+		</method>
+		<method name="get_user" qualifiers="const">
+			<return type="SteamIdentity" />
+			<description>Return the backend-verified launch identity.</description>
+		</method>
+		<method name="get_state" qualifiers="const">
+			<return type="int" enum="SteamNotificationUserState.State" />
+			<description>Return the desired asynchronous session state.</description>
+		</method>
+		<method name="get_message" qualifiers="const">
+			<return type="SteamLocalizedText" />
+			<description>Return the recipient's localized status message.</description>
+		</method>
+	</methods>
+	<members>
+		<member name="user" type="SteamIdentity" setter="" getter="get_user">
+			A recipient verified by the same trusted publisher.
+		</member>
+		<member name="state" type="int" enum="SteamNotificationUserState.State" setter="" getter="get_state">
+			Desired notification state.
+		</member>
+		<member name="message" type="SteamLocalizedText" setter="" getter="get_message">
+			Localized text shown for this recipient.
+		</member>
+	</members>
+	<constants>
+		<constant name="WAITING" value="0" enum="State">Steam waits for other participants.</constant>
+		<constant name="READY" value="1" enum="State">This participant has an action to take.</constant>
+		<constant name="DONE" value="2" enum="State">This participant has completed the session.</constant>
+	</constants>
+</class>

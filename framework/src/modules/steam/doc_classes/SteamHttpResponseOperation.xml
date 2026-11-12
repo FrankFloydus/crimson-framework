@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="SteamHttpResponseOperation" inherits="RefCounted">
+	<brief_description>
+		Retained, cancellable operation for one submitted Steam HTTP request.
+	</brief_description>
+	<description>
+		Use [method wait] to await a terminal outcome and [method cancel] to stop a pending request.
+	</description>
+	<methods>
+		<method name="is_finished">
+			<return type="bool" />
+			<description>
+				Return whether the operation has settled.
+			</description>
+		</method>
+		<method name="result">
+			<return type="SteamHttpResponseResult" />
+			<description>
+				Return the terminal result, or [code]null[/code] while pending.
+			</description>
+		</method>
+		<method name="wait">
+			<return type="Variant" />
+			<description>
+				Return the completion signal while pending or the stored [SteamHttpResponseResult] after settlement. Awaiting again returns the same result.
+			</description>
+		</method>
+		<method name="cancel">
+			<return type="int" />
+			<description>
+				Cancel the local request on the main thread. A successful cancellation settles the operation with [constant ERR_SKIP]. Return [constant ERR_DOES_NOT_EXIST] if the request is no longer pending.
+			</description>
+		</method>
+	</methods>
+	<signals>
+		<signal name="completed">
+			<param index="0" name="result" type="SteamHttpResponseResult" />
+			<description>
+				Emitted once after the native request and its callback routing are retired. The result carries the transport outcome and any complete HTTP response.
+			</description>
+		</signal>
+	</signals>
+</class>

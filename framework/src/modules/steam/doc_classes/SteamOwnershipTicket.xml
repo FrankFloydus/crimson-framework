@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="SteamOwnershipTicket" inherits="RefCounted">
+	<brief_description>Holds an encrypted Steam app ticket.</brief_description>
+	<methods>
+		<method name="bytes" qualifiers="const">
+			<return type="PackedByteArray" />
+			<description>Returns the opaque encrypted ticket for the trusted backend. Keep it out of saves, replays, and logs. Issuance and backend validation are separate actions.</description>
+		</method>
+	</methods>
+</class>

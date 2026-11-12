@@ -2,7 +2,7 @@
 
 # Demo menu
 
-Instance [MainMenu](main_menu.tscn) in the persistent demo scene and assign its **Game** field to the configured `CrimsonGame` node. When composing the scene from code, assign `menu.game = game` before adding the menu to the tree. The view owns input and renders the presentation state. [MenuViewModel](menu_view_model.gd) sends `play_solo()`, `host_game()`, and `join_game(address)` to the game and observes the returned operations and session lifecycle for menu feedback.
+Instance [MainMenu](main_menu.tscn) in the persistent demo scene and assign its **Game** field to the configured `GameRuntime` node. When composing the scene from code, assign `menu.game = game` before adding the menu to the tree. The view owns input and renders the presentation state. [MenuViewModel](menu_view_model.gd) sends `play_solo()`, `host_game()`, and `join_game(address)` to the game and observes the returned operations and session lifecycle for menu feedback.
 
 The [demo boot script](../main.gd) opens the normal multiplayer screen or Join form before invoking its action. The menu relays the settled launch result so a launcher can wait for real readiness.
 

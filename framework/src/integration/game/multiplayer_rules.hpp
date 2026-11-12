@@ -9,8 +9,8 @@
 namespace crimson::integration {
 
 // Session rules for a listen game, independent of the authored spawn placements.
-class CrimsonMultiplayerRules : public godot::Resource {
-    GDCLASS(CrimsonMultiplayerRules, godot::Resource)
+class MultiplayerRules : public godot::Resource {
+    GDCLASS(MultiplayerRules, godot::Resource)
 
     // Total player capacity, including the host.
     int64_t max_players = 4;
@@ -25,15 +25,15 @@ protected:
 
 public:
     // Create the default listen co-op rules.
-    static godot::Ref<CrimsonMultiplayerRules> listen_coop();
+    static godot::Ref<MultiplayerRules> listen_coop();
     // Copy the rules for use in another definition or session.
-    godot::Ref<CrimsonMultiplayerRules> copy_rules() const;
+    godot::Ref<MultiplayerRules> copy_rules() const;
     // Return an independent rule set with the given total capacity.
-    godot::Ref<CrimsonMultiplayerRules> with_max_players(int64_t value) const;
+    godot::Ref<MultiplayerRules> with_max_players(int64_t value) const;
     // Return an independent rule set with the given admission policy.
-    godot::Ref<CrimsonMultiplayerRules> allow_join_in_progress(bool enabled = true) const;
+    godot::Ref<MultiplayerRules> allow_join_in_progress(bool enabled = true) const;
     // Return an independent rule set with the supplied listen port.
-    godot::Ref<CrimsonMultiplayerRules> on_port(int64_t value) const;
+    godot::Ref<MultiplayerRules> on_port(int64_t value) const;
 
     // Set the total player limit for future sessions.
     void set_max_players(int64_t value);

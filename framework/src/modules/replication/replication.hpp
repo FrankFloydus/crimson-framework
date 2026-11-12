@@ -15,12 +15,12 @@
 namespace crimson::replication {
 
 // Delivers an explicit authority-provided view to each admitted multiplayer peer.
-class CrimsonReplication : public godot::Node {
-    GDCLASS(CrimsonReplication, godot::Node)
+class StateReplication : public godot::Node {
+    GDCLASS(StateReplication, godot::Node)
 
 public:
     // Continue checking synchronization deadlines while gameplay is paused.
-    CrimsonReplication();
+    StateReplication();
 
     // Set the authority's synchronous recipient-specific projection callback.
     godot::Error set_projector(const godot::Callable &callback);

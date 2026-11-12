@@ -13,11 +13,11 @@
 
 namespace crimson::session {
 
-class CrimsonGameSession;
+class GameSession;
 
 // A provider-verified account identity for an authenticated connection.
-class CrimsonSessionIdentity : public godot::RefCounted {
-    GDCLASS(CrimsonSessionIdentity, godot::RefCounted)
+class SessionIdentity : public godot::RefCounted {
+    GDCLASS(SessionIdentity, godot::RefCounted)
 
     // Namespace controlled by the verifier.
     godot::StringName provider;
@@ -30,7 +30,7 @@ protected:
 
 public:
     // Construct a validated identity, or return null for invalid fields.
-    static godot::Ref<CrimsonSessionIdentity> verified(const godot::StringName &p_provider,
+    static godot::Ref<SessionIdentity> verified(const godot::StringName &p_provider,
             const godot::String &p_subject);
     // Return the verified provider namespace.
     godot::StringName get_provider() const;
@@ -39,10 +39,10 @@ public:
 };
 
 // One authority or guest verification tied to a pending connection and session generation.
-class CrimsonSessionAuthRequest : public godot::RefCounted {
-    GDCLASS(CrimsonSessionAuthRequest, godot::RefCounted)
+class SessionAuthRequest : public godot::RefCounted {
+    GDCLASS(SessionAuthRequest, godot::RefCounted)
 
-    friend class CrimsonGameSession;
+    friend class GameSession;
 
     // Weak ID of the native session issuing the request.
     godot::ObjectID session_id;
@@ -60,7 +60,7 @@ class CrimsonSessionAuthRequest : public godot::RefCounted {
     godot::PackedByteArray proof;
 
     // Complete this exact attempt through its still-live native session.
-    godot::Error finish(const godot::Ref<CrimsonSessionIdentity> &identity, bool accepted);
+    godot::Error finish(const godot::Ref<SessionIdentity> &identity, bool accepted);
 
 protected:
     // Register verification request getters and completion actions.
@@ -76,29 +76,29 @@ public:
     // Return the bounded proof received from this connection.
     godot::PackedByteArray get_proof() const;
     // Settle this attempt with a verified identity on the scene thread.
-    godot::Error accept(const godot::Ref<CrimsonSessionIdentity> &identity);
+    godot::Error accept(const godot::Ref<SessionIdentity> &identity);
     // Deny this attempt on the scene thread.
     godot::Error reject();
 };
 
 // Trusted game or platform adapter for connection proof creation and verification.
-class CrimsonSessionAuthenticator : public godot::Resource {
-    GDCLASS(CrimsonSessionAuthenticator, godot::Resource)
+class SessionAuthenticator : public godot::Resource {
+    GDCLASS(SessionAuthenticator, godot::Resource)
 
-    friend class CrimsonGameSession;
+    friend class GameSession;
 
 protected:
     // Answer the remote challenge from locally prepared credentials. Empty denies the connection.
     GDVIRTUAL3R(godot::PackedByteArray, _make_proof, int32_t, bool, godot::PackedByteArray)
     // Verify the remote response, and accept or reject the request on the scene thread.
-    GDVIRTUAL1(_verify, godot::Ref<CrimsonSessionAuthRequest>)
+    GDVIRTUAL1(_verify, godot::Ref<SessionAuthRequest>)
     // Register the typed authentication hooks.
     static void _bind_methods();
     // Build a proof natively or invoke the scripted hook.
     virtual godot::PackedByteArray make_proof(int32_t peer_id, bool authority,
             const godot::PackedByteArray &challenge);
     // Verify natively or invoke the scripted hook, rejecting when it is absent.
-    virtual void verify(const godot::Ref<CrimsonSessionAuthRequest> &request);
+    virtual void verify(const godot::Ref<SessionAuthRequest> &request);
 };
 
 } // namespace crimson::session

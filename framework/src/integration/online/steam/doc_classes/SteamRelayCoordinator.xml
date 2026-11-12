@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="SteamRelayCoordinator" inherits="Resource">
+	<brief_description>Trusted game-owned backend adapter for Steam hosted dedicated relay.</brief_description>
+	<methods>
+		<method name="_register_server" qualifiers="virtual">
+			<return type="void" />
+			<param index="0" name="request" type="SteamRelayRequest" />
+			<description>Submit the Steam-signed login only to the authenticated backend. The backend checks app, namespace, profile, virtual port and registration before acknowledging the exact request with [method SteamRelayRequest.registered] or [method SteamRelayRequest.fail].</description>
+		</method>
+		<method name="_authorize_client" qualifiers="virtual">
+			<return type="void" />
+			<param index="0" name="request" type="SteamRelayRequest" />
+			<description>Authenticate the client independently, authorize only the selected live registration, and sign a fresh Steam relay ticket on the backend. Complete the exact request with [method SteamRelayRequest.authorize] or [method SteamRelayRequest.fail]. Keep signing credentials off client and game-server builds.</description>
+		</method>
+		<method name="_withdraw_server" qualifiers="virtual">
+			<return type="void" />
+			<param index="0" name="listing_id" type="String" />
+			<description>Idempotently retire only this exact generation-scoped hosted locator, including a late registration that finished after the Game left.</description>
+		</method>
+	</methods>
+</class>

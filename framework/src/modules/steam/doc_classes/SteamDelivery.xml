@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="SteamDelivery" inherits="Object">
+	<brief_description>Transport delivery choices for Steam packets.</brief_description>
+	<constants>
+		<constant name="RELIABLE" value="0" enum="Mode">Request reliable ordered delivery for this native channel.</constant>
+		<constant name="UNRELIABLE" value="1" enum="Mode">Request best-effort delivery for replaceable data. Packets can be lost or dropped.</constant>
+	</constants>
+</class>

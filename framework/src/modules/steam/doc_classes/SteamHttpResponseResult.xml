@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="SteamHttpResponseResult" inherits="SteamResult">
+	<brief_description>
+		Terminal transport outcome for a Steam HTTP request.
+	</brief_description>
+	<description>
+		A successful result contains the complete response, including responses with 4xx or 5xx status codes. Failed or cancelled requests have no response value.
+	</description>
+	<methods>
+		<method name="get_value">
+			<return type="SteamHttpResponse" />
+			<description>
+				Return the complete HTTP response, or [code]null[/code] if the request failed.
+			</description>
+		</method>
+	</methods>
+	<members>
+		<member name="value" type="SteamHttpResponse" setter="" getter="get_value">
+			Complete response after successful transport. The value is [code]null[/code] on failure.
+		</member>
+	</members>
+</class>

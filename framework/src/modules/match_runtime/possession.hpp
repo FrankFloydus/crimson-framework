@@ -12,12 +12,12 @@
 namespace crimson::match_runtime {
 
 // Owns the match's one-primary-character assignment rules.
-class CrimsonPossession : public godot::RefCounted {
-    GDCLASS(CrimsonPossession, godot::RefCounted)
+class PlayerPossession : public godot::RefCounted {
+    GDCLASS(PlayerPossession, godot::RefCounted)
 
 public:
     // Registers possession state and its cross-store validator with the match coordinator.
-    godot::Error configure(const godot::Ref<CrimsonTransactionCoordinator> &coordinator,
+    godot::Error configure(const godot::Ref<TransactionCoordinator> &coordinator,
             const godot::String &players_store, const godot::String &characters_store,
             const godot::Callable &eligibility = {});
 
@@ -31,7 +31,7 @@ public:
     int64_t get_revision(const godot::String &player_id) const;
 
     // Queues a switch or release alongside other changes in the same match transaction.
-    godot::Error queue_primary_change(const godot::Ref<CrimsonTransaction> &transaction,
+    godot::Error queue_primary_change(const godot::Ref<GameTransaction> &transaction,
             const godot::String &player_id, const godot::String &character_id, int64_t expected_revision);
 
     // Commits a single switch or release and returns the transaction outcome.
@@ -47,7 +47,7 @@ private:
     const std::thread::id owner_thread = std::this_thread::get_id();
 
     // Keeps the match's transaction coordinator alive while possession is configured.
-    godot::Ref<CrimsonTransactionCoordinator> coordinator;
+    godot::Ref<TransactionCoordinator> coordinator;
 
     // Identifies the store containing game-defined player records.
     godot::String players_store;

@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="SteamInvite" inherits="RefCounted">
+	<brief_description>A Steam request to join a lobby, ready for the game's confirmation flow.</brief_description>
+	<methods>
+		<method name="get_listing" qualifiers="const">
+			<return type="SteamListing" />
+			<description>Return the locator accepted by [method GameRuntime.join_listing].</description>
+		</method>
+		<method name="get_from_steam_id" qualifiers="const">
+			<return type="String" />
+			<description>Return the inviter's decimal SteamID64 when Steam provided it.</description>
+		</method>
+	</methods>
+	<members>
+		<member name="listing" type="SteamListing" setter="" getter="get_listing">Typed lobby locator for explicit join.</member>
+		<member name="from_steam_id" type="String" setter="" getter="get_from_steam_id">Inviter account when Steam supplied it. A launch invite can omit this field.</member>
+	</members>
+</class>

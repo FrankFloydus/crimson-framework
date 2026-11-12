@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="SteamTimelineEventResult" inherits="SteamResult">
+	<brief_description>
+		Reports whether Steam accepted a Timeline marker submission.
+	</brief_description>
+	<description>
+		Reports whether Steam accepted a Timeline marker submission.
+	</description>
+	<members>
+		<member name="value" type="SteamTimelineEvent" setter="" getter="get_value">
+			The submitted event when the result succeeds, or null on error.
+		</member>
+	</members>
+</class>

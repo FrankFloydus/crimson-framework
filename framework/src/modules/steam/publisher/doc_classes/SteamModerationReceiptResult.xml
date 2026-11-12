@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="SteamModerationReceiptResult" inherits="SteamResult">
+	<brief_description>
+		A typed result from trusted Steam moderation.
+	</brief_description>
+	<description>
+		Check [member SteamResult.ok] for success. The approved action's audit receipt remains available when its remote outcome is unresolved or the backend's terminal audit write fails. An audit write failure returns [constant ERR_DATABASE_CANT_WRITE]. The receipt's acknowledgment field retains the observed Steam outcome.
+	</description>
+	<tutorials>
+	</tutorials>
+	<methods>
+		<method name="get_value" qualifiers="const">
+			<return type="SteamModerationReceipt" />
+			<description>
+				Returns the approved action's audit receipt, including when its remote outcome is unresolved. Null when authorization was not granted.
+			</description>
+		</method>
+	</methods>
+	<members>
+		<member name="value" type="SteamModerationReceipt" setter="" getter="get_value">
+			The approved action's audit receipt, including when its remote outcome is unresolved. Null when authorization was not granted.
+		</member>
+	</members>
+</class>

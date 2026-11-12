@@ -46,7 +46,7 @@ bool valid_peer_id(int64_t peer_id) {
 
 } // namespace
 
-Error CrimsonGameSession::set_authenticator(const Ref<CrimsonSessionAuthenticator> &authenticator) {
+Error GameSession::set_authenticator(const Ref<SessionAuthenticator> &authenticator) {
     if (state != IDLE || ending || opening) {
         return ERR_BUSY;
     }
@@ -54,19 +54,39 @@ Error CrimsonGameSession::set_authenticator(const Ref<CrimsonSessionAuthenticato
     return OK;
 }
 
-Ref<CrimsonSessionAuthenticator> CrimsonGameSession::get_authenticator() const {
+Ref<SessionAuthenticator> GameSession::get_authenticator() const {
     return configured_authenticator;
 }
 
-Ref<CrimsonSessionIdentity> CrimsonGameSession::get_peer_identity(int64_t peer_id) const {
+Ref<SessionIdentity> GameSession::get_peer_identity(int64_t peer_id) const {
     if (!valid_peer_id(peer_id) || (state != HOSTING && state != CLIENT) || !owns_auth_scope()) {
         return {};
     }
     const auto found = identities.find(static_cast<int32_t>(peer_id));
-    return found == identities.end() ? Ref<CrimsonSessionIdentity>() : found->second;
+    return found == identities.end() ? Ref<SessionIdentity>() : found->second;
 }
 
-Error CrimsonGameSession::check_auth_scope(const Ref<MultiplayerAPI> &api) const {
+void GameSession::revoke_verified_peer(int32_t peer_id, const Ref<SessionIdentity> &identity) {
+    if (identity.is_null() || get_state() != HOSTING || !owns_auth_scope()) {
+        return;
+    }
+    const auto pending = auth_attempts.find(peer_id);
+    if (pending != auth_attempts.end() && pending->second.identity == identity) {
+        reject_auth_peer(peer_id);
+        return;
+    }
+    if (get_peer_identity(peer_id) != identity || connected_peers.count(peer_id) == 0) {
+        return;
+    }
+    const auto peer = transport;
+    const uint64_t active_generation = generation;
+    peer->disconnect_peer(peer_id, false);
+    if (active_generation == generation && get_peer_identity(peer_id) == identity) {
+        on_peer_disconnected(peer_id);
+    }
+}
+
+Error GameSession::check_auth_scope(const Ref<MultiplayerAPI> &api) const {
     if (configured_authenticator.is_null()) {
         return OK;
     }
@@ -81,7 +101,7 @@ Error CrimsonGameSession::check_auth_scope(const Ref<MultiplayerAPI> &api) const
     return std::isfinite(timeout) && timeout > 0.0 && timeout <= max_auth_timeout ? OK : ERR_INVALID_PARAMETER;
 }
 
-Error CrimsonGameSession::connect_auth(const Ref<MultiplayerAPI> &api) {
+Error GameSession::connect_auth(const Ref<MultiplayerAPI> &api) {
     if (configured_authenticator.is_null()) {
         return OK;
     }
@@ -91,20 +111,20 @@ Error CrimsonGameSession::connect_auth(const Ref<MultiplayerAPI> &api) {
     }
     auth_api = api;
     previous_auth_callback = auth_api->get_auth_callback();
-    auth_signals = { callable_mp(this, &CrimsonGameSession::on_peer_authenticating),
-        callable_mp(this, &CrimsonGameSession::on_peer_authentication_failed) };
+    auth_signals = { callable_mp(this, &GameSession::on_peer_authenticating),
+        callable_mp(this, &GameSession::on_peer_authentication_failed) };
     for (size_t index = 0; index < auth_signals.size(); ++index) {
         const Error connected = auth_api->connect(pending_signals[index], auth_signals[index]);
         if (connected != OK) {
             return connected;
         }
     }
-    auth_callback = callable_mp(this, &CrimsonGameSession::on_auth_data);
+    auth_callback = callable_mp(this, &GameSession::on_auth_data);
     auth_api->set_auth_callback(auth_callback);
     return OK;
 }
 
-void CrimsonGameSession::disconnect_auth() {
+void GameSession::disconnect_auth() {
     if (auth_api.is_valid()) {
         for (size_t index = 0; index < auth_signals.size(); ++index) {
             if (auth_api->is_connected(pending_signals[index], auth_signals[index])) {
@@ -124,11 +144,11 @@ void CrimsonGameSession::disconnect_auth() {
     auth_failed = false;
 }
 
-bool CrimsonGameSession::owns_auth_scope() const {
+bool GameSession::owns_auth_scope() const {
     return auth_api.is_valid() && owns_current_transport() && auth_api->get_auth_callback() == auth_callback;
 }
 
-void CrimsonGameSession::on_peer_authenticating(int64_t peer_id) {
+void GameSession::on_peer_authenticating(int64_t peer_id) {
     if (!valid_peer_id(peer_id) || !owns_auth_scope()) {
         return;
     }
@@ -157,7 +177,7 @@ void CrimsonGameSession::on_peer_authenticating(int64_t peer_id) {
     }
 }
 
-void CrimsonGameSession::on_peer_authentication_failed(int64_t peer_id) {
+void GameSession::on_peer_authentication_failed(int64_t peer_id) {
     if (!valid_peer_id(peer_id) || !owns_auth_scope()) {
         return;
     }
@@ -167,7 +187,7 @@ void CrimsonGameSession::on_peer_authentication_failed(int64_t peer_id) {
     }
 }
 
-void CrimsonGameSession::on_auth_data(int64_t peer_id, const PackedByteArray &data) {
+void GameSession::on_auth_data(int64_t peer_id, const PackedByteArray &data) {
     if (!valid_peer_id(peer_id) || !owns_auth_scope()) {
         return;
     }
@@ -194,8 +214,8 @@ void CrimsonGameSession::on_auth_data(int64_t peer_id, const PackedByteArray &da
     reject_auth_peer(id);
 }
 
-Error CrimsonGameSession::finish_auth(const CrimsonSessionAuthRequest &request,
-        const Ref<CrimsonSessionIdentity> &identity, bool accepted) {
+Error GameSession::finish_auth(const SessionAuthRequest &request,
+        const Ref<SessionIdentity> &identity, bool accepted) {
     auto pending = auth_attempts.find(request.peer_id);
     if (request.generation != generation || !owns_auth_scope() || pending == auth_attempts.end() ||
             pending->second.id != request.attempt || pending->second.stage != AuthStage::VERIFYING ||
@@ -211,7 +231,7 @@ Error CrimsonGameSession::finish_auth(const CrimsonSessionAuthRequest &request,
     return OK;
 }
 
-void CrimsonGameSession::process_authentication() {
+void GameSession::process_authentication() {
     std::array<int32_t, max_pending> pending_ids;
     size_t count = 0;
     for (const auto &[id, attempt] : auth_attempts) {
@@ -229,7 +249,7 @@ void CrimsonGameSession::process_authentication() {
     }
 }
 
-void CrimsonGameSession::advance_auth_attempt(int32_t peer_id) {
+void GameSession::advance_auth_attempt(int32_t peer_id) {
     auto pending = auth_attempts.find(peer_id);
     if (pending == auth_attempts.end()) {
         return;
@@ -239,7 +259,7 @@ void CrimsonGameSession::advance_auth_attempt(int32_t peer_id) {
     const Ref<SceneMultiplayer> api = auth_api;
 
     if (pending->second.stage == AuthStage::CHALLENGE_RECEIVED) {
-        const Ref<CrimsonSessionAuthenticator> authenticator = configured_authenticator;
+        const Ref<SessionAuthenticator> authenticator = configured_authenticator;
         const PackedByteArray challenge = pending->second.remote_challenge;
         pending->second.remote_challenge.clear();
         pending->second.stage = AuthStage::BUILDING_PROOF;
@@ -259,9 +279,9 @@ void CrimsonGameSession::advance_auth_attempt(int32_t peer_id) {
     }
 
     if (pending->second.stage == AuthStage::PROOF && !pending->second.remote_proof.is_empty()) {
-        const Ref<CrimsonSessionAuthenticator> authenticator = configured_authenticator;
+        const Ref<SessionAuthenticator> authenticator = configured_authenticator;
         pending->second.stage = AuthStage::VERIFYING;
-        Ref<CrimsonSessionAuthRequest> request;
+        Ref<SessionAuthRequest> request;
         request.instantiate();
         request->session_id = ObjectID(get_instance_id());
         request->generation = generation;
@@ -296,7 +316,7 @@ void CrimsonGameSession::advance_auth_attempt(int32_t peer_id) {
     }
 }
 
-bool CrimsonGameSession::admit_authenticated_peer(int32_t peer_id) {
+bool GameSession::admit_authenticated_peer(int32_t peer_id) {
     auto pending = auth_attempts.find(peer_id);
     if (!owns_auth_scope() || pending == auth_attempts.end() || pending->second.stage != AuthStage::WAITING_REMOTE ||
             !pending->second.engine_connected) {
@@ -307,7 +327,7 @@ bool CrimsonGameSession::admit_authenticated_peer(int32_t peer_id) {
     return true;
 }
 
-void CrimsonGameSession::reject_auth_peer(int32_t peer_id) {
+void GameSession::reject_auth_peer(int32_t peer_id) {
     auth_attempts.erase(peer_id);
     identities.erase(peer_id);
     if (state == CONNECTING && peer_id == authority_id) {

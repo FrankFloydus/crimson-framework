@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="SteamPurchaseStore" inherits="RefCounted">
+	<brief_description>Trusted persistence and entitlement adapter for Steam Wallet purchases.</brief_description>
+	<description>Implement these synchronous hooks using durable storage in a trusted process. Partition records by AppID and environment. Scope checkout uniqueness to the authenticated account. A commit atomically persists the next revision and applies the matching entitlement difference, or records that difference in a durable outbox within the same transaction. Compute the desired paid item set from the incoming phase and reversed IDs, then compare it with the durable granted set. A first payment observation can be partial, so grant only surviving items in that case. Repeated commits and outbox delivery must be idempotent by order and item.</description>
+	<tutorials>
+	</tutorials>
+	<methods>
+		<method name="_reserve_checkout" qualifiers="virtual">
+			<return type="SteamPublisherPurchaseOrder" />
+			<param index="0" name="app_id" type="int" />
+			<param index="1" name="environment" type="int" enum="SteamPublisherSettings.Environment" />
+			<param index="2" name="steam_id" type="String" />
+			<param index="3" name="cart" type="SteamPurchaseCart" />
+			<param index="4" name="checkout_id" type="String" />
+			<description>Atomically looks up or reserves the authenticated player's checkout. The game chooses order ID, currency, prices and item mappings. Return the same immutable quote for a replay and null if the selection is rejected.</description>
+		</method>
+		<method name="_load_order" qualifiers="virtual">
+			<return type="SteamPublisherPurchaseOrderResult" />
+			<param index="0" name="app_id" type="int" />
+			<param index="1" name="environment" type="int" enum="SteamPublisherSettings.Environment" />
+			<param index="2" name="order_id" type="String" />
+			<description>Returns the stored order for the exact namespace and ID. Return an explicit storage error when durability cannot be established.</description>
+		</method>
+		<method name="_compare_and_commit" qualifiers="virtual">
+			<return type="bool" />
+			<param index="0" name="expected_revision" type="int" />
+			<param index="1" name="next" type="SteamPublisherPurchaseOrder" />
+			<description>Return true only when the stored immutable quote and expected revision matched and the new revision and corresponding entitlement change or outbox message were committed atomically. Return false without changing durable state on a conflict or failure.</description>
+		</method>
+		<method name="_authorize_refund" qualifiers="virtual">
+			<return type="bool" />
+			<param index="0" name="order" type="SteamPublisherPurchaseOrder" />
+			<description>Return true only when the current trusted operator or workflow may refund this exact fulfilled order. The default denies. A backend must enforce its own administrative authentication and refund policy.</description>
+		</method>
+	</methods>
+</class>

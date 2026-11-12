@@ -2,13 +2,21 @@
   "$comment": "Copyright Francesco Di Blasi 2026 - All Rights Reserved",
   "enabled_classes": [
     "Camera3D",
+    "Control",
     "Crypto",
+    "DisplayServer",
     "ENetMultiplayerPeer",
     "ENetPacketPeer",
+    "Engine",
     "FileAccess",
+    "HTTPClient",
     "Image",
     "ImageTexture",
+    "InputEventKey",
+    "InputEventMouseButton",
+    "InputEventMouseMotion",
     "JSON",
+    "LineEdit",
     "Marshalls",
     "Marker3D",
     "MultiplayerAPI",
@@ -25,8 +33,12 @@
     "SceneMultiplayer",
     "SceneTree",
     "SceneTreeTimer",
+    "TextEdit",
     "Texture2D",
+    "TLSOptions",
     "Time",
-    "WorkerThreadPool"
+    "Window",
+    "WorkerThreadPool",
+    "X509Certificate"
   ]
 }

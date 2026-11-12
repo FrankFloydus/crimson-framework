@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="SteamPartyListingsResult" inherits="SteamResult">
+	<brief_description>Result of querying visible compatible Party beacons.</brief_description>
+	<members>
+		<member name="value" type="SteamPartyListing[]" setter="" getter="get_value">Read-only listing snapshots, bounded to 128 inspected Steam beacons.</member>
+	</members>
+</class>

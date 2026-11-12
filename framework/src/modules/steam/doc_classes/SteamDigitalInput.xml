@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="SteamDigitalInput" inherits="RefCounted">
+	<brief_description>
+		A digital action sample from the current Steam Input frame.
+	</brief_description>
+	<description>
+		Read these fields from a successful [method SteamController.digital] result. The sample remains readable after the next frame.
+	</description>
+	<tutorials>
+	</tutorials>
+	<methods>
+		<method name="is_active" qualifiers="const">
+			<return type="bool" />
+			<description>
+				Returns whether Steam reports that the action is available in the active set.
+			</description>
+		</method>
+		<method name="is_pressed" qualifiers="const">
+			<return type="bool" />
+			<description>
+				Returns whether this active action is currently pressed.
+			</description>
+		</method>
+	</methods>
+	<members>
+		<member name="active" type="bool" setter="" getter="is_active">
+			Read-only active-set availability for this action.
+		</member>
+		<member name="pressed" type="bool" setter="" getter="is_pressed">
+			Read-only button state for this active action. False when inactive.
+		</member>
+	</members>
+</class>

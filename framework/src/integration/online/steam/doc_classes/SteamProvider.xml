@@ -1,0 +1,165 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="SteamProvider" inherits="GameServiceProvider">
+	<brief_description>
+		Uses the signed-in Steam client for online games, verified peer identity, and native Steam transport.
+	</brief_description>
+	<methods>
+		<method name="with_message_channels" qualifiers="const">
+			<return type="SteamProvider" />
+			<param index="0" name="channels" type="StringName[]" />
+			<description>Returns an independent provider branch allowing the specified app message channels for verified, world-ready Steam Game peers. Supply at most 16 distinct channel names of up to 32 ASCII characters, or an empty list to disable Game Messages. Invalid names return null.</description>
+		</method>
+		<method name="configure" qualifiers="static">
+			<return type="SteamProvider" />
+			<description>Build detached settings with a private lobby and the Steam launch AppID.</description>
+		</method>
+		<method name="for_app" qualifiers="const">
+			<return type="SteamProvider" />
+			<param index="0" name="expected_app_id" type="int" />
+			<description>Return a branch with this expected AppID. Zero uses the Steam launch AppID, and invalid IDs return null.</description>
+		</method>
+		<method name="private" qualifiers="const">
+			<return type="SteamProvider" />
+			<description>Return a branch that publishes an invite-only lobby.</description>
+		</method>
+		<method name="friends_only" qualifiers="const">
+			<return type="SteamProvider" />
+			<description>Return a branch that publishes a lobby joinable by friends and invitees.</description>
+		</method>
+		<method name="public_lobbies" qualifiers="const">
+			<return type="SteamProvider" />
+			<description>Return a branch whose compatible lobby appears in Steam search.</description>
+		</method>
+		<method name="invisible_lobby" qualifiers="const">
+			<return type="SteamProvider" />
+			<description>Return a branch whose lobby appears in Steam search and is hidden from friends visibility.</description>
+		</method>
+		<method name="with_lobby_namespace" qualifiers="const">
+			<return type="SteamProvider" />
+			<param index="0" name="namespace" type="String" />
+			<description>Return a branch with 1 to 64 ASCII letters, digits, underscores, or hyphens. An invalid namespace returns null.</description>
+		</method>
+		<method name="on_virtual_port" qualifiers="const">
+			<return type="SteamProvider" />
+			<param index="0" name="port" type="int" />
+			<description>Return a branch with a Steam virtual port from 0 to 65535. An invalid port returns null.</description>
+		</method>
+		<method name="prefer_relay" qualifiers="const">
+			<return type="SteamProvider" />
+			<description>Returns a branch that prefers Valve relay routes over direct ICE for incoming Steam listen connections. It adds a 500 millisecond ICE route selection penalty while preserving direct fallback. Dedicated routes are unaffected. Observe the actual chosen path with [method SteamNetworking.peer_path].</description>
+		</method>
+		<method name="set_prefer_relay_routes">
+			<return type="void" />
+			<param index="0" name="enabled" type="bool" />
+			<description>Sets the route preference for the next Steam listen attachment.</description>
+		</method>
+		<method name="get_prefer_relay_routes" qualifiers="const">
+			<return type="bool" />
+			<description>Returns whether the next Steam listen attachment will prefer Valve relays.</description>
+		</method>
+		<method name="set_lobby_visibility">
+			<return type="void" />
+			<param index="0" name="value" type="int" enum="SteamProvider.Visibility" />
+			<description>Set the lobby visibility captured when the game attaches.</description>
+		</method>
+		<method name="get_lobby_visibility" qualifiers="const">
+			<return type="int" enum="SteamProvider.Visibility" />
+			<description>Return the configured Steam lobby visibility.</description>
+		</method>
+		<method name="set_app_id">
+			<return type="void" />
+			<param index="0" name="value" type="int" />
+			<description>Set the expected AppID before attaching the game.</description>
+		</method>
+		<method name="get_app_id" qualifiers="const">
+			<return type="int" />
+			<description>Return the configured expected AppID.</description>
+		</method>
+		<method name="set_virtual_port">
+			<return type="void" />
+			<param index="0" name="value" type="int" />
+			<description>Set the Steam P2P virtual port before attaching the game.</description>
+		</method>
+		<method name="get_virtual_port" qualifiers="const">
+			<return type="int" />
+			<description>Return the configured Steam P2P virtual port.</description>
+		</method>
+		<method name="set_lobby_namespace">
+			<return type="void" />
+			<param index="0" name="value" type="String" />
+			<description>Set the shared lobby namespace before attaching the game.</description>
+		</method>
+		<method name="get_lobby_namespace" qualifiers="const">
+			<return type="String" />
+			<description>Return the configured namespace.</description>
+		</method>
+		<method name="is_ready" qualifiers="const">
+			<return type="bool" />
+			<description>Return whether this Resource identifies one attached game with usable Steam. Use [method SteamServices.for_game] when the Resource is shared.</description>
+		</method>
+		<method name="get_local_steam_id" qualifiers="const">
+			<return type="String" />
+			<description>Return the signed-in SteamID64 for the uniquely identified attachment, or an empty string.</description>
+		</method>
+		<method name="get_initialization_error" qualifiers="const">
+			<return type="String" />
+			<description>Return the unique attachment's startup diagnostic or the diagnostic for an ambiguous Resource.</description>
+		</method>
+		<method name="open_invite_overlay">
+			<return type="int" enum="Error" />
+			<description>Request the invite picker for the uniquely attached game's current lobby. Use [method GameInvites.open_overlay] for an exact game attachment.</description>
+		</method>
+		<method name="invite_player">
+			<return type="int" enum="Error" />
+			<param index="0" name="steam_id" type="String" />
+			<description>Send an invitation from the uniquely attached game's current lobby. Use [method GameInvites.send] for an exact game attachment.</description>
+		</method>
+		<method name="with_commerce_backend" qualifiers="const">
+			<return type="SteamProvider" />
+			<param index="0" name="backend" type="SteamCommerceBackend" />
+			<description>Returns a new provider configuration with the selected game-owned commerce adapter. The adapter must use the game's authenticated purchasing backend. Pass null for a provider without commerce.</description>
+		</method>
+		<method name="dedicated" qualifiers="const">
+			<return type="SteamProvider" />
+			<param index="0" name="settings" type="SteamServer" />
+			<description>Return a branch that creates a separate SteamGameServer pipe for [method GameRuntime.start_dedicated_online]. The game remains playerless and does not acquire a signed-in Steam client. Null settings return null.</description>
+		</method>
+		<method name="with_relay_coordinator" qualifiers="const">
+			<return type="SteamProvider" />
+			<param index="0" name="coordinator" type="SteamRelayCoordinator" />
+			<description>Return a branch with the trusted hosted relay coordinator. The server uses registration and withdrawal. The signed-in guest uses fresh authorization. Null clears the adapter for a future Game.</description>
+		</method>
+	</methods>
+	<members>
+		<member name="prefer_relay_routes" type="bool" setter="set_prefer_relay_routes" getter="get_prefer_relay_routes" default="false">
+			Bias Steam listen-host route selection toward Valve relays. Direct ICE remains a fallback. The default uses Steam's normal route scoring. Dedicated sessions select their own route.
+		</member>
+		<member name="app_id" type="int" setter="set_app_id" getter="get_app_id" default="0">
+			Expected Steam AppID for this game. Zero accepts the AppID selected by Steam when the process starts. Configure the provider before attaching the game.
+		</member>
+		<member name="virtual_port" type="int" setter="set_virtual_port" getter="get_virtual_port" default="0">
+			Steam P2P virtual port used by the host, from 0 to 65535. Zero is the standard Steam P2P port. This value is independent of the direct UDP port.
+		</member>
+		<member name="lobby_namespace" type="String" setter="set_lobby_namespace" getter="get_lobby_namespace" default="&quot;crimson&quot;">
+			Game-specific identifier checked when joining a Steam lobby. Use the same value on host and guests. Use 1 to 64 ASCII letters, digits, underscores, or hyphens.
+		</member>
+		<member name="lobby_visibility" type="int" setter="set_lobby_visibility" getter="get_lobby_visibility" enum="SteamProvider.Visibility" default="0">
+			Who can discover and join the hosted Steam lobby. Private requires a Steam invitation.
+		</member>
+	</members>
+	<signals>
+		<signal name="invite_received">
+			<param index="0" name="listing_id" type="String" />
+			<description>
+				Emitted when Steam asks the running client to join a lobby. Submit the listing to [method GameRuntime.join_online] after the user accepts it in your game.
+			</description>
+		</signal>
+	</signals>
+	<constants>
+		<constant name="PRIVATE" value="0" enum="Visibility">Invite-only Steam lobby.</constant>
+		<constant name="FRIENDS_ONLY" value="1" enum="Visibility">Joinable by Steam friends and invitees.</constant>
+		<constant name="PUBLIC" value="2" enum="Visibility">Appears in compatible Steam lobby search.</constant>
+		<constant name="INVISIBLE" value="3" enum="Visibility">Appears in Steam search while hidden from friends visibility.</constant>
+	</constants>
+</class>

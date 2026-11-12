@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="SteamModerationReceipt" inherits="RefCounted">
+	<brief_description>
+		The terminal audit details for one reviewed game sanction or removal.
+	</brief_description>
+	<description>
+		A successful receipt acknowledges Steam's recognized reply for the request. Observe game admission or profile state separately when the game needs to confirm a later effect. When a submitted request times out or observation closes, the receipt remains available and the remote outcome can remain unresolved.
+	</description>
+	<tutorials>
+	</tutorials>
+	<methods>
+		<method name="get_action" qualifiers="const">
+			<return type="int" enum="SteamModerationRequest.Action" />
+			<description>
+				Returns the exact reviewed action recorded by the policy.
+			</description>
+		</method>
+		<method name="get_app_id" qualifiers="const">
+			<return type="int" />
+			<description>
+				Returns the trusted AppID that scoped this action.
+			</description>
+		</method>
+		<method name="get_player_id" qualifiers="const">
+			<return type="String" />
+			<description>
+				Returns the target SteamID64 resolved by the policy.
+			</description>
+		</method>
+		<method name="get_report_id" qualifiers="const">
+			<return type="String" />
+			<description>
+				Returns the reviewed Valve report ID, or empty for removal.
+			</description>
+		</method>
+		<method name="get_duration_seconds" qualifiers="const">
+			<return type="int" />
+			<description>
+				Returns the suspension duration in seconds, or zero otherwise.
+			</description>
+		</method>
+		<method name="get_audit_id" qualifiers="const">
+			<return type="String" />
+			<description>
+				Returns the game-owned audit reference reserved before dispatch.
+			</description>
+		</method>
+		<method name="get_acknowledged" qualifiers="const">
+			<return type="bool" />
+			<description>
+				Returns whether a recognized Steam reply acknowledged the action.
+			</description>
+		</method>
+	</methods>
+	<members>
+		<member name="action" type="int" enum="SteamModerationRequest.Action" setter="" getter="get_action">
+			The exact reviewed action recorded by the policy.
+		</member>
+		<member name="app_id" type="int" setter="" getter="get_app_id">
+			The trusted AppID that scoped this action.
+		</member>
+		<member name="player_id" type="String" setter="" getter="get_player_id">
+			The target SteamID64 resolved by the policy.
+		</member>
+		<member name="report_id" type="String" setter="" getter="get_report_id">
+			The reviewed Valve report ID, or empty for removal.
+		</member>
+		<member name="duration_seconds" type="int" setter="" getter="get_duration_seconds">
+			The suspension duration in seconds, or zero otherwise.
+		</member>
+		<member name="audit_id" type="String" setter="" getter="get_audit_id">
+			The game-owned audit reference reserved before dispatch.
+		</member>
+		<member name="acknowledged" type="bool" setter="" getter="get_acknowledged">
+			Whether a recognized Steam reply acknowledged the action.
+		</member>
+	</members>
+</class>

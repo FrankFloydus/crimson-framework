@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="SteamPurchases" inherits="RefCounted">
+	<brief_description>Starts and refreshes Steam orders through the game's authenticated purchasing backend.</brief_description>
+	<description>Use [method SteamScope.purchases] after binding a [SteamCommerceBackend]. A local observer times out after 20 seconds. On timeout, retry the same cart and checkout ID so the backend can reconcile the existing order.</description>
+	<methods>
+		<method name="catalog">
+			<return type="Variant" />
+			<description>Await a [SteamPurchaseCatalogResult] for the signed-in player's offers.</description>
+		</method>
+		<method name="checkout">
+			<return type="Variant" />
+			<param index="0" name="cart" type="SteamPurchaseCart" />
+			<description>Await a [SteamPurchaseOutcomeResult] for this cart. A pending receipt can be refreshed later by order ID. A failed local observation retains the checkout ID.</description>
+		</method>
+		<method name="order">
+			<return type="Variant" />
+			<param index="0" name="order_id" type="String" />
+			<description>Await a [SteamPurchaseOutcomeResult] for the authenticated player's exact previously created order.</description>
+		</method>
+	</methods>
+	<signals>
+		<signal name="order_changed">
+			<param index="0" name="outcome" type="SteamPurchaseOutcome" />
+			<description>Emitted when the authenticated game backend first reports or changes an order state.</description>
+		</signal>
+	</signals>
+</class>

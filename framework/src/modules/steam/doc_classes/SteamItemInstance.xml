@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="SteamItemInstance" inherits="RefCounted">
+	<brief_description>
+		A detached item instance and stack state from Steam.
+	</brief_description>
+	<description>
+		Snapshot quantities and flags describe the item at the time Steam returned it. The flags carry Steam's numeric mask, including bit [code]1[/code] for account-locked items and bit [code]512[/code] when Steam reports consumption.
+	</description>
+	<tutorials>
+	</tutorials>
+	<methods>
+		<method name="get_instance_id" qualifiers="const">
+			<return type="String" />
+			<description>
+				Returns the opaque instance ID in unsigned decimal form.
+			</description>
+		</method>
+		<method name="get_definition_id" qualifiers="const">
+			<return type="int" />
+			<description>
+				Returns the published definition associated with this instance.
+			</description>
+		</method>
+		<method name="get_quantity" qualifiers="const">
+			<return type="int" />
+			<description>
+				Returns the current stack quantity reported by Steam.
+			</description>
+		</method>
+		<method name="get_flags" qualifiers="const">
+			<return type="int" />
+			<description>
+				Returns the Steam item status and action confirmation bits.
+			</description>
+		</method>
+	</methods>
+	<members>
+		<member name="instance_id" type="String" setter="" getter="get_instance_id">
+			The opaque instance ID in unsigned decimal form.
+		</member>
+		<member name="definition_id" type="int" setter="" getter="get_definition_id">
+			The published definition associated with this instance.
+		</member>
+		<member name="quantity" type="int" setter="" getter="get_quantity">
+			The current stack quantity reported by Steam.
+		</member>
+		<member name="flags" type="int" setter="" getter="get_flags">
+			The Steam item status and action confirmation bits.
+		</member>
+	</members>
+</class>

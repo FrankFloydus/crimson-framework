@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="SteamScoreOptions" inherits="RefCounted">
+	<brief_description>Branchable score submission options tied to the originating Steam client scope.</brief_description>
+	<description>Start from [method SteamLeaderboards.with_details] or [method SteamLeaderboards.with_replay]. Each modifier returns an independent branch. [method submit_score] starts the submission.</description>
+	<methods>
+		<method name="submit_score" qualifiers="const">
+			<return type="Variant" />
+			<param index="0" name="board_name" type="String" />
+			<param index="1" name="score" type="int" />
+			<description>Submits the signed 32-bit score to an existing board using keep-best. If Steam reports that the score became the entry, attaches the requested replay. Use [code]await[/code] to receive a [SteamLeaderboardSubmissionResult]. The accepted receipt remains available if attachment fails.</description>
+		</method>
+		<method name="with_details" qualifiers="const">
+			<return type="SteamScoreOptions" />
+			<param index="0" name="details" type="PackedInt32Array" />
+			<description>Returns a branch that sends these details with the score. The submission accepts at most 64 signed 32-bit integers.</description>
+		</method>
+		<method name="with_replay" qualifiers="const">
+			<return type="SteamScoreOptions" />
+			<param index="0" name="shared_file_handle" type="String" />
+			<description>Returns a branch requesting attachment of the provided Steam Remote Storage shared-file handle. Pass a nonzero decimal handle belonging to this app.</description>
+		</method>
+	</methods>
+</class>

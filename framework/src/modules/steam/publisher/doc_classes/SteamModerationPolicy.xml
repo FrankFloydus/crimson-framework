@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="SteamModerationPolicy" inherits="RefCounted">
+	<brief_description>
+		Authorizes moderation and records audited outcomes in the trusted game backend.
+	</brief_description>
+	<description>
+		Implement this policy in a trusted publisher build and inject it through [member SteamPublisherSettings.moderation_policy]. The game owns authentication, match evidence, moderator roles, review decisions, and durable audit storage. The publisher checks the exact request and target before dispatch.
+	</description>
+	<tutorials>
+	</tutorials>
+	<methods>
+		<method name="_authorize" qualifiers="virtual">
+			<return type="SteamModerationAuthorization" />
+			<param index="0" name="request" type="SteamModerationRequest" />
+			<description>
+				Return [code]null[/code] to deny [param request]. For a reviewed write, check moderator authorization and resolve the reviewed player for the configured app. Persist the exact action and reserve an audit reference before returning [method SteamModerationAuthorization.approve].
+			</description>
+		</method>
+		<method name="_record_outcome" qualifiers="virtual">
+			<return type="bool" />
+			<param index="0" name="receipt" type="SteamModerationReceipt" />
+			<param index="1" name="error" type="int" enum="Error" />
+			<description>
+				Durably record the publisher-observed terminal [param error] and [param receipt] in the matching audit record. Return [code]true[/code] after persistence succeeds. A missing or failed write returns [constant ERR_DATABASE_CANT_WRITE] from the moderation action and preserves its receipt for reconciliation. This hook runs before the caller resumes.
+			</description>
+		</method>
+	</methods>
+</class>

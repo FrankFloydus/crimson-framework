@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="SteamNetworking" inherits="RefCounted">
+	<brief_description>Read Steam relay readiness and inspect an admitted Game peer's transport path.</brief_description>
+	<description>Access from [method SteamClient.networking] or [method SteamScope.networking]. The Game scope resolves [method peer_path] from current Steam-verified participants and their exact live gameplay sockets. Standalone sockets expose their own [method SteamSocketConnection.path].</description>
+	<tutorials>
+	</tutorials>
+	<methods>
+		<method name="relay_status" qualifiers="const">
+			<return type="SteamRelayStatus" />
+			<description>Returns Steam's latest relay readiness. An inactive or unsupported scope returns an unknown snapshot.</description>
+		</method>
+		<method name="warm_relay">
+			<return type="int" enum="Error" />
+			<description>Starts Steam relay preparation. [constant OK] means preparation was requested. Observe [signal relay_status_changed] or query [method relay_status] for readiness.</description>
+		</method>
+		<method name="peer_path" qualifiers="const">
+			<return type="SteamConnectionPathResult" />
+			<param index="0" name="peer_id" type="int" />
+			<description>Samples the exact current remote Steam-verified Game peer. Returns [constant ERR_INVALID_PARAMETER] for an invalid ID, [constant ERR_UNAVAILABLE] without a live Game sampler, or [constant ERR_DOES_NOT_EXIST] when the peer has no matching admitted live socket.</description>
+		</method>
+	</methods>
+	<signals>
+		<signal name="relay_status_changed">
+			<param index="0" name="status" type="SteamRelayStatus" />
+			<description>Emitted when Steam reports a relay availability update. The argument is a detached snapshot.</description>
+		</signal>
+	</signals>
+</class>

@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="SteamPublisherPurchaseOrderResult" inherits="SteamResult">
+	<brief_description>A durable order lookup outcome.</brief_description>
+	<description>Distinguishes an absent order from a store or lookup failure, so a reconciliation cursor never skips an order when storage is unavailable.</description>
+	<tutorials>
+	</tutorials>
+	<methods>
+		<method name="create" qualifiers="static">
+			<return type="SteamPublisherPurchaseOrderResult" />
+			<param index="0" name="error" type="int" enum="Error" />
+			<param index="1" name="value" type="SteamPublisherPurchaseOrder" default="null" />
+			<description>Constructs a durable lookup result. Use [constant ERR_DOES_NOT_EXIST] only when storage confirms absence. An OK result with a null [param value] becomes [constant ERR_INVALID_DATA].</description>
+		</method>
+		<method name="get_value" qualifiers="const">
+			<return type="SteamPublisherPurchaseOrder" />
+			<description>Exact persisted order, or null on failure.</description>
+		</method>
+	</methods>
+	<members>
+		<member name="value" type="SteamPublisherPurchaseOrder" setter="" getter="get_value">Exact persisted order, or null on failure.</member>
+	</members>
+</class>

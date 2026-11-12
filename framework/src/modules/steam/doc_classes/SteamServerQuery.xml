@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="SteamServerQuery" inherits="RefCounted">
+	<brief_description>Branchable filters for one scoped Steam dedicated server search.</brief_description>
+	<methods>
+		<method name="on_map" qualifiers="const">
+			<return type="SteamServerQuery" />
+			<param index="0" name="world_id" type="StringName" />
+			<description>Return a branch matching the exact world tag. The default accepts every compatible world.</description>
+		</method>
+		<method name="with_room_for" qualifiers="const">
+			<return type="SteamServerQuery" />
+			<param index="0" name="players" type="int" />
+			<description>Return a branch requiring 1 to 64 free seats. The default requires one seat.</description>
+		</method>
+		<method name="under_latency" qualifiers="const">
+			<return type="SteamServerQuery" />
+			<param index="0" name="milliseconds" type="int" />
+			<description>Return a branch capping latency at 1 to 60000 milliseconds. The default applies no additional latency cutoff.</description>
+		</method>
+		<method name="limit" qualifiers="const">
+			<return type="SteamServerQuery" />
+			<param index="0" name="count" type="int" />
+			<description>Return a branch with a 1 to 50 result cap. The default is 50.</description>
+		</method>
+		<method name="fetch" qualifiers="const">
+			<return type="Variant" />
+			<param index="0" name="timeout_ms" type="int" default="5000" />
+			<description>Run the search and await its typed [SteamListingsResult]. The deadline accepts 100 to 15000 milliseconds. Eligible rows already copied by the deadline are returned when available.</description>
+		</method>
+		<method name="fetch_operation" qualifiers="const">
+			<return type="SteamListingsOperation" />
+			<param index="0" name="timeout_ms" type="int" default="5000" />
+			<description>Run the same bounded search with an explicit cancellable operation. A scope permits one active search.</description>
+		</method>
+	</methods>
+</class>

@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="SteamPartyListing" inherits="RefCounted">
+	<brief_description>A visible Party beacon whose metadata matches this AppID.</brief_description>
+	<members>
+		<member name="id" type="String" setter="" getter="get_id">Opaque decimal Steam beacon identifier.</member>
+		<member name="owner_steam_id" type="String" setter="" getter="get_owner_steam_id">Individual SteamID64 verified by Steam as the creator of this beacon.</member>
+		<member name="location" type="SteamPartyLocation" setter="" getter="get_location">Detached discovery location.</member>
+	</members>
+</class>

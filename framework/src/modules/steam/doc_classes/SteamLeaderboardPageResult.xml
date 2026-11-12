@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="SteamLeaderboardPageResult" inherits="SteamResult">
+	<brief_description>The terminal outcome of a Steam leaderboard read.</brief_description>
+	<methods>
+		<method name="get_value" qualifiers="const">
+			<return type="SteamLeaderboardPage" />
+			<description>Detached page on success, or [code]null[/code] on failure. A successful query may return a page with no rows.</description>
+		</method>
+	</methods>
+	<members>
+		<member name="value" type="SteamLeaderboardPage" getter="get_value">
+			Detached page on success, or [code]null[/code] on failure. A successful query may return a page with no rows.
+		</member>
+	</members>
+</class>

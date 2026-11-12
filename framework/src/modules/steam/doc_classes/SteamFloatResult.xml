@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="SteamFloatResult" inherits="SteamResult">
+	<brief_description>
+		The outcome and typed value of a cached Steam floating-point stat read.
+	</brief_description>
+	<methods>
+		<method name="get_value" qualifiers="const">
+			<return type="float" />
+			<description>Returns the cached float on success or 0.0 on failure. Check [member SteamResult.ok] to distinguish the outcomes.</description>
+		</method>
+	</methods>
+	<members>
+		<member name="value" type="float" getter="get_value">
+			Steam's single-precision stat or average-rate value widened to a Godot float. Meaningful when [member SteamResult.ok] is true. A failed read also has a value of 0.0.
+		</member>
+	</members>
+</class>

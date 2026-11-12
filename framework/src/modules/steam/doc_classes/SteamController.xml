@@ -1,0 +1,159 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="SteamController" inherits="RefCounted">
+	<brief_description>
+		Represents one live connection through Steam Input.
+	</brief_description>
+	<description>
+		Get a view from [method SteamInput.controllers] or a controller signal. A controller view becomes unavailable when its lease ends or the hardware disconnects. Steam supplies the action sets, layers, and state. The game owns player assignment and maps input values to local gameplay commands. Call on the main thread.
+	</description>
+	<tutorials>
+	</tutorials>
+	<methods>
+		<method name="activate_layer">
+			<return type="int" enum="Error" />
+			<param index="0" name="name" type="StringName" />
+			<description>
+				Asks Steam to apply the named [param name] layer to the current set. Returns [constant ERR_DOES_NOT_EXIST] if the published name is unknown, [constant ERR_INVALID_PARAMETER] if it is empty or exceeds 128 UTF-8 bytes, or [constant ERR_UNAVAILABLE] when this view or native capability is unavailable.
+			</description>
+		</method>
+		<method name="analog" qualifiers="const">
+			<return type="SteamAnalogInputResult" />
+			<param index="0" name="action" type="StringName" />
+			<description>
+				Reads [param action] in the current Steam Input frame. Inactive input returns an inactive zero vector. Unknown actions return [constant ERR_DOES_NOT_EXIST]. An empty or oversized action name returns [constant ERR_INVALID_PARAMETER]. A retired view or unavailable Steam interface returns [constant ERR_UNAVAILABLE].
+			</description>
+		</method>
+		<method name="deactivate_layer">
+			<return type="int" enum="Error" />
+			<param index="0" name="name" type="StringName" />
+			<description>
+				Asks Steam to remove the named [param name] layer from the current set. Returns [constant ERR_DOES_NOT_EXIST] if the published name is unknown, [constant ERR_INVALID_PARAMETER] if it is empty or exceeds 128 UTF-8 bytes, or [constant ERR_UNAVAILABLE] when this view or native capability is unavailable.
+			</description>
+		</method>
+		<method name="digital" qualifiers="const">
+			<return type="SteamDigitalInputResult" />
+			<param index="0" name="action" type="StringName" />
+			<description>
+				Reads [param action] in the current Steam Input frame. An inactive action reports [code]active = false[/code]. Unknown actions return [constant ERR_DOES_NOT_EXIST]. An empty or oversized action name returns [constant ERR_INVALID_PARAMETER]. A retired view or unavailable Steam interface returns [constant ERR_UNAVAILABLE].
+			</description>
+		</method>
+		<method name="glyph" qualifiers="const">
+			<return type="SteamTextureResult" />
+			<param index="0" name="action" type="StringName" />
+			<param index="1" name="size" type="int" enum="SteamController.GlyphSize" default="1" />
+			<description>
+				Returns a PNG texture at [param size] for the first effective Steam binding origin of [param action]. An unbound action, unavailable glyph, or retired view returns [constant ERR_UNAVAILABLE]. An invalid size or action name returns [constant ERR_INVALID_PARAMETER].
+			</description>
+		</method>
+		<method name="glyphs" qualifiers="const">
+			<return type="SteamTexturesResult" />
+			<param index="0" name="action" type="StringName" />
+			<param index="1" name="size" type="int" enum="SteamController.GlyphSize" default="1" />
+			<description>
+				Returns the textures at [param size] for the effective Steam binding origins of [param action] in origin order. The highest active layer that supplies origins takes precedence over the base set. An unbound action, unavailable glyph, or retired view returns [constant ERR_UNAVAILABLE]. An invalid size or action name returns [constant ERR_INVALID_PARAMETER].
+			</description>
+		</method>
+		<method name="is_connected" qualifiers="const">
+			<return type="bool" />
+			<description>
+				Returns whether this view still identifies the same live connection in its owning lease.
+			</description>
+		</method>
+		<method name="open_binding_panel">
+			<return type="int" enum="Error" />
+			<description>
+				Requests Steam's binding configuration panel for this controller. [constant OK] acknowledges the request. Returns [constant ERR_UNAVAILABLE] if Steam declines or the controller is disconnected.
+			</description>
+		</method>
+		<method name="type" qualifiers="const">
+			<return type="int" enum="SteamController.Type" />
+			<description>
+				Returns Steam's controller family. Returns [constant TYPE_UNKNOWN] if the view is unavailable or the reported value is unrecognized.
+			</description>
+		</method>
+		<method name="use_action_set">
+			<return type="int" enum="Error" />
+			<param index="0" name="name" type="StringName" />
+			<description>
+				Asks Steam to select the [param name] action set from the manifest. Returns [constant ERR_DOES_NOT_EXIST] if the published name is unknown, [constant ERR_INVALID_PARAMETER] if it is empty or exceeds 128 UTF-8 bytes, or [constant ERR_UNAVAILABLE] when this view or native capability is unavailable.
+			</description>
+		</method>
+		<method name="vibrate">
+			<return type="int" enum="Error" />
+			<param index="0" name="low" type="float" />
+			<param index="1" name="high" type="float" />
+			<description>
+				Submits normalized [param low] and [param high] motor amplitudes from 0 to 1. Pass zero for both to clear the request. [constant OK] acknowledges the SDK submission. A disconnected controller or missing vibration capability returns [constant ERR_UNAVAILABLE]. Nonfinite or out-of-range values return [constant ERR_INVALID_PARAMETER].
+			</description>
+		</method>
+	</methods>
+	<constants>
+		<constant name="TYPE_UNKNOWN" value="0" enum="Type">
+			Steam did not identify a supported controller family.
+		</constant>
+		<constant name="TYPE_STEAM_CONTROLLER" value="1" enum="Type">
+			Steam Controller (2015).
+		</constant>
+		<constant name="TYPE_XBOX_360" value="2" enum="Type">
+			Xbox 360 controller.
+		</constant>
+		<constant name="TYPE_XBOX_ONE" value="3" enum="Type">
+			Xbox One controller.
+		</constant>
+		<constant name="TYPE_GENERIC_GAMEPAD" value="4" enum="Type">
+			Generic gamepad.
+		</constant>
+		<constant name="TYPE_PLAYSTATION_4" value="5" enum="Type">
+			PlayStation 4 controller.
+		</constant>
+		<constant name="TYPE_APPLE_MFI" value="6" enum="Type">
+			Apple MFi controller.
+		</constant>
+		<constant name="TYPE_ANDROID" value="7" enum="Type">
+			Android controller.
+		</constant>
+		<constant name="TYPE_SWITCH_JOYCON_PAIR" value="8" enum="Type">
+			Paired Nintendo Switch Joy-Con controllers.
+		</constant>
+		<constant name="TYPE_SWITCH_JOYCON_SINGLE" value="9" enum="Type">
+			One Nintendo Switch Joy-Con controller.
+		</constant>
+		<constant name="TYPE_SWITCH_PRO" value="10" enum="Type">
+			Nintendo Switch Pro Controller.
+		</constant>
+		<constant name="TYPE_MOBILE_TOUCH" value="11" enum="Type">
+			Steam Link virtual touch controller.
+		</constant>
+		<constant name="TYPE_PLAYSTATION_3" value="12" enum="Type">
+			PlayStation 3 controller.
+		</constant>
+		<constant name="TYPE_PLAYSTATION_5" value="13" enum="Type">
+			PlayStation 5 controller.
+		</constant>
+		<constant name="TYPE_STEAM_DECK" value="14" enum="Type">
+			Steam Deck controller.
+		</constant>
+		<constant name="TYPE_STEAMOS_HANDHELD" value="15" enum="Type">
+			SteamOS handheld controller.
+		</constant>
+		<constant name="TYPE_SWITCH_2_PRO" value="16" enum="Type">
+			Nintendo Switch 2 Pro Controller.
+		</constant>
+		<constant name="TYPE_STEAM_CONTROLLER_2026" value="17" enum="Type">
+			Steam Controller (2026).
+		</constant>
+		<constant name="TYPE_STEAM_FRAME_PAIR" value="18" enum="Type">
+			Paired Steam Frame controllers.
+		</constant>
+		<constant name="SMALL" value="0" enum="GlyphSize">
+			32-pixel glyph.
+		</constant>
+		<constant name="MEDIUM" value="1" enum="GlyphSize">
+			128-pixel glyph.
+		</constant>
+		<constant name="LARGE" value="2" enum="GlyphSize">
+			256-pixel glyph.
+		</constant>
+	</constants>
+</class>

@@ -7,8 +7,8 @@
 namespace crimson::integration {
 
 // Marks an authored player placement in the active world.
-class CrimsonSpawnPoint : public godot::Marker3D {
-    GDCLASS(CrimsonSpawnPoint, godot::Marker3D)
+class PlayerSpawnPoint : public godot::Marker3D {
+    GDCLASS(PlayerSpawnPoint, godot::Marker3D)
 
 protected:
     // Uses the inherited marker transform for authoring.

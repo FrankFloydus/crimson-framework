@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="SteamPurchaseLine" inherits="RefCounted">
+	<brief_description>One immutable game SKU selection.</brief_description>
+	<members>
+		<member name="sku" type="StringName" setter="" getter="get_sku">The game catalog ID. The backend resolves its price.</member>
+		<member name="quantity" type="int" setter="" getter="get_quantity">The requested number of units, from 1 through 1000.</member>
+	</members>
+</class>

@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="SteamModerationAuthorization" inherits="RefCounted">
+	<brief_description>
+		A game policy's approval for one exact immutable moderation request.
+	</brief_description>
+	<description>
+		Return an approval from [method SteamModerationPolicy._authorize] only after verifying the exact request. For a reviewed write, reserve a durable audit record before returning the approval. An approval for another request, an incorrect removal target, or a missing audit reference cannot authorize a sanction.
+	</description>
+	<tutorials>
+	</tutorials>
+	<methods>
+		<method name="approve" qualifiers="static">
+			<return type="SteamModerationAuthorization" />
+			<param index="0" name="request" type="SteamModerationRequest" />
+			<param index="1" name="player_id" type="String" default="&quot;&quot;" />
+			<param index="2" name="audit_id" type="String" default="&quot;&quot;" />
+			<description>
+				Returns an approval bound to this exact [param request]. Use the reviewed [param player_id] for a suspension or ban. An empty player ID keeps the request's explicit target. A sanction or removal requires a durable [param audit_id]. Returns [code]null[/code] for a missing request.
+			</description>
+		</method>
+		<method name="get_player_id" qualifiers="const">
+			<return type="String" />
+			<description>
+				Returns the policy's resolved target SteamID64 when the action addresses a player.
+			</description>
+		</method>
+		<method name="get_audit_id" qualifiers="const">
+			<return type="String" />
+			<description>
+				Returns the trusted backend's durable audit reference for a reviewed action.
+			</description>
+		</method>
+	</methods>
+	<members>
+		<member name="player_id" type="String" setter="" getter="get_player_id">
+			The policy's resolved target SteamID64 when the action addresses a player.
+		</member>
+		<member name="audit_id" type="String" setter="" getter="get_audit_id">
+			The trusted backend's durable audit reference for a reviewed action.
+		</member>
+	</members>
+</class>

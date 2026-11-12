@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="SteamPurchaseBuyerInfoResult" inherits="SteamResult">
+	<brief_description>Outcome of a trusted Steam Wallet metadata request.</brief_description>
+	<description>Returned by awaiting [method SteamPublisherPurchases.buyer_info]. An unavailable publisher, unverified account, or malformed response reports an error without exposing the vendor payload.</description>
+	<methods>
+		<method name="get_value" qualifiers="const">
+			<return type="SteamPurchaseBuyerInfo" />
+			<description>Returns the detached buyer metadata on success, or null on failure.</description>
+		</method>
+	</methods>
+	<members>
+		<member name="value" type="SteamPurchaseBuyerInfo" setter="" getter="get_value">Verified Steam Wallet quote metadata on success, or null on failure.</member>
+	</members>
+</class>

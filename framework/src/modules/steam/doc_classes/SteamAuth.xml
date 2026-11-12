@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="SteamAuth" inherits="RefCounted">
+	<brief_description>Issues Steam tickets for a trusted backend.</brief_description>
+	<description>Use [method SteamClient.auth] after boot. Local observation expires after 15 seconds. The client cancels Web API handles at scope shutdown. The native encrypted ticket reservation stays active until Steam delivers its result.</description>
+	<methods>
+		<method name="web_ticket">
+			<return type="Variant" />
+			<param index="0" name="audience" type="String" />
+			<description>Await a [SteamWebTicketResult] for the named service. Use a nonempty audience of at most 255 UTF-8 bytes without ASCII control characters. The backend must verify the same audience and AppID.</description>
+		</method>
+		<method name="ownership_ticket">
+			<return type="Variant" />
+			<param index="0" name="challenge" type="PackedByteArray" />
+			<description>Await a [SteamOwnershipTicketResult] containing an encrypted app ticket for the backend's 1-to-1024-byte challenge. Steam allows one pending request across client scopes and enforces its own rate limit.</description>
+		</method>
+	</methods>
+</class>

@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="SteamLeaderboardInfo" inherits="RefCounted">
+	<brief_description>A detached snapshot of a resolved Steam leaderboard.</brief_description>
+	<methods>
+		<method name="get_display" qualifiers="const">
+			<return type="int" enum="SteamLeaderboards.Display" />
+			<description>Board score display format configured in Steamworks.</description>
+		</method>
+		<method name="get_entry_count" qualifiers="const">
+			<return type="int" />
+			<description>Total number of entries reported by Steam for the board.</description>
+		</method>
+		<method name="get_name" qualifiers="const">
+			<return type="String" />
+			<description>Published Steam leaderboard API name.</description>
+		</method>
+		<method name="get_sort" qualifiers="const">
+			<return type="int" enum="SteamLeaderboards.Sort" />
+			<description>Board sort direction configured in Steamworks.</description>
+		</method>
+	</methods>
+	<members>
+		<member name="display" type="int" getter="get_display" enum="SteamLeaderboards.Display">
+			Board score display format configured in Steamworks.
+		</member>
+		<member name="entry_count" type="int" getter="get_entry_count">
+			Total number of entries reported by Steam for the board.
+		</member>
+		<member name="name" type="String" getter="get_name">
+			Published Steam leaderboard API name.
+		</member>
+		<member name="sort" type="int" getter="get_sort" enum="SteamLeaderboards.Sort">
+			Board sort direction configured in Steamworks.
+		</member>
+	</members>
+</class>

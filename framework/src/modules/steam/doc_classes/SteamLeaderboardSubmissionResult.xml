@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="SteamLeaderboardSubmissionResult" inherits="SteamResult">
+	<brief_description>Outcome of a keep-best score submission and its optional replay.</brief_description>
+	<methods>
+		<method name="get_value" qualifiers="const">
+			<return type="SteamLeaderboardSubmission" />
+			<description>Receipt for an accepted score, including when the replay fails. Returns [code]null[/code] if Steam never reported an accepted upload.</description>
+		</method>
+	</methods>
+	<members>
+		<member name="value" type="SteamLeaderboardSubmission" getter="get_value">
+			Receipt for an accepted score, including when the replay fails. Returns [code]null[/code] if Steam never reported an accepted upload.
+		</member>
+	</members>
+</class>

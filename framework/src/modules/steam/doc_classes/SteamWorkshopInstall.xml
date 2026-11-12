@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="SteamWorkshopInstall" inherits="RefCounted">
+	<brief_description>
+		Detached local installation metadata for a current Workshop item.
+	</brief_description>
+	<methods>
+		<method name="get_published_id" qualifiers="const">
+			<return type="String" />
+			<description>Return the canonical unsigned decimal published file ID.</description>
+		</method>
+		<method name="get_directory" qualifiers="const">
+			<return type="String" />
+			<description>Return the absolute directory Steam reports for this item.</description>
+		</method>
+		<method name="get_size_bytes" qualifiers="const">
+			<return type="int" />
+			<description>Return the installed content size in bytes.</description>
+		</method>
+	</methods>
+	<members>
+		<member name="published_id" type="String" setter="" getter="get_published_id">
+			The exact published file ID.
+		</member>
+		<member name="directory" type="String" setter="" getter="get_directory">
+			The absolute content directory reported by Steam.
+		</member>
+		<member name="size_bytes" type="int" setter="" getter="get_size_bytes">
+			Size of the installed content in bytes.
+		</member>
+	</members>
+</class>

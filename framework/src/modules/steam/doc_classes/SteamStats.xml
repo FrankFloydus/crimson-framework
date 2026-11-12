@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="SteamStats" inherits="RefCounted">
+	<brief_description>
+		Reads and updates the signed-in player's published Steam stats and achievements.
+	</brief_description>
+	<description>
+		Get this service from [method SteamClient.stats] after Steam starts. It reads Steam's local cache for the current app. Use [method edit] to collect changes and [method SteamStatsEdit.submit] to request persistence once.
+	</description>
+	<methods>
+		<method name="achievement" qualifiers="const">
+			<return type="SteamAchievement" />
+			<param index="0" name="api_name" type="StringName" />
+			<description>Returns a detached snapshot of the named achievement, or [code]null[/code] if the name or cache cannot be read.</description>
+		</method>
+		<method name="achievements" qualifiers="const">
+			<return type="SteamAchievement[]" />
+			<description>Returns a typed array of readable achievement snapshots. Returns an empty array if the Steam stats cache is unavailable or there are no entries.</description>
+		</method>
+		<method name="clear_achievement">
+			<return type="int" enum="Error" />
+			<param index="0" name="name" type="String" />
+			<description>Clears an unlock in the signed-in player's local cache. Use on controlled test data or as part of a game reset. Call [method store] to request persistence.</description>
+		</method>
+		<method name="edit" qualifiers="const">
+			<return type="SteamStatsEdit" />
+			<description>Returns an empty draft. This call has no effect on the Steam cache.</description>
+		</method>
+		<method name="indicate_achievement_progress" deprecated="Use [method show_progress] instead.">
+			<return type="int" enum="Error" />
+			<param index="0" name="name" type="String" />
+			<param index="1" name="current" type="int" />
+			<param index="2" name="maximum" type="int" />
+			<description>Alias for [method show_progress].</description>
+		</method>
+		<method name="is_available" qualifiers="const">
+			<return type="bool" />
+			<description>Returns whether the active client scope exposes the Steam User Stats interface on the main thread.</description>
+		</method>
+		<method name="set_stat_float">
+			<return type="int" enum="Error" />
+			<param index="0" name="name" type="String" />
+			<param index="1" name="value" type="float" />
+			<description>Sets an absolute finite float in the local cache within Steam's single-precision range. Call [method store] to request persistence.</description>
+		</method>
+		<method name="set_stat_int">
+			<return type="int" enum="Error" />
+			<param index="0" name="name" type="String" />
+			<param index="1" name="value" type="int" />
+			<description>Sets an absolute signed 32-bit integer in the local cache. Call [method store] to request persistence.</description>
+		</method>
+		<method name="show_progress">
+			<return type="int" enum="Error" />
+			<param index="0" name="name" type="String" />
+			<param index="1" name="current" type="int" />
+			<param index="2" name="maximum" type="int" />
+			<description>Requests a Steam overlay progress popup for a locked achievement. The current count must be positive and below the maximum, which fits an unsigned 32-bit integer. The popup leaves the cached unlock state unchanged.</description>
+		</method>
+		<method name="stat_float" qualifiers="const">
+			<return type="SteamFloatResult" />
+			<param index="0" name="name" type="String" />
+			<description>Reads a cached float or average-rate stat. Check [member SteamResult.ok] before using its value. The result reports an invalid name, an unavailable interface, or a missing stat of the requested type.</description>
+		</method>
+		<method name="stat_int" qualifiers="const">
+			<return type="SteamIntResult" />
+			<param index="0" name="name" type="String" />
+			<description>Reads a cached signed 32-bit stat. Check [member SteamResult.ok] before using its value. The result reports an invalid name, an unavailable interface, or a missing stat of the requested type.</description>
+		</method>
+		<method name="store">
+			<return type="int" enum="Error" />
+			<description>Requests persistence of changed stats and achievements. [constant @GlobalScope.OK] means Steam accepted the local request. Use [signal stats_stored] to observe the app-wide backend response.</description>
+		</method>
+		<method name="unlock_achievement">
+			<return type="int" enum="Error" />
+			<param index="0" name="name" type="String" />
+			<description>Marks the named achievement unlocked in the signed-in player's local cache. Call [method store] to request persistence and the unlock notification.</description>
+		</method>
+		<method name="update_average_rate">
+			<return type="int" enum="Error" />
+			<param index="0" name="name" type="String" />
+			<param index="1" name="count" type="float" />
+			<param index="2" name="seconds" type="float" />
+			<description>Updates an average-rate stat in the local cache. The accumulated count must be finite within Steam's float range and the duration must be finite and positive. Call [method store] to request persistence.</description>
+		</method>
+	</methods>
+	<signals>
+		<signal name="achievement_stored">
+			<param index="0" name="name" type="String" />
+			<param index="1" name="current" type="int" />
+			<param index="2" name="maximum" type="int" />
+			<description>Emitted when Steam reports an achievement unlock or a progress popup for the active app. Both progress counts are zero for a complete unlock.</description>
+		</signal>
+		<signal name="stats_stored">
+			<param index="0" name="steam_result" type="int" />
+			<description>Emitted with Steam's native result for a store or achievement progress event. This is an app-wide event shared by matching Steam scopes.</description>
+		</signal>
+	</signals>
+</class>

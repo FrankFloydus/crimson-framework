@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="SteamPresence" inherits="RefCounted">
+	<brief_description>Manages the localized Steam status and optional party grouping for one client scope.</brief_description>
+	<description>
+		Get this service from [method SteamClient.presence] or [method SteamScope.presence]. Only one attached scope owns the managed status at a time. Replacing or clearing status affects the keys that scope still owns. The Game provider owns the join route independently.
+	</description>
+	<methods>
+		<method name="joinable">
+			<return type="int" enum="Error" />
+			<param index="0" name="listing" type="SteamListing" />
+			<description>Publishes Steam Join Game for the exact Game's current friends-only or public lobby while admission is open and seats remain. Returns [constant @GlobalScope.OK] if Steam accepted the route or the Game already owns it. Returns [constant @GlobalScope.ERR_BUSY] when a foreign connect key exists, [constant @GlobalScope.ERR_UNAUTHORIZED] for an ineligible or stale lobby, and [constant @GlobalScope.ERR_UNAVAILABLE] outside a live Steam Game scope.</description>
+		</method>
+		<method name="clear_joinable">
+			<return type="int" enum="Error" />
+			<description>Clears this Game's connect key and suppresses automatic publication for the current hosted lobby. Keeps the status label, party grouping, and any foreign connect key. Call [method joinable] to publish again. A newly hosted lobby uses its usual visibility policy. Returns [constant @GlobalScope.ERR_UNAVAILABLE] outside a live Steam Game scope, or [constant @GlobalScope.FAILED] if Steam declines the clear.</description>
+		</method>
+		<method name="clear">
+			<return type="int" enum="Error" />
+			<description>
+				Clears the keys still owned by this scope. A non-owning scope can call this without changing another scope's status. Explicit Friends overrides and unrelated presence keys are preserved. Stopping the owning scope also attempts to clear its keys.
+			</description>
+		</method>
+		<method name="is_available" qualifiers="const">
+			<return type="bool" />
+			<description>Returns whether the active main-thread Steam scope supports local status writes and cache reads.</description>
+		</method>
+		<method name="show">
+			<return type="int" enum="Error" />
+			<param index="0" name="display_token" type="StringName" />
+			<param index="1" name="values" type="Dictionary[String, String]" default="{}" />
+			<param index="2" name="party_id" type="String" default="&quot;&quot;" />
+			<param index="3" name="party_size" type="int" default="0" />
+			<description>
+				Publishes a Steamworks localization token beginning with [code]#[/code] and its optional replacements. To group players, provide both a nonempty [param party_id] and a positive [param party_size]. Use the defaults for no grouping. Replacement keys must fit Steam's byte and key limits and must avoid [code]connect[/code], [code]status[/code], and names beginning with [code]steam_[/code].
+				Returns [constant @GlobalScope.ERR_BUSY] when another scope owns the status or unrelated keys leave insufficient capacity. Steam applies each key separately. [constant @GlobalScope.OK] acknowledges local acceptance. Configure the token in Steamworks to display the label for other players.
+			</description>
+		</method>
+	</methods>
+</class>

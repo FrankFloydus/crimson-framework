@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="SteamBroadcastStatus" inherits="RefCounted">
+	<brief_description>Snapshot of the local Steam client's broadcast upload.</brief_description>
+	<description>Snapshot of the local Steam client's broadcast upload.</description>
+	<members>
+		<member name="uploading" type="bool" setter="" getter="is_uploading">Whether Steam reports an active broadcast upload.</member>
+		<member name="viewers" type="int" setter="" getter="get_viewers">Number of viewers for an active upload, or 0 while idle.</member>
+	</members>
+</class>

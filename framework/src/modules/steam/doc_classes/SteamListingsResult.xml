@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="SteamListingsResult" inherits="SteamResult">
+	<brief_description>Terminal result of a bounded Steam lobby search.</brief_description>
+	<methods>
+		<method name="get_value" qualifiers="const">
+			<return type="SteamListing[]" />
+			<description>Copy the list of immutable snapshots returned by the search.</description>
+		</method>
+	</methods>
+	<members>
+		<member name="value" type="SteamListing[]" setter="" getter="get_value">Detached snapshots from the completed search. An empty successful result means no matching listings.</member>
+	</members>
+</class>

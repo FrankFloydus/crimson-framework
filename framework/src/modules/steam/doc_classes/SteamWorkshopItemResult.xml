@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="SteamWorkshopItemResult" inherits="SteamResult">
+	<brief_description>
+		Outcome and metadata from an exact Workshop lookup.
+	</brief_description>
+	<methods>
+		<method name="get_value" qualifiers="const">
+			<return type="SteamWorkshopItem" />
+			<description>Returns Workshop item metadata on success, or [code]null[/code] on failure.</description>
+		</method>
+	</methods>
+	<members>
+		<member name="value" type="SteamWorkshopItem" setter="" getter="get_value">
+			Detached Workshop item metadata for the successful query.
+		</member>
+	</members>
+</class>

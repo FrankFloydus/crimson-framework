@@ -7,17 +7,47 @@
 
 ## Added
 
+- Added typed dedicated Steam stats and achievements for the exact admitted peer, Wallet buyer information, Cloud write-batch hints, Workshop subscriptions and legal agreement actions, and Steam notification session launch hints. Verified that an anonymous Spacewar dedicated server loaded the signed-in guest's Steam stats and retired the cache handle when the guest left. `Pending push`
+
+- Verified a live Spacewar Winner unlock through the rendered achievement preview. Steam acknowledged the store and unlock, the operator saw the Steam notification, and a fresh process read the achievement as already unlocked. `Pending push`
+
+- Added a self-service Steam testing guide, bulk PowerShell suites, a rendered one-button achievement unlock, an opt-in live encrypted ownership fixture, and a repeatable offline DRM smoke test. Passed 28 signed Spacewar cases on both Windows builds, 29 Debug cases each for missing-runtime and SDK-off, and six trusted publisher mocks. Confirmed that the rendered preview read Spacewar's locked Winner and became ready without unlocking it. `Pending push`
+
+- Added standalone authenticated Steam Sockets, observed connection path diagnostics, and hosted Steam Datagram Relay through a game-owned trusted coordinator. Verified direct loopback packet delivery and both dedicated connection variants' missing-coordinator and unprovisioned deployment handling. `Pending push`
+
+- Added native Steam dedicated hosting, ticket-bound admission, and a typed server browser. Verified an anonymous secure Spacewar server and signed guest in separate processes, including invalid-proof denial, identity pinning, two fresh joins into the same world, and clean teardown. `Pending push`
+
+- Added typed client checkout and trusted publisher authentication, Wallet, Inventory, Notifications, and moderation. Verified the client against a mock backend in Spacewar and exercised trusted operations with no-socket publisher fixtures. `Pending push`
+
+- Added Steam Networking Messages with typed peer permissions, independent delivery modes, bilateral binding freshness, and exact Game admission checks. Verified signed Spacewar capability and authorization boundaries, plus missing-runtime behavior. `Pending push`
+
+- Added typed Steam Voice capture and decoding, Game-owned push-to-talk routing, and Steam Parties discovery, owner-bound reservations, and scoped beacon publication. Verified signed read-only Spacewar and missing-runtime fixtures. Added explicit two-account voice and beacon fixtures. `Pending push`
+
+- Added typed Steam Cloud sharing, leaderboard submissions, Timeline phases, friend and lobby snapshots, Workshop, screenshots, Remote Play, Device, Input, browser, media, Inventory, and client ticket services. Verified signed Spacewar read and lifecycle paths, including private lobby self-chat and Web API and encrypted ticket issuance. `Pending push`
+
+- Added the trusted publisher build and a SteamPipe DRM wrapper. Verified the wrapper's arguments, failure cleanup, and destination protection with a controlled SteamCMD stub. `Pending push`
+
+- Added `GameDefinition.boot()`, typed Steam achievement and stats results, the configured HTTP facade, and standalone Overlay actions. Verified the boot path, signed Spacewar reads and HTTP, and rendered Achievements overlay callbacks. `Pending push`
+
+- Registered the Steam editor icon for native Steam nodes and configuration types. Included the asset and upstream license in the addon layout. `Pending push`
+
+- Drafted a standalone Crimson Collections design with typed Godot views, fluent operations, snapshot semantics, and performance verification for approval before Steam API work. `Pending push`
+
+- Drafted the full Steam public API proposal for approval, with initialization, function contracts, FPS integrations, and verification plans for every feature. `Pending push`
+
+- Added the standalone Steam client with typed Apps, Friends, and Utils services, shared runtime ownership, and isolated CLI fixtures. Documented the full Steamworks architecture and feature-by-feature live test requirements. `Pending push`
+
+- Added Steam HTTP, Cloud, stats, achievements, leaderboards, Game Recording timelines, and SDK diagnostics. Added one-call client boot, direct HTTP, Cloud, and top-score actions, and branchable stat edits that submit together. Added CLI fixtures for the signed-in and unavailable paths. `Pending push`
+
 - Added game-scoped Session and Scene Loader injection, global Crimson game and scene facades, and native dedicated startup. Added root Windows launchers for a headless server and for up to four LAN instances. `e83f32f806417f36379fb381e6f9cb5b6461e836`
 
 - Added typed gameplay transport factories with native ENet defaults and verified a scripted demo adapter through the same host, late-join, rejection, and teardown paths. `e83f32f806417f36379fb381e6f9cb5b6461e836`
 
 - Added asynchronous online directory hooks, typed join endpoints, and verified identity before session admission. The demo's custom online provider passed separate-process host, authorized guest, and denied guest checks on both DLL variants. `e83f32f806417f36379fb381e6f9cb5b6461e836`
 
-- Added optional native SDK build configuration and an EOS runtime probe. Verified the official Epic C SDK initialization and missing-runtime behavior on both DLL variants. `e83f32f806417f36379fb381e6f9cb5b6461e836`
+- Added a native Steamworks listen provider with lobbies, P2P transport, and provider identity checks. Verified both sides of a two-account Spacewar match and the Windows export dependency selections. `e83f32f806417f36379fb381e6f9cb5b6461e836`
 
-- Added native Steamworks and Epic Online Services listen providers in the Crimson extension, with vendor lobbies, P2P transport, and provider identity checks. Verified both sides of a two-account Spacewar match and all four Windows export dependency selections. The private EOS deployment still requires live verification. `e83f32f806417f36379fb381e6f9cb5b6461e836`
-
-- Added an isolated EOS live runner that starts both demo peers, verifies the selected network path, and keeps test credentials in the child processes. Added two-account Spacewar fixture roles and verified a portable test bundle from a fresh extraction. `e83f32f806417f36379fb381e6f9cb5b6461e836`
+- Added two-account Spacewar fixture roles and verified a portable test bundle from a fresh extraction. `e83f32f806417f36379fb381e6f9cb5b6461e836`
 
 - Added explicit Steam lobby invites for a selected SteamID64. Verified the invitation, guest admission, shared world, bidirectional gameplay RPCs, and teardown across two accounts after the graphical host's Steam invite dialog failed to open. `e83f32f806417f36379fb381e6f9cb5b6461e836`
 
@@ -34,6 +64,16 @@
 - Started the weekly work log and archive. `e83f32f806417f36379fb381e6f9cb5b6461e836`
 
 ## Changed
+
+- Audited the current Steam implementation against Valve's documentation and the approved API. Identified gaps in offline startup, Steam launch and join controls, dedicated server metadata, and publisher notification and moderation behavior. `Pending push`
+
+- Required native Godot class XML for public methods, properties, enum values, and signals, and added Steam class documentation to the editor build. `Pending push`
+
+- Migrated Godot-facing classes to brand-neutral API names, including `GameRuntime`, `GameServices`, `SteamClient`, and `SteamProvider`. Updated the current demo, server, Inspector documentation, and fixture references. Deferred Collections. `Pending push`
+
+- Clarified Collections as a globally accessible framework module and documented shared adoption across game, inventory, save, scene, session, and tools APIs. `Pending push`
+
+- Refined the Steam public API proposal with typed achievement snapshots, concrete result and collection bindings, and Godot completion checks. `Pending push`
 
 - Kept explanatory Inspector property documentation mandatory and removed the manual tooltip test requirement from the agent guides. `e83f32f806417f36379fb381e6f9cb5b6461e836`
 
@@ -53,10 +93,18 @@
 
 ## Removed
 
+- Retired the unused online provider, its native SDK wiring, and its integration fixtures. The Steam and ENet launch paths remain available. `Pending push`
+
 - Retired the demo's Quake asset importers, playback backdrop, BSP shaders, and runtime asset dependency. `Superseded before publication`
 - Retired the local FPS prototype and its dedicated tests before publishing the initial framework snapshot. `847cccea9473b7561001ea2c399eba1fd651a0ab`
 
 ## Fixed
+
+- Isolated Steam publisher fixtures from the demo's editor import so their trusted native types resolve in the publisher test project. `Pending push`
+
+- Fixed Steam audit findings in offline startup and fatal IPC recovery, Steam Join Game launch handling and presence controls, listen relay preference, dedicated advertisement metadata, moderation durations, and notification opt-in deduplication. The 28 Spacewar cases passed on both Windows targets after a targeted Workshop rerun. The 30-case SDK-off suite, isolated runtime recovery, signed dedicated reconnect, and trusted publisher mocks also passed. `Pending push`
+
+- Ended the game process tick after online startup or a baseline timeout can resume a caller. Added a fixture that frees a game from its completed host operation and verifies listing cleanup. `Pending push`
 
 - Fixed Steam invite dialog startup for direct graphical launches by initializing the opt-in Steam runtime before Godot creates the display and waiting for SDK overlay readiness before submitting the dialog request. `e83f32f806417f36379fb381e6f9cb5b6461e836`
 

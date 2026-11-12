@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="SteamCloudQuotaResult" inherits="SteamResult">
+	<brief_description>
+		Outcome and storage capacity from querying Steam Cloud quota.
+	</brief_description>
+	<methods>
+		<method name="get_value" qualifiers="const">
+			<return type="SteamCloudQuota" />
+			<description>Returns the quota on success, or [code]null[/code] on failure.</description>
+		</method>
+	</methods>
+	<members>
+		<member name="value" type="SteamCloudQuota" setter="" getter="get_value">
+			The detached capacity snapshot for the successful query.
+		</member>
+	</members>
+</class>

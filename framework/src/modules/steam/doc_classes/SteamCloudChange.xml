@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="SteamCloudChange" inherits="RefCounted">
+	<brief_description>
+		A local file update or deletion Steam applied through dynamic Cloud sync.
+	</brief_description>
+	<methods>
+		<method name="get_change_type" qualifiers="const">
+			<return type="int" enum="SteamCloudChange.ChangeType" />
+			<description>Returns the kind of local change already applied by Steam.</description>
+		</method>
+		<method name="get_name_or_path" qualifiers="const">
+			<return type="String" />
+			<description>Returns the logical Remote Storage name or absolute local path.</description>
+		</method>
+		<method name="get_path_type" qualifiers="const">
+			<return type="int" enum="SteamCloudChange.PathType" />
+			<description>Returns how to interpret the path reported by Steam.</description>
+		</method>
+	</methods>
+	<members>
+		<member name="change_type" type="int" enum="SteamCloudChange.ChangeType" setter="" getter="get_change_type">
+			The kind of local change Steam applied.
+		</member>
+		<member name="name_or_path" type="String" setter="" getter="get_name_or_path">
+			The affected file identifier, interpreted using [member path_type].
+		</member>
+		<member name="path_type" type="int" enum="SteamCloudChange.PathType" setter="" getter="get_path_type">
+			How Steam identifies the affected file.
+		</member>
+	</members>
+	<constants>
+		<constant name="CHANGE_UNKNOWN" value="0" enum="ChangeType">Steam supplied an unrecognized change kind.</constant>
+		<constant name="CHANGE_UPDATED" value="1" enum="ChangeType">Steam updated the local file contents.</constant>
+		<constant name="CHANGE_DELETED" value="2" enum="ChangeType">Steam deleted the local file.</constant>
+		<constant name="PATH_UNKNOWN" value="0" enum="PathType">Steam supplied an unrecognized path kind.</constant>
+		<constant name="PATH_ABSOLUTE" value="1" enum="PathType">The affected file is identified by an absolute local path.</constant>
+		<constant name="PATH_CLOUD_NAME" value="2" enum="PathType">The affected file is identified by a logical Remote Storage name.</constant>
+	</constants>
+</class>

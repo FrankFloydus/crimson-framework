@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="SteamLeaderboardPage" inherits="RefCounted">
+	<brief_description>A detached, read-only leaderboard page.</brief_description>
+	<methods>
+		<method name="get_entries" qualifiers="const">
+			<return type="SteamLeaderboardEntry[]" />
+			<description>Read-only typed collection of the returned rows, up to the requested limit. It remains readable after the Steam client stops.</description>
+		</method>
+		<method name="get_total_count" qualifiers="const">
+			<return type="int" />
+			<description>Number of rows in Steam's response before the requested limit is applied. Use [method SteamLeaderboard.metadata] for the board's total entry count.</description>
+		</method>
+	</methods>
+	<members>
+		<member name="entries" type="SteamLeaderboardEntry[]" getter="get_entries">
+			Read-only typed collection of the returned rows, up to the requested limit. It remains readable after the Steam client stops.
+		</member>
+		<member name="total_count" type="int" getter="get_total_count">
+			Number of rows in Steam's response before the requested limit is applied. Use [method SteamLeaderboard.metadata] for the board's total entry count.
+		</member>
+	</members>
+</class>

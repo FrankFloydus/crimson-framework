@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="SteamServerBrowser" inherits="RefCounted">
+	<brief_description>Steam dedicated server discovery for one exact signed-in client scope.</brief_description>
+	<methods>
+		<method name="is_available" qualifiers="const">
+			<return type="bool" />
+			<description>Return whether the owning Steam client start supports the server browser.</description>
+		</method>
+		<method name="query" qualifiers="const">
+			<return type="SteamServerQuery" />
+			<param index="0" name="source" type="int" enum="SteamServer.Advertisement" default="2" />
+			<param index="1" name="namespace" type="StringName" default="&amp;&quot;&quot;" />
+			<description>Return detached options for Steam Internet or LAN discovery. Omit the namespace to use the owning game's namespace or [code]crimson[/code] on a standalone client. A Game scope cannot override its namespace.</description>
+		</method>
+		<method name="inspect">
+			<return type="SteamServerDetailsOperation" />
+			<param index="0" name="listing" type="SteamListing" />
+			<param index="1" name="timeout_ms" type="int" default="3000" />
+			<description>Refresh one selected server using its native Steam query port. The response must match the selected AppID, namespace, server identity and address. Timeout accepts 100 to 15000 milliseconds.</description>
+		</method>
+	</methods>
+</class>

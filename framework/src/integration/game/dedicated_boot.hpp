@@ -9,16 +9,16 @@
 
 namespace crimson::integration {
 
-class CrimsonGame;
+class GameRuntime;
 
-// Starts a configured CrimsonGame as an explicit playerless authority from a headless launch.
-class CrimsonDedicatedBoot : public godot::Node {
-    GDCLASS(CrimsonDedicatedBoot, godot::Node)
+// Starts a configured GameRuntime as an explicit playerless authority from a headless launch.
+class DedicatedServerBoot : public godot::Node {
+    GDCLASS(DedicatedServerBoot, godot::Node)
 
     // Weak reference to the game authored in the dedicated boot scene.
     godot::ObjectID game_id;
     // Startup operation retained until its one terminal notification.
-    godot::Ref<CrimsonGameOperation> starting;
+    godot::Ref<GameOperation> starting;
     // Effective UDP port announced to the launcher after startup.
     int64_t port = 0;
 
@@ -39,9 +39,9 @@ public:
     // Disconnect pending startup feedback before the boot scene leaves the tree.
     void _exit_tree() override;
     // Set the game configured to own the dedicated match.
-    void set_game(CrimsonGame *game);
+    void set_game(GameRuntime *game);
     // Return the referenced game while it exists.
-    CrimsonGame *get_game() const;
+    GameRuntime *get_game() const;
 };
 
 } // namespace crimson::integration

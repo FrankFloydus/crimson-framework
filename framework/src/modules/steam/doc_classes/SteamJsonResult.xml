@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="SteamJsonResult" inherits="SteamResult">
+	<brief_description>
+		Result of decoding an HTTP response body as JSON.
+	</brief_description>
+	<description>
+		Check [member SteamResult.ok] to distinguish a valid JSON null from a parse failure.
+	</description>
+	<methods>
+		<method name="get_value">
+			<return type="Variant" />
+			<description>
+				Return the decoded JSON value. A successful result can contain [code]null[/code].
+			</description>
+		</method>
+	</methods>
+	<members>
+		<member name="value" type="Variant" setter="" getter="get_value">
+			Decoded JSON value. Check [member SteamResult.ok] for parse success.
+		</member>
+	</members>
+</class>

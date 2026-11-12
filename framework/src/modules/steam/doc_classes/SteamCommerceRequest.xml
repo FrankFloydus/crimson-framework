@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="SteamCommerceRequest" inherits="RefCounted">
+	<brief_description>One pending result owned by a game commerce operation.</brief_description>
+	<methods>
+		<method name="complete_catalog">
+			<return type="int" enum="Error" />
+			<param index="0" name="result" type="SteamPurchaseCatalogResult" />
+			<description>Completes this exact catalog request on the main thread. Repeated or retired completions return an error.</description>
+		</method>
+		<method name="complete_order">
+			<return type="int" enum="Error" />
+			<param index="0" name="result" type="SteamPurchaseOutcomeResult" />
+			<description>Completes this exact order request on the main thread. Confirm the order through the game backend before responding. Repeated or retired completions return an error.</description>
+		</method>
+	</methods>
+	<signals>
+		<signal name="catalog_completed">
+			<param index="0" name="result" type="SteamPurchaseCatalogResult" />
+			<description>Emitted once when the catalog request settles.</description>
+		</signal>
+		<signal name="order_completed">
+			<param index="0" name="result" type="SteamPurchaseOutcomeResult" />
+			<description>Emitted once when the order request settles.</description>
+		</signal>
+	</signals>
+</class>

@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="SteamPublisherPurchases" inherits="RefCounted">
+	<brief_description>Trusted Steam Wallet checkout, settlement and refund service.</brief_description>
+	<description>Resolve with [method SteamPublisher.purchases] and inject [member SteamPublisherSettings.purchase_store]. Await each action for its typed result. All order-changing calls operate only on trusted persisted quotes and exact Steam receipts. The backend must authorize caller access to known order IDs before exposing these functions to a client.</description>
+	<tutorials>
+	</tutorials>
+	<methods>
+		<method name="buyer_info">
+			<return type="Variant" />
+			<param index="0" name="player" type="SteamIdentity" />
+			<description>Await a [SteamPurchaseBuyerInfoResult] with the Steam Wallet country, currency, optional region, and reported account status for [param player]. The identity must come from this exact publisher. Uses the configured live or sandbox environment. Read this before quoting a localized price. The game keeps ownership of its catalog, pricing, and eligibility policy.</description>
+		</method>
+		<method name="begin">
+			<return type="Variant" />
+			<param index="0" name="player" type="SteamIdentity" />
+			<param index="1" name="cart" type="SteamPurchaseCart" />
+			<param index="2" name="checkout_id" type="String" />
+			<description>Await a [SteamPurchaseOutcomeResult]. Requires a [SteamIdentity] verified by the same publisher. Atomically prices and reserves the cart under [param checkout_id], then starts Steam authorization. An uncertain previous initialization is queried without automatically repeating the write.</description>
+		</method>
+		<method name="query">
+			<return type="Variant" />
+			<param index="0" name="order_id" type="String" />
+			<description>Await a [SteamPurchaseOutcomeResult] for a known order. Verifies exact Steam payer, transaction, currency and line amounts and persists applicable state changes. An unknown order or invalid receipt returns a typed error.</description>
+		</method>
+		<method name="finalize">
+			<return type="Variant" />
+			<param index="0" name="order_id" type="String" />
+			<description>Await a [SteamPurchaseOutcomeResult]. Requires an exact Steam query to verify approval before claiming and capturing the charge. Durable fulfillment follows a verified success. An uncertain earlier finalization remains in reconciliation and is never blindly repeated.</description>
+		</method>
+		<method name="reconcile">
+			<return type="Variant" />
+			<param index="0" name="since_unix" type="int" />
+			<param index="1" name="max_results" type="int" default="1000" />
+			<description>Await a [SteamPurchaseReconciliationResult] for one bounded settlement page from the inclusive Unix UTC cursor. [param max_results] must be from 1 to 1000 and defaults to 1000. A reply larger than 4 MiB fails validation. Applies known receipts and exact item reversals in order. A failing event leaves the original cursor available for replay. A full page whose last timestamp equals the input cursor returns [constant ERR_BUSY].</description>
+		</method>
+		<method name="refund">
+			<return type="Variant" />
+			<param index="0" name="order_id" type="String" />
+			<description>Await a [SteamPurchaseOutcomeResult]. Queries and requests a full refund only for a known fulfilled order and an explicit store policy approval. Reversal requires a confirmed receipt and durable update. Partial Steam-originated reversals are handled by [method reconcile].</description>
+		</method>
+	</methods>
+</class>

@@ -8,18 +8,18 @@ const LISTING := "crimson-loopback-fixture"
 
 
 ## Test-only directory shared through an isolated harness folder.
-class FixtureDirectory extends CrimsonOnlineDirectory:
-	var game: CrimsonGame
+class FixtureDirectory extends OnlineDirectory:
+	var game: GameRuntime
 	var listing_path: String
 	var publication_mode := "normal"
-	var held: CrimsonOnlineDirectoryRequest
+	var held: OnlineDirectoryRequest
 	var retired: Array[String] = []
 	var left: Array[String] = []
 	var published_while_closed := false
 
-	func _publish(endpoint: CrimsonSessionEndpoint, world_id: StringName, request: CrimsonOnlineDirectoryRequest) -> void:
-		var session := game.get_node(^"Session") as CrimsonGameSession
-		published_while_closed = game.get_world() != null and game.get_phase() == CrimsonGame.TRANSITIONING \
+	func _publish(endpoint: SessionEndpoint, world_id: StringName, request: OnlineDirectoryRequest) -> void:
+		var session := game.get_node(^"Session") as GameSession
+		published_while_closed = game.get_world() != null and game.get_phase() == GameRuntime.TRANSITIONING \
 				and not session.is_accepting_connections()
 		if publication_mode == "hold":
 			held = request
@@ -41,7 +41,7 @@ class FixtureDirectory extends CrimsonOnlineDirectory:
 		file.close()
 		request.publish(LISTING)
 
-	func _resolve(listing_id: String, request: CrimsonOnlineDirectoryRequest) -> void:
+	func _resolve(listing_id: String, request: OnlineDirectoryRequest) -> void:
 		if listing_id == "pending-fixture":
 			held = request
 			return
@@ -49,7 +49,7 @@ class FixtureDirectory extends CrimsonOnlineDirectory:
 		if file == null or file.get_length() != 2:
 			request.fail()
 			return
-		request.resolve(CrimsonSessionEndpoint.direct(ADDRESS, file.get_16()))
+		request.resolve(SessionEndpoint.direct(ADDRESS, file.get_16()))
 
 	func _unpublish(listing_id: String) -> void:
 		retired.append(listing_id)
@@ -61,7 +61,7 @@ class FixtureDirectory extends CrimsonOnlineDirectory:
 
 
 ## Verifies a fixture-only proof with an ephemeral key provisioned by the isolated harness.
-class FixtureIdentity extends CrimsonSessionAuthenticator:
+class FixtureIdentity extends SessionAuthenticator:
 	var key: PackedByteArray
 	var deny_local := false
 	var denials := 0
@@ -72,14 +72,14 @@ class FixtureIdentity extends CrimsonSessionAuthenticator:
 			proof[0] = proof[0] ^ 1
 		return proof
 
-	func _verify(request: CrimsonSessionAuthRequest) -> void:
+	func _verify(request: SessionAuthRequest) -> void:
 		var expected := _sign(not request.is_authority(), request.get_challenge())
 		if not Crypto.new().constant_time_compare(expected, request.get_proof()):
 			denials += 1
 			request.reject()
 			return
 		var subject := "fixture-guest" if request.is_authority() else "fixture-host"
-		request.accept(CrimsonSessionIdentity.verified(&"fixture", subject))
+		request.accept(SessionIdentity.verified(&"fixture", subject))
 
 	func _sign(authority: bool, challenge: PackedByteArray) -> PackedByteArray:
 		var input := ("crimson-online-authority" if authority else "crimson-online-guest").to_utf8_buffer()
@@ -88,23 +88,23 @@ class FixtureIdentity extends CrimsonSessionAuthenticator:
 
 
 ## Installs the two public service hooks from the game project.
-class FixtureProvider extends CrimsonServiceProvider:
+class FixtureProvider extends GameServiceProvider:
 	var directory := FixtureDirectory.new()
 	var identity := FixtureIdentity.new()
 
-	func _create_online_directory() -> CrimsonOnlineDirectory:
+	func _create_online_directory() -> OnlineDirectory:
 		return directory
 
-	func _create_session() -> CrimsonGameSession:
-		var session := CrimsonGameSession.new()
+	func _create_session() -> GameSession:
+		var session := GameSession.new()
 		if session.set_authenticator(identity) != OK:
 			session.free()
 			return null
 		return session
 
 
-var _game: CrimsonGame
-var _session: CrimsonGameSession
+var _game: GameRuntime
+var _session: GameSession
 var _provider := FixtureProvider.new()
 var _folder: String
 var _port: int
@@ -132,20 +132,21 @@ func _run() -> void:
 	_provider.directory.listing_path = _folder.path_join("listing")
 	var main := load(String(ProjectSettings.get_setting("application/run/main_scene"))) as PackedScene
 	var demo := main.instantiate()
-	_game = demo.get_node(^"Game") as CrimsonGame
+	_game = demo.get_node(^"Game") as GameRuntime
 	_provider.directory.game = _game
 	var definition := _game.definition
 	# The guests intentionally author another port. Their directory route must win.
 	var local_port := _port if args[0] == "host" else (_port % 65535) + 1
 	_game.definition = definition.with_provider(_provider).with_multiplayer(definition.multiplayer_rules.on_port(local_port))
 	root.add_child(demo)
-	_session = _game.get_node(^"Session") as CrimsonGameSession
+	_session = _game.get_node(^"Session") as GameSession
 	var passed := false
 	match args[0]:
 		"host": passed = await _run_host()
 		"denied": passed = await _run_denied()
 		"client": passed = await _run_client()
-	_game.leave()
+	if is_instance_valid(_game):
+		_game.leave()
 	if passed:
 		print("CRIMSON_DEMO_ONLINE_PASSED %s" % args[0])
 	quit(0 if passed else 1)
@@ -155,8 +156,8 @@ func _run_host() -> bool:
 	var directory := _provider.directory
 	directory.publication_mode = "fail"
 	var failed: Dictionary = await _game.host_online(ADDRESS, ADDRESS).wait()
-	if not _check(failed.code == "ListingPublishFailed" and _game.get_phase() == CrimsonGame.IDLE
-			and _game.get_world() == null and _session.get_state() == CrimsonGameSession.IDLE,
+	if not _check(failed.code == "ListingPublishFailed" and _game.get_phase() == GameRuntime.IDLE
+			and _game.get_world() == null and _session.get_state() == GameSession.IDLE,
 			"Publication failure must roll back the mounted authority and release its port."):
 		return false
 
@@ -207,10 +208,20 @@ func _run_host() -> bool:
 		return false
 	if not await _wait_until(func() -> bool: return _session.get_connected_peer_ids().is_empty(), "retired connection"):
 		return false
-	return _check(_session.get_peer_identity(peers[0]) == null and _game.leave() == OK
+	if not _check(_session.get_peer_identity(peers[0]) == null and _game.leave() == OK
 			and _game.get_online_listing().is_empty()
 			and directory.retired == ["retired-fixture", "inline-retired-fixture", LISTING]
-			and not FileAccess.file_exists(directory.listing_path), "Teardown must retire identity and listing exactly once.")
+			and not FileAccess.file_exists(directory.listing_path), "Teardown must retire identity and listing exactly once."):
+		return false
+
+	var restarted: Dictionary = await _game.host_online(ADDRESS, ADDRESS).wait()
+	if not _check(restarted.ok and restarted.listing_id == LISTING, "The provider can reopen after leaving."):
+		return false
+	_game.free()
+	await process_frame
+	return _check(not is_instance_valid(_game) and directory.retired.count(LISTING) == 2
+			and not FileAccess.file_exists(directory.listing_path),
+			"Freeing the game from its completed startup must retire the published listing and survive the frame.")
 
 
 func _run_denied() -> bool:
@@ -218,7 +229,7 @@ func _run_denied() -> bool:
 		return false
 	var denied: Dictionary = await _game.join_online(LISTING).wait()
 	return _check(not denied.ok and _game.get_world() == null and _game.get_local_player() == null
-			and _game.get_phase() == CrimsonGame.IDLE and _provider.directory.left == [LISTING],
+			and _game.get_phase() == GameRuntime.IDLE and _provider.directory.left == [LISTING],
 			"An incorrect proof must fail before world readiness and release membership.") \
 			and _mark("denied-done")
 
@@ -227,22 +238,22 @@ func _run_client() -> bool:
 	if not await _wait_until(_marked.bind("denial-checked"), "authority denial assertions"):
 		return false
 	var missing: Dictionary = await _game.join_online("missing").wait()
-	if not _check(missing.code == "ListingUnavailable" and _session.get_state() == CrimsonGameSession.IDLE,
+	if not _check(missing.code == "ListingUnavailable" and _session.get_state() == GameSession.IDLE,
 			"Missing listing must fail before claiming the transport."):
 		return false
 	var pending := _game.join_online("pending-fixture")
 	var held := _provider.directory.held
 	if not _check(held != null and _game.leave() == OK and pending.get_result().code == "Cancelled"
-			and held.resolve(CrimsonSessionEndpoint.direct(ADDRESS, _port)) != OK,
+			and held.resolve(SessionEndpoint.direct(ADDRESS, _port)) != OK,
 			"Cancel a directory lookup and reject its stale result."):
 		return false
 	var changed := _game.join_online("pending-fixture")
 	held = _provider.directory.held
-	if not _check(_session.set_authenticator(null) == OK and held.resolve(CrimsonSessionEndpoint.direct(ADDRESS, _port)) == OK,
+	if not _check(_session.set_authenticator(null) == OK and held.resolve(SessionEndpoint.direct(ADDRESS, _port)) == OK,
 			"Change the idle session authenticator while the lookup is pending."):
 		return false
 	var unverified: Dictionary = await changed.wait()
-	if not _check(unverified.code == "OnlineAuthenticationRequired" and _session.get_state() == CrimsonGameSession.IDLE
+	if not _check(unverified.code == "OnlineAuthenticationRequired" and _session.get_state() == GameSession.IDLE
 			and _session.set_authenticator(_provider.identity) == OK,
 			"Do not open a resolved route after the selected authentication policy changes."):
 		return false

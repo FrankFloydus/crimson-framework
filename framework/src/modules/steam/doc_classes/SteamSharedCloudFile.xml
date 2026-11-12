@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="SteamSharedCloudFile" inherits="RefCounted">
+	<brief_description>
+		Validated metadata and bounded bytes from a shared Steam Cloud file.
+	</brief_description>
+	<methods>
+		<method name="get_bytes" qualifiers="const">
+			<return type="PackedByteArray" />
+			<description>Returns the detached bytes copied from the Steam download.</description>
+		</method>
+		<method name="get_handle" qualifiers="const">
+			<return type="String" />
+			<description>Returns the requested UGC handle as a canonical unsigned decimal string.</description>
+		</method>
+		<method name="get_name" qualifiers="const">
+			<return type="String" />
+			<description>Returns the validated logical filename reported by Steam.</description>
+		</method>
+		<method name="get_owner_steam_id" qualifiers="const">
+			<return type="String" />
+			<description>Returns the owner SteamID64 as an unsigned decimal string, or an empty string when Steam supplies no owner.</description>
+		</method>
+	</methods>
+	<members>
+		<member name="bytes" type="PackedByteArray" setter="" getter="get_bytes">
+			Detached file bytes within the caller's requested limit.
+		</member>
+		<member name="handle" type="String" setter="" getter="get_handle">
+			The opaque UGC handle. Keep its unsigned decimal representation intact.
+		</member>
+		<member name="name" type="String" setter="" getter="get_name">
+			The validated logical Remote Storage name returned by Steam.
+		</member>
+		<member name="owner_steam_id" type="String" setter="" getter="get_owner_steam_id">
+			The SteamID64 of the sharing account when Steam reports it.
+		</member>
+	</members>
+</class>

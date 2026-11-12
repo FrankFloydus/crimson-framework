@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="SteamNotificationStore" inherits="RefCounted">
+	<brief_description>
+		Trusted persistence adapter for notification keys and session ownership.
+	</brief_description>
+	<description>
+		Inject the implementation through [member SteamPublisherSettings.notification_store]. Use durable storage that applies the operation key, fingerprint, target reservation, and ownership decisions across backend workers.
+	</description>
+	<methods>
+		<method name="_claim_launch_opt_in" qualifiers="virtual">
+			<return type="int" enum="Error" />
+			<param index="0" name="app_id" type="int" />
+			<param index="1" name="steam_id" type="String" />
+			<param index="2" name="launch_id" type="String" />
+			<description>Atomically reserve notification registration for the exact verified app, account, and authoritative launch ID across backend workers. Return [constant OK] only for a new durable claim, [constant ERR_ALREADY_IN_USE] when it is already claimed, or an error if authorization or storage fails. Keep the claim after dispatch even when Steam does not confirm the response.</description>
+		</method>
+		<method name="_claim" qualifiers="virtual">
+			<return type="SteamNotificationClaim" />
+			<param index="0" name="app_id" type="int" />
+			<param index="1" name="key" type="String" />
+			<param index="2" name="fingerprint" type="String" />
+			<param index="3" name="action" type="int" enum="SteamNotificationStore.Action" />
+			<param index="4" name="target_id" type="String" />
+			<description>Atomically compare the app-scoped key and fingerprint, replay completed receipts, and claim a new write only when authorized. Update and remove claims also reserve the exact owned target against competing keys until settlement. An unresolved sent operation remains reserved for trusted reconciliation.</description>
+		</method>
+		<method name="_commit" qualifiers="virtual">
+			<return type="bool" />
+			<param index="0" name="app_id" type="int" />
+			<param index="1" name="key" type="String" />
+			<param index="2" name="fingerprint" type="String" />
+			<param index="3" name="action" type="int" enum="SteamNotificationStore.Action" />
+			<param index="4" name="provider_id" type="String" />
+			<description>Atomically commit the exact claim and its provider ID. Record ownership on create, preserve it on update, and retire it on remove. Release the target reservation in the same transaction.</description>
+		</method>
+		<method name="_owns_session" qualifiers="virtual">
+			<return type="bool" />
+			<param index="0" name="app_id" type="int" />
+			<param index="1" name="session_id" type="String" />
+			<description>Returns whether the trusted backend currently owns this provider session for the configured app.</description>
+		</method>
+		<method name="_release_unsent" qualifiers="virtual">
+			<return type="bool" />
+			<param index="0" name="app_id" type="int" />
+			<param index="1" name="key" type="String" />
+			<param index="2" name="fingerprint" type="String" />
+			<param index="3" name="action" type="int" enum="SteamNotificationStore.Action" />
+			<description>Atomically releases the exact claim and its target reservation when Crimson reports that transport scheduling failed.</description>
+		</method>
+		<method name="_release_unsent_launch_opt_in" qualifiers="virtual">
+			<return type="bool" />
+			<param index="0" name="app_id" type="int" />
+			<param index="1" name="steam_id" type="String" />
+			<param index="2" name="launch_id" type="String" />
+			<description>Release the exact launch claim when Crimson confirms no Steam request was scheduled. Return true only after releasing the claim durably.</description>
+		</method>
+	</methods>
+	<constants>
+		<constant name="CREATE" value="0" enum="Action">Create a new app-owned notification session.</constant>
+		<constant name="UPDATE" value="1" enum="Action">Replace an owned session's participant state.</constant>
+		<constant name="REMOVE" value="2" enum="Action">Remove an owned session and its notifications.</constant>
+	</constants>
+</class>

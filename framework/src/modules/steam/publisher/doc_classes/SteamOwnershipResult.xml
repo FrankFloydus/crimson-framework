@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="SteamOwnershipResult" inherits="SteamResult">
+	<brief_description>
+		Outcome of trusted encrypted app ticket verification.
+	</brief_description>
+	<methods>
+		<method name="get_value" qualifiers="const">
+			<return type="SteamOwnership" />
+			<description>Returns the verified ownership receipt on success, or [code]null[/code] on failure.</description>
+		</method>
+	</methods>
+	<members>
+		<member name="value" type="SteamOwnership" setter="" getter="get_value">
+			Detached app and DLC ownership and the scoped player identity on success.
+		</member>
+	</members>
+</class>

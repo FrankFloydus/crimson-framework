@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="SteamVoicePcm" inherits="RefCounted">
+	<brief_description>Decoded Steam voice audio for the game's playback queue.</brief_description>
+	<members>
+		<member name="samples" type="PackedByteArray" setter="" getter="get_samples">Signed little-endian 16-bit mono samples. The size is an even number of bytes.</member>
+		<member name="sample_rate_hz" type="int" setter="" getter="get_sample_rate_hz">Sample rate of the decoded audio, in hertz.</member>
+	</members>
+</class>

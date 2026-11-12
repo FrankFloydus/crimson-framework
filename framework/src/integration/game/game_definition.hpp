@@ -16,11 +16,11 @@
 
 namespace crimson::integration {
 
-class CrimsonGame;
+class GameRuntime;
 
 // Serializable game setup shared by the Inspector and fluent configuration.
-class CrimsonGameDefinition : public godot::Resource {
-    GDCLASS(CrimsonGameDefinition, godot::Resource)
+class GameDefinition : public godot::Resource {
+    GDCLASS(GameDefinition, godot::Resource)
 
     // Stable application identifier written into checkpoints.
     godot::String app_id = "crimson.game";
@@ -37,12 +37,12 @@ class CrimsonGameDefinition : public godot::Resource {
     // Actor scene spawned for participants in immediate play.
     godot::Ref<godot::PackedScene> player_scene;
     // Listen-game settings. An empty resource permits local play only.
-    godot::Ref<CrimsonMultiplayerRules> multiplayer_rules;
+    godot::Ref<MultiplayerRules> multiplayer_rules;
     // Custom factories selected before the game attaches its native services.
-    godot::Ref<CrimsonServiceProvider> service_provider;
+    godot::Ref<GameServiceProvider> service_provider;
 
     // Copy the configuration through the same setters used by the Inspector.
-    godot::Ref<CrimsonGameDefinition> copy_definition() const;
+    godot::Ref<GameDefinition> copy_definition() const;
 
 protected:
     // Registers the definition's Inspector properties and script methods.
@@ -50,25 +50,27 @@ protected:
 
 public:
     // Create a new definition with the same defaults as an Inspector resource.
-    static godot::Ref<CrimsonGameDefinition> configure();
+    static godot::Ref<GameDefinition> configure();
     // Return an independent definition with the supplied catalog.
-    godot::Ref<CrimsonGameDefinition> with_worlds(const godot::Dictionary &p_worlds) const;
+    godot::Ref<GameDefinition> with_worlds(const godot::Dictionary &p_worlds) const;
     // Return an independent definition with a different starting world.
-    godot::Ref<CrimsonGameDefinition> starting_in(const godot::StringName &p_world_id) const;
+    godot::Ref<GameDefinition> starting_in(const godot::StringName &p_world_id) const;
     // Return an independent definition with the supplied persistence settings.
-    godot::Ref<CrimsonGameDefinition> with_saves(const godot::String &p_app_id,
+    godot::Ref<GameDefinition> with_saves(const godot::String &p_app_id,
             const godot::String &p_root = "user://crimson", int64_t p_schema_version = 1) const;
     // Return an independent definition with a named immediate-play world.
-    godot::Ref<CrimsonGameDefinition> with_starting_world(const godot::StringName &world_id,
+    godot::Ref<GameDefinition> with_starting_world(const godot::StringName &world_id,
             const godot::Ref<godot::PackedScene> &scene) const;
     // Return an independent definition with the supplied player scene.
-    godot::Ref<CrimsonGameDefinition> with_player(const godot::Ref<godot::PackedScene> &scene) const;
+    godot::Ref<GameDefinition> with_player(const godot::Ref<godot::PackedScene> &scene) const;
     // Return an independent definition with a copy of the supplied multiplayer rules.
-    godot::Ref<CrimsonGameDefinition> with_multiplayer(const godot::Ref<CrimsonMultiplayerRules> &rules) const;
+    godot::Ref<GameDefinition> with_multiplayer(const godot::Ref<MultiplayerRules> &rules) const;
     // Return an independent definition using the selected game service factories.
-    godot::Ref<CrimsonGameDefinition> with_provider(const godot::Ref<CrimsonServiceProvider> &provider) const;
+    godot::Ref<GameDefinition> with_provider(const godot::Ref<GameServiceProvider> &provider) const;
     // Create a detached Game node with an independent copy of this definition.
-    CrimsonGame *create() const;
+    GameRuntime *create() const;
+    // Attach a configured Game to a live scene-tree owner and return the surviving attachment.
+    GameRuntime *boot(godot::Node *owner) const;
 
     // Sets the checkpoint application identifier for future matches.
     void set_app_id(const godot::String &p_app_id);
@@ -99,13 +101,13 @@ public:
     // Get the authored actor scene.
     godot::Ref<godot::PackedScene> get_player_scene() const;
     // Assign the multiplayer rule resource for future starts.
-    void set_multiplayer_rules(const godot::Ref<CrimsonMultiplayerRules> &rules);
+    void set_multiplayer_rules(const godot::Ref<MultiplayerRules> &rules);
     // Get the authored multiplayer rule resource.
-    godot::Ref<CrimsonMultiplayerRules> get_multiplayer_rules() const;
+    godot::Ref<MultiplayerRules> get_multiplayer_rules() const;
     // Select a provider before the game enters the scene tree.
-    void set_service_provider(const godot::Ref<CrimsonServiceProvider> &provider);
+    void set_service_provider(const godot::Ref<GameServiceProvider> &provider);
     // Return the selected provider, or null to use native defaults.
-    godot::Ref<CrimsonServiceProvider> get_service_provider() const;
+    godot::Ref<GameServiceProvider> get_service_provider() const;
 };
 
 } // namespace crimson::integration

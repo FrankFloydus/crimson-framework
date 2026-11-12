@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="SteamServerStatsOperation" inherits="RefCounted">
+	<brief_description>Retained result of one Steam GameServer stats operation.</brief_description>
+	<description>Local observation is bounded to 15 seconds. Steam may still complete an issued store after local cancellation, departure, or timeout. The same account stays fenced while its earlier Steam call drains, preventing accidental replay of a pending update.</description>
+	<methods>
+		<method name="is_finished" qualifiers="const">
+			<return type="bool" />
+			<description>Report whether the observation has a terminal result.</description>
+		</method>
+		<method name="result" qualifiers="const">
+			<return type="SteamServerStatsResult" />
+			<description>Return the settled result, or null while pending.</description>
+		</method>
+		<method name="wait">
+			<return type="Variant" />
+			<description>Return the terminal [SteamServerStatsResult] or a signal to await for that result.</description>
+		</method>
+		<method name="cancel">
+			<return type="int" enum="Error" />
+			<description>Settle a pending observer with [constant ERR_SKIP] and stop any edit still waiting on a load. A store already issued to Steam can still persist. Returns [constant ERR_DOES_NOT_EXIST] once the observer is settled.</description>
+		</method>
+	</methods>
+	<signals>
+		<signal name="completed">
+			<param index="0" name="result" type="SteamServerStatsResult" />
+			<description>Emitted once the terminal result is stored on this operation.</description>
+		</signal>
+	</signals>
+</class>

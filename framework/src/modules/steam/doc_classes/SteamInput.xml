@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="SteamInput" inherits="RefCounted">
+	<brief_description>
+		Starts Steam Input and exposes connected controllers.
+	</brief_description>
+	<description>
+		Get this service from [method SteamClient.input]. Start it on the main thread of the persistent client. Steam Input uses app settings by default and accepts an absolute path to a loose development manifest. Client scopes share the active native lease, manifest, and frame update. The game assigns each [SteamController] to a player independently of Godot joypad indices.
+	</description>
+	<tutorials>
+		<link title="Steam Input API">https://partner.steamgames.com/doc/api/ISteamInput</link>
+	</tutorials>
+	<methods>
+		<method name="controllers" qualifiers="const">
+			<return type="SteamController[]" />
+			<description>
+				Returns a read-only snapshot of the connected controller views owned by this lease. Before start and after stop, returns an empty array.
+			</description>
+		</method>
+		<method name="start">
+			<return type="int" enum="Error" />
+			<param index="0" name="manifest_path" type="String" default="&quot;&quot;" />
+			<description>
+				Starts Steam Input. Leave [param manifest_path] empty to use Steam's app configuration or join the existing manifest. To override, pass an absolute path to a loose file Steam can read. A different explicit path while the lease is active returns [constant ERR_BUSY]. A missing file returns [constant ERR_FILE_NOT_FOUND]. Steam's parse rejection returns [constant ERR_PARSE_ERROR]. An invalid path returns [constant ERR_INVALID_PARAMETER]. A detached or unsupported scope returns [constant ERR_UNAVAILABLE].
+			</description>
+		</method>
+		<method name="stop">
+			<return type="void" />
+			<description>
+				Releases this lease and invalidates the views already returned by [method controllers]. The last active lease shuts down Steam Input. Stopping again is safe.
+			</description>
+		</method>
+	</methods>
+	<signals>
+		<signal name="bindings_changed">
+			<param index="0" name="controller" type="SteamController" />
+			<description>
+				Emitted when Steam reloads the configuration for a connected controller. Refresh cached HUD prompts.
+			</description>
+		</signal>
+		<signal name="controller_connected">
+			<param index="0" name="controller" type="SteamController" />
+			<description>
+				Emitted after a new controller view appears in [method controllers]. A reconnect may produce a new view for the same hardware.
+			</description>
+		</signal>
+		<signal name="controller_disconnected">
+			<param index="0" name="controller" type="SteamController" />
+			<description>
+				Emitted after a controller view is removed and invalidated. Use the supplied view to clear the local player assignment.
+			</description>
+		</signal>
+	</signals>
+</class>

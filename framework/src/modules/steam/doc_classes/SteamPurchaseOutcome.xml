@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="SteamPurchaseOutcome" inherits="RefCounted">
+	<brief_description>Backend-confirmed snapshot of one Steam order.</brief_description>
+	<methods>
+		<method name="create" qualifiers="static">
+			<return type="SteamPurchaseOutcome" />
+			<param index="0" name="order_id" type="String" />
+			<param index="1" name="currency" type="String" />
+			<param index="2" name="total" type="int" />
+			<param index="3" name="state" type="int" enum="SteamPurchaseOutcome.State" />
+			<description>Creates the typed receipt from verified backend state. Provide a canonical nonzero 64-bit decimal order ID, a valid currency code, and a positive total in Steam's units. Invalid data returns null.</description>
+		</method>
+	</methods>
+	<members>
+		<member name="order_id" type="String" setter="" getter="get_order_id">The canonical decimal order ID assigned by the backend.</member>
+		<member name="currency" type="String" setter="" getter="get_currency">Three-letter uppercase currency code for the order total.</member>
+		<member name="total" type="int" setter="" getter="get_total">Total in Steam's units for the order currency.</member>
+		<member name="state" type="int" setter="" getter="get_state" enum="State">The latest order state confirmed by the game backend.</member>
+	</members>
+	<constants>
+		<constant name="AWAITING_APPROVAL" value="0" enum="State">Steam is waiting for the player to authorize the order.</constant>
+		<constant name="DECLINED" value="1" enum="State">The order was declined.</constant>
+		<constant name="RECONCILING" value="2" enum="State">The backend is confirming an uncertain outcome.</constant>
+		<constant name="FULFILLED" value="3" enum="State">The backend confirms the durable grant.</constant>
+		<constant name="REVERSED" value="4" enum="State">The backend confirms the grant was reversed.</constant>
+		<constant name="PARTIALLY_REVERSED" value="5" enum="State">The backend confirms that only some purchased grants were reversed.</constant>
+	</constants>
+</class>

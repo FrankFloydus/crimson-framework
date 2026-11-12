@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="SteamListing" inherits="OnlineListing">
+	<brief_description>A detached Steam discovery or invite snapshot. Join through the current game to resolve it.</brief_description>
+	<methods>
+		<method name="get_kind" qualifiers="const">
+			<return type="int" enum="SteamListing.Kind" />
+			<description>Return the listing's discovery kind.</description>
+		</method>
+		<method name="get_app_id" qualifiers="const">
+			<return type="int" />
+			<description>Return the Steam AppID under which the listing was observed.</description>
+		</method>
+		<method name="get_namespace" qualifiers="const">
+			<return type="StringName" />
+			<description>Return the game namespace expected by this listing.</description>
+		</method>
+		<method name="get_world_id" qualifiers="const">
+			<return type="StringName" />
+			<description>Return the advertised world identifier when available.</description>
+		</method>
+		<method name="get_name" qualifiers="const">
+			<return type="String" />
+			<description>Return the optional advertised label.</description>
+		</method>
+		<method name="get_players" qualifiers="const">
+			<return type="int" />
+			<description>Return the observed lobby member count, or zero without a count.</description>
+		</method>
+		<method name="get_capacity" qualifiers="const">
+			<return type="int" />
+			<description>Return the observed lobby member limit, or zero without a limit.</description>
+		</method>
+		<method name="get_server_steam_id" qualifiers="const">
+			<return type="String" />
+			<description>Return the Steam server identity when present. Lobby locators return an empty string.</description>
+		</method>
+		<method name="get_ping_ms" qualifiers="const">
+			<return type="int" />
+			<description>Return the measured server latency in milliseconds, or minus one when unavailable.</description>
+		</method>
+		<method name="is_social" qualifiers="const">
+			<return type="bool" />
+			<description>Return true when Steam metadata identified a standalone social lobby. A thin invite locator may need to join Steam membership before the selected flow can verify its type.</description>
+		</method>
+	</methods>
+	<members>
+		<member name="kind" type="int" setter="" getter="get_kind" enum="SteamListing.Kind">Discovery kind for this locator.</member>
+		<member name="app_id" type="int" setter="" getter="get_app_id">Steam AppID under which the listing was observed.</member>
+		<member name="namespace" type="StringName" setter="" getter="get_namespace">Expected game namespace for fresh resolution.</member>
+		<member name="world_id" type="StringName" setter="" getter="get_world_id">Advertised world when available.</member>
+		<member name="name" type="String" setter="" getter="get_name">Optional display label.</member>
+		<member name="players" type="int" setter="" getter="get_players">Observed number of lobby members.</member>
+		<member name="capacity" type="int" setter="" getter="get_capacity">Observed member limit.</member>
+		<member name="server_steam_id" type="String" setter="" getter="get_server_steam_id">Server identity for a server locator.</member>
+		<member name="ping_ms" type="int" setter="" getter="get_ping_ms">Measured server latency in milliseconds. Minus one means unavailable.</member>
+	</members>
+	<constants>
+		<constant name="LOBBY" value="0" enum="Kind">Steam lobby locator.</constant>
+		<constant name="SERVER" value="1" enum="Kind">Reserved listing kind for Steam server discovery.</constant>
+	</constants>
+</class>

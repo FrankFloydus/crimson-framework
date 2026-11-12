@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="SteamOverlay" inherits="RefCounted">
+	<brief_description>
+		Opens Steam overlay panes and observes when the overlay has focus.
+	</brief_description>
+	<description>
+		Get this facade from [method SteamClient.overlay] after starting the client. Call it on the main thread. A retained facade becomes unavailable when its owning client stops. The SDK overlay must be enabled and loaded for the running game. For a direct development launch, pass [code]--crimson-steam-overlay=&lt;AppID&gt;[/code] after Godot's [code]--[/code] separator and launch with the matching Steam AppID.
+		An open method returns [constant @GlobalScope.OK] once it issues the request to Steam. Observe the rendered pane to confirm its contents. [constant @GlobalScope.ERR_BUSY] means the overlay is not ready or the method was called off the main thread. [constant @GlobalScope.ERR_UNAVAILABLE] means the facade or required SDK interface is unavailable. [constant @GlobalScope.ERR_INVALID_PARAMETER] means a live facade rejected a target.
+	</description>
+	<methods>
+		<method name="is_active" qualifiers="const">
+			<return type="bool" />
+			<description>
+				Returns the latest activation state observed for the running AppID. The initial state is false until the current Steam runtime receives an activation event. A detached facade returns false.
+			</description>
+		</method>
+		<method name="is_ready" qualifiers="const">
+			<return type="bool" />
+			<description>
+				Returns true when the running Steam client reports that the overlay is loaded and accessible. It may remain false during graphics startup, with the overlay disabled, or in a headless process.
+			</description>
+		</method>
+		<method name="open_achievements" qualifiers="const">
+			<return type="int" enum="Error" />
+			<description>
+				Requests the current game's Steam Achievements pane.
+			</description>
+		</method>
+		<method name="open_profile" qualifiers="const">
+			<return type="int" enum="Error" />
+			<param index="0" name="steam_id" type="String" />
+			<description>
+				Requests the Steam Community profile of an individual account identified by its decimal SteamID64.
+			</description>
+		</method>
+		<method name="open_store" qualifiers="const">
+			<return type="int" enum="Error" />
+			<param index="0" name="app_id" type="int" default="0" />
+			<description>
+				Requests the Steam Store page in browse mode. Zero selects the running AppID. A positive unsigned 32-bit AppID selects another product.
+			</description>
+		</method>
+		<method name="open_trade" qualifiers="const">
+			<return type="int" enum="Error" />
+			<param index="0" name="partner_steam_id" type="String" />
+			<description>
+				Requests the Steam Trading pane for the supplied partner's decimal SteamID64. Call it after the game's authorized backend has started an existing Steam trading session with that individual account.
+			</description>
+		</method>
+		<method name="open_web" qualifiers="const">
+			<return type="int" enum="Error" />
+			<param index="0" name="url" type="String" />
+			<description>
+				Requests a page in Steam's overlay browser. Supply an absolute HTTP or HTTPS URL without embedded credentials and at most 2048 UTF-8 bytes.
+			</description>
+		</method>
+	</methods>
+	<signals>
+		<signal name="activation_changed">
+			<param index="0" name="active" type="bool" />
+			<description>
+				Emitted when Steam reports that the overlay gained or lost focus. Applies to both a Steam hotkey and an in-game request. [method is_active] already reflects the new state when the signal is delivered.
+			</description>
+		</signal>
+	</signals>
+</class>

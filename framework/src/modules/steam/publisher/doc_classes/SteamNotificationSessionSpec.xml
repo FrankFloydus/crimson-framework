@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="SteamNotificationSessionSpec" inherits="RefCounted">
+	<brief_description>
+		Immutable full state for creating or updating an asynchronous game session.
+	</brief_description>
+	<methods>
+		<method name="create" qualifiers="static">
+			<return type="SteamNotificationSessionSpec" />
+			<param index="0" name="context" type="String" />
+			<param index="1" name="title" type="SteamLocalizedText" />
+			<param index="2" name="users" type="SteamNotificationUserState[]" />
+			<description>Creates an immutable complete session spec. [param context] is a canonical unsigned decimal string used at creation. Supply a localized title and 1 to 16 distinct verified participants.</description>
+		</method>
+		<method name="get_context" qualifiers="const">
+			<return type="String" />
+			<description>Return the backend context as an unsigned decimal string.</description>
+		</method>
+		<method name="get_title" qualifiers="const">
+			<return type="SteamLocalizedText" />
+			<description>Return the session's localized title.</description>
+		</method>
+		<method name="get_users" qualifiers="const">
+			<return type="SteamNotificationUserState[]" />
+			<description>Return the full read-only participant state.</description>
+		</method>
+	</methods>
+	<members>
+		<member name="context" type="String" setter="" getter="get_context">
+			Backend context submitted when the session is created.
+		</member>
+		<member name="title" type="SteamLocalizedText" setter="" getter="get_title">
+			Title shown in the recipients' list of sessions.
+		</member>
+		<member name="users" type="SteamNotificationUserState[]" setter="" getter="get_users">
+			Every verified participant and their desired state.
+		</member>
+	</members>
+</class>

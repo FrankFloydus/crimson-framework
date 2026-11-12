@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="SteamItemDefinitionResult" inherits="SteamResult">
+	<brief_description>
+		A typed Steam inventory outcome.
+	</brief_description>
+	<description>
+		Check [member SteamResult.ok] before reading [member value]. The requested definition, or null on failure.
+	</description>
+	<tutorials>
+	</tutorials>
+	<methods>
+		<method name="get_value" qualifiers="const">
+			<return type="SteamItemDefinition" />
+			<description>
+				Returns the requested definition, or null on failure.
+			</description>
+		</method>
+	</methods>
+	<members>
+		<member name="value" type="SteamItemDefinition" setter="" getter="get_value">
+			The requested definition, or null on failure.
+		</member>
+	</members>
+</class>

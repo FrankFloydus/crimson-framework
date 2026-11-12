@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="SteamListingsOperation" inherits="RefCounted">
+	<brief_description>A retained observation of one Steam lobby search.</brief_description>
+	<methods>
+		<method name="is_finished" qualifiers="const">
+			<return type="bool" />
+			<description>Return whether the operation has settled.</description>
+		</method>
+		<method name="result" qualifiers="const">
+			<return type="SteamListingsResult" />
+			<description>Return the terminal result, or null while pending.</description>
+		</method>
+		<method name="wait">
+			<return type="Variant" />
+			<description>Await the same typed result before or after settlement.</description>
+		</method>
+		<method name="cancel">
+			<return type="int" enum="Error" />
+			<description>Cancel local observation. The search lane remains occupied until the Steam callback drains or reaches its deadline.</description>
+		</method>
+	</methods>
+	<signals>
+		<signal name="completed">
+			<param index="0" name="result" type="SteamListingsResult" />
+			<description>Emitted once after settling the observer.</description>
+		</signal>
+	</signals>
+</class>

@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="SteamPublisherAuth" inherits="RefCounted">
+	<brief_description>Verifies Steam Web API tickets and current ownership on the trusted backend.</brief_description>
+	<description>Get this scoped service from [method SteamPublisher.auth]. The backend supplies its expected service audience and keeps ticket bytes out of logs and saved data.</description>
+	<tutorials>
+	</tutorials>
+	<methods>
+		<method name="verify">
+			<return type="Variant" />
+			<param index="0" name="ticket_bytes" type="PackedByteArray" />
+			<param index="1" name="audience" type="String" />
+			<description>Sends the configured AppID, exact [param audience], and hex-encoded ticket to Valve. Use [code]await[/code] to receive [SteamIdentityResult]. Only an accepted ticket with a valid individual SteamID issues an identity.</description>
+		</method>
+		<method name="owns_app">
+			<return type="Variant" />
+			<param index="0" name="identity" type="SteamIdentity" />
+			<param index="1" name="app_id" type="int" />
+			<description>Checks Steam's current license for an identity minted by this exact publisher. Use [code]await[/code] to receive [SteamAppOwnershipResult]. A negative license is a successful query with [member SteamAppOwnership.owns_app] false.</description>
+		</method>
+		<method name="verify_ownership">
+			<return type="SteamOwnershipResult" />
+			<param index="0" name="ticket" type="PackedByteArray" />
+			<param index="1" name="expected_challenge" type="PackedByteArray" />
+			<param index="2" name="dlc_ids" type="PackedInt64Array" default="PackedInt64Array()" />
+			<description>Verifies an encrypted app ticket locally against the configured AppID, exact [param expected_challenge], and optional DLC AppIDs. Checks the fresh ticket and consumes the one-time challenge through the trusted store before issuing an identity. Returns a typed error for invalid tickets, replay, or unavailable configuration.</description>
+		</method>
+	</methods>
+</class>

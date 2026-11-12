@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="SteamPartyLocation" inherits="RefCounted">
+	<brief_description>A detached Steam Chat location eligible for Party beacons.</brief_description>
+	<members>
+		<member name="id" type="String" setter="" getter="get_id">Opaque decimal Steam location identifier.</member>
+		<member name="kind" type="int" setter="" getter="get_kind">Steam location family. This version supports Chat groups.</member>
+	</members>
+	<constants>
+		<constant name="CHAT_GROUP" value="1" enum="Kind">A Steam Chat group location.</constant>
+	</constants>
+</class>

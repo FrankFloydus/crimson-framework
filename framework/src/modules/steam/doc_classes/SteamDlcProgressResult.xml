@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="SteamDlcProgressResult" inherits="SteamResult">
+	<brief_description>Outcome of a Steam DLC download progress query.</brief_description>
+	<description>Returned by [method SteamApps.download_progress]. An inactive download is a successful query with an inactive snapshot.</description>
+	<methods>
+		<method name="get_value" qualifiers="const">
+			<return type="SteamDlcProgress" />
+			<description>Returns the detached progress snapshot on success, or [code]null[/code] on error.</description>
+		</method>
+	</methods>
+	<members>
+		<member name="value" type="SteamDlcProgress" setter="" getter="get_value">Read-only progress snapshot for a successful query. An error result has a [code]null[/code] payload.</member>
+	</members>
+</class>

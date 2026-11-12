@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="SteamLeaderboardResult" inherits="SteamResult">
+	<brief_description>Outcome of a leaderboard lookup or creation.</brief_description>
+	<methods>
+		<method name="get_value" qualifiers="const">
+			<return type="SteamLeaderboard" />
+			<description>Resolved board on success, or [code]null[/code] on failure. The board belongs to the exact Steam client scope that requested it.</description>
+		</method>
+	</methods>
+	<members>
+		<member name="value" type="SteamLeaderboard" getter="get_value">
+			Resolved board on success, or [code]null[/code] on failure. The board belongs to the exact Steam client scope that requested it.
+		</member>
+	</members>
+</class>

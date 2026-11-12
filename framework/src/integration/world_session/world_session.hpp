@@ -19,8 +19,8 @@
 namespace crimson::integration {
 
 // Mount one shared, locally packaged world and assign player scenes to authority-owned slots.
-class CrimsonWorldSession : public godot::Node {
-    GDCLASS(CrimsonWorldSession, godot::Node)
+class WorldSession : public godot::Node {
+    GDCLASS(WorldSession, godot::Node)
 
 public:
     // Maximum number of local and remote participants supported by the fixed-world backend.
@@ -34,11 +34,11 @@ public:
     };
 
     // Start a branchable setup with the same defaults as the Inspector definition.
-    static godot::Ref<CrimsonWorldSessionDefinition> configure();
+    static godot::Ref<WorldSessionDefinition> configure();
     // Set the authoring definition while idle. Each start captures its fields.
-    void set_definition(const godot::Ref<CrimsonWorldSessionDefinition> &value);
+    void set_definition(const godot::Ref<WorldSessionDefinition> &value);
     // Return the resource used to configure the next start.
-    godot::Ref<CrimsonWorldSessionDefinition> get_definition() const;
+    godot::Ref<WorldSessionDefinition> get_definition() const;
     // Return the configured ENet port, frozen while a session is active.
     int64_t get_port() const;
     // Start a local-only world and spawn the local player.
@@ -57,16 +57,20 @@ public:
     godot::Node3D *get_local_player() const;
     // Return the mounted actor assigned to an occupied session-local peer ID.
     godot::Node3D *get_player(int64_t peer_id) const;
-    // Configure the shared backend for CrimsonGame's typed, capacity-limited immediate play.
+    // Check on the authority whether this player acknowledged the current mounted world.
+    bool is_peer_world_ready(int32_t peer_id) const;
+    // Count fixed-world seats remaining after all currently admitted guests and the local actor.
+    int32_t available_remote_seats() const;
+    // Configure the shared backend for GameRuntime's typed, capacity-limited immediate play.
     void configure_immediate(const godot::Ref<godot::PackedScene> &world,
             const godot::Ref<godot::PackedScene> &player, const godot::StringName &world_key,
             int64_t max_players, int64_t listen_port, int64_t authority_epoch);
     // Inject the owning game's persistent services before this backend enters the tree.
-    void use_services(session::CrimsonGameSession *session, scene_load::CrimsonSceneLoadManager *loader);
+    void use_services(session::GameSession *session, scene_load::SceneLoadManager *loader);
     // Host the configured immediate game as a listen or headless authority.
     godot::Error host_immediate(const godot::String &bind_address, bool dedicated, bool hold_admission = false);
     // Join the owning game's authenticated route without changing its authored listen port.
-    godot::Error join_endpoint(const godot::Ref<session::CrimsonSessionEndpoint> &endpoint);
+    godot::Error join_endpoint(const godot::Ref<session::SessionEndpoint> &endpoint);
     // Return the current authority epoch for immediate readiness.
     int64_t get_world_epoch() const;
     // Return whether the native session currently owns authority.
@@ -112,11 +116,11 @@ private:
     };
 
     // Resource authored in the Inspector or via the branchable builder.
-    godot::Ref<CrimsonWorldSessionDefinition> definition;
+    godot::Ref<WorldSessionDefinition> definition;
     // Scene-tree-owned native transport, at a matching RPC path on every peer.
-    session::CrimsonGameSession *transport = nullptr;
+    session::GameSession *transport = nullptr;
     // Owning game's shared loader for immediate play. Legacy standalone sessions retain their mount path.
-    scene_load::CrimsonSceneLoadManager *scene_loader = nullptr;
+    scene_load::SceneLoadManager *scene_loader = nullptr;
     // Role selected for the active or starting session.
     Mode active_mode = Mode::Offline;
     // Player scene captured at the start of this session.
@@ -166,7 +170,7 @@ private:
 
     // Validate scene configuration, start the transport, and publish initial readiness.
     godot::Error start(Mode mode, const godot::String &address = {},
-            const godot::Ref<session::CrimsonSessionEndpoint> &endpoint = {}, bool hold_admission = false);
+            const godot::Ref<session::SessionEndpoint> &endpoint = {}, bool hold_admission = false);
     // Capture and validate the local resources before claiming the transport.
     godot::Error configure_start(Mode mode);
     // Validate placements and attach a player container to the detached scene.
@@ -237,4 +241,4 @@ private:
 
 } // namespace crimson::integration
 
-VARIANT_ENUM_CAST(crimson::integration::CrimsonWorldSession::State);
+VARIANT_ENUM_CAST(crimson::integration::WorldSession::State);

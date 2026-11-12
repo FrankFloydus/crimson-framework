@@ -1,0 +1,215 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="SteamClient" inherits="Node">
+	<brief_description>
+		Owns a standalone Steam client scope.
+	</brief_description>
+	<description>
+		Attach the client to a persistent node and start it on the main thread. Active scopes share the local account and the process AppID. Cached Steam services can remain available without a live connection to Valve. The client pumps Steam callbacks while active. Stopping the client, leaving the scene tree, or losing the native callback pipe invalidates its services and ends observation of outstanding operations.
+	</description>
+	<tutorials>
+	</tutorials>
+	<methods>
+		<method name="apps" qualifiers="const">
+			<return type="SteamApps" />
+			<description>
+				Returns the active scope's app and DLC metadata service, or [code]null[/code] before startup or after stop.
+			</description>
+		</method>
+		<method name="boot" qualifiers="static">
+			<return type="SteamClient" />
+			<param index="0" name="owner" type="Node" />
+			<param index="1" name="expected_app_id" type="int" default="0" />
+			<description>
+				Creates a client as a child of [param owner] and attempts to start it. Call on the main thread with a live owner inside the scene tree. Pass [code]0[/code] to use the Steam launch AppID. If attachment succeeds, the returned node retains any initialization failure. Check [method is_ready] and [method get_initialization_error]. Returns [code]null[/code] if attachment fails.
+			</description>
+		</method>
+		<method name="cloud" qualifiers="const">
+			<return type="SteamCloud" />
+			<description>
+				Returns the active scope's Steam Cloud file service, or [code]null[/code] when the client scope is inactive.
+			</description>
+		</method>
+		<method name="diagnostics" qualifiers="const">
+			<return type="SteamDiagnostics" />
+			<description>
+				Returns the active scope's Steam SDK warning capture service, or [code]null[/code] before startup or after stop. Call [method SteamDiagnostics.start] to enable capture.
+			</description>
+		</method>
+		<method name="friends" qualifiers="const">
+			<return type="SteamFriends" />
+			<description>
+				Returns the active scope's Steam Friends service for local Rich Presence, or [code]null[/code] when the client scope is inactive.
+			</description>
+		</method>
+		<method name="get_app_id" qualifiers="const">
+			<return type="int" />
+			<description>
+				Returns the active Steam AppID, or [code]0[/code] when the client scope is inactive.
+			</description>
+		</method>
+		<method name="get_initialization_error" qualifiers="const">
+			<return type="String" />
+			<description>
+				Returns the stored startup diagnostic. A successful start clears the diagnostic.
+			</description>
+		</method>
+		<method name="get_local_steam_id" qualifiers="const">
+			<return type="String" />
+			<description>
+				Returns the signed-in account's SteamID64 as a decimal string. Returns an empty string when the client scope is inactive.
+			</description>
+		</method>
+		<method name="http" qualifiers="const">
+			<return type="SteamHttp" />
+			<description>
+				Returns the active scope's Steam HTTP service, or [code]null[/code] when the client scope is inactive.
+			</description>
+		</method>
+		<method name="is_online" qualifiers="const">
+			<return type="bool" />
+			<description>
+				Returns whether the active local Steam client has a live connection to Valve. Check [method is_ready] for local SDK access, which may be available in Offline Mode.
+			</description>
+		</method>
+		<method name="is_ready" qualifiers="const">
+			<return type="bool" />
+			<description>
+				Returns whether this client has a started Steam scope. Check the relevant service for capability availability.
+			</description>
+		</method>
+		<method name="leaderboards" qualifiers="const">
+			<return type="SteamLeaderboards" />
+			<description>
+				Returns the active scope's Steam leaderboard service, or [code]null[/code] when the client scope is inactive.
+			</description>
+		</method>
+		<method name="overlay" qualifiers="const">
+			<return type="SteamOverlay" />
+			<description>
+				Returns the active scope's Steam overlay service when the capability is available. Returns [code]null[/code] when the scope is inactive or overlay support is unavailable. Check [method SteamOverlay.is_ready] before presenting actions that require a usable overlay.
+			</description>
+		</method>
+		<method name="restart_through_steam_if_needed" qualifiers="static">
+			<return type="int" enum="Error" />
+			<param index="0" name="app_id" type="int" />
+			<description>
+				Optionally asks Steam to relaunch a rendered shipping game from the player's Steam Library. Call before [method boot], any provider initialization, or the overlay bootstrap. [constant ERR_SKIP] means Steam requested relaunch and the calling game should quit promptly. [constant OK] means the current process can continue. The check requires a non-Spacewar AppID, a Steam-enabled build, and the packaged SDK runtime. It is unavailable in headless or editor contexts and reports [constant ERR_BUSY] after client initialization has been attempted.
+			</description>
+		</method>
+		<method name="start">
+			<return type="int" enum="Error" />
+			<param index="0" name="expected_app_id" type="int" default="0" />
+			<description>
+				Starts this attached client on the main thread. An expected AppID of [code]0[/code] uses the Steam launch AppID. Starting an active client again with its current AppID succeeds. A conflicting AppID returns [constant ERR_ALREADY_IN_USE]. Inspect [method get_initialization_error] for Steam initialization details.
+			</description>
+		</method>
+		<method name="stats" qualifiers="const">
+			<return type="SteamStats" />
+			<description>
+				Returns the active scope's local Steam stats and achievements service, or [code]null[/code] when the client scope is inactive.
+			</description>
+		</method>
+		<method name="stop">
+			<return type="void" />
+			<description>
+				Ends this client scope, invalidates its services, and releases its lease on the shared Steam runtime. Call on the main thread. Other active scopes keep their own leases.
+			</description>
+		</method>
+		<method name="timeline" qualifiers="const">
+			<return type="SteamTimeline" />
+			<description>
+				Returns the active scope's Steam Game Recording timeline service, or [code]null[/code] when the client scope is inactive.
+			</description>
+		</method>
+		<method name="utils" qualifiers="const">
+			<return type="SteamUtils" />
+			<description>
+				Returns the active scope's Steam utility service, or [code]null[/code] when the client scope is inactive.
+			</description>
+		</method>
+		<method name="screenshots" qualifiers="const">
+			<return type="SteamScreenshots" />
+			<description>Returns the screenshot capture and result service for this client scope. Returns null while the scope is inactive.</description>
+		</method>
+		<method name="remote_play" qualifiers="const">
+			<return type="SteamRemotePlay" />
+			<description>Returns the Remote Play session and input service for this client scope. Returns null while the scope is inactive.</description>
+		</method>
+		<method name="inventory" qualifiers="const">
+			<return type="SteamInventory" />
+			<description>Returns the Steam Inventory service for this client scope. Returns null while the scope is inactive.</description>
+		</method>
+		<method name="workshop" qualifiers="const">
+			<return type="SteamWorkshop" />
+			<description>Returns the Steam Workshop service for this client scope. Returns null while the scope is inactive.</description>
+		</method>
+		<method name="presence" qualifiers="const">
+			<return type="SteamPresence" />
+			<description>Returns the managed Rich Presence service for the active client scope, or null after the scope ends.</description>
+		</method>
+		<method name="music" qualifiers="const">
+			<return type="SteamMusic" />
+			<description>Returns the Steam music player service for the active client scope, or null after the scope ends.</description>
+		</method>
+		<method name="video" qualifiers="const">
+			<return type="SteamVideo" />
+			<description>Returns the Steam video and broadcast service for the active client scope, or null after the scope ends.</description>
+		</method>
+		<method name="device" qualifiers="const">
+			<return type="SteamDevice" />
+			<description>Returns the device, virtual keyboard, and VR status service for the active client scope, or null after the scope ends.</description>
+		</method>
+		<method name="lobbies" qualifiers="const">
+			<return type="SteamLobbies" />
+			<description>Return the current scope's lobby discovery and standalone social service, or null before startup or after stop.</description>
+		</method>
+		<method name="auth" qualifiers="const">
+			<return type="SteamAuth" />
+			<description>Returns the authentication and ownership ticket service for the active client scope, or null after the scope ends.</description>
+		</method>
+		<method name="input" qualifiers="const">
+			<return type="SteamInput" />
+			<description>Returns the Steam Input controller service for the active client scope, or null after the scope ends.</description>
+		</method>
+		<method name="browser" qualifiers="const">
+			<return type="SteamBrowser" />
+			<description>Returns the Steam HTML Surface service for the active client scope, or null after the scope ends.</description>
+		</method>
+		<method name="purchases" qualifiers="const">
+			<return type="SteamPurchases" />
+			<description>Returns the active scope's purchasing facade, or null after the scope stops. A standalone client has no purchasing backend.</description>
+		</method>
+		<method name="voice" qualifiers="const">
+			<return type="SteamVoice" />
+			<description>Returns the active scope's opt-in voice capture and decode service, or null after the scope ends.</description>
+		</method>
+		<method name="parties" qualifiers="const">
+			<return type="SteamParties" />
+			<description>Returns this client's scoped Steam Parties service, or null after the client stops.</description>
+		</method>
+		<method name="server_browser" qualifiers="const">
+			<return type="SteamServerBrowser" />
+			<description>Return this exact client scope's Steam dedicated server browser, or null when its client is unavailable.</description>
+		</method>
+		<method name="messages" qualifiers="const">
+			<return type="SteamMessages" />
+			<description>Returns the Steam message service for this client scope. Standalone peers require explicit authorization. Returns null after the scope ends.</description>
+		</method>
+		<method name="networking" qualifiers="const">
+			<return type="SteamNetworking" />
+			<description>Returns the Steam relay and connection-path diagnostics for the active client scope, or null after the scope ends.</description>
+		</method>
+		<method name="sockets" qualifiers="const">
+			<return type="SteamSockets" />
+			<description>Returns the standalone Steam Sockets service for the active client scope, or null after the scope ends.</description>
+		</method>
+	</methods>
+	<signals>
+		<signal name="runtime_lost">
+			<description>
+				Emitted after a fatal local Steam IPC failure invalidates this client scope. A standalone owner can defer [method start] to acquire a fresh scope after all failure observers finish. A temporary loss of network connectivity keeps the local scope active.
+			</description>
+		</signal>
+	</signals>
+</class>

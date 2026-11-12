@@ -2,13 +2,13 @@
 extends "res://tests/game_flow/game_flow_harness.gd"
 
 
-class FixtureProvider extends CrimsonServiceProvider:
+class FixtureProvider extends GameServiceProvider:
 	# Loader returned by the factory and later used for the real transition.
-	var loader: CrimsonSceneLoadManager
+	var loader: SceneLoadManager
 
 	# Create one distinct loader before the game is published by the container.
-	func _create_scene_loader() -> CrimsonSceneLoadManager:
-		loader = CrimsonSceneLoadManager.new()
+	func _create_scene_loader() -> SceneLoadManager:
+		loader = SceneLoadManager.new()
 		loader.set_load_timeout_msec(7000)
 		return loader
 
@@ -29,13 +29,13 @@ func _run() -> void:
 	_start_watchdog()
 	var passed := await _run_offline()
 	if is_instance_valid(_game):
-		var scenes := Crimson.scenes()
+		var scenes := GameServices.scenes()
 		_game.leave()
 		await process_frame
 		_shell.remove_child(_game)
 		if passed:
 			var expired: Dictionary = await scenes.load(AMBER).wait()
-			passed = _expect(Crimson.scenes() == null and scenes.get_world() == null
+			passed = _expect(GameServices.scenes() == null and scenes.get_world() == null
 					and expired.get("code") == "Unavailable",
 					"A retained scene facade expires when the game leaves its scope.")
 		_game.free()
@@ -46,10 +46,22 @@ func _run() -> void:
 
 # Save a world, change the active mount and state, and verify atomic restore and failure paths.
 func _run_offline() -> bool:
+	var detached := Node.new()
+	var definition := GameDefinition.configure()
+	var rejected_owner := definition.boot(detached)
+	detached.free()
+	if not _expect(rejected_owner == null, "Game boot rejects an owner outside the tree."):
+		return false
+	var retiring := Node.new()
+	root.add_child(retiring)
+	retiring.child_entered_tree.connect(func(_node: Node) -> void: retiring.queue_free(), CONNECT_ONE_SHOT)
+	if not _expect(definition.boot(retiring) == null, "Game boot returns null when its owner is retired during attachment."):
+		return false
+	await process_frame
 	var provider := FixtureProvider.new()
 	if not _configure_game(true, provider) or not _register_authority_store():
 		return false
-	if not _expect(Crimson.game() == _game and Crimson.for_node(provider.loader) == _game
+	if not _expect(GameServices.game() == _game and GameServices.for_node(provider.loader) == _game
 			and _game.get_node("SceneLoader") == provider.loader,
 			"The global facade resolves the game and uses the injected loader."):
 		return false
@@ -89,7 +101,7 @@ func _run_offline() -> bool:
 		or not _corrupt_fixture_generation():
 		return false
 
-	var scenes := Crimson.scenes()
+	var scenes := GameServices.scenes()
 	var traveled: Dictionary = await scenes.load(COBALT).wait()
 	if not _expect(traveled.get("ok", false) and _mounted_world(COBALT, "cobalt") and _game.get_world_epoch() > amber_epoch,
 		"Travel to Cobalt and advance the world epoch: %s" % traveled):
@@ -133,7 +145,7 @@ func _run_offline() -> bool:
 		return false
 
 	if not _expect(_game.leave() == OK, "End the offline session.") \
-			or not await _wait_for(func() -> bool: return _game.get_phase() == CrimsonGame.IDLE, "offline teardown"):
+			or not await _wait_for(func() -> bool: return _game.get_phase() == GameRuntime.IDLE, "offline teardown"):
 		return false
 	if not _expect(_game.get_world() == null and _game.get_transactions() != coordinator,
 			"Teardown removes the scene and replaces the authority scope.") \

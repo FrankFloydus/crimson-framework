@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="OnlineListing" inherits="RefCounted">
+	<brief_description>A detached locator for a game served by an online directory.</brief_description>
+	<methods>
+		<method name="get_provider" qualifiers="const">
+			<return type="StringName" />
+			<description>Return the provider key that owns resolution of this listing.</description>
+		</method>
+		<method name="get_id" qualifiers="const">
+			<return type="String" />
+			<description>Return the directory identifier used for fresh resolution.</description>
+		</method>
+	</methods>
+	<members>
+		<member name="provider" type="StringName" setter="" getter="get_provider">Provider responsible for this locator.</member>
+		<member name="id" type="String" setter="" getter="get_id">Opaque listing identifier. Join through the game to resolve the current route.</member>
+	</members>
+</class>

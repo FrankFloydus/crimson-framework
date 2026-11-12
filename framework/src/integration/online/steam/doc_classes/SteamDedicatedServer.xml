@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="SteamDedicatedServer" inherits="RefCounted">
+	<brief_description>Scoped observation of one exact Steam dedicated Game attachment.</brief_description>
+	<methods>
+		<method name="status" qualifiers="const">
+			<return type="SteamServerStatus" />
+			<description>Read a detached readiness, advertisement, world and authenticated player count snapshot. A retired attachment returns idle status.</description>
+		</method>
+		<method name="get_initialization_error" qualifiers="const">
+			<return type="String" />
+			<description>Read the safe diagnostic captured during native setup. An empty string means setup started without an immediate error.</description>
+		</method>
+		<method name="inventory_verifier" qualifiers="const">
+			<return type="SteamInventoryVerifier" />
+			<description>Return the verifier for the exact dedicated attachment. It validates Steam inventory proofs only for the current transport-certified and admitted identity. After teardown it reports unavailable.</description>
+		</method>
+		<method name="stats" qualifiers="const">
+			<return type="SteamServerPlayerStats" />
+			<param index="0" name="peer_id" type="int" />
+			<description>Resolve Steam progression for the currently admitted remote connection with [param peer_id]. Returns null for the local authority, unknown or retired peers, a Game outside its dedicated Steam session, or calls off the scene thread. The returned service is bound to this exact authenticated admission.</description>
+		</method>
+	</methods>
+	<signals>
+		<signal name="status_changed">
+			<param index="0" name="status" type="SteamServerStatus" />
+			<description>Emitted on the scene thread when one public status field changes, including on retirement.</description>
+		</signal>
+	</signals>
+</class>

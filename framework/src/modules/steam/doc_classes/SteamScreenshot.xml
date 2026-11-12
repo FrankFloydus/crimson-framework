@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="SteamScreenshot" inherits="RefCounted">
+	<brief_description>A confirmed saved Steam screenshot and its annotation status.</brief_description>
+	<description>
+		The native handle stays internal. This snapshot describes metadata submissions observed by this scope. An ordinary screenshot or another scope's save has no local annotation requests.
+	</description>
+	<tutorials>
+	</tutorials>
+	<members>
+		<member name="annotation_errors" type="int[]" getter="get_annotation_errors" setter="">
+			Read-only [enum Error] codes for failed annotation requests, in location, user, and Workshop item order. Steam's rejection maps to [constant FAILED]. A missing native action maps to [constant ERR_UNAVAILABLE]. A saved image stays available even when metadata fails.
+		</member>
+		<member name="annotations_accepted" type="bool" getter="get_annotations_accepted" setter="">
+			Whether Steam accepted every annotation requested by this scope. Ordinary screenshots and saves from other scopes have no local annotations to reject.
+		</member>
+	</members>
+</class>

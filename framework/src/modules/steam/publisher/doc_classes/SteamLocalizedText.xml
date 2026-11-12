@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="SteamLocalizedText" inherits="RefCounted">
+	<brief_description>
+		Immutable localization token and variables for one Steam notification text.
+	</brief_description>
+	<methods>
+		<method name="create" qualifiers="static">
+			<return type="SteamLocalizedText" />
+			<param index="0" name="token" type="StringName" />
+			<param index="1" name="variables" type="Dictionary[StringName, String]" />
+			<description>Creates immutable text with a Steam localization token and detached substitutions. Use a leading [code]#[/code], up to 128 UTF-8 token bytes, and up to 8 substitutions. The service checks these bounds before submission.</description>
+		</method>
+		<method name="get_token" qualifiers="const">
+			<return type="StringName" />
+			<description>Return the localization token, including its leading #.</description>
+		</method>
+		<method name="get_variables" qualifiers="const">
+			<return type="Dictionary[StringName, String]" />
+			<description>Return the read-only localization substitutions.</description>
+		</method>
+	</methods>
+	<members>
+		<member name="token" type="StringName" setter="" getter="get_token">
+			The app's Steam localization token.
+		</member>
+		<member name="variables" type="Dictionary[StringName, String]" setter="" getter="get_variables">
+			Detached localization variables keyed by their Steam token names.
+		</member>
+	</members>
+</class>

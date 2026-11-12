@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="SteamCloudWriteBatchResult" inherits="SteamResult">
+	<brief_description>
+		Outcome and scoped handle for an app-wide Steam Cloud write-batch hint.
+	</brief_description>
+	<methods>
+		<method name="get_value" qualifiers="const">
+			<return type="SteamCloudWriteBatch" />
+			<description>Returns the batch handle on success, or [code]null[/code] on failure.</description>
+		</method>
+	</methods>
+	<members>
+		<member name="value" type="SteamCloudWriteBatch" setter="" getter="get_value">
+			The scoped batch handle retained by this result.
+		</member>
+	</members>
+</class>

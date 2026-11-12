@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="SteamTextEntryResult" inherits="SteamResult">
+	<brief_description>Terminal outcome of a Steam modal keyboard request.</brief_description>
+	<description>A user dismissal is a successful result carrying a [SteamTextEntry] with [code]submitted = false[/code]. Runtime failure or the originating scope's teardown produces an error result.</description>
+	<tutorials>
+	</tutorials>
+	<members>
+		<member name="value" type="SteamTextEntry" getter="get_value" setter="">
+			The user's submitted or dismissed decision. Null when the keyboard could not complete.
+		</member>
+	</members>
+</class>

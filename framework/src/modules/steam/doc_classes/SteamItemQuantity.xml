@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="SteamItemQuantity" inherits="RefCounted">
+	<brief_description>
+		An owned item instance and positive quantity to exchange.
+	</brief_description>
+	<description>
+		Pass these records to [method SteamInventory.craft]. The instance ID is an unsigned decimal string and the quantity is a positive integer of at most [code]4294967295[/code].
+	</description>
+	<tutorials>
+	</tutorials>
+	<methods>
+		<method name="make" qualifiers="static">
+			<return type="SteamItemQuantity" />
+			<param index="0" name="instance_id" type="String" />
+			<param index="1" name="quantity" type="int" />
+			<description>
+				Returns a pair containing [param instance_id] and [param quantity]. [method SteamInventory.craft] validates both fields before submitting an exchange.
+			</description>
+		</method>
+		<method name="get_instance_id" qualifiers="const">
+			<return type="String" />
+			<description>
+				Returns the opaque instance ID in unsigned decimal form.
+			</description>
+		</method>
+		<method name="get_quantity" qualifiers="const">
+			<return type="int" />
+			<description>
+				Returns the requested positive exchange quantity.
+			</description>
+		</method>
+	</methods>
+	<members>
+		<member name="instance_id" type="String" setter="" getter="get_instance_id">
+			The opaque instance ID in unsigned decimal form.
+		</member>
+		<member name="quantity" type="int" setter="" getter="get_quantity">
+			The requested positive exchange quantity.
+		</member>
+	</members>
+</class>

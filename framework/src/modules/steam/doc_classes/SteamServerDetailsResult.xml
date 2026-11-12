@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="SteamServerDetailsResult" inherits="SteamResult">
+	<brief_description>Typed outcome of refreshing one Steam server listing.</brief_description>
+	<methods>
+		<method name="get_value" qualifiers="const">
+			<return type="SteamServerDetails" />
+			<description>Refreshed server details on success, or null on failure.</description>
+		</method>
+	</methods>
+	<members>
+		<member name="value" type="SteamServerDetails" getter="get_value" setter="">Refreshed server details on success, or null on failure.</member>
+	</members>
+</class>

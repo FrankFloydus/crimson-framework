@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="SteamCloudWriteBatch" inherits="RefCounted">
+	<brief_description>
+		Scoped Steam Cloud write-batch hint for the active AppID.
+	</brief_description>
+	<description>
+		Keep this handle while submitting a related group of Remote Storage writes or local writes to Auto-Cloud paths. Await each asynchronous write before calling [method close]. The hint applies to the whole Steam app. Every write keeps its own outcome and Steam controls synchronization. The owning client also ends the hint when it stops or the handle is released.
+	</description>
+	<methods>
+		<method name="close">
+			<return type="int" enum="Error" />
+			<description>Ends this exact hint on the client thread. Returns [constant OK] for a closed handle. Returns [constant ERR_BUSY] when called from another thread while open, or [constant ERR_UNAVAILABLE] if Steam could not acknowledge closure.</description>
+		</method>
+		<method name="is_open" qualifiers="const">
+			<return type="bool" />
+			<description>Returns whether this handle still owns its Steam Cloud write-batch hint.</description>
+		</method>
+	</methods>
+</class>

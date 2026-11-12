@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="SteamPeer" inherits="MultiplayerPeerExtension">
+	<brief_description>The Godot peer created by a native Steam Session transport.</brief_description>
+	<methods>
+		<method name="get_remote_steam_id" qualifiers="const">
+			<return type="int" />
+			<param index="0" name="peer_id" type="int" />
+			<description>Return the current transport-certified Steam ID bound to this exact physical peer. Return zero before its secure handshake or after it leaves.</description>
+		</method>
+	</methods>
+</class>

@@ -156,12 +156,12 @@ bool copy_runtime_dto(const Dictionary &value, Dictionary &output) {
     return copy_dictionary(value, output, budget);
 }
 
-void CrimsonTransaction::_bind_methods() {
+void GameTransaction::_bind_methods() {
     ClassDB::bind_method(D_METHOD("add_change", "store_id", "operation", "expected_revision"),
-            &CrimsonTransaction::add_change);
+            &GameTransaction::add_change);
 }
 
-Error CrimsonTransaction::add_change(const String &store_id, const Dictionary &operation, int64_t expected_revision) {
+Error GameTransaction::add_change(const String &store_id, const Dictionary &operation, int64_t expected_revision) {
     if (owner_id == 0 || consumed || restore_base_revision >= 0 || owner_thread != std::this_thread::get_id()) {
         return ERR_UNAVAILABLE;
     }
@@ -182,36 +182,36 @@ Error CrimsonTransaction::add_change(const String &store_id, const Dictionary &o
     return OK;
 }
 
-void CrimsonTransactionCoordinator::_bind_methods() {
+void TransactionCoordinator::_bind_methods() {
     ClassDB::bind_method(D_METHOD("register_store", "store_id", "initial_state", "prepare", "validate_restore"),
-            &CrimsonTransactionCoordinator::register_store, DEFVAL(Callable()));
+            &TransactionCoordinator::register_store, DEFVAL(Callable()));
     ClassDB::bind_method(D_METHOD("register_validator", "validator_id", "watched_stores", "validator"),
-            &CrimsonTransactionCoordinator::register_validator);
-    ClassDB::bind_method(D_METHOD("read_store", "store_id"), &CrimsonTransactionCoordinator::read_store);
-    ClassDB::bind_method(D_METHOD("get_store_revision", "store_id"), &CrimsonTransactionCoordinator::get_store_revision);
-    ClassDB::bind_method(D_METHOD("get_revision"), &CrimsonTransactionCoordinator::get_revision);
-    ClassDB::bind_method(D_METHOD("begin", "context"), &CrimsonTransactionCoordinator::begin, DEFVAL(Dictionary()));
-    ClassDB::bind_method(D_METHOD("commit", "transaction"), &CrimsonTransactionCoordinator::commit);
-    ClassDB::bind_method(D_METHOD("capture_snapshot"), &CrimsonTransactionCoordinator::capture_snapshot);
+            &TransactionCoordinator::register_validator);
+    ClassDB::bind_method(D_METHOD("read_store", "store_id"), &TransactionCoordinator::read_store);
+    ClassDB::bind_method(D_METHOD("get_store_revision", "store_id"), &TransactionCoordinator::get_store_revision);
+    ClassDB::bind_method(D_METHOD("get_revision"), &TransactionCoordinator::get_revision);
+    ClassDB::bind_method(D_METHOD("begin", "context"), &TransactionCoordinator::begin, DEFVAL(Dictionary()));
+    ClassDB::bind_method(D_METHOD("commit", "transaction"), &TransactionCoordinator::commit);
+    ClassDB::bind_method(D_METHOD("capture_snapshot"), &TransactionCoordinator::capture_snapshot);
     ClassDB::bind_method(D_METHOD("prepare_restore", "snapshot", "context"),
-            &CrimsonTransactionCoordinator::prepare_restore, DEFVAL(Dictionary()));
+            &TransactionCoordinator::prepare_restore, DEFVAL(Dictionary()));
     ClassDB::bind_method(D_METHOD("publish_restore", "candidate", "defer_notification"),
-            &CrimsonTransactionCoordinator::publish_restore, DEFVAL(false));
+            &TransactionCoordinator::publish_restore, DEFVAL(false));
     ClassDB::bind_method(D_METHOD("notify_restore_published", "published_revision"),
-            &CrimsonTransactionCoordinator::notify_restore_published);
+            &TransactionCoordinator::notify_restore_published);
     ADD_SIGNAL(MethodInfo("committed", PropertyInfo(Variant::INT, "revision"),
             PropertyInfo(Variant::PACKED_STRING_ARRAY, "stores")));
 }
 
-bool CrimsonTransactionCoordinator::is_owner_thread() const {
+bool TransactionCoordinator::is_owner_thread() const {
     return owner_thread == std::this_thread::get_id();
 }
 
-bool CrimsonTransactionCoordinator::mutation_locked() const {
+bool TransactionCoordinator::mutation_locked() const {
     return committing || pending_restore_revision >= 0;
 }
 
-Error CrimsonTransactionCoordinator::register_store(const String &store_id, const Dictionary &initial_state,
+Error TransactionCoordinator::register_store(const String &store_id, const Dictionary &initial_state,
         const Callable &prepare, const Callable &validate_restore) {
     if (!is_owner_thread()) {
         return ERR_UNAVAILABLE;
@@ -234,7 +234,7 @@ Error CrimsonTransactionCoordinator::register_store(const String &store_id, cons
     return OK;
 }
 
-Error CrimsonTransactionCoordinator::register_validator(const String &validator_id,
+Error TransactionCoordinator::register_validator(const String &validator_id,
         const PackedStringArray &watched_stores, const Callable &validator) {
     if (!is_owner_thread()) {
         return ERR_UNAVAILABLE;
@@ -263,7 +263,7 @@ Error CrimsonTransactionCoordinator::register_validator(const String &validator_
     return OK;
 }
 
-Error CrimsonTransactionCoordinator::register_store_with_validator(const String &store_id,
+Error TransactionCoordinator::register_store_with_validator(const String &store_id,
         const Dictionary &initial_state, const Callable &prepare, const String &validator_id,
         const PackedStringArray &watched_stores, const Callable &validator) {
     const Error registered = register_store(store_id, initial_state, prepare);
@@ -277,7 +277,7 @@ Error CrimsonTransactionCoordinator::register_store_with_validator(const String 
     return result;
 }
 
-Dictionary CrimsonTransactionCoordinator::read_store(const String &store_id) const {
+Dictionary TransactionCoordinator::read_store(const String &store_id) const {
     if (!is_owner_thread()) {
         return {};
     }
@@ -285,7 +285,7 @@ Dictionary CrimsonTransactionCoordinator::read_store(const String &store_id) con
     return store != stores.end() ? store->second.state.duplicate(true) : Dictionary();
 }
 
-Variant CrimsonTransactionCoordinator::read_store_value(const String &store_id, const String &key) const {
+Variant TransactionCoordinator::read_store_value(const String &store_id, const String &key) const {
     if (!is_owner_thread()) {
         return {};
     }
@@ -293,7 +293,7 @@ Variant CrimsonTransactionCoordinator::read_store_value(const String &store_id, 
     return store != stores.end() ? store->second.state.get(key, Variant()).duplicate(true) : Variant();
 }
 
-int64_t CrimsonTransactionCoordinator::get_store_revision(const String &store_id) const {
+int64_t TransactionCoordinator::get_store_revision(const String &store_id) const {
     if (!is_owner_thread()) {
         return -1;
     }
@@ -301,11 +301,11 @@ int64_t CrimsonTransactionCoordinator::get_store_revision(const String &store_id
     return store != stores.end() ? store->second.revision : -1;
 }
 
-int64_t CrimsonTransactionCoordinator::get_revision() const {
+int64_t TransactionCoordinator::get_revision() const {
     return is_owner_thread() ? revision : -1;
 }
 
-Ref<CrimsonTransaction> CrimsonTransactionCoordinator::begin(const Dictionary &context) {
+Ref<GameTransaction> TransactionCoordinator::begin(const Dictionary &context) {
     if (!is_owner_thread() || mutation_locked()) {
         return {};
     }
@@ -314,7 +314,7 @@ Ref<CrimsonTransaction> CrimsonTransactionCoordinator::begin(const Dictionary &c
     if (!copy_dictionary(context, detached, budget)) {
         return {};
     }
-    Ref<CrimsonTransaction> transaction;
+    Ref<GameTransaction> transaction;
     transaction.instantiate();
     transaction->owner_id = get_instance_id();
     transaction->owner_thread = owner_thread;
@@ -324,16 +324,16 @@ Ref<CrimsonTransaction> CrimsonTransactionCoordinator::begin(const Dictionary &c
     return transaction;
 }
 
-bool CrimsonTransactionCoordinator::owns_transaction(const Ref<CrimsonTransaction> &transaction) const {
+bool TransactionCoordinator::owns_transaction(const Ref<GameTransaction> &transaction) const {
     return is_owner_thread() && transaction.is_valid() && transaction->owner_id == get_instance_id() &&
             transaction->restore_base_revision < 0;
 }
 
-bool CrimsonTransactionCoordinator::has_validator(const String &validator_id) const {
+bool TransactionCoordinator::has_validator(const String &validator_id) const {
     return is_owner_thread() && validators.find(validator_id) != validators.end();
 }
 
-Dictionary CrimsonTransactionCoordinator::result(bool ok, const String &code, const String &message) const {
+Dictionary TransactionCoordinator::result(bool ok, const String &code, const String &message) const {
     Dictionary outcome;
     outcome["ok"] = ok;
     outcome["code"] = code;
@@ -342,7 +342,7 @@ Dictionary CrimsonTransactionCoordinator::result(bool ok, const String &code, co
     return outcome;
 }
 
-Dictionary CrimsonTransactionCoordinator::capture_snapshot() const {
+Dictionary TransactionCoordinator::capture_snapshot() const {
     if (!is_owner_thread()) {
         return result(false, "wrong_thread", "Capture must run on the coordinator's owner thread.");
     }
@@ -363,7 +363,7 @@ Dictionary CrimsonTransactionCoordinator::capture_snapshot() const {
     return outcome;
 }
 
-Dictionary CrimsonTransactionCoordinator::prepare_restore(const Dictionary &snapshot, const Dictionary &context) {
+Dictionary TransactionCoordinator::prepare_restore(const Dictionary &snapshot, const Dictionary &context) {
     if (!is_owner_thread()) {
         return result(false, "wrong_thread", "Restore preparation must run on the coordinator's owner thread.");
     }
@@ -388,7 +388,7 @@ Dictionary CrimsonTransactionCoordinator::prepare_restore(const Dictionary &snap
         }
     }
 
-    const Ref<CrimsonTransactionCoordinator> keep_alive(this);
+    const Ref<TransactionCoordinator> keep_alive(this);
     CommitGuard guard(committing);
     Dictionary prepared;
     DtoBudget prepared_budget;
@@ -422,7 +422,7 @@ Dictionary CrimsonTransactionCoordinator::prepare_restore(const Dictionary &snap
         prepared[store_id] = checked;
     }
 
-    Ref<CrimsonTransaction> candidate;
+    Ref<GameTransaction> candidate;
     candidate.instantiate();
     if (!copy_runtime_dto(prepared, candidate->restore_states)) {
         return result(false, "invalid_snapshot", "The prepared restore exceeds the runtime DTO budget.");
@@ -440,7 +440,7 @@ Dictionary CrimsonTransactionCoordinator::prepare_restore(const Dictionary &snap
     return outcome;
 }
 
-Dictionary CrimsonTransactionCoordinator::publish_restore(const Ref<CrimsonTransaction> &candidate, bool defer_notification) {
+Dictionary TransactionCoordinator::publish_restore(const Ref<GameTransaction> &candidate, bool defer_notification) {
     if (!is_owner_thread()) {
         return result(false, "wrong_thread", "Restore publication must run on the coordinator's owner thread.");
     }
@@ -460,7 +460,7 @@ Dictionary CrimsonTransactionCoordinator::publish_restore(const Ref<CrimsonTrans
         return result(false, "stale_revision", "The store registry or committed revision changed after restore preparation.");
     }
 
-    const Ref<CrimsonTransactionCoordinator> keep_alive(this);
+    const Ref<TransactionCoordinator> keep_alive(this);
     CommitGuard guard(committing);
     PackedStringArray changed_stores;
     for (auto &[store_id, store] : stores) {
@@ -479,7 +479,7 @@ Dictionary CrimsonTransactionCoordinator::publish_restore(const Ref<CrimsonTrans
     return result(true, "ok", {});
 }
 
-Error CrimsonTransactionCoordinator::notify_restore_published(int64_t published_revision) {
+Error TransactionCoordinator::notify_restore_published(int64_t published_revision) {
     if (!is_owner_thread()) {
         return ERR_UNAVAILABLE;
     }
@@ -490,7 +490,7 @@ Error CrimsonTransactionCoordinator::notify_restore_published(int64_t published_
         return ERR_INVALID_PARAMETER;
     }
 
-    const Ref<CrimsonTransactionCoordinator> keep_alive(this);
+    const Ref<TransactionCoordinator> keep_alive(this);
     CommitGuard guard(committing);
     const PackedStringArray changed_stores = std::move(pending_restore_stores);
     pending_restore_revision = -1;
@@ -498,7 +498,7 @@ Error CrimsonTransactionCoordinator::notify_restore_published(int64_t published_
     return OK;
 }
 
-Dictionary CrimsonTransactionCoordinator::commit(const Ref<CrimsonTransaction> &transaction) {
+Dictionary TransactionCoordinator::commit(const Ref<GameTransaction> &transaction) {
     if (!is_owner_thread()) {
         return result(false, "wrong_thread", "Commit must run on the coordinator's owner thread.");
     }
@@ -512,7 +512,7 @@ Dictionary CrimsonTransactionCoordinator::commit(const Ref<CrimsonTransaction> &
         return result(false, "consumed_transaction", "The transaction has already been submitted.");
     }
 
-    const Ref<CrimsonTransactionCoordinator> keep_alive(this);
+    const Ref<TransactionCoordinator> keep_alive(this);
     CommitGuard guard(committing);
     transaction->consumed = true;
     auto changes = std::move(transaction->changes);
@@ -593,7 +593,7 @@ Dictionary CrimsonTransactionCoordinator::commit(const Ref<CrimsonTransaction> &
     return result(true, "ok", {});
 }
 
-String CrimsonTransactionCoordinator::validate_prepared_states(const Dictionary &prepared, const Dictionary &context) const {
+String TransactionCoordinator::validate_prepared_states(const Dictionary &prepared, const Dictionary &context) const {
     for (const auto &[validator_id, validator] : validators) {
         bool relevant = false;
         for (int64_t i = 0; i < validator.watched_stores.size(); ++i) {

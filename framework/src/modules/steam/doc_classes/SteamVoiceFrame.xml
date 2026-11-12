@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="SteamVoiceFrame" inherits="RefCounted">
+	<brief_description>One complete compressed Steam voice frame.</brief_description>
+	<members>
+		<member name="bytes" type="PackedByteArray" setter="" getter="get_bytes">Opaque encoded bytes. Send these through a game-authorized voice route. Keep the frame intact for decoding and discard it after use.</member>
+	</members>
+</class>

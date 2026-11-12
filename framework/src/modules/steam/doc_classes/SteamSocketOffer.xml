@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="SteamSocketOffer" inherits="RefCounted">
+	<brief_description>A short-lived request to connect to one specific standalone listener.</brief_description>
+	<description>Resolve the offer on the listener that emitted it. It expires after 1.5 seconds and can only be accepted or rejected once. Apply the game's policy before accepting and use the certified account after the connection reports ready.</description>
+	<tutorials>
+	</tutorials>
+	<methods>
+		<method name="get_endpoint" qualifiers="const">
+			<return type="SteamSocketEndpoint" />
+			<description>Returns the listener's local route.</description>
+		</method>
+		<method name="get_steam_id" qualifiers="const">
+			<return type="String" />
+			<description>Returns the initial claimed account, if available.</description>
+		</method>
+		<method name="get_expires_at_msec" qualifiers="const">
+			<return type="int" />
+			<description>Returns the expiry in Godot monotonic milliseconds.</description>
+		</method>
+	</methods>
+	<members>
+		<member name="endpoint" type="SteamSocketEndpoint" setter="" getter="get_endpoint">The local route on which the offer arrived.</member>
+		<member name="steam_id" type="String" setter="" getter="get_steam_id" default="&quot;&quot;">Steam's initial account claim, or an empty string when unavailable. Read [member SteamSocketConnection.steam_id] after authentication for the certified account.</member>
+		<member name="expires_at_msec" type="int" setter="" getter="get_expires_at_msec" default="0">Expiry using the clock from [method Time.get_ticks_msec].</member>
+	</members>
+</class>

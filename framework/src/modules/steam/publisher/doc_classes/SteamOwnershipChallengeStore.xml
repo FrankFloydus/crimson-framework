@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="SteamOwnershipChallengeStore" inherits="RefCounted">
+	<brief_description>
+		Trusted durable store for one-time encrypted ownership challenges.
+	</brief_description>
+	<description>
+		Inject this adapter through [member SteamPublisherSettings.ownership_challenge_store]. The backend issues a cryptographically random challenge for a specific outstanding request and persists its app, expiry, and any expected account binding. Pass that outstanding challenge to [method SteamPublisherAuth.verify_ownership]. A shared store must serialize the same challenge across all backend workers.
+	</description>
+	<methods>
+		<method name="_consume" qualifiers="virtual">
+			<return type="bool" />
+			<param index="0" name="app_id" type="int" />
+			<param index="1" name="challenge" type="PackedByteArray" />
+			<param index="2" name="steam_id" type="String" />
+			<param index="3" name="issued_at_unix" type="int" />
+			<param index="4" name="now_unix" type="int" />
+			<description>
+				Atomically matches the exact backend-issued challenge and AppID, verifies the record is unexpired and unused, checks its request and expected-account bindings, and retires it before returning [code]true[/code]. [param steam_id] is the verified ticket account. Times use Unix seconds. Return [code]false[/code] when any check fails. Keep challenge bytes and account identifiers out of logs.
+			</description>
+		</method>
+	</methods>
+</class>

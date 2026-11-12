@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="SteamWorkshopPublication" inherits="RefCounted">
+	<brief_description>
+		Identity and Steam agreement state for a Workshop publication.
+	</brief_description>
+	<methods>
+		<method name="get_published_id" qualifiers="const">
+			<return type="String" />
+			<description>Return the canonical unsigned decimal published file ID.</description>
+		</method>
+		<method name="get_needs_legal_agreement" qualifiers="const">
+			<return type="bool" />
+			<description>Return whether Steam requires the author to accept its Workshop agreement.</description>
+		</method>
+	</methods>
+	<members>
+		<member name="published_id" type="String" setter="" getter="get_published_id">
+			The exact published file ID available for editing or retry.
+		</member>
+		<member name="needs_legal_agreement" type="bool" setter="" getter="get_needs_legal_agreement">
+			Whether the author needs to accept the Steam Workshop legal agreement.
+		</member>
+	</members>
+</class>

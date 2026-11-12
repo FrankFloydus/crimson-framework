@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="SteamServer" inherits="RefCounted">
+	<brief_description>Fluent settings for a certified playerless Steam dedicated Game.</brief_description>
+	<methods>
+		<method name="configure" qualifiers="static">
+			<return type="SteamServer" />
+			<param index="0" name="name" type="String" default="&quot;Crimson Server&quot;" />
+			<param index="1" name="game_port" type="int" default="27015" />
+			<param index="2" name="query_port" type="int" default="27016" />
+			<description>Configure the server name and two distinct UDP ports. The display name allows up to 63 UTF-8 bytes. Gameplay accepts ports 1 to 65535. Query ports 1 to 65534 are available. The default binds all IPv4 interfaces and starts in authenticated, unlisted direct mode.</description>
+		</method>
+		<method name="secure" qualifiers="const">
+			<return type="SteamServer" />
+			<description>Return a branch retaining the default requirement for certified Steam identities and valid Steam authentication tickets.</description>
+		</method>
+		<method name="bind_to" qualifiers="const">
+			<return type="SteamServer" />
+			<param index="0" name="address" type="String" />
+			<description>Return a branch bound to a literal IPv4 interface. An asterisk uses every local IPv4 interface.</description>
+		</method>
+		<method name="advertise_on" qualifiers="const">
+			<return type="SteamServer" />
+			<param index="0" name="scope" type="int" enum="SteamServer.Advertisement" />
+			<description>Return a branch with the selected advertisement policy. LAN-only Steam advertisement is unavailable in the current SDK. Only [constant INTERNET] explicitly enables Steam discovery.</description>
+		</method>
+		<method name="with_login" qualifiers="const">
+			<return type="SteamServer" />
+			<param index="0" name="secret_ref" type="StringName" />
+			<description>Return a branch reading a server login token from an operator-owned environment key. Use up to 64 uppercase ASCII letters, digits or underscores. An empty key uses Steam's anonymous game server logon.</description>
+		</method>
+		<method name="with_product_metadata" qualifiers="const">
+			<return type="SteamServer" />
+			<param index="0" name="version" type="String" />
+			<param index="1" name="description" type="String" />
+			<param index="2" name="install_dir" type="String" />
+			<description>Returns a branch with the game's configured Steam master-server version, game description, and install folder name. Version and description are limited to 63 UTF-8 bytes. The folder name is limited to 31 UTF-8 bytes and must be one folder component. All values are nonempty and exclude controls. Invalid settings prevent dedicated startup. Defaults are 1.0.0.0, Crimson, and crimson for compatibility. Set metadata before boot for a published app.</description>
+		</method>
+		<method name="get_product_version" qualifiers="const">
+			<return type="String" />
+			<description>Returns the version sent to Steam's GameServer initialization and master-server checks.</description>
+		</method>
+		<method name="get_game_description" qualifiers="const">
+			<return type="String" />
+			<description>Returns the title's browser game description.</description>
+		</method>
+		<method name="get_install_dir" qualifiers="const">
+			<return type="String" />
+			<description>Returns the title's Steam install folder name, without the parent path.</description>
+		</method>
+		<method name="is_valid" qualifiers="const">
+			<return type="bool" />
+			<description>Returns whether all detached settings passed validation. An invalid branch cannot start a Steam dedicated Game.</description>
+		</method>
+		<method name="via_sdr" qualifiers="const">
+			<return type="SteamServer" />
+			<param index="0" name="profile" type="StringName" />
+			<description>Return a branch selecting a hosted Steam Datagram Relay deployment with a profile name of up to 32 ASCII letters, digits, underscores or hyphens. An empty profile selects direct transport. A hosted profile requires Valve-provisioned server settings and a trusted game coordinator.</description>
+		</method>
+	</methods>
+	<constants>
+		<constant name="DIRECT" value="0" enum="Advertisement">Authenticated direct play with no Steam browser advertisement.</constant>
+		<constant name="LAN" value="1" enum="Advertisement">Request LAN-only publication. Startup reports unavailable while the SDK lacks an independent secure LAN-only switch.</constant>
+		<constant name="INTERNET" value="2" enum="Advertisement">Request Valve's joint server-browser and LAN advertisement after the listener, certificate, and world are ready.</constant>
+	</constants>
+</class>

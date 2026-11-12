@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="SteamInventoryVerifier" inherits="RefCounted">
+	<brief_description>
+		Verifies a signed inventory selection for a currently authenticated Steam player.
+	</brief_description>
+	<description>
+		Get this service from [method SteamDedicatedServer.inventory_verifier] on the dedicated Steam authority. Pass the current admitted player's authenticated SteamID64. The server verifies the signature and matching account through its GameServer interface, checks the exact admission before and after verification, and accepts proofs at most five minutes old by Steam's server clock.
+	</description>
+	<tutorials>
+		<link title="Steam inventory proof verification">https://partner.steamgames.com/doc/api/ISteamInventory#DeserializeResult</link>
+	</tutorials>
+	<methods>
+		<method name="verify">
+			<return type="Variant" />
+			<param index="0" name="proof" type="PackedByteArray" />
+			<param index="1" name="expected_steam_id" type="String" />
+			<description>
+				Awaits a [SteamInventorySnapshotResult] after validating the [param proof] of up to 1 MiB against the currently admitted [param expected_steam_id] in canonical decimal form. A successful snapshot contains up to 256 selected items at the signed timestamp and uses [constant SteamInventorySnapshot.FRESHNESS_VERIFIED_PROOF]. Invalid arguments return [constant ERR_INVALID_PARAMETER]. An unavailable game server returns [constant ERR_UNAVAILABLE]. A rejected signature or malformed result returns [constant ERR_INVALID_DATA]. An expired proof or verification deadline returns [constant ERR_TIMEOUT]. An owner or admission mismatch returns [constant ERR_UNAUTHORIZED]. A retired observation returns [constant ERR_SKIP].
+			</description>
+		</method>
+	</methods>
+</class>

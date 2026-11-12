@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="SteamHttpOptions" inherits="RefCounted">
+	<brief_description>
+		Branchable HTTP options and actions for one Steam client scope.
+	</brief_description>
+	<description>
+		Each modifier returns a new branch. The same HTTP terminal can be called on [SteamHttp] with defaults or on a configured branch.
+	</description>
+	<methods>
+		<method name="accept_json">
+			<return type="SteamHttpOptions" />
+			<description>
+				Return a branch with the request's Accept header set to [code]application/json[/code].
+			</description>
+		</method>
+		<method name="with_header">
+			<return type="SteamHttpOptions" />
+			<param index="0" name="name" type="String" />
+			<param index="1" name="value" type="String" />
+			<description>
+				Return a branch with a request header. Header names are case-insensitive, and a new value replaces the same header on that branch. Steam manages framing and connection headers.
+			</description>
+		</method>
+		<method name="with_timeout">
+			<return type="SteamHttpOptions" />
+			<param index="0" name="milliseconds" type="int" />
+			<description>
+				Return a branch with an absolute deadline from 100 to 120,000 milliseconds. The default is 15,000 milliseconds.
+			</description>
+		</method>
+		<method name="with_max_response_bytes">
+			<return type="SteamHttpOptions" />
+			<param index="0" name="bytes" type="int" />
+			<description>
+				Return a branch with a response body limit from 1 byte to 4 MiB. The default is 1 MiB. Larger bodies return a limit error and expose no partial response.
+			</description>
+		</method>
+		<method name="with_response_headers">
+			<return type="SteamHttpOptions" />
+			<param index="0" name="names" type="PackedStringArray" />
+			<description>
+				Return a branch that replaces the selected response header names. Select up to 16 additional names. Matching ignores case, and Content-Type is captured when present. A selected field larger than 2,048 bytes returns a limit error.
+			</description>
+		</method>
+		<method name="fetch">
+			<return type="Variant" />
+			<param index="0" name="url" type="String" />
+			<description>
+				Send an absolute HTTP or HTTPS URL using GET. Returns a [SteamHttpResponseResult] after [code]await[/code].
+			</description>
+		</method>
+		<method name="head">
+			<return type="Variant" />
+			<param index="0" name="url" type="String" />
+			<description>
+				Send HEAD and return status and captured headers with an empty body. Returns a [SteamHttpResponseResult] after [code]await[/code].
+			</description>
+		</method>
+		<method name="post">
+			<return type="Variant" />
+			<param index="0" name="url" type="String" />
+			<param index="1" name="data" type="Dictionary" />
+			<description>
+				Send the supplied dictionary as a JSON POST body. Returns a [SteamHttpResponseResult] after [code]await[/code].
+			</description>
+		</method>
+		<method name="put">
+			<return type="Variant" />
+			<param index="0" name="url" type="String" />
+			<param index="1" name="data" type="Dictionary" />
+			<description>
+				Send the supplied dictionary as a JSON PUT body. Returns a [SteamHttpResponseResult] after [code]await[/code].
+			</description>
+		</method>
+		<method name="patch">
+			<return type="Variant" />
+			<param index="0" name="url" type="String" />
+			<param index="1" name="data" type="Dictionary" />
+			<description>
+				Send the supplied dictionary as a JSON PATCH body. Returns a [SteamHttpResponseResult] after [code]await[/code].
+			</description>
+		</method>
+		<method name="delete">
+			<return type="Variant" />
+			<param index="0" name="url" type="String" />
+			<description>
+				Send DELETE using the selected options. Returns a [SteamHttpResponseResult] after [code]await[/code].
+			</description>
+		</method>
+		<method name="options">
+			<return type="Variant" />
+			<param index="0" name="url" type="String" />
+			<description>
+				Send OPTIONS using the selected options. Returns a [SteamHttpResponseResult] after [code]await[/code].
+			</description>
+		</method>
+		<method name="request">
+			<return type="SteamHttpRequest" />
+			<param index="0" name="url" type="String" />
+			<param index="1" name="method" type="int" enum="SteamHttpOptions.Method" default="1" />
+			<description>
+				Create an unsent request draft with the selected options. The default method is GET.
+			</description>
+		</method>
+	</methods>
+	<constants>
+		<constant name="METHOD_GET" value="1" enum="Method">
+			Read the response for a URL.
+		</constant>
+		<constant name="METHOD_HEAD" value="2" enum="Method">
+			Read response metadata without a body.
+		</constant>
+		<constant name="METHOD_POST" value="3" enum="Method">
+			Submit a body to the URL.
+		</constant>
+		<constant name="METHOD_PUT" value="4" enum="Method">
+			Submit a replacement body to the URL.
+		</constant>
+		<constant name="METHOD_DELETE" value="5" enum="Method">
+			Issue an HTTP DELETE request.
+		</constant>
+		<constant name="METHOD_OPTIONS" value="6" enum="Method">
+			Query HTTP options for the URL.
+		</constant>
+		<constant name="METHOD_PATCH" value="7" enum="Method">
+			Submit a partial update body to the URL.
+		</constant>
+	</constants>
+</class>

@@ -14,45 +14,45 @@ namespace crimson::integration {
 
 using namespace godot;
 
-void CrimsonDedicatedBoot::_bind_methods() {
-    ClassDB::bind_method(D_METHOD("set_game", "game"), &CrimsonDedicatedBoot::set_game);
-    ClassDB::bind_method(D_METHOD("get_game"), &CrimsonDedicatedBoot::get_game);
-    ADD_PROPERTY(PropertyInfo(Variant::OBJECT, "game", PROPERTY_HINT_NODE_TYPE, "CrimsonGame"), "set_game", "get_game");
+void DedicatedServerBoot::_bind_methods() {
+    ClassDB::bind_method(D_METHOD("set_game", "game"), &DedicatedServerBoot::set_game);
+    ClassDB::bind_method(D_METHOD("get_game"), &DedicatedServerBoot::get_game);
+    ADD_PROPERTY(PropertyInfo(Variant::OBJECT, "game", PROPERTY_HINT_NODE_TYPE, "GameRuntime"), "set_game", "get_game");
 }
 
-void CrimsonDedicatedBoot::set_game(CrimsonGame *game) {
+void DedicatedServerBoot::set_game(GameRuntime *game) {
     game_id = game ? ObjectID(game->get_instance_id()) : ObjectID();
 }
 
-CrimsonGame *CrimsonDedicatedBoot::get_game() const {
-    return Object::cast_to<CrimsonGame>(ObjectDB::get_instance(game_id));
+GameRuntime *DedicatedServerBoot::get_game() const {
+    return Object::cast_to<GameRuntime>(ObjectDB::get_instance(game_id));
 }
 
-void CrimsonDedicatedBoot::_ready() {
+void DedicatedServerBoot::_ready() {
     if (!get_tree()->get_edited_scene_root() &&
             OS::get_singleton()->get_cmdline_user_args().has("--crimson-role=server")) {
-        callable_mp(this, &CrimsonDedicatedBoot::start_server).call_deferred();
+        callable_mp(this, &DedicatedServerBoot::start_server).call_deferred();
     }
 }
 
-void CrimsonDedicatedBoot::_exit_tree() {
-    const Callable handler = callable_mp(this, &CrimsonDedicatedBoot::on_started);
+void DedicatedServerBoot::_exit_tree() {
+    const Callable handler = callable_mp(this, &DedicatedServerBoot::on_started);
     if (starting.is_valid() && starting->is_connected("completed", handler)) {
         starting->disconnect("completed", handler);
     }
     starting.unref();
 }
 
-void CrimsonDedicatedBoot::start_server() {
+void DedicatedServerBoot::start_server() {
     if (!is_inside_tree()) {
         return;
     }
-    CrimsonGame *game = get_game();
-    const Ref<CrimsonGameDefinition> definition = game ? game->get_definition() : Ref<CrimsonGameDefinition>();
-    const Ref<CrimsonMultiplayerRules> rules = definition.is_valid() ? definition->get_multiplayer_rules() :
-            Ref<CrimsonMultiplayerRules>();
+    GameRuntime *game = get_game();
+    const Ref<GameDefinition> definition = game ? game->get_definition() : Ref<GameDefinition>();
+    const Ref<MultiplayerRules> rules = definition.is_valid() ? definition->get_multiplayer_rules() :
+            Ref<MultiplayerRules>();
     if (rules.is_null() || !game->is_inside_tree() || game->get_tree() != get_tree()) {
-        fail("Assign a CrimsonGame in the server scene with multiplayer rules.");
+        fail("Assign a GameRuntime in the server scene with multiplayer rules.");
         return;
     }
 
@@ -82,11 +82,11 @@ void CrimsonDedicatedBoot::start_server() {
     if (starting->is_finished()) {
         on_started(starting->get_result());
     } else {
-        starting->connect("completed", callable_mp(this, &CrimsonDedicatedBoot::on_started), CONNECT_ONE_SHOT);
+        starting->connect("completed", callable_mp(this, &DedicatedServerBoot::on_started), CONNECT_ONE_SHOT);
     }
 }
 
-void CrimsonDedicatedBoot::on_started(const Dictionary &result) {
+void DedicatedServerBoot::on_started(const Dictionary &result) {
     starting.unref();
     if (!is_inside_tree()) {
         return;
@@ -95,15 +95,15 @@ void CrimsonDedicatedBoot::on_started(const Dictionary &result) {
         fail(result.get("message", "The dedicated game could not start."));
         return;
     }
-    CrimsonGame *game = get_game();
-    if (!game || game->get_phase() != CrimsonGame::RUNNING || !game->get_world() || game->get_local_player()) {
+    GameRuntime *game = get_game();
+    if (!game || game->get_phase() != GameRuntime::RUNNING || !game->get_world() || game->get_local_player()) {
         fail("The dedicated operation did not publish a playerless world.");
         return;
     }
     UtilityFunctions::print("[Crimson] READY server ", port);
 }
 
-void CrimsonDedicatedBoot::fail(const String &message) {
+void DedicatedServerBoot::fail(const String &message) {
     UtilityFunctions::print("[Crimson] ERROR server ", message);
     get_tree()->quit(1);
 }

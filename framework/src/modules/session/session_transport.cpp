@@ -27,21 +27,21 @@ bool valid_opaque_transport(const String &name) {
 
 } // namespace
 
-void CrimsonSessionEndpoint::_bind_methods() {
-    ClassDB::bind_static_method(get_class_static(), D_METHOD("direct", "address", "port"), &CrimsonSessionEndpoint::direct);
-    ClassDB::bind_static_method(get_class_static(), D_METHOD("opaque", "transport", "route"), &CrimsonSessionEndpoint::opaque);
-    ClassDB::bind_method(D_METHOD("get_address"), &CrimsonSessionEndpoint::get_address);
-    ClassDB::bind_method(D_METHOD("get_port"), &CrimsonSessionEndpoint::get_port);
-    ClassDB::bind_method(D_METHOD("get_transport"), &CrimsonSessionEndpoint::get_transport);
-    ClassDB::bind_method(D_METHOD("get_route"), &CrimsonSessionEndpoint::get_route);
+void SessionEndpoint::_bind_methods() {
+    ClassDB::bind_static_method(get_class_static(), D_METHOD("direct", "address", "port"), &SessionEndpoint::direct);
+    ClassDB::bind_static_method(get_class_static(), D_METHOD("opaque", "transport", "route"), &SessionEndpoint::opaque);
+    ClassDB::bind_method(D_METHOD("get_address"), &SessionEndpoint::get_address);
+    ClassDB::bind_method(D_METHOD("get_port"), &SessionEndpoint::get_port);
+    ClassDB::bind_method(D_METHOD("get_transport"), &SessionEndpoint::get_transport);
+    ClassDB::bind_method(D_METHOD("get_route"), &SessionEndpoint::get_route);
 }
 
-Ref<CrimsonSessionEndpoint> CrimsonSessionEndpoint::direct(const String &p_address, int64_t p_port) {
+Ref<SessionEndpoint> SessionEndpoint::direct(const String &p_address, int64_t p_port) {
     const String address = p_address.strip_edges();
     if (address.is_empty() || p_port < 1 || p_port > 65535) {
         return {};
     }
-    Ref<CrimsonSessionEndpoint> endpoint;
+    Ref<SessionEndpoint> endpoint;
     endpoint.instantiate();
     endpoint->address = address;
     endpoint->port = p_port;
@@ -49,123 +49,123 @@ Ref<CrimsonSessionEndpoint> CrimsonSessionEndpoint::direct(const String &p_addre
     return endpoint;
 }
 
-Ref<CrimsonSessionEndpoint> CrimsonSessionEndpoint::opaque(const StringName &p_transport, const PackedByteArray &p_route) {
+Ref<SessionEndpoint> SessionEndpoint::opaque(const StringName &p_transport, const PackedByteArray &p_route) {
     if (!valid_opaque_transport(String(p_transport)) || p_route.is_empty() || p_route.size() > 512) {
         return {};
     }
-    Ref<CrimsonSessionEndpoint> endpoint;
+    Ref<SessionEndpoint> endpoint;
     endpoint.instantiate();
     endpoint->transport = p_transport;
     endpoint->route = p_route.duplicate();
     return endpoint;
 }
 
-String CrimsonSessionEndpoint::get_address() const {
+String SessionEndpoint::get_address() const {
     return address;
 }
 
-int64_t CrimsonSessionEndpoint::get_port() const {
+int64_t SessionEndpoint::get_port() const {
     return port;
 }
 
-StringName CrimsonSessionEndpoint::get_transport() const {
+StringName SessionEndpoint::get_transport() const {
     return transport;
 }
 
-PackedByteArray CrimsonSessionEndpoint::get_route() const {
+PackedByteArray SessionEndpoint::get_route() const {
     return route.duplicate();
 }
 
-void CrimsonSessionTransportResult::_bind_methods() {
-    ClassDB::bind_static_method(get_class_static(), D_METHOD("opened", "peer"), &CrimsonSessionTransportResult::opened);
-    ClassDB::bind_static_method(get_class_static(), D_METHOD("failed", "error"), &CrimsonSessionTransportResult::failed);
-    ClassDB::bind_method(D_METHOD("get_error"), &CrimsonSessionTransportResult::get_error);
-    ClassDB::bind_method(D_METHOD("get_peer"), &CrimsonSessionTransportResult::get_peer);
+void SessionTransportResult::_bind_methods() {
+    ClassDB::bind_static_method(get_class_static(), D_METHOD("opened", "peer"), &SessionTransportResult::opened);
+    ClassDB::bind_static_method(get_class_static(), D_METHOD("failed", "error"), &SessionTransportResult::failed);
+    ClassDB::bind_method(D_METHOD("get_error"), &SessionTransportResult::get_error);
+    ClassDB::bind_method(D_METHOD("get_peer"), &SessionTransportResult::get_peer);
 }
 
-Ref<CrimsonSessionTransportResult> CrimsonSessionTransportResult::opened(const Ref<MultiplayerPeer> &p_peer) {
+Ref<SessionTransportResult> SessionTransportResult::opened(const Ref<MultiplayerPeer> &p_peer) {
     if (p_peer.is_null()) {
         return failed(ERR_INVALID_PARAMETER);
     }
-    Ref<CrimsonSessionTransportResult> result;
+    Ref<SessionTransportResult> result;
     result.instantiate();
     result->error = OK;
     result->peer = p_peer;
     return result;
 }
 
-Ref<CrimsonSessionTransportResult> CrimsonSessionTransportResult::failed(Error p_error) {
-    Ref<CrimsonSessionTransportResult> result;
+Ref<SessionTransportResult> SessionTransportResult::failed(Error p_error) {
+    Ref<SessionTransportResult> result;
     result.instantiate();
     result->error = p_error == OK ? ERR_INVALID_PARAMETER : p_error;
     return result;
 }
 
-Error CrimsonSessionTransportResult::get_error() const {
+Error SessionTransportResult::get_error() const {
     return error;
 }
 
-Ref<MultiplayerPeer> CrimsonSessionTransportResult::get_peer() const {
+Ref<MultiplayerPeer> SessionTransportResult::get_peer() const {
     return peer;
 }
 
-void CrimsonSessionTransport::_bind_methods() {
+void SessionTransport::_bind_methods() {
     GDVIRTUAL_BIND(_open_server, "port", "remote_limit", "bind_address");
     GDVIRTUAL_BIND(_open_client, "endpoint");
     GDVIRTUAL_BIND(_disconnect_after_flush, "peer", "peer_id");
 }
 
-Ref<CrimsonSessionTransportResult> CrimsonSessionTransport::open_server(int64_t port, int64_t remote_limit,
+Ref<SessionTransportResult> SessionTransport::open_server(int64_t port, int64_t remote_limit,
         const String &bind_address) {
-    Ref<CrimsonSessionTransportResult> result;
+    Ref<SessionTransportResult> result;
     return GDVIRTUAL_CALL(_open_server, port, remote_limit, bind_address, result) ? result :
-            CrimsonSessionTransportResult::failed(ERR_UNAVAILABLE);
+            SessionTransportResult::failed(ERR_UNAVAILABLE);
 }
 
-Ref<CrimsonSessionTransportResult> CrimsonSessionTransport::open_client(const Ref<CrimsonSessionEndpoint> &endpoint) {
-    Ref<CrimsonSessionTransportResult> result;
-    return GDVIRTUAL_CALL(_open_client, endpoint, result) ? result : CrimsonSessionTransportResult::failed(ERR_UNAVAILABLE);
+Ref<SessionTransportResult> SessionTransport::open_client(const Ref<SessionEndpoint> &endpoint) {
+    Ref<SessionTransportResult> result;
+    return GDVIRTUAL_CALL(_open_client, endpoint, result) ? result : SessionTransportResult::failed(ERR_UNAVAILABLE);
 }
 
-void CrimsonSessionTransport::disconnect_after_flush(const Ref<MultiplayerPeer> &peer, int32_t peer_id) {
+void SessionTransport::disconnect_after_flush(const Ref<MultiplayerPeer> &peer, int32_t peer_id) {
     if (!GDVIRTUAL_CALL(_disconnect_after_flush, peer, peer_id)) {
         peer->disconnect_peer(peer_id, false);
     }
 }
 
-void CrimsonENetSessionTransport::_bind_methods() {
+void ENetSessionTransport::_bind_methods() {
     ClassDB::bind_method(D_METHOD("open_server", "port", "remote_limit", "bind_address"),
-            &CrimsonENetSessionTransport::open_server);
-    ClassDB::bind_method(D_METHOD("open_client", "endpoint"), &CrimsonENetSessionTransport::open_client);
+            &ENetSessionTransport::open_server);
+    ClassDB::bind_method(D_METHOD("open_client", "endpoint"), &ENetSessionTransport::open_client);
     ClassDB::bind_method(D_METHOD("disconnect_after_flush", "peer", "peer_id"),
-            &CrimsonENetSessionTransport::disconnect_after_flush);
+            &ENetSessionTransport::disconnect_after_flush);
 }
 
-Ref<CrimsonSessionTransportResult> CrimsonENetSessionTransport::open_server(int64_t port, int64_t remote_limit,
+Ref<SessionTransportResult> ENetSessionTransport::open_server(int64_t port, int64_t remote_limit,
         const String &bind_address) {
     if (port < 1 || port > 65535 || remote_limit < 1 || remote_limit > 4095 ||
             (bind_address != "*" && !bind_address.is_valid_ip_address())) {
-        return CrimsonSessionTransportResult::failed(ERR_INVALID_PARAMETER);
+        return SessionTransportResult::failed(ERR_INVALID_PARAMETER);
     }
     Ref<ENetMultiplayerPeer> peer;
     peer.instantiate();
     peer->set_bind_ip(bind_address);
     const Error error = peer->create_server(static_cast<int32_t>(port), static_cast<int32_t>(remote_limit));
-    return error == OK ? CrimsonSessionTransportResult::opened(peer) : CrimsonSessionTransportResult::failed(error);
+    return error == OK ? SessionTransportResult::opened(peer) : SessionTransportResult::failed(error);
 }
 
-Ref<CrimsonSessionTransportResult> CrimsonENetSessionTransport::open_client(const Ref<CrimsonSessionEndpoint> &endpoint) {
+Ref<SessionTransportResult> ENetSessionTransport::open_client(const Ref<SessionEndpoint> &endpoint) {
     if (endpoint.is_null() || endpoint->get_transport() != StringName("enet") ||
             endpoint->get_address().is_empty() || endpoint->get_port() == 0) {
-        return CrimsonSessionTransportResult::failed(ERR_INVALID_PARAMETER);
+        return SessionTransportResult::failed(ERR_INVALID_PARAMETER);
     }
     Ref<ENetMultiplayerPeer> peer;
     peer.instantiate();
     const Error error = peer->create_client(endpoint->get_address(), static_cast<int32_t>(endpoint->get_port()));
-    return error == OK ? CrimsonSessionTransportResult::opened(peer) : CrimsonSessionTransportResult::failed(error);
+    return error == OK ? SessionTransportResult::opened(peer) : SessionTransportResult::failed(error);
 }
 
-void CrimsonENetSessionTransport::disconnect_after_flush(const Ref<MultiplayerPeer> &peer, int32_t peer_id) {
+void ENetSessionTransport::disconnect_after_flush(const Ref<MultiplayerPeer> &peer, int32_t peer_id) {
     const Ref<ENetMultiplayerPeer> enet = peer;
     if (enet.is_valid()) {
         const Ref<ENetPacketPeer> remote = enet->get_peer(peer_id);

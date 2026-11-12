@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="SteamDlcProgress" inherits="RefCounted">
+	<brief_description>Detached download progress for one optional DLC.</brief_description>
+	<description>Get a fresh record from [method SteamApps.download_progress] when updating a progress display.</description>
+	<methods>
+		<method name="get_downloaded_bytes" qualifiers="const">
+			<return type="int" />
+			<description>Returns Steam's downloaded byte count, or zero when inactive.</description>
+		</method>
+		<method name="get_total_bytes" qualifiers="const">
+			<return type="int" />
+			<description>Returns Steam's total download size in bytes, or zero when inactive or unknown.</description>
+		</method>
+		<method name="is_active" qualifiers="const">
+			<return type="bool" />
+			<description>Returns whether Steam reported an active optional DLC download.</description>
+		</method>
+	</methods>
+	<members>
+		<member name="active" type="bool" setter="" getter="is_active">Whether Steam was downloading the DLC when queried. Both byte counts are zero for an inactive transfer.</member>
+		<member name="downloaded_bytes" type="int" setter="" getter="get_downloaded_bytes">Number of bytes downloaded for the active transfer. Zero while inactive.</member>
+		<member name="total_bytes" type="int" setter="" getter="get_total_bytes">Total download size in bytes. Zero indicates an inactive transfer or an unknown total.</member>
+	</members>
+</class>

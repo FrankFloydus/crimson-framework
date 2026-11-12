@@ -57,7 +57,7 @@ static func parse(arguments: PackedStringArray) -> Dictionary:
 
 
 ## Branch the authored definition for an override. Return zero without multiplayer rules.
-static func configure_port(game: CrimsonGame, override_port: int) -> int:
+static func configure_port(game: GameRuntime, override_port: int) -> int:
 	var definition := game.definition
 	if definition == null or definition.multiplayer_rules == null:
 		return 0

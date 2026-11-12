@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="SteamMessages" inherits="RefCounted">
+	<brief_description>Steam-authenticated, bounded, app-scoped side-channel routing.</brief_description>
+	<methods>
+		<method name="for_peer">
+			<return type="SteamMessagePeerResult" />
+			<param index="0" name="peer_id" type="int" />
+			<description>Authorizes the Game's current Steam-verified participant using its configured channels. A guest resolves its authority. An authority resolves its admitted world-ready peers. The binding expires when the participant or current epoch retires.</description>
+		</method>
+		<method name="authorize">
+			<return type="SteamMessagePeerResult" />
+			<param index="0" name="steam_id" type="String" />
+			<param index="1" name="channels" type="StringName[]" />
+			<description>Authorizes one distinct remote individual SteamID64 in a standalone scope. Supply one to 16 distinct names of up to 32 ASCII characters. Names begin with a letter or digit and may also contain period, hyphen, or underscore. This grants local routing permission only. Game scopes require [method for_peer].</description>
+		</method>
+	</methods>
+</class>

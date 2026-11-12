@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="SteamOwnership" inherits="RefCounted">
+	<brief_description>
+		Detached base app and DLC ownership from a verified encrypted app ticket.
+	</brief_description>
+	<description>
+		The trusted publisher issues this receipt after decryption, ownership checks, and atomic consumption of the exact outstanding backend challenge. Verification accepts tickets up to five minutes old with up to 30 seconds of forward clock skew. The challenge store also enforces the backend's challenge expiry. The receipt represents the ticket's entitlement snapshot.
+	</description>
+	<methods>
+		<method name="get_checked_dlc_ids" qualifiers="const">
+			<return type="PackedInt64Array" />
+			<description>Returns the exact DLC AppIDs checked during verification.</description>
+		</method>
+		<method name="get_identity" qualifiers="const">
+			<return type="SteamIdentity" />
+			<description>Returns the publisher-scoped Steam identity verified by the encrypted ticket and backend challenge.</description>
+		</method>
+		<method name="get_issued_at_unix" qualifiers="const">
+			<return type="int" />
+			<description>Returns the verified ticket issue time in Unix seconds.</description>
+		</method>
+		<method name="get_owned_dlc_ids" qualifiers="const">
+			<return type="PackedInt64Array" />
+			<description>Returns the requested DLC AppIDs whose ownership the ticket proves.</description>
+		</method>
+		<method name="owns_app" qualifiers="const">
+			<return type="bool" />
+			<description>Returns whether this receipt proves ownership of its base app.</description>
+		</method>
+		<method name="owns_dlc" qualifiers="const">
+			<return type="bool" />
+			<param index="0" name="app_id" type="int" />
+			<description>Returns [code]true[/code] when the ticket confirms ownership of the requested DLC AppID.</description>
+		</method>
+	</methods>
+	<members>
+		<member name="app_owned" type="bool" setter="" getter="owns_app">
+			Base app ownership confirmed in the verified ticket.
+		</member>
+		<member name="checked_dlc_ids" type="PackedInt64Array" setter="" getter="get_checked_dlc_ids">
+			All DLC AppIDs the caller requested for this ticket.
+		</member>
+		<member name="identity" type="SteamIdentity" setter="" getter="get_identity">
+			The authenticated player identity for the issuing publisher scope.
+		</member>
+		<member name="issued_at_unix" type="int" setter="" getter="get_issued_at_unix">
+			The encrypted ticket's checked Unix issue time in seconds.
+		</member>
+		<member name="owned_dlc_ids" type="PackedInt64Array" setter="" getter="get_owned_dlc_ids">
+			The checked DLC AppIDs whose ownership the ticket proves.
+		</member>
+	</members>
+</class>

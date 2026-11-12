@@ -10,11 +10,11 @@
 
 namespace crimson::integration {
 
-class CrimsonWorldSession;
+class WorldSession;
 
 // Defines one playable 3D world and its default player spawning policy.
-class CrimsonWorldSessionDefinition : public godot::Resource {
-    GDCLASS(CrimsonWorldSessionDefinition, godot::Resource)
+class WorldSessionDefinition : public godot::Resource {
+    GDCLASS(WorldSessionDefinition, godot::Resource)
 
 public:
     // ENet port used when a game leaves its definition at the default.
@@ -35,7 +35,7 @@ private:
     int64_t port = DEFAULT_PORT;
 
     // Clone the configuration while sharing its referenced scene assets.
-    godot::Ref<CrimsonWorldSessionDefinition> copy_definition() const;
+    godot::Ref<WorldSessionDefinition> copy_definition() const;
 
 protected:
     // Register fluent operations and matching Inspector properties.
@@ -43,19 +43,19 @@ protected:
 
 public:
     // Create a new configuration with Inspector defaults.
-    static godot::Ref<CrimsonWorldSessionDefinition> configure();
+    static godot::Ref<WorldSessionDefinition> configure();
     // Return an independent configuration with the supplied local world.
-    godot::Ref<CrimsonWorldSessionDefinition> with_world(const godot::Ref<godot::PackedScene> &scene) const;
+    godot::Ref<WorldSessionDefinition> with_world(const godot::Ref<godot::PackedScene> &scene) const;
     // Return an independent configuration with an actor scene and its world-relative spawn container.
-    godot::Ref<CrimsonWorldSessionDefinition> with_players(const godot::Ref<godot::PackedScene> &scene,
+    godot::Ref<WorldSessionDefinition> with_players(const godot::Ref<godot::PackedScene> &scene,
             const godot::NodePath &spawn_path = godot::NodePath("SpawnPoints")) const;
     // Return an independent configuration with optional local camera and visibility setup.
-    godot::Ref<CrimsonWorldSessionDefinition> with_local_view(const godot::NodePath &camera_path,
+    godot::Ref<WorldSessionDefinition> with_local_view(const godot::NodePath &camera_path,
             const godot::NodePath &hidden_path = {}) const;
     // Return an independent configuration with the supplied ENet port.
-    godot::Ref<CrimsonWorldSessionDefinition> on_port(int64_t value) const;
+    godot::Ref<WorldSessionDefinition> on_port(int64_t value) const;
     // Create a detached WorldSession node with a copy of this configuration.
-    CrimsonWorldSession *create() const;
+    WorldSession *create() const;
 
     // Set the authored world resource.
     void set_world_scene(const godot::Ref<godot::PackedScene> &scene);

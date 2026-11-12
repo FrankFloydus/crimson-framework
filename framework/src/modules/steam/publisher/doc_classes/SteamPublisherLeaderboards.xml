@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="SteamPublisherLeaderboards" inherits="RefCounted">
+	<brief_description>Submits authoritative leaderboard scores from a trusted backend.</brief_description>
+	<description>Get this service from [method SteamPublisher.leaderboards] after the game has authorized the run and verified the player. The configured publisher must have write access to the board.</description>
+	<tutorials>
+	</tutorials>
+	<methods>
+		<method name="submit_score">
+			<return type="Variant" />
+			<param index="0" name="player" type="SteamIdentity" />
+			<param index="1" name="board_id" type="int" />
+			<param index="2" name="score" type="int" />
+			<param index="3" name="details" type="PackedByteArray" default="PackedByteArray()" />
+			<description>Submits a signed 32-bit [param score] using KeepBest for a verified player and a positive Valve board ID. Accepts up to 256 raw details bytes. Use [code]await[/code] to receive [SteamLeaderboardSubmissionResult]. Success acknowledges the HTTP submission. The publisher endpoint does not document rank or change fields, so the result carries the submitted score and no [member SteamLeaderboardSubmission.upload] receipt.</description>
+		</method>
+	</methods>
+</class>

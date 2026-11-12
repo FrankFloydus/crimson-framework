@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="SteamBrowserRequest" inherits="RefCounted">
+	<brief_description>A reusable additional-origin policy for future Steam browser pages.</brief_description>
+	<description>Build independent policies using [method SteamBrowser.allow_origins]. Each opening binds the resulting page to its own fixed policy and original client scope.</description>
+	<tutorials>
+	</tutorials>
+	<methods>
+		<method name="open">
+			<return type="Variant" />
+			<param index="0" name="url" type="String" />
+			<param index="1" name="size" type="Vector2i" default="Vector2i(960, 540)" />
+			<description>Await a [SteamBrowserPageResult] after submitting creation and initial navigation under this policy. HTTPS permits its initial origin. HTTP is available only for an explicitly included numeric loopback origin at the same port.</description>
+		</method>
+	</methods>
+</class>

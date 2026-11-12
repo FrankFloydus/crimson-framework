@@ -9,9 +9,9 @@ var _checks := 0
 ## Assertions that reported errors and will cause a nonzero exit.
 var _failures := 0
 ## Coordinator shared by the transaction test and its callback fixtures.
-var _coordinator: CrimsonTransactionCoordinator
+var _coordinator: TransactionCoordinator
 ## Separate transaction used to probe writes during preparation and notification.
-var _nested: CrimsonTransaction
+var _nested: GameTransaction
 ## Snapshots captured by the synchronous commit observer.
 var _observed: Array[Dictionary] = []
 ## Result of attempting a nested commit from a store preparer.
@@ -21,7 +21,7 @@ var _prepared_a: Dictionary
 ## Candidate and live values recorded by the rejecting aggregate validator.
 var _validated_pair: Dictionary
 ## Router used by the command test and its reentrant handler.
-var _router: CrimsonCommandRouter
+var _router: CommandRouter
 ## Commands that reached the gameplay handler, including policy denials.
 var _commands: Array[Dictionary] = []
 ## Result of attempting recursive command dispatch from the handler.
@@ -48,7 +48,7 @@ func _run() -> void:
 
 ## Checks detachment, revisions, reentrant calls, and all-or-nothing publication.
 func _test_transactions() -> void:
-	_coordinator = CrimsonTransactionCoordinator.new()
+	_coordinator = TransactionCoordinator.new()
 	var initial := {"nested": {"actor": "nobody"}}
 	_expect(_coordinator.register_store("a", initial, _prepare_a) == OK, "Register the first store.")
 	_expect(_coordinator.register_store("b", {"count": 0}, _prepare_b) == OK, "Register the second store.")
@@ -60,7 +60,7 @@ func _test_transactions() -> void:
 	view["nested"]["actor"] = "leaked"
 	_expect(_coordinator.read_store("a")["nested"]["actor"] == "nobody", "Reads cannot mutate live state.")
 
-	var foreign := CrimsonTransactionCoordinator.new()
+	var foreign := TransactionCoordinator.new()
 	var context := {"actor": {"id": "alice"}}
 	var transaction := _coordinator.begin(context)
 	var operation := {"value": {"id": "first"}}
@@ -166,7 +166,7 @@ func _observe_commit(revision: int, stores: PackedStringArray) -> void:
 
 ## Checks detached capture, full validation, stale candidates, and deferred publication.
 func _test_checkpoint_restore() -> void:
-	var coordinator := CrimsonTransactionCoordinator.new()
+	var coordinator := TransactionCoordinator.new()
 	_expect(coordinator.register_store("a", {"count": 2}, _prepare_b, _check_checkpoint_counter) == OK
 		and coordinator.register_store("b", {"count": 3}, _prepare_checkpoint_counter) == OK, "Register checkpoint stores with explicit and implicit checks.")
 	_expect(coordinator.register_validator("order", PackedStringArray(["a", "b"]), _check_checkpoint_order) == OK,
@@ -185,20 +185,20 @@ func _test_checkpoint_restore() -> void:
 	_expect(coordinator.prepare_restore({"a": {"count": 4}, "b": {"count": 3}}).get("code") == "validation_failed",
 		"Check invariants across the complete candidate set.")
 
-	var stale: CrimsonTransaction = coordinator.prepare_restore(snapshot).get("candidate")
+	var stale: GameTransaction = coordinator.prepare_restore(snapshot).get("candidate")
 	_expect(stale != null, "Prepare a checkpoint without modifying live stores.")
 	var mutation := coordinator.begin()
 	_expect(mutation.add_change("b", {"add": 2}, 0) == OK and _ok(coordinator.commit(mutation)), "Advance one store after preparation.")
 	_expect(coordinator.publish_restore(stale).get("code") == "stale_revision" and coordinator.read_store("b")["count"] == 5,
 		"A stale checkpoint candidate cannot overwrite an intervening commit.")
-	var registry_stale: CrimsonTransaction = coordinator.prepare_restore(snapshot).get("candidate")
+	var registry_stale: GameTransaction = coordinator.prepare_restore(snapshot).get("candidate")
 	_expect(coordinator.register_validator("new_rule", PackedStringArray(["b"]), _check_checkpoint_order) == OK
 		and coordinator.publish_restore(registry_stale).get("code") == "stale_revision",
 		"A newly registered validator invalidates a previously checked candidate.")
-	var candidate: CrimsonTransaction = coordinator.prepare_restore(snapshot).get("candidate")
+	var candidate: GameTransaction = coordinator.prepare_restore(snapshot).get("candidate")
 	_expect(candidate != null and candidate.add_change("a", {"add": 99}, 0) != OK
 		and coordinator.commit(candidate).get("code") == "invalid_transaction", "A restore candidate cannot be edited or used as a transaction.")
-	var foreign := CrimsonTransactionCoordinator.new()
+	var foreign := TransactionCoordinator.new()
 	_expect(foreign.publish_restore(candidate).get("code") == "invalid_restore", "Only the preparing coordinator can publish the candidate.")
 	snapshot["a"]["count"] = 900
 	_expect(coordinator.read_store("a")["count"] == 2, "Captured snapshots cannot mutate live stores.")
@@ -237,9 +237,9 @@ func _check_checkpoint_order(prepared: Dictionary, _context: Dictionary) -> Dict
 
 ## Checks atomic pickups using the native grid and a world pickup store.
 func _test_inventory_pickup() -> void:
-	var coordinator := CrimsonTransactionCoordinator.new()
+	var coordinator := TransactionCoordinator.new()
 	var inventory := SpatialInventory.new()
-	var adapter := CrimsonInventoryTransactionAdapter.new()
+	var adapter := InventoryTransactionAdapter.new()
 	_expect(inventory.configure(Vector2i(1, 1)) == OK, "Create a one-cell native inventory.")
 	_expect(adapter.configure(coordinator, "bag", inventory.export_snapshot()) == OK, "Register the native inventory transaction adapter.")
 	_expect(coordinator.register_store("world", {"sword": true, "potion": true}, _prepare_pickup) == OK, "Register the world pickup store.")
@@ -287,12 +287,12 @@ func _inventory_has(snapshot: Dictionary, id: String) -> bool:
 
 ## Exercises primary-character ownership and routes commands through the authority API.
 func _test_possession_and_commands() -> void:
-	var coordinator := CrimsonTransactionCoordinator.new()
+	var coordinator := TransactionCoordinator.new()
 	_expect(coordinator.register_store("players", {"alice": {"team": "red"}, "bob": {"team": "blue"}}, _keep_state) == OK,
 		"Register stable player records.")
 	_expect(coordinator.register_store("characters", {"hero": {"health": 30}, "summon": {"health": 10}}, _prepare_characters) == OK,
 		"Register independent character records.")
-	var possession := CrimsonPossession.new()
+	var possession := PlayerPossession.new()
 	_expect(possession.configure(coordinator, "players", "characters") == OK, "Configure possession over match records.")
 	var starting_stores: Dictionary = coordinator.capture_snapshot()["stores"]
 	var changes: Array = []
@@ -315,7 +315,7 @@ func _test_possession_and_commands() -> void:
 	_expect(not _ok(possession.try_set_primary("alice", "summon", 0)) and possession.get_primary("alice") == "hero",
 		"Reject a switch based on the previous possession revision.")
 
-	_router = CrimsonCommandRouter.new()
+	_router = CommandRouter.new()
 	_expect(_router.configure("match-1", 4, possession) == OK, "Configure the local authority command router.")
 	_expect(_router.register_handler("move", _handle_command, true) == OK
 		and _router.register_handler("ready", _handle_command) == OK, "Register primary-targeted and match commands.")
@@ -349,7 +349,7 @@ func _test_possession_and_commands() -> void:
 	_router = null
 	_test_possessed_character_despawn(coordinator, possession)
 	_expect(_ok(possession.try_set_primary("alice", "hero", possession.get_revision("alice"))), "Assign a character before restoring earlier possession state.")
-	var earlier: CrimsonTransaction = coordinator.prepare_restore(starting_stores).get("candidate")
+	var earlier: GameTransaction = coordinator.prepare_restore(starting_stores).get("candidate")
 	var change_count := changes.size()
 	var restore := coordinator.publish_restore(earlier, true)
 	_expect(_ok(restore) and changes.size() == change_count and possession.get_primary("alice").is_empty(),
@@ -359,7 +359,7 @@ func _test_possession_and_commands() -> void:
 
 
 ## Checks that removing a possessed character requires releasing it in the same commit.
-func _test_possessed_character_despawn(coordinator: CrimsonTransactionCoordinator, possession: CrimsonPossession) -> void:
+func _test_possessed_character_despawn(coordinator: TransactionCoordinator, possession: PlayerPossession) -> void:
 	var revision := coordinator.get_revision()
 	var unsafe := coordinator.begin()
 	_expect(unsafe.add_change("characters", {"despawn": "summon"}, 0) == OK, "Stage a despawn for an actively possessed character.")
@@ -413,7 +413,7 @@ func _handle_command(player_id: String, intent: Dictionary) -> Dictionary:
 
 ## Checks unique peer and player bindings and guards replacements from stale disconnects.
 func _test_player_binding_generations() -> void:
-	var bindings := CrimsonPlayerBindings.new()
+	var bindings := PlayerBindings.new()
 	var original := bindings.bind_peer(7, "alice")
 	_expect(original > 0 and bindings.get_player(7) == "alice" and bindings.get_binding_generation(7) == original,
 		"Bind a peer to its stable player ID and expose the binding generation.")

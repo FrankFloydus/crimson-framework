@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="SteamIdentityResult" inherits="SteamResult">
+	<brief_description>Outcome of verifying one Web API ticket.</brief_description>
+	<description>Check [member SteamResult.ok] before using the result.</description>
+	<tutorials>
+	</tutorials>
+	<methods>
+		<method name="get_value" qualifiers="const">
+			<return type="SteamIdentity" />
+			<description>Identity minted by the publisher on success, or null on failure.</description>
+		</method>
+	</methods>
+	<members>
+		<member name="value" type="SteamIdentity" setter="" getter="get_value">
+			Identity minted by the publisher on success, or null on failure.
+		</member>
+	</members>
+</class>

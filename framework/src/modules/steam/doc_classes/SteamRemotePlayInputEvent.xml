@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="SteamRemotePlayInputEvent" inherits="RefCounted">
+	<brief_description>A detached Steam keyboard or mouse event identified by its stream.</brief_description>
+	<description>Consume this sample in the matching local seat. Crimson leaves global Godot input routing to the game.</description>
+	<tutorials>
+	</tutorials>
+	<members>
+		<member name="event" type="InputEvent" getter="get_event" setter="">
+			Godot keyboard, mouse motion, mouse button, or wheel event. Relative motion stays in the units reported by Steam. Map normalized absolute motion to the intended viewport before dispatching to a UI. Button and wheel samples carry no pointer position.
+		</member>
+		<member name="has_absolute_position" type="bool" getter="get_has_absolute_position" setter="">
+			Whether a mouse motion event also has a [member InputEventMouse.position] normalized to the host window. Values range from 0 to 1 in each dimension. False for relative-only motion and all other samples.
+		</member>
+		<member name="session_id" type="int" getter="get_session_id" setter="">
+			Stream ID of the sender. Route the sample to that stream's local seat.
+		</member>
+	</members>
+</class>

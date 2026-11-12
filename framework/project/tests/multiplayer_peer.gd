@@ -11,9 +11,9 @@ const TIMEOUT_MS := 8000
 const SCENES: Array[StringName] = [&"amber", &"cobalt"]
 
 # Native transport and admission lifecycle for this process.
-var _session: CrimsonGameSession
+var _session: GameSession
 # Native manager for synchronized scene activation.
-var _loader: CrimsonSceneLoadManager
+var _loader: SceneLoadManager
 # Persistent parent of the scene manager's currently mounted world.
 var _world_container: Node
 # RPC endpoint that compares publication across the two processes.
@@ -83,13 +83,13 @@ func _configure_world() -> bool:
 	shell.name = &"MultiplayerHarness"
 	root.add_child(shell)
 
-	_session = CrimsonGameSession.new()
+	_session = GameSession.new()
 	_session.name = &"Session"
 	shell.add_child(_session)
 	_world_container = Node.new()
 	_world_container.name = &"WorldContainer"
 	shell.add_child(_world_container)
-	_loader = CrimsonSceneLoadManager.new()
+	_loader = SceneLoadManager.new()
 	_loader.name = &"SceneLoader"
 	shell.add_child(_loader)
 	_probe = CommitProbe.new()
@@ -146,7 +146,7 @@ func _run_host(port: int) -> bool:
 func _run_client(port: int) -> bool:
 	if not _expect(_session.join(ADDRESS, port, 6.0) == OK, "Begin joining UDP port %d" % port):
 		return false
-	if not await _wait_for(func() -> bool: return _session.get_state() == CrimsonGameSession.State.CLIENT, "connected client"):
+	if not await _wait_for(func() -> bool: return _session.get_state() == GameSession.State.CLIENT, "connected client"):
 		return false
 	if not _expect(not _session.is_authority() and _session.get_local_peer_id() > 1, "Join as a non-authoritative peer"):
 		return false

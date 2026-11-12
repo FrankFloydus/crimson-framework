@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="SteamVoice" inherits="RefCounted">
+	<brief_description>Steam voice decoding and opt-in microphone access for one client start.</brief_description>
+	<methods>
+		<method name="capture" qualifiers="const">
+			<return type="SteamVoiceCapture" />
+			<description>Returns the scope's microphone controls without starting capture. A new unattached service has no capture handle. A retained handle returns [constant ERR_UNAVAILABLE] after its scope stops.</description>
+		</method>
+		<method name="decode">
+			<return type="SteamVoicePcmResult" />
+			<param index="0" name="bytes" type="PackedByteArray" />
+			<param index="1" name="sample_rate_hz" type="int" default="0" />
+			<description>Decodes one complete Steam voice frame of 1 to 8192 bytes. Zero chooses Steam's recommended rate, or pass a rate from 11025 to 48000 Hz. The result contains up to 131072 bytes of signed 16-bit mono PCM. Unavailable codecs and invalid input return a typed error.</description>
+		</method>
+	</methods>
+</class>

@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="SteamInventorySnapshotResult" inherits="SteamResult">
+	<brief_description>
+		A typed Steam inventory outcome.
+	</brief_description>
+	<description>
+		Check [member SteamResult.ok] before reading [member value]. The detached inventory snapshot, or null on failure.
+	</description>
+	<tutorials>
+	</tutorials>
+	<methods>
+		<method name="get_value" qualifiers="const">
+			<return type="SteamInventorySnapshot" />
+			<description>
+				Returns the detached inventory snapshot, or null on failure.
+			</description>
+		</method>
+	</methods>
+	<members>
+		<member name="value" type="SteamInventorySnapshot" setter="" getter="get_value">
+			The detached inventory snapshot, or null on failure.
+		</member>
+	</members>
+</class>

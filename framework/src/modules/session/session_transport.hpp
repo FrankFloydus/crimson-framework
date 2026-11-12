@@ -12,8 +12,8 @@
 namespace crimson::session {
 
 // Runtime endpoint passed to a transport adapter when opening a client.
-class CrimsonSessionEndpoint : public godot::RefCounted {
-    GDCLASS(CrimsonSessionEndpoint, godot::RefCounted)
+class SessionEndpoint : public godot::RefCounted {
+    GDCLASS(SessionEndpoint, godot::RefCounted)
 
     // Direct host address, with surrounding whitespace removed.
     godot::String address;
@@ -30,9 +30,9 @@ protected:
 
 public:
     // Construct a direct endpoint, returning null for an empty address or invalid port.
-    static godot::Ref<CrimsonSessionEndpoint> direct(const godot::String &p_address, int64_t p_port);
+    static godot::Ref<SessionEndpoint> direct(const godot::String &p_address, int64_t p_port);
     // Construct a route for a named adapter, returning null for an invalid name or size.
-    static godot::Ref<CrimsonSessionEndpoint> opaque(const godot::StringName &p_transport,
+    static godot::Ref<SessionEndpoint> opaque(const godot::StringName &p_transport,
             const godot::PackedByteArray &p_route);
     // Read the direct host address.
     godot::String get_address() const;
@@ -45,8 +45,8 @@ public:
 };
 
 // Immutable result of opening a new Godot multiplayer peer.
-class CrimsonSessionTransportResult : public godot::RefCounted {
-    GDCLASS(CrimsonSessionTransportResult, godot::RefCounted)
+class SessionTransportResult : public godot::RefCounted {
+    GDCLASS(SessionTransportResult, godot::RefCounted)
 
     // Exact opening failure, or OK with an initialized peer.
     godot::Error error = godot::ERR_UNCONFIGURED;
@@ -59,9 +59,9 @@ protected:
 
 public:
     // Construct a successful result, rejecting null peers.
-    static godot::Ref<CrimsonSessionTransportResult> opened(const godot::Ref<godot::MultiplayerPeer> &p_peer);
+    static godot::Ref<SessionTransportResult> opened(const godot::Ref<godot::MultiplayerPeer> &p_peer);
     // Construct a failure result, normalizing OK to ERR_INVALID_PARAMETER.
-    static godot::Ref<CrimsonSessionTransportResult> failed(godot::Error p_error);
+    static godot::Ref<SessionTransportResult> failed(godot::Error p_error);
     // Read the outcome of the transport open call.
     godot::Error get_error() const;
     // Read the newly initialized peer, or null on failure.
@@ -69,14 +69,14 @@ public:
 };
 
 // Creates fresh Godot peers while Game Session retains admission and lifecycle ownership.
-class CrimsonSessionTransport : public godot::Resource {
-    GDCLASS(CrimsonSessionTransport, godot::Resource)
+class SessionTransport : public godot::Resource {
+    GDCLASS(SessionTransport, godot::Resource)
 
 protected:
     // Open a server peer with the requested remote-seat limit and bind address.
-    GDVIRTUAL3R(godot::Ref<CrimsonSessionTransportResult>, _open_server, int64_t, int64_t, godot::String)
+    GDVIRTUAL3R(godot::Ref<SessionTransportResult>, _open_server, int64_t, int64_t, godot::String)
     // Open a client peer for an endpoint understood by this transport.
-    GDVIRTUAL1R(godot::Ref<CrimsonSessionTransportResult>, _open_client, godot::Ref<CrimsonSessionEndpoint>)
+    GDVIRTUAL1R(godot::Ref<SessionTransportResult>, _open_client, godot::Ref<SessionEndpoint>)
     // Retire an admitted guest after the peer sends already queued reliable messages.
     GDVIRTUAL2(_disconnect_after_flush, godot::Ref<godot::MultiplayerPeer>, int32_t)
     // Register the factory and graceful disconnection hooks.
@@ -84,17 +84,17 @@ protected:
 
 public:
     // Invoke the scripted server factory; an absent implementation fails explicitly.
-    virtual godot::Ref<CrimsonSessionTransportResult> open_server(int64_t port, int64_t remote_limit,
+    virtual godot::Ref<SessionTransportResult> open_server(int64_t port, int64_t remote_limit,
             const godot::String &bind_address);
     // Invoke the scripted client factory; an absent implementation fails explicitly.
-    virtual godot::Ref<CrimsonSessionTransportResult> open_client(const godot::Ref<CrimsonSessionEndpoint> &endpoint);
+    virtual godot::Ref<SessionTransportResult> open_client(const godot::Ref<SessionEndpoint> &endpoint);
     // Invoke the graceful hook or request a normal Godot disconnect if it is absent.
     virtual void disconnect_after_flush(const godot::Ref<godot::MultiplayerPeer> &peer, int32_t peer_id);
 };
 
 // Native direct UDP transport used when no adapter is selected.
-class CrimsonENetSessionTransport : public CrimsonSessionTransport {
-    GDCLASS(CrimsonENetSessionTransport, CrimsonSessionTransport)
+class ENetSessionTransport : public SessionTransport {
+    GDCLASS(ENetSessionTransport, SessionTransport)
 
 protected:
     // Expose the built-in factories for composition by a custom adapter.
@@ -102,10 +102,10 @@ protected:
 
 public:
     // Bind and initialize a new ENet server peer.
-    godot::Ref<CrimsonSessionTransportResult> open_server(int64_t port, int64_t remote_limit,
+    godot::Ref<SessionTransportResult> open_server(int64_t port, int64_t remote_limit,
             const godot::String &bind_address) override;
     // Initialize an ENet connection attempt to a direct endpoint.
-    godot::Ref<CrimsonSessionTransportResult> open_client(const godot::Ref<CrimsonSessionEndpoint> &endpoint) override;
+    godot::Ref<SessionTransportResult> open_client(const godot::Ref<SessionEndpoint> &endpoint) override;
     // Schedule ENet's reliable queue to drain before disconnecting the guest.
     void disconnect_after_flush(const godot::Ref<godot::MultiplayerPeer> &peer, int32_t peer_id) override;
 };

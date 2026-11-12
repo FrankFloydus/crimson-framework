@@ -15,11 +15,11 @@ void register_types(godot::ModuleInitializationLevel level) {
     if (level != godot::MODULE_INITIALIZATION_LEVEL_SCENE) {
         return;
     }
-    GDREGISTER_CLASS(CrimsonTransaction);
-    GDREGISTER_CLASS(CrimsonTransactionCoordinator);
-    GDREGISTER_CLASS(CrimsonPlayerBindings);
-    GDREGISTER_CLASS(CrimsonPossession);
-    GDREGISTER_CLASS(CrimsonCommandRouter);
+    GDREGISTER_CLASS(GameTransaction);
+    GDREGISTER_CLASS(TransactionCoordinator);
+    GDREGISTER_CLASS(PlayerBindings);
+    GDREGISTER_CLASS(PlayerPossession);
+    GDREGISTER_CLASS(CommandRouter);
 }
 
 } // namespace crimson::match_runtime

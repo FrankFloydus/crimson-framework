@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="SteamPurchaseOutcomeResult" inherits="SteamResult">
+	<brief_description>Order receipt or a recoverable checkout failure.</brief_description>
+	<methods>
+		<method name="create" qualifiers="static">
+			<return type="SteamPurchaseOutcomeResult" />
+			<param index="0" name="error" type="int" enum="Error" />
+			<param index="1" name="value" type="SteamPurchaseOutcome" default="null" />
+			<param index="2" name="checkout_id" type="String" default="&quot;&quot;" />
+			<description>Creates a typed response for the commerce adapter. Echo the original checkout ID on a successful begin response. Error results can carry the same ID for retry.</description>
+		</method>
+	</methods>
+	<members>
+		<member name="value" type="SteamPurchaseOutcome" setter="" getter="get_value">The confirmed order receipt on success. A recoverable error can also carry an existing order whose state is [constant SteamPurchaseOutcome.RECONCILING].</member>
+		<member name="checkout_id" type="String" setter="" getter="get_checkout_id">Stable retry ID when the result belongs to a submitted cart. Retained when the local observer times out or closes.</member>
+	</members>
+</class>

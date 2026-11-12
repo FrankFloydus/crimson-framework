@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="SteamHttp" inherits="SteamHttpOptions">
+	<brief_description>
+		Scoped Steam HTTP service with default request options.
+	</brief_description>
+	<description>
+		Get this service from [method SteamClient.http]. It owns the requests for that Steam client scope.
+	</description>
+	<methods>
+		<method name="is_available">
+			<return type="bool" />
+			<description>
+				Return true when this client scope has a usable Steam HTTP interface on the main thread.
+			</description>
+		</method>
+	</methods>
+</class>

@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="SteamNotificationBoolOperation" inherits="RefCounted">
+	<brief_description>
+		Retained observation of one boolean notification acknowledgment.
+	</brief_description>
+	<methods>
+		<method name="cancel">
+			<return type="int" enum="Error" />
+			<description>Settles local observation with [constant ERR_SKIP]. An already submitted request can still reach Steam and commit its durable receipt. Returns [constant ERR_DOES_NOT_EXIST] if observation has ended.</description>
+		</method>
+		<method name="is_finished" qualifiers="const">
+			<return type="bool" />
+			<description>Returns whether this observation has a terminal result.</description>
+		</method>
+		<method name="result" qualifiers="const">
+			<return type="SteamBoolResult" />
+			<description>Returns the terminal result, or [code]null[/code] while pending.</description>
+		</method>
+		<method name="wait">
+			<return type="Variant" />
+			<description>Use [code]await operation.wait()[/code] to receive a [SteamBoolResult] before or after settlement.</description>
+		</method>
+	</methods>
+	<signals>
+		<signal name="completed">
+			<param index="0" name="result" type="SteamBoolResult" />
+			<description>Emitted once with the same terminal result available from [method result].</description>
+		</signal>
+	</signals>
+</class>

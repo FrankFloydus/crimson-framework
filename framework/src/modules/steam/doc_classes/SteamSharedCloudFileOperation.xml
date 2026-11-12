@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="SteamSharedCloudFileOperation" inherits="RefCounted">
+	<brief_description>
+		Retained observation of one shared Steam Cloud download.
+	</brief_description>
+	<methods>
+		<method name="cancel">
+			<return type="int" enum="Error" />
+			<description>
+				Ends local observation and completes it with [constant ERR_SKIP]. Steam finishes the native download and closes any resulting cache entry. Returns [constant ERR_DOES_NOT_EXIST] when observation has already ended.
+			</description>
+		</method>
+		<method name="is_finished" qualifiers="const">
+			<return type="bool" />
+			<description>Returns whether the operation has a terminal result.</description>
+		</method>
+		<method name="result" qualifiers="const">
+			<return type="SteamSharedCloudFileResult" />
+			<description>Returns the same terminal result as [signal completed], or [code]null[/code] while observation is pending.</description>
+		</method>
+		<method name="wait">
+			<return type="Variant" />
+			<description>Use [code]await operation.wait()[/code] to receive a [SteamSharedCloudFileResult] before or after observation ends.</description>
+		</method>
+	</methods>
+	<signals>
+		<signal name="completed">
+			<param index="0" name="result" type="SteamSharedCloudFileResult" />
+			<description>
+				Emitted once after a pending download settles, including after cancellation or client shutdown. [method result] already returns this result during the signal.
+			</description>
+		</signal>
+	</signals>
+</class>

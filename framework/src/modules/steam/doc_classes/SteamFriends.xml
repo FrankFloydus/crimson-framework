@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="SteamFriends" inherits="RefCounted">
+	<brief_description>
+		Reads cached friends and manages individual Rich Presence keys.
+	</brief_description>
+	<description>
+		Get this service from [method SteamClient.friends]. Use [method list] for the signed-in account's immediate friends and [SteamPresence] for managed status. The individual Rich Presence calls operate on the signed-in account's keys.
+	</description>
+	<tutorials>
+	</tutorials>
+	<methods>
+		<method name="clear_rich_presence">
+			<return type="int" enum="Error" />
+			<param index="0" name="key" type="String" />
+			<description>
+				Clears one Rich Presence [param key] and preserves the account's other keys. Returns [constant @GlobalScope.OK] when Steam accepts the update. The Game provider reserves the [code]connect[/code] key for its join route.
+			</description>
+		</method>
+		<method name="list" qualifiers="const">
+			<return type="SteamFriendsResult" />
+			<description>
+				Returns the current cached immediate friends as a read-only typed collection. A successful result can contain an empty array. An inactive or unavailable Steam client returns [constant @GlobalScope.ERR_UNAVAILABLE].
+			</description>
+		</method>
+		<method name="is_available" qualifiers="const">
+			<return type="bool" />
+			<description>
+				Returns whether the active client exposes the Steam Friends interface on the main thread.
+			</description>
+		</method>
+		<method name="rich_presence" qualifiers="const">
+			<return type="String" />
+			<param index="0" name="key" type="String" />
+			<description>
+				Returns the signed-in account's cached value for [param key], or an empty string when the key is absent or the query is unavailable.
+			</description>
+		</method>
+		<method name="set_rich_presence">
+			<return type="int" enum="Error" />
+			<param index="0" name="key" type="String" />
+			<param index="1" name="value" type="String" />
+			<description>
+				Sets one Rich Presence [param key] to [param value]. Both must be nonempty UTF-8 strings within Steam's byte limits. Returns [constant @GlobalScope.OK] when Steam accepts the update. Setting a managed key explicitly removes it from [SteamPresence] ownership. Use [method clear_rich_presence] to remove a key. The Game provider reserves [code]connect[/code].
+			</description>
+		</method>
+	</methods>
+</class>

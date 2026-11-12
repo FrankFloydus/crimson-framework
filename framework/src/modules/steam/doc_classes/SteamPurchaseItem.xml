@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="SteamPurchaseItem" inherits="RefCounted">
+	<brief_description>Backend-priced offer for a single game SKU.</brief_description>
+	<methods>
+		<method name="create" qualifiers="static">
+			<return type="SteamPurchaseItem" />
+			<param index="0" name="sku" type="StringName" />
+			<param index="1" name="display_name" type="String" />
+			<param index="2" name="amount" type="int" />
+			<param index="3" name="currency" type="String" />
+			<description>Creates an offer from the authenticated backend's pricing. Amount must be positive in Steam's units for the three-letter uppercase currency code. Invalid offers return null.</description>
+		</method>
+	</methods>
+	<members>
+		<member name="sku" type="StringName" setter="" getter="get_sku">Stable game catalog ID.</member>
+		<member name="display_name" type="String" setter="" getter="get_display_name">Localized item display name supplied by the game backend.</member>
+		<member name="amount" type="int" setter="" getter="get_amount">Price in Steam's units for the currency.</member>
+		<member name="currency" type="String" setter="" getter="get_currency">Three-letter uppercase currency code for this price.</member>
+	</members>
+</class>

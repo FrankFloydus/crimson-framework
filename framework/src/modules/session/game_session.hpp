@@ -20,10 +20,10 @@
 
 namespace crimson::session {
 
-class CrimsonGameSession : public godot::Node {
-    GDCLASS(CrimsonGameSession, godot::Node)
+class GameSession : public godot::Node {
+    GDCLASS(GameSession, godot::Node)
 
-    friend class CrimsonSessionAuthRequest;
+    friend class SessionAuthRequest;
 
 public:
     // Roles exposed to gameplay and lobby code.
@@ -36,7 +36,7 @@ public:
     };
 
     // Keep connection deadlines and cleanup active while gameplay is paused.
-    CrimsonGameSession();
+    GameSession();
 
     // Install an offline transport with a local authority.
     godot::Error start_offline();
@@ -48,15 +48,17 @@ public:
     // Connect to a direct host address and wait for server admission.
     godot::Error join(const godot::String &address, int64_t port, double timeout_seconds = 10.0);
     // Connect to an endpoint understood by the selected adapter and wait for admission.
-    godot::Error join_endpoint(const godot::Ref<CrimsonSessionEndpoint> &endpoint, double timeout_seconds = 10.0);
+    godot::Error join_endpoint(const godot::Ref<SessionEndpoint> &endpoint, double timeout_seconds = 10.0);
     // Select the adapter while idle. Null restores the default ENet implementation.
-    godot::Error set_transport_adapter(const godot::Ref<CrimsonSessionTransport> &adapter);
+    godot::Error set_transport_adapter(const godot::Ref<SessionTransport> &adapter);
     // Select optional bilateral connection authentication while idle. Null uses the API's ordinary policy.
-    godot::Error set_authenticator(const godot::Ref<CrimsonSessionAuthenticator> &authenticator);
+    godot::Error set_authenticator(const godot::Ref<SessionAuthenticator> &authenticator);
     // Return the authenticator selected for network starts, or null for the API's ordinary policy.
-    godot::Ref<CrimsonSessionAuthenticator> get_authenticator() const;
+    godot::Ref<SessionAuthenticator> get_authenticator() const;
     // Read the verified identity of an admitted direct peer, if this session authenticated it.
-    godot::Ref<CrimsonSessionIdentity> get_peer_identity(int64_t peer_id) const;
+    godot::Ref<SessionIdentity> get_peer_identity(int64_t peer_id) const;
+    // Revoke the exact native identity while pending or admitted on this authority.
+    void revoke_verified_peer(int32_t peer_id, const godot::Ref<SessionIdentity> &identity);
     // End the current session and restore the previous transport.
     void leave();
 
@@ -112,7 +114,7 @@ private:
         // Bounded remote proof staged until provider verification begins.
         godot::PackedByteArray remote_proof;
         // Validated identity staged before Godot announces the connection.
-        godot::Ref<CrimsonSessionIdentity> identity;
+        godot::Ref<SessionIdentity> identity;
         // Godot announced the physical peer, possibly during complete_auth().
         bool engine_connected = false;
     };
@@ -132,9 +134,9 @@ private:
     // Transport installed by this session.
     godot::Ref<godot::MultiplayerPeer> transport;
     // Optional factory selected for the next network session.
-    godot::Ref<CrimsonSessionTransport> configured_adapter;
+    godot::Ref<SessionTransport> configured_adapter;
     // Factory retained by the active transport until teardown completes.
-    godot::Ref<CrimsonSessionTransport> active_adapter;
+    godot::Ref<SessionTransport> active_adapter;
     // Maximum simultaneous admitted remote peers for the current host.
     size_t remote_limit = 0;
     // Offline transport to restore when ownership is released.
@@ -144,7 +146,7 @@ private:
     // Exact callables used to remove the scope's signal subscriptions.
     std::array<godot::Callable, 4> callbacks;
     // Optional verifier selected for upcoming network starts.
-    godot::Ref<CrimsonSessionAuthenticator> configured_authenticator;
+    godot::Ref<SessionAuthenticator> configured_authenticator;
     // Scene API on which the current verifier owns authentication.
     godot::Ref<godot::SceneMultiplayer> auth_api;
     // Previously installed callback restored if Crimson still owns the auth slot.
@@ -158,7 +160,7 @@ private:
     // Pending challenges indexed by the engine-reported connection ID.
     std::map<int32_t, AuthAttempt> auth_attempts;
     // Verified identities of direct remotes admitted by this API.
-    std::map<int32_t, godot::Ref<CrimsonSessionIdentity>> identities;
+    std::map<int32_t, godot::Ref<SessionIdentity>> identities;
     // Settles a rejected authority connection after Godot finishes its current packet callback.
     bool auth_failed = false;
 
@@ -166,11 +168,11 @@ private:
     godot::Error get_available_api(godot::Ref<godot::MultiplayerAPI> &api, bool networked) const;
     // Invoke the selected factory and verify peer role and scope ownership before installation.
     godot::Error open_network_transport(State role, uint64_t timeout_ms, size_t max_remote, bool accepting,
-            const std::function<godot::Ref<CrimsonSessionTransportResult>(CrimsonSessionTransport &)> &factory);
+            const std::function<godot::Ref<SessionTransportResult>(SessionTransport &)> &factory);
     // Reserve the scope, bind callbacks, and publish the initial session state.
     godot::Error activate_transport(const godot::Ref<godot::MultiplayerAPI> &api,
             const godot::Ref<godot::MultiplayerPeer> &peer, State new_state, uint64_t deadline = 0,
-            const godot::Ref<CrimsonSessionTransport> &adapter = {}, size_t max_remote = 0);
+            const godot::Ref<SessionTransport> &adapter = {}, size_t max_remote = 0);
     // Subscribe to connection and roster events on the claimed scope.
     godot::Error connect_api_signals();
     // Remove this session's callbacks before returning the scope.
@@ -197,8 +199,8 @@ private:
     // Validate framing and route an incoming authentication packet from the actual sender.
     void on_auth_data(int64_t peer_id, const godot::PackedByteArray &data);
     // Settle the exact current verification on the Scene API after checking its attempt and generation.
-    godot::Error finish_auth(const CrimsonSessionAuthRequest &request,
-            const godot::Ref<CrimsonSessionIdentity> &identity, bool accepted);
+    godot::Error finish_auth(const SessionAuthRequest &request,
+            const godot::Ref<SessionIdentity> &identity, bool accepted);
     // Run provider callbacks and completion after Godot finishes its packet callbacks.
     void process_authentication();
     // Advance one pending proof or completed verification outside the engine packet callback.
@@ -222,4 +224,4 @@ private:
 
 } // namespace crimson::session
 
-VARIANT_ENUM_CAST(crimson::session::CrimsonGameSession::State);
+VARIANT_ENUM_CAST(crimson::session::GameSession::State);

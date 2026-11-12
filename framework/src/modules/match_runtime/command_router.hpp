@@ -15,13 +15,13 @@
 namespace crimson::match_runtime {
 
 // Dispatches validated gameplay intents using trusted match player identities.
-class CrimsonCommandRouter : public godot::RefCounted {
-    GDCLASS(CrimsonCommandRouter, godot::RefCounted)
+class CommandRouter : public godot::RefCounted {
+    GDCLASS(CommandRouter, godot::RefCounted)
 
 public:
     // Bind a match, its initial world epoch, and the possession reader.
     godot::Error configure(const godot::String &match_id, int64_t world_epoch,
-            const godot::Ref<CrimsonPossession> &possessor);
+            const godot::Ref<PlayerPossession> &possessor);
     // Open or close command admission at the authority's lifecycle boundary.
     godot::Error set_accepting_commands(bool enabled);
     // Set a newer world epoch, clear sequence cursors, and close command admission.
@@ -44,7 +44,7 @@ private:
     // Active world version used to reject commands for a previous scene.
     int64_t world_epoch = 0;
     // Possession service used to verify the character and assignment revision.
-    godot::Ref<CrimsonPossession> possessor;
+    godot::Ref<PlayerPossession> possessor;
     // Callable and primary-character requirement indexed by command type.
     godot::Dictionary handlers;
     // Highest dispatched command sequence for each active player stream.

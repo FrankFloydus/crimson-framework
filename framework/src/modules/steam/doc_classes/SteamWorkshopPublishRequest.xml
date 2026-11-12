@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="SteamWorkshopPublishRequest" inherits="RefCounted">
+	<brief_description>
+		Branchable request for publishing or updating an app-owned Workshop item.
+	</brief_description>
+	<description>
+		Get a draft from [method SteamWorkshop.new_item] or [method SteamWorkshopItemRef.edit]. Modifiers return independent branches. New items require a title and existing local content directory and default to private visibility. An edit preserves every field left unset.
+	</description>
+	<methods>
+		<method name="described_as" qualifiers="const">
+			<return type="SteamWorkshopPublishRequest" />
+			<param index="0" name="description" type="String" />
+			<description>Returns a branch with a replacement item description. An empty description clears this field. Supports up to 7,999 UTF-8 bytes.</description>
+		</method>
+		<method name="named" qualifiers="const">
+			<return type="SteamWorkshopPublishRequest" />
+			<param index="0" name="title" type="String" />
+			<description>Returns a branch with a replacement title of 1 to 128 UTF-8 bytes.</description>
+		</method>
+		<method name="submit" qualifiers="const">
+			<return type="Variant" />
+			<param index="0" name="change_notes" type="String" default="&quot;&quot;" />
+			<description>
+				Use [code]await request.submit()[/code] to receive a [SteamWorkshopPublicationResult]. Steam uploads the chosen content and preview. Keep those paths available while Steam may still complete a submitted update. [param change_notes] supports up to 7,999 UTF-8 bytes. If Steam has already created an item, an interrupted upload can return its published ID even when [member SteamResult.ok] is false. When [member SteamWorkshopPublication.needs_legal_agreement] is true, offer [method SteamWorkshop.show_legal_agreement] and check [method SteamWorkshop.legal_agreement_status] after the author closes the overlay. Continue a known item through [method SteamWorkshopItemRef.edit] using the original published ID.
+			</description>
+		</method>
+		<method name="tagged" qualifiers="const">
+			<return type="SteamWorkshopPublishRequest" />
+			<param index="0" name="tag" type="String" />
+			<description>Returns a branch that includes this tag in the replacement set. Supply up to 16 distinct tags using printable characters other than commas. A tag supports up to 255 UTF-8 bytes, and Steam also bounds the combined set. Leaving tags unset on an edit preserves the existing set.</description>
+		</method>
+		<method name="visibility" qualifiers="const">
+			<return type="SteamWorkshopPublishRequest" />
+			<param index="0" name="visibility" type="int" enum="SteamWorkshopPublishRequest.Visibility" />
+			<description>Returns a branch with the selected Steam Workshop audience. Leaving visibility unset keeps a new item private and preserves an existing item's audience.</description>
+		</method>
+		<method name="with_content" qualifiers="const">
+			<return type="SteamWorkshopPublishRequest" />
+			<param index="0" name="directory" type="String" />
+			<description>Returns a branch that uploads the selected content directory. Use an existing absolute local directory or a Godot path that resolves to one. Steam uploads the directory's contents.</description>
+		</method>
+		<method name="with_preview" qualifiers="const">
+			<return type="SteamWorkshopPublishRequest" />
+			<param index="0" name="image_file" type="String" />
+			<description>Returns a branch with a replacement local preview image. The file must contain at least 16 bytes and be smaller than 1 MiB. Steam uses the active app's Cloud settings to store the preview.</description>
+		</method>
+	</methods>
+	<constants>
+		<constant name="PRIVATE" value="0" enum="Visibility">Restricts visibility to the item's author.</constant>
+		<constant name="FRIENDS_ONLY" value="1" enum="Visibility">Shares the item with the author's Steam friends.</constant>
+		<constant name="PUBLIC" value="2" enum="Visibility">Publishes the item publicly in Steam Workshop.</constant>
+		<constant name="UNLISTED" value="3" enum="Visibility">Allows viewing through the item's link while keeping it out of global Workshop query results.</constant>
+	</constants>
+</class>

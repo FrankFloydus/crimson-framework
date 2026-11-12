@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="SteamServerStatus" inherits="RefCounted">
+	<brief_description>Detached snapshot of a dedicated Game's current Steam readiness and admission.</brief_description>
+	<methods>
+		<method name="is_ready" qualifiers="const">
+			<return type="bool" />
+			<description>True when the exact playerless Game is running with admission open.</description>
+		</method>
+		<method name="is_listed" qualifiers="const">
+			<return type="bool" />
+			<description>Compatibility name for [method is_advertisement_requested].</description>
+		</method>
+		<method name="is_advertisement_requested" qualifiers="const">
+			<return type="bool" />
+			<description>True when this world enabled local Steam browser advertisement. Confirm external discoverability by querying from a Steam client.</description>
+		</method>
+		<method name="is_secure" qualifiers="const">
+			<return type="bool" />
+			<description>True when the dedicated SDK is logged in, reports Steam secure mode, and has a current transport certificate.</description>
+		</method>
+		<method name="get_authenticated_players" qualifiers="const">
+			<return type="int" />
+			<description>Number of remote peers verified and admitted by the active Game Session.</description>
+		</method>
+		<method name="get_world_id" qualifiers="const">
+			<return type="StringName" />
+			<description>Stable published world identifier, or empty when no world is published.</description>
+		</method>
+	</methods>
+	<members>
+		<member name="ready" type="bool" getter="is_ready" setter="">True when the exact playerless Game is running with admission open.</member>
+		<member name="listed" type="bool" getter="is_listed" setter="">Compatibility alias for [member advertisement_requested].</member>
+		<member name="advertisement_requested" type="bool" getter="is_advertisement_requested" setter="">True when local Steam browser advertisement was enabled. A browser query is needed to confirm external discovery.</member>
+		<member name="secure" type="bool" getter="is_secure" setter="">True when the dedicated SDK is logged in, reports Steam secure mode, and has a current transport certificate.</member>
+		<member name="authenticated_players" type="int" getter="get_authenticated_players" setter="">Number of remote peers verified and admitted by the active Game Session.</member>
+		<member name="world_id" type="StringName" getter="get_world_id" setter="">Stable published world identifier, or empty when no world is published.</member>
+	</members>
+</class>

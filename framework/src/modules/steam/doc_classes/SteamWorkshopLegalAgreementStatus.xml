@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="SteamWorkshopLegalAgreementStatus" inherits="RefCounted">
+	<brief_description>
+		The signed-in user's Workshop legal agreement status for the exact AppID.
+	</brief_description>
+	<description>
+		Use [member needs_action] to determine whether Steam needs the user to accept the latest version. The user may have accepted an older version. Open the agreement explicitly with [method SteamWorkshop.show_legal_agreement].
+	</description>
+	<methods>
+		<method name="get_app_id" qualifiers="const">
+			<return type="int" />
+			<description>Returns the AppID Steam confirmed for this status.</description>
+		</method>
+		<method name="get_version" qualifiers="const">
+			<return type="int" />
+			<description>Returns the version of the signed agreement when applicable.</description>
+		</method>
+		<method name="get_accepted_at_unix" qualifiers="const">
+			<return type="int" />
+			<description>Returns the signed agreement's Unix timestamp when available.</description>
+		</method>
+		<method name="is_accepted" qualifiers="const">
+			<return type="bool" />
+			<description>Reports whether Steam says the user accepted the reported version.</description>
+		</method>
+		<method name="get_needs_action" qualifiers="const">
+			<return type="bool" />
+			<description>Reports whether the user needs to accept the latest agreement.</description>
+		</method>
+	</methods>
+	<members>
+		<member name="app_id" type="int" setter="" getter="get_app_id">
+			Exact active AppID reported by Steam.
+		</member>
+		<member name="version" type="int" setter="" getter="get_version">
+			Agreement version reported by Steam, or zero when unavailable.
+		</member>
+		<member name="accepted_at_unix" type="int" setter="" getter="get_accepted_at_unix">
+			Time Steam recorded the agreement action, or zero when unavailable.
+		</member>
+		<member name="accepted" type="bool" setter="" getter="is_accepted">
+			Whether the reported agreement version was accepted.
+		</member>
+		<member name="needs_action" type="bool" setter="" getter="get_needs_action">
+			Whether Steam requires user action for the latest agreement.
+		</member>
+	</members>
+</class>

@@ -9,24 +9,32 @@
 
 #include <cstdint>
 #include <memory>
+#include <optional>
+
+namespace crimson::steam {
+class SteamConnectionPath;
+class SteamRuntime;
+class SteamServer;
+class SteamServerRuntime;
+class SteamSocketRuntime;
+}
 
 namespace crimson::integration {
 
-class SteamRuntime;
+// Godot host-star peer over certificate-backed Steam Networking Sockets connections.
+class SteamPeer : public godot::MultiplayerPeerExtension {
+    GDCLASS(SteamPeer, godot::MultiplayerPeerExtension)
 
-// Godot host-star peer over Steam Networking Sockets P2P connections.
-class CrimsonSteamPeer : public godot::MultiplayerPeerExtension {
-    GDCLASS(CrimsonSteamPeer, godot::MultiplayerPeerExtension)
-
-    friend class CrimsonSteamSessionTransport;
+    friend class SteamSessionTransport;
 
     struct State;
     // Owns the listener, polling group, and authenticated physical peer mappings.
     std::unique_ptr<State> state;
 
-    // Open an authority listener or connect to the expected Steam account and virtual port.
-    godot::Error open(const std::shared_ptr<SteamRuntime> &runtime, int32_t virtual_port, int32_t remote_limit,
-            uint64_t expected_authority = 0);
+    // Open P2P, direct IPv4, or hosted relay networking on the matching Steam callback pipe.
+    godot::Error open(const std::shared_ptr<steam::SteamSocketRuntime> &runtime, int32_t port, int32_t remote_limit,
+            uint64_t expected_authority = 0, std::optional<uint32_t> direct_ipv4 = {}, bool hosted = false,
+            bool prefer_relay = false);
 
 protected:
     // Register diagnostics available on the Godot peer.
@@ -34,9 +42,9 @@ protected:
 
 public:
     // Create a disconnected Godot peer.
-    CrimsonSteamPeer();
+    SteamPeer();
     // Release SDK subscriptions, poll group, and all sockets before releasing the runtime.
-    ~CrimsonSteamPeer() override;
+    ~SteamPeer() override;
 
     // Return the Steam ID bound to a ready, authenticated physical connection.
     uint64_t get_remote_steam_id(int32_t peer_id) const;
@@ -88,40 +96,68 @@ public:
 };
 
 // Native Steam adapter selected by the game-scoped Steam service provider.
-class CrimsonSteamSessionTransport : public session::CrimsonSessionTransport {
-    GDCLASS(CrimsonSteamSessionTransport, session::CrimsonSessionTransport)
+class SteamSessionTransport : public session::SessionTransport {
+    GDCLASS(SteamSessionTransport, session::SessionTransport)
 
     // Scene-thread Steam runtime shared by the provider and active sockets.
-    std::shared_ptr<SteamRuntime> runtime;
+    std::shared_ptr<steam::SteamRuntime> runtime;
+    // Dedicated authorities use the separate SteamGameServer network interface.
+    std::shared_ptr<steam::SteamServerRuntime> server_runtime;
     // P2P virtual port of this adapter's next listener.
     int32_t virtual_port = 0;
+    // Per-listener preference for Valve relays with direct ICE still available.
+    bool prefer_relay_routes = false;
+    // Host-order direct bind interface for the dedicated listener.
+    uint32_t dedicated_ipv4 = 0;
+    // Gameplay port declared by the dedicated settings.
+    uint16_t dedicated_port = 0;
+    // Whether the dedicated Game uses Valve's hosted relay listener.
+    bool hosted_relay = false;
+    // Hosted listener's explicitly selected Steam virtual port.
+    int32_t hosted_virtual_port = 0;
+    // Hosted route committed by the trusted game coordinator for the current listener.
+    godot::Ref<session::SessionEndpoint> hosted_endpoint;
+    // Single-use exact endpoint authorized by the current Game's fresh coordinator request.
+    godot::Ref<session::SessionEndpoint> hosted_client_endpoint;
     // Weak reference to the only active physical peer created by this adapter.
     godot::ObjectID active_peer;
 
     // Resolve the current transport without extending its lifetime.
-    CrimsonSteamPeer *get_active_peer() const;
+    SteamPeer *get_active_peer() const;
 
 protected:
     // Register Steam route creation and listener and identity diagnostics.
     static void _bind_methods();
 
 public:
-    // Configure the signed-in Steam runtime and listener's virtual port before opening a peer.
-    godot::Error configure(const std::shared_ptr<SteamRuntime> &p_runtime, int32_t p_virtual_port = 0);
+    // Configure the signed-in Steam runtime and listener settings before opening a peer.
+    godot::Error configure(const std::shared_ptr<steam::SteamRuntime> &p_runtime, int32_t p_virtual_port = 0,
+            bool prefer_relay = false);
+    // Configure a dedicated listener on the separate GameServer pipe.
+    godot::Error configure_dedicated(const std::shared_ptr<steam::SteamServerRuntime> &runtime,
+            const godot::Ref<steam::SteamServer> &settings, int32_t hosted_virtual_port = 0);
+    // Close the exact client SDK peer before the fatal IPC generation loses native access.
+    bool retire_client_runtime();
+    // Expose a committed hosted route only while its coordinator registration is owned.
+    void set_hosted_endpoint(const godot::Ref<session::SessionEndpoint> &endpoint);
+    // Stage or retire the exact endpoint granted by this Game's fresh hosted ticket authorization.
+    void set_hosted_client_endpoint(const godot::Ref<session::SessionEndpoint> &endpoint);
     // Construct a typed Steam endpoint using the expected authority ID and virtual port.
-    static godot::Ref<session::CrimsonSessionEndpoint> route(uint64_t owner_id, int32_t virtual_port);
+    static godot::Ref<session::SessionEndpoint> route(uint64_t owner_id, int32_t virtual_port);
     // Return the endpoint of the currently open authority, if any.
-    godot::Ref<session::CrimsonSessionEndpoint> get_host_endpoint() const;
+    godot::Ref<session::SessionEndpoint> get_host_endpoint() const;
     // Return the current authority's physical remote-seat bound, or zero.
     int32_t get_host_remote_limit() const;
     // Resolve the provider-verified physical Steam account for a ready peer.
     uint64_t get_remote_steam_id(int32_t peer_id) const;
+    // Sample only the current physical connection for the admitted account.
+    godot::Ref<steam::SteamConnectionPath> get_peer_path(int32_t peer_id, uint64_t admitted_account) const;
     // Listen on the configured Steam virtual port using the requested remote-seat limit.
-    godot::Ref<session::CrimsonSessionTransportResult> open_server(int64_t port, int64_t remote_limit,
+    godot::Ref<session::SessionTransportResult> open_server(int64_t port, int64_t remote_limit,
             const godot::String &bind_address) override;
     // Connect to the Steam account and virtual port in a typed endpoint.
-    godot::Ref<session::CrimsonSessionTransportResult> open_client(
-            const godot::Ref<session::CrimsonSessionEndpoint> &endpoint) override;
+    godot::Ref<session::SessionTransportResult> open_client(
+            const godot::Ref<session::SessionEndpoint> &endpoint) override;
     // Close a current peer with Steam's best-effort reliable linger.
     void disconnect_after_flush(const godot::Ref<godot::MultiplayerPeer> &peer, int32_t peer_id) override;
 };

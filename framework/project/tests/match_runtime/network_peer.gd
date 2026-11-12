@@ -22,15 +22,15 @@ const SCOUT := "scout"
 const RESERVE := "reserve"
 
 # Native session used for the offline run and the ENet run.
-var _session: CrimsonGameSession
+var _session: GameSession
 # RPC endpoint at the same node path in both processes.
 var _ingress: TestIngress
 # Authority-side stores and transaction commits for the current run.
-var _coordinator: CrimsonTransactionCoordinator
+var _coordinator: TransactionCoordinator
 # Authority-side primary character assignments.
-var _possession: CrimsonPossession
+var _possession: PlayerPossession
 # Shared command path for local and remote players.
-var _router: CrimsonCommandRouter
+var _router: CommandRouter
 # Ordered log of casts that reached the gameplay handler.
 var _accepted_casts: Array = []
 # Assertions that failed, including those checked in signal callbacks.
@@ -40,7 +40,7 @@ var _failures := 0
 # Exchanges test commands and acknowledgments across the ENet connection.
 class TestIngress extends Node:
 	# Stable player IDs associated with admitted connection IDs.
-	var bindings := CrimsonPlayerBindings.new()
+	var bindings := PlayerBindings.new()
 	# Authority-side callable for dispatching an identified player's command.
 	var submit: Callable
 	# Server replies keyed by the command sequence supplied by the client.
@@ -112,7 +112,7 @@ func _run() -> void:
 	shell.name = "MatchRuntimeHarness"
 	root.add_child(shell)
 
-	_session = CrimsonGameSession.new()
+	_session = GameSession.new()
 	_session.name = "Session"
 	shell.add_child(_session)
 	_ingress = TestIngress.new()
@@ -137,9 +137,9 @@ func _run() -> void:
 # Initialize fresh stores, possession rules, and command handlers for one run.
 func _configure_authority() -> bool:
 	_accepted_casts.clear()
-	_coordinator = CrimsonTransactionCoordinator.new()
-	_possession = CrimsonPossession.new()
-	_router = CrimsonCommandRouter.new()
+	_coordinator = TransactionCoordinator.new()
+	_possession = PlayerPossession.new()
+	_router = CommandRouter.new()
 	if not _expect(_coordinator.register_store(
 			"players", {LOCAL_PLAYER: {"name": "Host"}, REMOTE_PLAYER: {"name": "Guest"}}, _read_only) == OK,
 			"Register player records."):
@@ -250,7 +250,7 @@ func _claim_and_cast_locally() -> bool:
 func _run_client(port: int) -> bool:
 	if not _expect(_session.join(ADDRESS, port, 6.0) == OK, "Join the loopback host."):
 		return false
-	if not await _wait_for(func() -> bool: return _session.get_state() == CrimsonGameSession.State.CLIENT,
+	if not await _wait_for(func() -> bool: return _session.get_state() == GameSession.State.CLIENT,
 			"the client session"):
 		return false
 	if not await _wait_for(func() -> bool: return _ingress.client_can_start, "the server's command gate"):

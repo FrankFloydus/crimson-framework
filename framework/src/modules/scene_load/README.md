@@ -2,7 +2,7 @@
 
 # Scene Load Manager
 
-`CrimsonSceneLoadManager` is a native Godot node for replacing a managed world offline or across connected multiplayer peers. It uses the `MultiplayerAPI` for its own scene-tree branch. `CrimsonGameSession` or the game can supply that transport.
+`SceneLoadManager` is a native Godot node for replacing a managed world offline or across connected multiplayer peers. It uses the `MultiplayerAPI` for its own scene-tree branch. `GameSession` or the game can supply that transport.
 
 ## Setup
 
@@ -51,7 +51,7 @@ The host records the connected group at the start. Each participant asynchronous
 
 While a network transition runs, the host transport refuses new connections. Admission stays closed for the active managed world. A first transition that fails before commit restores the previous admission setting. A post-commit failure keeps admission closed for recovery. Ending the transport, exiting the manager, or removing a world with no pending recovery releases the gate. Connect the intended group before loading and keep admission closed while the manager owns the world. Late join hydration and application state replication belong to the game.
 
-CrimsonGame's immediate-play integration uses a native-only local request on this loader. The integration selects a packaged scene from its own definition, configures the detached candidate, and uses the same mount and cancellation lifecycle. On a late join it authorizes that request for the entering guest only. The running authority and other guests keep their current mounts while the integration confirms the entrant's scene and spawn baseline. The standalone methods above retain their coordinated behavior.
+GameRuntime's immediate-play integration uses a native-only local request on this loader. The integration selects a packaged scene from its own definition, configures the detached candidate, and uses the same mount and cancellation lifecycle. On a late join it authorizes that request for the entering guest only. The running authority and other guests keep their current mounts while the integration confirms the entrant's scene and spawn baseline. The standalone methods above retain their coordinated behavior.
 
 PackedScene scripts should defer gameplay initialization that requires remote peers until the manager confirms completion. Scene selection synchronizes asset IDs and world activation. The game supplies matching content on every peer and owns player state, scene-specific authority, spawn rules, and save/restore orchestration.
 

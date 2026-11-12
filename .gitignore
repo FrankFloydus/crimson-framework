@@ -8,8 +8,7 @@
 /framework/bin/**
 /framework/project/addons/crimson-framework/bin/
 
-# Local platform SDKs obtained from their vendors
-/framework/vendor/eos/
+# Local Steamworks SDKs
 /framework/vendor/steamworks/
 
 # Ignore scons database

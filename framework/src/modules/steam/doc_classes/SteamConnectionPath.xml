@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="SteamConnectionPath" inherits="RefCounted">
+	<brief_description>A snapshot of an authenticated Steam connection's route and quality.</brief_description>
+	<description>Read this snapshot from [method SteamSocketConnection.path] or [method SteamNetworking.peer_path]. Steam reports measurements for the current connection. Sample again for updates.</description>
+	<tutorials>
+	</tutorials>
+	<methods>
+		<method name="get_kind" qualifiers="const">
+			<return type="int" enum="SteamConnectionPath.RouteKind" />
+			<description>Returns the current route kind.</description>
+		</method>
+		<method name="get_ping_ms" qualifiers="const">
+			<return type="int" />
+			<description>Returns the latency measurement in milliseconds.</description>
+		</method>
+		<method name="get_packet_loss" qualifiers="const">
+			<return type="float" />
+			<description>Returns Steam's estimated in-order delivery deficit.</description>
+		</method>
+	</methods>
+	<members>
+		<member name="kind" type="int" setter="" getter="get_kind" enum="SteamConnectionPath.RouteKind" default="0">Steam's observed route kind.</member>
+		<member name="ping_ms" type="int" setter="" getter="get_ping_ms" default="-1">Steam's latency measurement in milliseconds, or [code]-1[/code] before a measurement.</member>
+		<member name="packet_loss" type="float" setter="" getter="get_packet_loss" default="-1.0">A value from [code]0.0[/code] to [code]1.0[/code] estimated as one minus Steam's local in-order delivery quality. Steam can count reordered packets in this metric. [code]-1.0[/code] means unavailable.</member>
+	</members>
+	<constants>
+		<constant name="UNKNOWN" value="0" enum="RouteKind">Steam has not identified the route.</constant>
+		<constant name="DIRECT" value="1" enum="RouteKind">Steam reports a direct socket path.</constant>
+		<constant name="RELAY" value="2" enum="RouteKind">Steam reports a relayed connection.</constant>
+	</constants>
+</class>

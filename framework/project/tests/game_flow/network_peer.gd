@@ -75,7 +75,7 @@ func _run_host(port: int) -> bool:
 	if not _register_authority_store() or not _expect(_game.host(port, 4, ADDRESS) == OK,
 		"Start the Game Flow authority on loopback UDP %d." % port):
 		return false
-	if not _expect(_game.is_authority() and _game.get_phase() == CrimsonGame.LOBBY,
+	if not _expect(_game.is_authority() and _game.get_phase() == GameRuntime.LOBBY,
 		"Hosting enters the authority lobby before any world starts."):
 		return false
 	print("CRIMSON_GAME_FLOW_HOST_READY")

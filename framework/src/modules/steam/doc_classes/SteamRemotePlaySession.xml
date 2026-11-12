@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="SteamRemotePlaySession" inherits="RefCounted">
+	<brief_description>A snapshot of a connected Steam Remote Play stream.</brief_description>
+	<description>Use the session ID to associate a stream with a game-owned local player seat. Take a fresh snapshot when current device information is needed.</description>
+	<tutorials>
+	</tutorials>
+	<members>
+		<member name="client_size" type="Vector2i" getter="get_client_size" setter="">
+			Reported streaming client's display resolution in pixels, or zero in both dimensions when Steam has no resolution.
+		</member>
+		<member name="session_id" type="int" getter="get_session_id" setter="">
+			Steam's transient stream ID. Use it to match input and disconnect signals to the active seat.
+		</member>
+		<member name="steam_id" type="String" getter="get_steam_id" setter="">
+			Decimal SteamID64, or an empty string when Steam has no individual account ID for the guest.
+		</member>
+		<member name="together" type="bool" getter="get_together" setter="">
+			Whether the stream was created using a Remote Play Together invitation.
+		</member>
+	</members>
+</class>

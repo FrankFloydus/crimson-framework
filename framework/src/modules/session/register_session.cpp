@@ -3,6 +3,7 @@
 #include "register_session.hpp"
 
 #include "game_session.hpp"
+#include "online_listing.hpp"
 
 #include <godot_cpp/core/class_db.hpp>
 
@@ -10,14 +11,15 @@ namespace crimson::session {
 
 void register_types(godot::ModuleInitializationLevel level) {
     if (level == godot::MODULE_INITIALIZATION_LEVEL_SCENE) {
-        GDREGISTER_CLASS(CrimsonSessionEndpoint);
-        GDREGISTER_CLASS(CrimsonSessionTransportResult);
-        GDREGISTER_CLASS(CrimsonSessionTransport);
-        GDREGISTER_CLASS(CrimsonENetSessionTransport);
-        GDREGISTER_CLASS(CrimsonSessionIdentity);
-        GDREGISTER_CLASS(CrimsonSessionAuthRequest);
-        GDREGISTER_CLASS(CrimsonSessionAuthenticator);
-        GDREGISTER_CLASS(CrimsonGameSession);
+        GDREGISTER_CLASS(SessionEndpoint);
+        GDREGISTER_CLASS(SessionTransportResult);
+        GDREGISTER_CLASS(SessionTransport);
+        GDREGISTER_CLASS(ENetSessionTransport);
+        GDREGISTER_CLASS(SessionIdentity);
+        GDREGISTER_CLASS(SessionAuthRequest);
+        GDREGISTER_CLASS(SessionAuthenticator);
+        GDREGISTER_CLASS(GameSession);
+        GDREGISTER_CLASS(OnlineListing);
     }
 }
 

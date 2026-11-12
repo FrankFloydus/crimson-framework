@@ -29,9 +29,9 @@ class TestContext:
 	# Persistent parent for the manager's currently published scene.
 	var world_container: Node
 	# Native session owned by this context.
-	var session: CrimsonGameSession
+	var session: GameSession
 	# Native scene loader scoped to this context.
-	var manager: CrimsonSceneLoadManager
+	var manager: SceneLoadManager
 	# Scene IDs that began loading on this peer.
 	var started: Array[StringName] = []
 	# Scene IDs successfully published on this peer.
@@ -269,10 +269,10 @@ func _create_context(branch_name: String) -> TestContext:
 	context.world_container = Node.new()
 	context.world_container.name = "WorldContainer"
 	context.branch.add_child(context.world_container)
-	context.session = CrimsonGameSession.new()
+	context.session = GameSession.new()
 	context.session.name = "GameSession"
 	context.branch.add_child(context.session)
-	context.manager = CrimsonSceneLoadManager.new()
+	context.manager = SceneLoadManager.new()
 	context.manager.name = "SceneLoadManager"
 	context.branch.add_child(context.manager)
 	# Record the start and publication order for this peer.
@@ -311,13 +311,13 @@ func _connect_contexts(host: TestContext, client: TestContext) -> bool:
 		return false
 	# Consider the fixture connected only after the host and client agree on the peer ID.
 	var connected := func():
-		return (client.session.get_state() == CrimsonGameSession.CLIENT
+		return (client.session.get_state() == GameSession.CLIENT
 			and host.session.get_connected_peer_ids().has(client.session.get_local_peer_id()))
 	return await _wait_for(connected, "The server and client discover each other.")
 
 
 # Find a usable loopback UDP port and host the ENet session.
-func _host_on_loopback(session: CrimsonGameSession) -> int:
+func _host_on_loopback(session: GameSession) -> int:
 	for attempt in range(5):
 		var socket := PacketPeerUDP.new()
 		if socket.bind(0, "127.0.0.1") != OK:

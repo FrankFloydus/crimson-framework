@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="SteamSocketListenerResult" inherits="SteamResult">
+	<brief_description>Typed result of opening a standalone Steam listener.</brief_description>
+	<description>A successful result contains the new listener.</description>
+	<tutorials>
+	</tutorials>
+	<methods>
+		<method name="get_value" qualifiers="const">
+			<return type="SteamSocketListener" />
+			<description>Returns the issued listener when the result succeeded.</description>
+		</method>
+	</methods>
+	<members>
+		<member name="value" type="SteamSocketListener" setter="" getter="get_value">The owned listener, or [code]null[/code] on failure.</member>
+	</members>
+</class>

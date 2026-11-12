@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="SteamLeaderboardPageOperation" inherits="RefCounted">
+	<brief_description>Observes a cancellable leaderboard read.</brief_description>
+	<description>
+		A request started from [method SteamLeaderboardQuery.fetch_operation] can first resolve the board and then download the page. A request from an existing [SteamLeaderboard] starts at the download. Stopping the owning scope settles pending reads with [constant @GlobalScope.ERR_SKIP].
+	</description>
+	<methods>
+		<method name="cancel">
+			<return type="int" enum="Error" />
+			<description>
+				Ends local observation of the current stage. Returns [constant @GlobalScope.OK] when the cancellation was applied. The operation settles with [constant @GlobalScope.ERR_SKIP]. Steam can still finish an already submitted download.
+			</description>
+		</method>
+		<method name="is_finished" qualifiers="const">
+			<return type="bool" />
+			<description>Returns whether this operation has a terminal outcome.</description>
+		</method>
+		<method name="result" qualifiers="const">
+			<return type="SteamLeaderboardPageResult" />
+			<description>Returns the same typed terminal result delivered by [signal completed], or [code]null[/code] while pending.</description>
+		</method>
+		<method name="wait">
+			<return type="Variant" />
+			<description>Use [code]await[/code] to get a [SteamLeaderboardPageResult]. A settled operation returns its result immediately.</description>
+		</method>
+	</methods>
+	<signals>
+		<signal name="completed">
+			<param index="0" name="result" type="SteamLeaderboardPageResult" />
+			<description>Emitted once with the typed terminal outcome after the operation has settled.</description>
+		</signal>
+	</signals>
+</class>

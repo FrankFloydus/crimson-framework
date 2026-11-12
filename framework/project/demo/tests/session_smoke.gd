@@ -5,23 +5,23 @@ const ADDRESS := "127.0.0.1"
 const WAIT_MS := 15000
 
 # A game-supplied adapter that records the native Session's factory and rejection calls.
-class LoopbackTransport extends CrimsonSessionTransport:
-	var enet := CrimsonENetSessionTransport.new()
+class LoopbackTransport extends SessionTransport:
+	var enet := ENetSessionTransport.new()
 	var session: WeakRef
 	var server_ports: Array[int] = []
 	var client_ports: Array[int] = []
 	var rejected_peers: Array[int] = []
 	var during_open: Array[int] = []
 
-	func _open_server(port: int, remote_limit: int, bind_address: String) -> CrimsonSessionTransportResult:
+	func _open_server(port: int, remote_limit: int, bind_address: String) -> SessionTransportResult:
 		server_ports.append(port)
 		during_open.append(session.get_ref().start_offline())
 		return enet.open_server(port, remote_limit, bind_address)
 
-	func _open_client(endpoint: CrimsonSessionEndpoint) -> CrimsonSessionTransportResult:
+	func _open_client(endpoint: SessionEndpoint) -> SessionTransportResult:
 		client_ports.append(endpoint.get_port())
 		if endpoint.get_address() != ADDRESS:
-			return CrimsonSessionTransportResult.failed(ERR_INVALID_PARAMETER)
+			return SessionTransportResult.failed(ERR_INVALID_PARAMETER)
 		return enet.open_client(endpoint)
 
 	func _disconnect_after_flush(peer: MultiplayerPeer, peer_id: int) -> void:
@@ -29,11 +29,11 @@ class LoopbackTransport extends CrimsonSessionTransport:
 		enet.disconnect_after_flush(peer, peer_id)
 
 
-class LoopbackProvider extends CrimsonServiceProvider:
+class LoopbackProvider extends GameServiceProvider:
 	var adapter := LoopbackTransport.new()
 
-	func _create_session() -> CrimsonGameSession:
-		var session := CrimsonGameSession.new()
+	func _create_session() -> GameSession:
+		var session := GameSession.new()
 		adapter.session = weakref(session)
 		if session.set_transport_adapter(adapter) != OK:
 			session.free()
@@ -42,8 +42,8 @@ class LoopbackProvider extends CrimsonServiceProvider:
 
 
 var _demo: Node
-var _game: CrimsonGame
-var _definition: CrimsonGameDefinition
+var _game: GameRuntime
+var _definition: GameDefinition
 var _markers: String
 var _ended_reason := &""
 var _loopback: LoopbackProvider
@@ -64,7 +64,7 @@ func _run() -> void:
 	_markers = args[2]
 	var main := load(String(ProjectSettings.get_setting("application/run/main_scene"))) as PackedScene
 	_demo = main.instantiate()
-	_game = _demo.get_node(^"Game") as CrimsonGame
+	_game = _demo.get_node(^"Game") as GameRuntime
 	var authored := _game.definition
 	var authored_rules := authored.multiplayer_rules
 	_definition = authored.with_multiplayer(authored_rules.on_port(port).with_max_players(3))
@@ -107,7 +107,7 @@ func _run_solo() -> bool:
 			"Reject a blank address without starting a session."):
 		return false
 	var pending := _game.join_game(ADDRESS)
-	if not _check(not pending.is_finished() and _game.get_phase() == CrimsonGame.TRANSITIONING
+	if not _check(not pending.is_finished() and _game.get_phase() == GameRuntime.TRANSITIONING
 			and _game.get_world() == null, "Keep a pending join separate from world readiness."):
 		return false
 	var cancelled := _game.leave()
@@ -115,7 +115,7 @@ func _run_solo() -> bool:
 			and _ended_reason == &"left" and _is_idle(), "Cancel the pending operation and release transport."):
 		return false
 	var pending_load := _game.play_solo()
-	if not _check(not pending_load.is_finished() and _game.get_phase() == CrimsonGame.TRANSITIONING
+	if not _check(not pending_load.is_finished() and _game.get_phase() == GameRuntime.TRANSITIONING
 			and _game.leave() == OK and pending_load.result.code == "Cancelled" and _is_idle(),
 			"Cancel during Scene Load and release the mount and transport."):
 		return false
@@ -137,7 +137,7 @@ func _run_solo() -> bool:
 
 func _exercise_builder() -> bool:
 	var authored := _game.definition
-	var base := CrimsonGame.configure()
+	var base := GameRuntime.configure()
 	var ready := (
 		base.with_starting_world(authored.starting_world, authored.starting_world_scene)
 		.with_player(authored.player_scene)
@@ -152,7 +152,7 @@ func _exercise_builder() -> bool:
 	_demo.add_child(built)
 	var invalid_result: Dictionary = await built.host_game(ADDRESS).wait()
 	var invalid: bool = (
-		invalid_result.code == "InvalidSpawnSetup" and built.get_phase() == CrimsonGame.IDLE
+		invalid_result.code == "InvalidSpawnSetup" and built.get_phase() == GameRuntime.IDLE
 		and built.get_world() == null and built.get_local_player() == null
 	)
 	built.definition = ready.with_multiplayer(null)
@@ -160,9 +160,9 @@ func _exercise_builder() -> bool:
 	var start_result: Dictionary = await built.play_solo().wait()
 	var started: bool = start_result.ok and built.get_local_player() != null and _uses_scene_loader(built)
 	var during_teardown: Array[String] = []
-	var restarted: Array[CrimsonGameOperation] = []
+	var restarted: Array[GameOperation] = []
 	var on_phase := func(phase: int) -> void:
-		if phase == CrimsonGame.IDLE:
+		if phase == GameRuntime.IDLE:
 			during_teardown.append(built.play_solo().result.code)
 	built.phase_changed.connect(on_phase)
 	built.session_ended.connect(func(_reason: StringName) -> void:
@@ -183,14 +183,14 @@ func _exercise_builder() -> bool:
 
 func _exercise_legacy_world_session() -> bool:
 	var legacy := (
-		CrimsonWorldSession.configure()
+		WorldSession.configure()
 		.with_world(_definition.starting_world_scene)
 		.with_players(_definition.player_scene)
 		.with_local_view(^"Camera3D", ^"Visuals")
 		.create()
 	)
 	_demo.add_child(legacy)
-	var started := legacy.start_offline() == OK and legacy.get_state() == CrimsonWorldSession.RUNNING \
+	var started := legacy.start_offline() == OK and legacy.get_state() == WorldSession.RUNNING \
 		and legacy.get_local_player() != null
 	var ended := legacy.leave() == OK and legacy.get_world() == null
 	_demo.remove_child(legacy)
@@ -223,21 +223,21 @@ func _exercise_reattach() -> bool:
 	retained.name = &"RetainedGame"
 	_demo.add_child(retained)
 	var started: Dictionary = await retained.play_solo().wait()
-	if not _check(started.ok and Crimson.for_node(retained) == retained, "Publish the initialized Game scope."):
+	if not _check(started.ok and GameServices.for_node(retained) == retained, "Publish the initialized Game scope."):
 		return false
-	var loader := retained.get_node(^"SceneLoader") as CrimsonSceneLoadManager
-	var transport := retained.get_node(^"Session") as CrimsonGameSession
+	var loader := retained.get_node(^"SceneLoader") as SceneLoadManager
+	var transport := retained.get_node(^"Session") as GameSession
 	var old_world_id := retained.get_world().get_instance_id()
 	_demo.remove_child(retained)
-	if not _check(Crimson.for_node(retained) == null and transport.get_state() == CrimsonGameSession.IDLE,
+	if not _check(GameServices.for_node(retained) == null and transport.get_state() == GameSession.IDLE,
 			"Removing the retained Game closes its scope and transport."):
 		retained.free()
 		return false
 	_demo.add_child(retained)
-	if not await _wait_until(func() -> bool: return Crimson.for_node(retained) == retained, "retained Game republishes after cleanup"):
+	if not await _wait_until(func() -> bool: return GameServices.for_node(retained) == retained, "retained Game republishes after cleanup"):
 		return false
 	if not _check(retained.get_node(^"SceneLoader") == loader and retained.get_node(^"Session") == transport
-			and loader.get_current_scene() == null and retained.get_phase() == CrimsonGame.IDLE,
+			and loader.get_current_scene() == null and retained.get_phase() == GameRuntime.IDLE,
 			"Reattach keeps the injected services and retires the previous world before publishing."):
 		return false
 	var restarted: Dictionary = await retained.play_solo().wait()
@@ -434,8 +434,8 @@ func _start_host(description: String) -> bool:
 	return _check(result.ok and _players_match([0]) and _uses_scene_loader(_game), description)
 
 
-func _uses_scene_loader(game: CrimsonGame) -> bool:
-	var loader := game.get_node(^"SceneLoader") as CrimsonSceneLoadManager
+func _uses_scene_loader(game: GameRuntime) -> bool:
+	var loader := game.get_node(^"SceneLoader") as SceneLoadManager
 	return loader.get_current_scene() != null and loader.get_current_scene() == game.get_world()
 
 
@@ -447,7 +447,7 @@ func _expect_join_denial(code: String, reason: StringName) -> bool:
 	_game.phase_changed.disconnect(collect)
 	return _check(
 		not result.ok and result.code == code and result.get("reason", "") == String(reason)
-		and _ended_reason == reason and _is_idle() and observed == [CrimsonGame.TRANSITIONING, CrimsonGame.IDLE],
+		and _ended_reason == reason and _is_idle() and observed == [GameRuntime.TRANSITIONING, GameRuntime.IDLE],
 		"A denied guest never publishes a world or running phase and receives %s." % reason
 	)
 
@@ -466,7 +466,7 @@ func _make_world(num_poses: int) -> PackedScene:
 	world.add_child(points)
 	points.owner = world
 	if num_poses > 0:
-		var anchor := CrimsonSpawnPoint.new()
+		var anchor := PlayerSpawnPoint.new()
 		anchor.name = &"Anchor"
 		points.add_child(anchor)
 		anchor.owner = world
@@ -484,7 +484,7 @@ func _make_world(num_poses: int) -> PackedScene:
 func _players_match(expected_slots: Array, local_slot: int = 0) -> bool:
 	var hub := _game.get_world()
 	var camera := root.get_camera_3d()
-	if _game.get_phase() != CrimsonGame.RUNNING or hub == null or camera == null:
+	if _game.get_phase() != GameRuntime.RUNNING or hub == null or camera == null:
 		return false
 	var actors := hub.get_node(^"Players")
 	var spawns := hub.get_node(^"SpawnPoints")
@@ -515,7 +515,7 @@ func _players_match(expected_slots: Array, local_slot: int = 0) -> bool:
 
 
 func _is_idle() -> bool:
-	return _game.get_phase() == CrimsonGame.IDLE and _game.get_world() == null and _game.get_local_player() == null
+	return _game.get_phase() == GameRuntime.IDLE and _game.get_world() == null and _game.get_local_player() == null
 
 
 func _host_departed() -> bool:

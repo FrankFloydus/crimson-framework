@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="SteamScreenshots" inherits="RefCounted">
+	<brief_description>Scoped access to Steam screenshot capture, annotated saves, and ready events.</brief_description>
+	<description>Resolve this facade with [method SteamClient.screenshots]. Call it on the main thread. Steam's overlay handles its normal screenshot hotkey. Submitted images go to the user's local Steam screenshot library.</description>
+	<tutorials>
+		<link title="Steamworks screenshots">https://partner.steamgames.com/doc/api/ISteamScreenshots</link>
+	</tutorials>
+	<methods>
+		<method name="capture" qualifiers="const">
+			<return type="int" enum="Error" />
+			<description>Ask Steam to capture the current rendered frame. Return [constant OK] when the request was issued. Observe [signal screenshot_ready] after a successful save. Return [constant ERR_BUSY] while the overlay is unavailable for capture or another integration has hooked screenshots.</description>
+		</method>
+		<method name="from_image">
+			<return type="SteamScreenshotRequest" />
+			<param index="0" name="image" type="Image" />
+			<description>Snapshot a nonempty, uncompressed image as RGB8 without mipmaps. Each side is limited to 8192 pixels and the total to 16777216 pixels. Invalid input is reported when submitting the draft. Later edits to the original image do not affect the draft.</description>
+		</method>
+		<method name="is_available" qualifiers="const">
+			<return type="bool" />
+			<description>Return whether this scope has Steam's screenshot interface and ready-event routing. Capture has the additional overlay requirement.</description>
+		</method>
+	</methods>
+	<signals>
+		<signal name="screenshot_ready">
+			<param index="0" name="screenshot" type="SteamScreenshot" />
+			<description>Emitted for a successful Steam save, including the normal screenshot hotkey. Only the scope that submitted an annotated image reports its annotation status. Use the draft's result for exact correlation.</description>
+		</signal>
+	</signals>
+</class>

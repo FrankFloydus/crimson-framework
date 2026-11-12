@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="SteamLobbyMember" inherits="RefCounted">
+	<brief_description>Detached identity and presentation snapshot for one Steam lobby member.</brief_description>
+	<methods>
+		<method name="get_steam_id" qualifiers="const">
+			<return type="String" />
+			<description>The member's decimal SteamID64 string.</description>
+		</method>
+		<method name="get_display_name" qualifiers="const">
+			<return type="String" />
+			<description>The locally available Steam persona name, or an empty string if unavailable.</description>
+		</method>
+		<method name="get_is_owner" qualifiers="const">
+			<return type="bool" />
+			<description>Whether this member was Steam's owner at snapshot time.</description>
+		</method>
+	</methods>
+	<members>
+		<member name="steam_id" type="String" setter="" getter="get_steam_id">The member's decimal SteamID64 string.</member>
+		<member name="display_name" type="String" setter="" getter="get_display_name">The locally available Steam persona name, or an empty string if unavailable.</member>
+		<member name="is_owner" type="bool" setter="" getter="get_is_owner">Whether this member was Steam's owner at snapshot time.</member>
+	</members>
+</class>

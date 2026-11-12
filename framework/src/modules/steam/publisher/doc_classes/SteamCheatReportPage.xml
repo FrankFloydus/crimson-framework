@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="SteamCheatReportPage" inherits="RefCounted">
+	<brief_description>
+		A bounded read-only page of Valve reports in increasing report ID order.
+	</brief_description>
+	<description>
+		Reports are ordered by the full unsigned Valve report ID. Use [member next_report_id] as [param after_report_id] in another [method SteamPublisherModeration.reports] call with the same UTC window. The cursor is present when the current reply contained rows beyond the local 64-report page limit.
+	</description>
+	<tutorials>
+	</tutorials>
+	<methods>
+		<method name="get_reports" qualifiers="const">
+			<return type="SteamCheatReport[]" />
+			<description>
+				Returns the detached reports for this page.
+			</description>
+		</method>
+		<method name="get_next_report_id" qualifiers="const">
+			<return type="String" />
+			<description>
+				Returns the exclusive continuation cursor, or empty when no additional row is known.
+			</description>
+		</method>
+	</methods>
+	<members>
+		<member name="reports" type="SteamCheatReport[]" setter="" getter="get_reports">
+			The detached reports for this page.
+		</member>
+		<member name="next_report_id" type="String" setter="" getter="get_next_report_id">
+			The exclusive continuation cursor, or empty when no additional row is known.
+		</member>
+	</members>
+</class>

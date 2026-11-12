@@ -1,0 +1,139 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="SteamScope" inherits="RefCounted">
+	<brief_description>Steam capabilities captured by one attached GameRuntime, with diagnostics for startup failures.</brief_description>
+	<methods>
+		<method name="is_ready" qualifiers="const">
+			<return type="bool" />
+			<description>Return whether this attachment has a live Steam client and provider.</description>
+		</method>
+		<method name="get_app_id" qualifiers="const">
+			<return type="int" />
+			<description>Return the confirmed active Steam AppID, or zero when unavailable.</description>
+		</method>
+		<method name="get_local_steam_id" qualifiers="const">
+			<return type="String" />
+			<description>Return the local signed-in SteamID64, or an empty string when unavailable.</description>
+		</method>
+		<method name="get_initialization_error" qualifiers="const">
+			<return type="String" />
+			<description>Return the diagnostic captured by this game's provider. Successful attachments return an empty string.</description>
+		</method>
+		<method name="lobbies" qualifiers="const">
+			<return type="SteamLobbies" />
+			<description>Resolve this exact attachment's lobby discovery service. Retained services expire on tree exit.</description>
+		</method>
+		<method name="apps" qualifiers="const">
+			<return type="SteamApps" />
+			<description>Read app metadata through this attachment's active Steam client. Returns null when this generation has ended.</description>
+		</method>
+		<method name="friends" qualifiers="const">
+			<return type="SteamFriends" />
+			<description>Use this attachment's active friends service. Returns null when this generation has ended.</description>
+		</method>
+		<method name="overlay" qualifiers="const">
+			<return type="SteamOverlay" />
+			<description>Use this attachment's overlay actions and state when Steam provides them. Returns null when this generation has ended.</description>
+		</method>
+		<method name="utils" qualifiers="const">
+			<return type="SteamUtils" />
+			<description>Read client and hardware state through this attachment. Returns null when this generation has ended.</description>
+		</method>
+		<method name="diagnostics" qualifiers="const">
+			<return type="SteamDiagnostics" />
+			<description>Resolve the warning capture service for this attachment. Returns null when this generation has ended.</description>
+		</method>
+		<method name="http" qualifiers="const">
+			<return type="SteamHttp" />
+			<description>Issue HTTP requests on this attachment's client scope. Returns null when this generation has ended.</description>
+		</method>
+		<method name="stats" qualifiers="const">
+			<return type="SteamStats" />
+			<description>Read or manage this attachment's Steam stats and achievements. Returns null when this generation has ended.</description>
+		</method>
+		<method name="leaderboards" qualifiers="const">
+			<return type="SteamLeaderboards" />
+			<description>Resolve the leaderboard service for this attachment. Returns null when this generation has ended.</description>
+		</method>
+		<method name="cloud" qualifiers="const">
+			<return type="SteamCloud" />
+			<description>Resolve Steam Cloud for this attachment. Returns null when this generation has ended.</description>
+		</method>
+		<method name="timeline" qualifiers="const">
+			<return type="SteamTimeline" />
+			<description>Resolve Steam Game Recording events for this attachment. Returns null when this generation has ended.</description>
+		</method>
+		<method name="screenshots" qualifiers="const">
+			<return type="SteamScreenshots" />
+			<description>Returns the screenshot capture and result service for this exact Game attachment. Returns null after the attachment ends.</description>
+		</method>
+		<method name="remote_play" qualifiers="const">
+			<return type="SteamRemotePlay" />
+			<description>Returns the Remote Play session and input service for this exact Game attachment. Returns null after the attachment ends.</description>
+		</method>
+		<method name="inventory" qualifiers="const">
+			<return type="SteamInventory" />
+			<description>Returns the Steam Inventory service for this exact Game attachment. Returns null after the attachment ends.</description>
+		</method>
+		<method name="workshop" qualifiers="const">
+			<return type="SteamWorkshop" />
+			<description>Returns the Steam Workshop service for this exact Game attachment. Returns null after the attachment ends.</description>
+		</method>
+		<method name="presence" qualifiers="const">
+			<return type="SteamPresence" />
+			<description>Returns the managed Rich Presence service for this exact Game attachment, or null after the scope ends.</description>
+		</method>
+		<method name="music" qualifiers="const">
+			<return type="SteamMusic" />
+			<description>Returns the Steam music player service for this exact Game attachment, or null after the scope ends.</description>
+		</method>
+		<method name="video" qualifiers="const">
+			<return type="SteamVideo" />
+			<description>Returns the Steam video and broadcast service for this exact Game attachment, or null after the scope ends.</description>
+		</method>
+		<method name="device" qualifiers="const">
+			<return type="SteamDevice" />
+			<description>Returns the device, virtual keyboard, and VR status service for this exact Game attachment, or null after the scope ends.</description>
+		</method>
+		<method name="auth" qualifiers="const">
+			<return type="SteamAuth" />
+			<description>Returns the authentication and ownership ticket service for this exact Game attachment, or null after the scope ends.</description>
+		</method>
+		<method name="input" qualifiers="const">
+			<return type="SteamInput" />
+			<description>Returns the Steam Input controller service for this exact Game attachment, or null after the scope ends.</description>
+		</method>
+		<method name="browser" qualifiers="const">
+			<return type="SteamBrowser" />
+			<description>Returns the Steam HTML Surface service for this exact Game attachment, or null after the scope ends.</description>
+		</method>
+		<method name="purchases" qualifiers="const">
+			<return type="SteamPurchases" />
+			<description>Returns the purchase facade for this exact Game attachment, or null after it ends. Bind a backend through [method SteamProvider.with_commerce_backend].</description>
+		</method>
+		<method name="voice" qualifiers="const">
+			<return type="SteamVoice" />
+			<description>Returns Steam voice capture and decoding for this exact Game attachment, or null after the attachment ends.</description>
+		</method>
+		<method name="parties" qualifiers="const">
+			<return type="SteamParties" />
+			<description>Returns this attachment's Steam Parties service, or null after the scope ends.</description>
+		</method>
+		<method name="server_browser" qualifiers="const">
+			<return type="SteamServerBrowser" />
+			<description>Return this exact client scope's Steam dedicated server browser, or null when its client is unavailable.</description>
+		</method>
+		<method name="messages" qualifiers="const">
+			<return type="SteamMessages" />
+			<description>Returns this attachment's Steam message service for admitted peers and configured channels. Returns null after the attachment ends.</description>
+		</method>
+		<method name="networking" qualifiers="const">
+			<return type="SteamNetworking" />
+			<description>Returns the Steam relay and connection-path diagnostics for this exact Game attachment, or null after the scope ends.</description>
+		</method>
+		<method name="sockets" qualifiers="const">
+			<return type="SteamSockets" />
+			<description>Returns the standalone Steam Sockets service for this exact Game attachment, or null after the scope ends.</description>
+		</method>
+	</methods>
+</class>

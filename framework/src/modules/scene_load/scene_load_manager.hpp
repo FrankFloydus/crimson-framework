@@ -16,12 +16,12 @@
 
 namespace crimson::scene_load {
 
-class CrimsonSceneLoadManager : public godot::Node {
-    GDCLASS(CrimsonSceneLoadManager, godot::Node)
+class SceneLoadManager : public godot::Node {
+    GDCLASS(SceneLoadManager, godot::Node)
 
 public:
     // Keep transition polling active while gameplay is paused.
-    CrimsonSceneLoadManager();
+    SceneLoadManager();
 
     // Select the persistent node that owns the mounted world.
     godot::Error set_world_container(godot::Node *container);

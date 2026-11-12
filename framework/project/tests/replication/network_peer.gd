@@ -12,9 +12,9 @@ const BINDING := 3
 const TIMEOUT_MS := 10000
 
 # Owns the fixture's ENet session.
-var _session: CrimsonGameSession
+var _session: GameSession
 # Native replication endpoint with the same path on both peers.
-var _replication: CrimsonReplication
+var _replication: StateReplication
 # Test-only confirmation endpoint.
 var _control: TestControl
 # Projection history recorded by the receiving process.
@@ -62,10 +62,10 @@ func _run() -> void:
 	var shell := Node.new()
 	shell.name = "ReplicationHarness"
 	root.add_child(shell)
-	_session = CrimsonGameSession.new()
+	_session = GameSession.new()
 	_session.name = "Session"
 	shell.add_child(_session)
-	_replication = CrimsonReplication.new()
+	_replication = StateReplication.new()
 	_replication.name = "Replication"
 	shell.add_child(_replication)
 	_control = TestControl.new()

@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="SteamWebTicketResult" inherits="SteamResult">
+	<brief_description>Reports whether Steam issued a Web API ticket.</brief_description>
+	<members>
+		<member name="value" type="SteamWebTicket" setter="" getter="get_value">The scoped ticket when issuance succeeds. Close it when the trusted backend no longer needs it.</member>
+	</members>
+</class>

@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="SteamTextEntry" inherits="RefCounted">
+	<brief_description>The user's decision from a Steam modal keyboard.</brief_description>
+	<description>Read this result after awaiting [method SteamDevice.enter_text].</description>
+	<tutorials>
+	</tutorials>
+	<members>
+		<member name="submitted" type="bool" getter="get_submitted" setter="">
+			Whether the user accepted the dialog. An accepted empty value still counts as submission. A dismissal has [code]submitted = false[/code].
+		</member>
+		<member name="text" type="String" getter="get_text" setter="">
+			Submitted text, or an empty string when the user dismissed the dialog. Hidden mode masks characters during input and still returns the submitted value here.
+		</member>
+	</members>
+</class>

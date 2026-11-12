@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="SteamTimelinePhaseResult" inherits="SteamResult">
+	<brief_description>
+		Reports the outcome of a recording lookup by stable game phase ID.
+	</brief_description>
+	<description>
+		Reports the outcome of a recording lookup by stable game phase ID.
+	</description>
+	<members>
+		<member name="value" type="TimelinePhaseRecording" setter="" getter="get_value">
+			The phase recording snapshot on success. Counts may be zero when Steam has no saved footage or captures.
+		</member>
+	</members>
+</class>

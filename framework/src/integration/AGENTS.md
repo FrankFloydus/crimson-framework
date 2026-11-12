@@ -4,7 +4,7 @@
 
 Use the [public API guide](../../docs/PUBLIC_API.md) for supported Godot bindings and the [architecture](../../docs/ARCHITECTURE.md) for module ownership and lifecycle contracts.
 
-- Compose services in [CrimsonGame](game/crimson_game.hpp). Keep game rules in registered stores, validators, commands, and projectors. Keep standalone modules independent of `src/integration`. [Cross-module adapters](adapters/) call owning modules through their APIs.
+- Compose services in [GameRuntime](game/crimson_game.hpp). Keep game rules in registered stores, validators, commands, and projectors. Keep standalone modules independent of `src/integration`. [Cross-module adapters](adapters/) call owning modules through their APIs.
 - Resolve Session and Scene Loader through [game-scoped factories](game/game_services.hpp). Attach the returned nodes at the established RPC-relative names and release the scope when the game leaves the tree.
 - Put fixed-world startup and player placement in [World Session](world_session/AGENTS.md). Put vendor composition and the directory contract in [Online](online/AGENTS.md).
 - Keep the game and its service nodes outside the replaceable world. Keep their paths relative to the Godot multiplayer root consistent across peers. Use durable world IDs for checkpoint destinations and scene IDs for asset selection.

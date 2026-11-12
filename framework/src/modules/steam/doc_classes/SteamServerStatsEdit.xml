@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="SteamServerStatsEdit" inherits="RefCounted">
+	<brief_description>Branchable edits to one player's published Steam GameServer progression.</brief_description>
+	<description>Each edit returns a new branch. Stage at most 32 changes with nonempty Steam API names of at most 127 UTF-8 bytes. [method submit] loads the cache if necessary and validates all names and readable types before calling setters. Steam applies setters individually. If a later setter fails, the receipt reports the accepted count and rejected index. Accepted cache changes can remain in Steam. An explicit [method SteamServerPlayerStats.store] can persist them without replaying the setters.</description>
+	<methods>
+		<method name="set_int" qualifiers="const">
+			<return type="SteamServerStatsEdit" />
+			<param index="0" name="name" type="StringName" />
+			<param index="1" name="value" type="int" />
+			<description>Stage an absolute signed 32-bit value for the published integer stat [param name].</description>
+		</method>
+		<method name="set_float" qualifiers="const">
+			<return type="SteamServerStatsEdit" />
+			<param index="0" name="name" type="StringName" />
+			<param index="1" name="value" type="float" />
+			<description>Stage an absolute finite value representable as a Steam single-precision float for [param name].</description>
+		</method>
+		<method name="update_average_rate" qualifiers="const">
+			<return type="SteamServerStatsEdit" />
+			<param index="0" name="name" type="StringName" />
+			<param index="1" name="count" type="float" />
+			<param index="2" name="seconds" type="float" />
+			<description>Stage a finite accumulated [param count] over a finite, positive elapsed duration in [param seconds] for the published AVGRATE stat [param name].</description>
+		</method>
+		<method name="unlock" qualifiers="const">
+			<return type="SteamServerStatsEdit" />
+			<param index="0" name="name" type="StringName" />
+			<description>Stage an unlock for the published server-writable achievement [param name].</description>
+		</method>
+		<method name="clear_achievement" qualifiers="const">
+			<return type="SteamServerStatsEdit" />
+			<param index="0" name="name" type="StringName" />
+			<description>Stage clearing the published server-writable achievement [param name]. Submit only for a deliberate reset.</description>
+		</method>
+		<method name="submit">
+			<return type="SteamServerStatsOperation" />
+			<description>Submit this exact draft once and return its retained observation. Repeated calls return the same operation, including after failure or cancellation. A successful edit receipt confirms Steam's native StoreUserStats response. An invalid draft settles with [constant ERR_INVALID_PARAMETER] before issuing Steam work. Use a new draft for a different game action.</description>
+		</method>
+	</methods>
+</class>

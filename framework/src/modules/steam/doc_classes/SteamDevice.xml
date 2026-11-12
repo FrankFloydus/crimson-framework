@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="SteamDevice" inherits="RefCounted">
+	<brief_description>
+		Reads Steam device and VR state and opens Steam text input.
+	</brief_description>
+	<description>
+		Get this service from [method SteamClient.device] after starting a Steam client. Query it on the main thread. Use the preset as a hint for initial settings and keep the player's saved choices. Steam reports platform state and accepts dashboard and keyboard requests. Use Godot's OpenXR interface for headset rendering, tracked input, and XR session lifecycle.
+	</description>
+	<tutorials>
+		<link title="Steam Utils">https://partner.steamgames.com/doc/api/ISteamUtils</link>
+	</tutorials>
+	<methods>
+		<method name="dismiss_keyboard">
+			<return type="int" enum="Error" />
+			<description>
+				Request dismissal of this scope's current Steam keyboard. [constant OK] means the request was accepted. The keyboard remains reserved until Steam reports it closed. Returns [constant ERR_DOES_NOT_EXIST] when there is no keyboard and [constant ERR_BUSY] when another scope owns it or a prior owner is closing.
+			</description>
+		</method>
+		<method name="enter_text">
+			<return type="Variant" />
+			<param index="0" name="prompt" type="String" />
+			<param index="1" name="initial" type="String" default="&quot;&quot;" />
+			<param index="2" name="max_chars" type="int" default="64" />
+			<param index="3" name="multiline" type="bool" default="false" />
+			<param index="4" name="hidden" type="bool" default="false" />
+			<description>
+				Open the modal Steam keyboard in the active rendered window. Await a [SteamTextEntryResult]. The optional prompt is limited to 1024 UTF-8 bytes and [param max_chars] to 1 through 4096 Unicode characters. Initial text must fit the requested length. Hidden mode masks characters during entry. A user dismissal succeeds with an empty, unsubmitted entry. Return an unavailable result if Steam cannot open the dialog or the owning scope stops, or [constant ERR_BUSY] if a keyboard is already active or closing.
+			</description>
+		</method>
+		<method name="hardware" qualifiers="const">
+			<return type="int" enum="SteamDevice.Hardware" />
+			<description>
+				Returns the hardware family Steam reports for this game, or [constant HARDWARE_UNKNOWN] if the query is unavailable or the reported value is unrecognized.
+			</description>
+		</method>
+		<method name="is_available" qualifiers="const">
+			<return type="bool" />
+			<description>
+				Returns whether this exact client start can query Steam Utils on the main thread. Some individual queries depend on additional SDK exports.
+			</description>
+		</method>
+		<method name="is_headset_streaming_enabled" qualifiers="const">
+			<return type="bool" />
+			<description>
+				Returns whether Steam reports that the headset view is streaming over Steam Remote Play. Returns [code]false[/code] if the query is unavailable.
+			</description>
+		</method>
+		<method name="is_proton" qualifiers="const">
+			<return type="bool" />
+			<description>
+				Returns whether Steam reports that the game process is running under Proton. Returns [code]false[/code] if the query is unavailable.
+			</description>
+		</method>
+		<method name="is_running_in_vr" qualifiers="const">
+			<return type="bool" />
+			<description>
+				Returns whether Steam itself reports running in VR mode. Returns [code]false[/code] if the query is unavailable. Query the OpenXR interface for the game's own XR session state.
+			</description>
+		</method>
+		<method name="is_steam_deck" qualifiers="const">
+			<return type="bool" />
+			<description>
+				Returns whether [method hardware] identifies a Steam Deck.
+			</description>
+		</method>
+		<method name="open_vr_dashboard">
+			<return type="int" enum="Error" />
+			<description>
+				Asks Steam to open its VR dashboard. [constant OK] acknowledges the SDK request. Returns [constant ERR_UNAVAILABLE] when Steam is outside VR mode or the scope or dashboard capability is unavailable.
+			</description>
+		</method>
+		<method name="recommended_preset" qualifiers="const">
+			<return type="int" enum="SteamDevice.Preset" />
+			<description>
+				Returns Steam's recommended starting configuration for this game and hardware. [constant PRESET_NONE] means Steam has no suggestion. [constant PRESET_UNKNOWN] means the query is unavailable or the value is unrecognized.
+			</description>
+		</method>
+		<method name="show_keyboard_for">
+			<return type="int" enum="Error" />
+			<param index="0" name="field" type="Control" />
+			<param index="1" name="mode" type="int" enum="SteamDevice.FloatingKeyboardMode" default="0" />
+			<description>
+				Open Steam's floating keyboard beside a visible, focused, editable [LineEdit] or [TextEdit] in the main game window. The field's bounds are transformed to client pixels. Steam sends OS key events to the focused control. Crimson requests dismissal if the field loses focus, becomes hidden or read-only, or leaves the tree. The field keeps its normal Godot text and submit behavior. Return [constant ERR_BUSY] while any scope's Steam keyboard is active or closing.
+			</description>
+		</method>
+	</methods>
+	<signals>
+		<signal name="keyboard_dismissed">
+			<description>Emitted when Steam confirms that the floating keyboard owned by this live scope closed. Await [method enter_text] for the separate modal result.</description>
+		</signal>
+	</signals>
+	<constants>
+		<constant name="SINGLE_LINE" value="0" enum="FloatingKeyboardMode">Single-line keyboard. Enter dismisses the keyboard.</constant>
+		<constant name="MULTILINE" value="1" enum="FloatingKeyboardMode">Multi-line keyboard. The user closes it explicitly.</constant>
+		<constant name="EMAIL" value="2" enum="FloatingKeyboardMode">Email keyboard layout. Enter dismisses the keyboard.</constant>
+		<constant name="NUMERIC" value="3" enum="FloatingKeyboardMode">Numeric keyboard layout. Enter dismisses the keyboard.</constant>
+		<constant name="HARDWARE_UNKNOWN" value="-1" enum="Hardware">The hardware family is unavailable or unrecognized.</constant>
+		<constant name="HARDWARE_NONE" value="0" enum="Hardware">Steam reports generic hardware with no Steam device family.</constant>
+		<constant name="HARDWARE_STEAM_DECK" value="1" enum="Hardware">Steam Deck hardware.</constant>
+		<constant name="HARDWARE_STEAM_MACHINE" value="2" enum="Hardware">Steam Machine hardware.</constant>
+		<constant name="HARDWARE_STEAM_FRAME" value="3" enum="Hardware">Steam Frame hardware.</constant>
+		<constant name="PRESET_UNKNOWN" value="-1" enum="Preset">The recommended preset is unavailable or unrecognized.</constant>
+		<constant name="PRESET_NONE" value="0" enum="Preset">Steam reports no preset suggestion.</constant>
+		<constant name="PRESET_LOW" value="1" enum="Preset">Steam suggests a general low preset.</constant>
+		<constant name="PRESET_MEDIUM" value="2" enum="Preset">Steam suggests a general medium preset.</constant>
+		<constant name="PRESET_HIGH" value="3" enum="Preset">Steam suggests a general high preset.</constant>
+		<constant name="PRESET_MAX" value="4" enum="Preset">Steam suggests a general maximum preset.</constant>
+		<constant name="PRESET_STEAM_DECK" value="5" enum="Preset">Steam suggests a preset tuned for Steam Deck.</constant>
+		<constant name="PRESET_STEAM_MACHINE" value="6" enum="Preset">Steam suggests a preset tuned for Steam Machine.</constant>
+		<constant name="PRESET_STEAM_FRAME" value="7" enum="Preset">Steam suggests a preset tuned for Steam Frame.</constant>
+	</constants>
+</class>

@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="SteamNotificationClaim" inherits="RefCounted">
+	<brief_description>
+		An atomic claim decision from the trusted notification store.
+	</brief_description>
+	<methods>
+		<method name="create" qualifiers="static">
+			<return type="SteamNotificationClaim" />
+			<param index="0" name="status" type="int" enum="SteamNotificationClaim.Status" />
+			<param index="1" name="session_id" type="String" default="&quot;&quot;" />
+			<description>Creates a store decision. A committed decision includes the original provider session ID.</description>
+		</method>
+		<method name="get_session_id" qualifiers="const">
+			<return type="String" />
+			<description>Returns the stored provider session ID for a committed operation.</description>
+		</method>
+		<method name="get_status" qualifiers="const">
+			<return type="int" enum="SteamNotificationClaim.Status" />
+			<description>Returns the durable claim decision.</description>
+		</method>
+	</methods>
+	<members>
+		<member name="session_id" type="String" setter="" getter="get_session_id">
+			Canonical provider session ID from the committed receipt.
+		</member>
+		<member name="status" type="int" enum="SteamNotificationClaim.Status" setter="" getter="get_status">
+			The durable decision for this exact operation key.
+		</member>
+	</members>
+	<constants>
+		<constant name="CLAIMED" value="0" enum="Status">The store created a claim for this caller and reserved its existing session target when applicable.</constant>
+		<constant name="IN_FLIGHT" value="1" enum="Status">The exact key or target has an unresolved write.</constant>
+		<constant name="COMMITTED" value="2" enum="Status">The exact operation already completed and has a durable receipt.</constant>
+		<constant name="CONFLICT" value="3" enum="Status">The same key belongs to a different immutable request.</constant>
+		<constant name="DENIED" value="4" enum="Status">The configured app lacks ownership of the requested target.</constant>
+	</constants>
+</class>

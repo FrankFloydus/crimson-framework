@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="SteamWebTicket" inherits="RefCounted">
+	<brief_description>Holds a revocable Steam Web API ticket.</brief_description>
+	<methods>
+		<method name="bytes" qualifiers="const">
+			<return type="PackedByteArray" />
+			<description>Returns the opaque bytes while the issuing scope and ticket are active. Transfer them only to the trusted verifier. Keep them out of save data, replays, and logs.</description>
+		</method>
+		<method name="close">
+			<return type="void" />
+			<description>Cancels this ticket and clears its stored bytes. Call on the main thread after the backend no longer needs the ticket. Repeated calls are safe.</description>
+		</method>
+	</methods>
+</class>

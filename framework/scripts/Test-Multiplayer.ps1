@@ -5,8 +5,7 @@ param(
     [Parameter(Mandatory)][string]$GodotExe,
     [ValidateSet('template_debug', 'template_release')][string[]]$Target = @('template_debug', 'template_release'),
     [string]$WorkDirectory = [IO.Path]::GetTempPath(),
-    [string]$BinaryDirectory,
-    [switch]$TestEosRuntime
+    [string]$BinaryDirectory
 )
 
 $ErrorActionPreference = 'Stop'
@@ -187,6 +186,7 @@ foreach ($variant in $Target) {
         throw "Build $variant before running the multiplayer tests."
     }
     New-Item -ItemType Directory -Path (Join-Path $addon 'bin') -Force | Out-Null
+    Copy-Item -LiteralPath (Join-Path $sourceAddon 'images') -Destination $addon -Recurse
     Copy-Item -LiteralPath (Join-Path $binarySource $binary) -Destination (Join-Path $addon 'bin')
     $descriptor = Get-Content -Raw -LiteralPath (Join-Path $sourceAddon 'crimson-framework.gdextension')
     if ($variant -eq 'template_release') { $descriptor = $descriptor.Replace('.template_debug.', '.template_release.') }
@@ -195,7 +195,7 @@ foreach ($variant in $Target) {
     Copy-Item -LiteralPath (Join-Path $root 'project/project.godot') -Destination $project
     $testDestination = Join-Path $project 'tests'
     New-Item -ItemType Directory -Path $testDestination | Out-Null
-    foreach ($entry in @('session', 'scene_load', 'match_runtime', 'replication', 'game_flow', 'online', 'multiplayer_peer.gd')) {
+    foreach ($entry in @('session', 'scene_load', 'match_runtime', 'replication', 'game_flow', 'multiplayer_peer.gd')) {
         Copy-Item -LiteralPath (Join-Path $root "project/tests/$entry") -Destination $testDestination -Recurse
     }
     Copy-Item -LiteralPath (Join-Path $root 'project/demo') -Destination $project -Recurse
@@ -219,17 +219,4 @@ foreach ($variant in $Target) {
     Invoke-DemoSessionTest -Project $project -Area $area
     Invoke-DemoSessionTest -Project $project -Area $area -Dedicated
     Invoke-DemoSessionTest -Project $project -Area $area -Online
-    if ($TestEosRuntime) {
-        $runtime = Join-Path $binarySource 'EOSSDK-Win64-Shipping.dll'
-        if (!(Test-Path -LiteralPath $runtime -PathType Leaf)) {
-            throw 'Build with the EOS C SDK before running -TestEosRuntime.'
-        }
-        Invoke-TestGodot -Project $project -Area $area -Name 'eos-missing' `
-            -Arguments @('--script', 'res://tests/online/eos_runtime.gd', '--', 'missing') `
-            -Marker 'CRIMSON_EOS_RUNTIME_PASSED missing'
-        Copy-Item -LiteralPath $runtime -Destination (Join-Path $addon 'bin')
-        Invoke-TestGodot -Project $project -Area $area -Name 'eos-available' `
-            -Arguments @('--script', 'res://tests/online/eos_runtime.gd', '--', 'available') `
-            -Marker 'CRIMSON_EOS_RUNTIME_PASSED available'
-    }
 }

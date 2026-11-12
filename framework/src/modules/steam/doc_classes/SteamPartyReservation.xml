@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="SteamPartyReservation" inherits="RefCounted">
+	<brief_description>An exact live Steam seat reservation for one beacon.</brief_description>
+	<members>
+		<member name="steam_id" type="String" setter="" getter="get_steam_id">SteamID64 of the individual account that reserved this seat.</member>
+		<member name="beacon_id" type="String" setter="" getter="get_beacon_id">Opaque decimal ID of the beacon that owns this reservation.</member>
+	</members>
+</class>

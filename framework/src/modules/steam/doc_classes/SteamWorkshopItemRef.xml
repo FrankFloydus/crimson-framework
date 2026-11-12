@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="SteamWorkshopItemRef" inherits="RefCounted">
+	<brief_description>
+		Scoped reference to one Workshop item by published file ID.
+	</brief_description>
+	<methods>
+		<method name="edit" qualifiers="const">
+			<return type="SteamWorkshopPublishRequest" />
+			<description>Creates a branchable draft that edits this existing item. Unset fields keep their current values. Submission verifies that the item belongs to the active app.</description>
+		</method>
+		<method name="fetch" qualifiers="const">
+			<return type="Variant" />
+			<description>Use [code]await item.fetch()[/code] to receive a [SteamWorkshopItemResult] for this exact item in the active app. An unavailable or removed item can report [constant ERR_FILE_NOT_FOUND].</description>
+		</method>
+		<method name="install" qualifiers="const">
+			<return type="Variant" />
+			<param index="0" name="high_priority" type="bool" default="false" />
+			<description>Use [code]await item.install()[/code] to receive a [SteamWorkshopInstallResult]. A same-app item with a current local directory resolves immediately after identity verification. Otherwise this waits for Steam's matching download. [param high_priority] tells Steam to prioritize the transfer ahead of other downloads. An unsubscribed item may be cached temporarily. Inspect and validate the installed content before using it.</description>
+		</method>
+		<method name="installed" qualifiers="const">
+			<return type="SteamWorkshopInstall" />
+			<description>Returns a current local content directory after this client verifies the item through a Workshop query or a matching install event. An unknown, pending, legacy, or out-of-date install returns [code]null[/code]. Steam can record this inspection in the signed-in player's used items.</description>
+		</method>
+		<method name="subscribe" qualifiers="const">
+			<return type="Variant" />
+			<description>Use [code]await item.subscribe()[/code] to receive the [SteamWorkshopSubscriptionResult] for an explicit subscription to this app's item. The result confirms the subscription. Use [method install] to wait for a current local directory.</description>
+		</method>
+		<method name="unsubscribe" qualifiers="const">
+			<return type="Variant" />
+			<description>Use [code]await item.unsubscribe()[/code] to receive the [SteamWorkshopSubscriptionResult] for removing the subscription. Steam may remove the installed files after the game closes.</description>
+		</method>
+		<method name="vote" qualifiers="const">
+			<return type="Variant" />
+			<param index="0" name="up" type="bool" />
+			<description>Use [code]await item.vote(up)[/code] to receive the [SteamWorkshopVoteResult] after Steam acknowledges this app item's upvote or downvote for the signed-in account.</description>
+		</method>
+	</methods>
+</class>

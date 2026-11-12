@@ -11,31 +11,31 @@
 
 namespace crimson::integration {
 
-class CrimsonGame;
-class CrimsonSaveSlot;
+class GameRuntime;
+class SaveSlot;
 
 // An immutable set of options for capturing a save in one game slot.
-class CrimsonSaveRequest : public godot::RefCounted {
-    GDCLASS(CrimsonSaveRequest, godot::RefCounted)
+class SaveRequest : public godot::RefCounted {
+    GDCLASS(SaveRequest, godot::RefCounted)
 
 public:
     // Return a request with a replacement display label.
-    godot::Ref<CrimsonSaveRequest> named(const godot::String &value) const;
+    godot::Ref<SaveRequest> named(const godot::String &value) const;
     // Return a request with detached replacement display fields.
-    godot::Ref<CrimsonSaveRequest> with_context(const godot::Dictionary &value) const;
+    godot::Ref<SaveRequest> with_context(const godot::Dictionary &value) const;
     // Return a request with a detached screenshot, or clear the preview when the image is unavailable.
-    godot::Ref<CrimsonSaveRequest> with_preview(const godot::Ref<godot::Image> &value) const;
+    godot::Ref<SaveRequest> with_preview(const godot::Ref<godot::Image> &value) const;
     // Return a request for an autosave generation.
-    godot::Ref<CrimsonSaveRequest> as_autosave() const;
+    godot::Ref<SaveRequest> as_autosave() const;
     // Capture and write the request through its originating game on the main thread.
-    godot::Ref<CrimsonGameOperation> submit() const;
+    godot::Ref<GameOperation> submit() const;
 
 protected:
     // Bind the immutable builder and operation submission methods to Godot.
     static void _bind_methods();
 
 private:
-    friend class CrimsonSaveSlot;
+    friend class SaveSlot;
 
     // Weak instance ID of the game that owns this request's save services.
     godot::ObjectID game_id;
@@ -53,24 +53,24 @@ private:
     bool autosave = false;
 
     // Copy the request while sharing its private immutable metadata values.
-    godot::Ref<CrimsonSaveRequest> copy_request() const;
+    godot::Ref<SaveRequest> copy_request() const;
 };
 
 // Addresses one profile and slot on a game without retaining the game node.
-class CrimsonSaveSlot : public godot::RefCounted {
-    GDCLASS(CrimsonSaveSlot, godot::RefCounted)
+class SaveSlot : public godot::RefCounted {
+    GDCLASS(SaveSlot, godot::RefCounted)
 
 public:
     // Bind the handle to the game and address selected by the composition facade.
-    void configure(CrimsonGame *game, const godot::String &profile, const godot::String &slot);
+    void configure(GameRuntime *game, const godot::String &profile, const godot::String &slot);
     // Start an immutable manual-save request for this address.
-    godot::Ref<CrimsonSaveRequest> save() const;
+    godot::Ref<SaveRequest> save() const;
     // Restore the newest generation through the owning game's transition pipeline.
-    godot::Ref<CrimsonGameOperation> restore_latest() const;
+    godot::Ref<GameOperation> restore_latest() const;
     // Restore one exact generation using the sequence and ID returned in slot history.
-    godot::Ref<CrimsonGameOperation> restore(const godot::String &sequence, const godot::String &id) const;
+    godot::Ref<GameOperation> restore(const godot::String &sequence, const godot::String &id) const;
     // List a page of generations, optionally before the supplied exclusive cursor.
-    godot::Ref<CrimsonGameOperation> history(const godot::String &before_sequence = {},
+    godot::Ref<GameOperation> history(const godot::String &before_sequence = {},
             const godot::String &before_id = {}, int64_t limit = 16) const;
 
 protected:

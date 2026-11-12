@@ -17,19 +17,19 @@
 namespace crimson::integration {
 
 // Carries bounded command receipts and authoritative world notices within one session scope.
-class CrimsonMatchNetwork : public godot::Node {
-    GDCLASS(CrimsonMatchNetwork, godot::Node)
+class MatchNetwork : public godot::Node {
+    GDCLASS(MatchNetwork, godot::Node)
 
 public:
     // Keep transport deadlines running while the game tree is paused.
-    CrimsonMatchNetwork();
+    MatchNetwork();
 
     // Capture the connected peer installed in this scope by the current session.
     godot::Error bind_transport();
     // Bind the authority callback that accepts a trusted sender and a detached command intent.
     void set_dispatcher(const godot::Callable &callback);
     // Send one client command and retain its receipt or terminal transport error.
-    godot::Ref<CrimsonGameOperation> submit_remote(const godot::Dictionary &intent);
+    godot::Ref<GameOperation> submit_remote(const godot::Dictionary &intent);
     // Release the captured session and settle its pending commands as disconnected.
     void reset();
     // Send the pending destination and epoch to connected clients.
@@ -52,7 +52,7 @@ private:
     // Stores the operation and deadline for one pending receipt on the captured connection.
     struct PendingCommand {
         // Operation returned to the caller when the command was submitted.
-        godot::Ref<CrimsonGameOperation> operation;
+        godot::Ref<GameOperation> operation;
         // Monotonic time at which a missing receipt settles as a timeout.
         uint64_t deadline_msec = 0;
     };

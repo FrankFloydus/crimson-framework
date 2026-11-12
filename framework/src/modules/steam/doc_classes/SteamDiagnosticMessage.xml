@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="SteamDiagnosticMessage" inherits="RefCounted">
+	<brief_description>
+		One Steam SDK diagnostic from a capture batch.
+	</brief_description>
+	<description>
+		Each message records the SDK severity and a fixed description suitable for a developer console or log. The description is selected by severity, so the original SDK payload stays private.
+	</description>
+	<methods>
+		<method name="get_severity" qualifiers="const">
+			<return type="int" />
+			<description>
+				Returns the Steam SDK severity number. Steam uses [code]0[/code] for an informational message and [code]1[/code] for a warning.
+			</description>
+		</method>
+		<method name="get_text" qualifiers="const">
+			<return type="String" />
+			<description>
+				Returns the fixed framework description for the severity. Future SDK severity codes use a generic diagnostic description.
+			</description>
+		</method>
+	</methods>
+	<members>
+		<member name="severity" type="int" setter="" getter="get_severity">
+			Read-only Steam SDK severity number. Use it to select how a developer console presents the message.
+		</member>
+		<member name="text" type="String" setter="" getter="get_text">
+			Read-only description suitable for displaying or logging the diagnostic.
+		</member>
+	</members>
+</class>

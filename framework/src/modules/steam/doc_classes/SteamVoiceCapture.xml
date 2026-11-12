@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="SteamVoiceCapture" inherits="RefCounted">
+	<brief_description>Exclusive Steam microphone capture for one client scope.</brief_description>
+	<methods>
+		<method name="start">
+			<return type="int" enum="Error" />
+			<description>Requests capture for this scope. Call after the player opts in and explicitly starts push-to-talk. Another owner or native tail cleanup returns [constant ERR_BUSY]. Repeating an active start from the same owner is harmless.</description>
+		</method>
+		<method name="stop">
+			<return type="int" enum="Error" />
+			<description>Requests native stop. The exact owner may read final frames for up to 300 milliseconds. Scope teardown discards those frames immediately. A detached or inactive owner returns [constant ERR_UNAVAILABLE].</description>
+		</method>
+		<method name="read_frame">
+			<return type="SteamVoiceFrameResult" />
+			<description>Polls one opaque compressed frame of up to 8192 bytes. Call once per process frame during capture. An empty poll, exhausted tail, or detached owner returns [constant ERR_UNAVAILABLE].</description>
+		</method>
+	</methods>
+</class>

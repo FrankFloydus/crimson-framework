@@ -6,7 +6,7 @@ extends Node
 const LaunchArguments := preload("res://demo/session/launch_arguments.gd")
 const MainMenu := preload("res://demo/ui/main_menu.gd")
 
-@onready var _game: CrimsonGame = $Game
+@onready var _game: GameRuntime = $Game
 @onready var _menu: MainMenu = $MainMenu
 
 

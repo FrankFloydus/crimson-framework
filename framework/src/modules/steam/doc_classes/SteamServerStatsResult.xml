@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="SteamServerStatsResult" inherits="SteamResult">
+	<brief_description>Outcome and native evidence for a dedicated Steam progression action.</brief_description>
+	<description>For a submitted edit, success confirms the exact Steam StoreUserStats response. Failed results preserve the number of accepted setters and whether the store was issued. A timeout or cancellation with [member store_submitted] true leaves persistence unknown to the local observer.</description>
+	<methods>
+		<method name="get_applied" qualifiers="const">
+			<return type="int" />
+			<description>Return the number of setters accepted into the native cache for this action.</description>
+		</method>
+		<method name="get_failed_at" qualifiers="const">
+			<return type="int" />
+			<description>Return the zero-based index of a rejected edit, or -1 when no individual edit failed.</description>
+		</method>
+		<method name="get_steam_result" qualifiers="const">
+			<return type="int" />
+			<description>Return the exact observed Steam EResult, or 0 when there is no matched native result.</description>
+		</method>
+		<method name="was_store_submitted" qualifiers="const">
+			<return type="bool" />
+			<description>Return whether Steam assigned a native call handle to the store.</description>
+		</method>
+	</methods>
+	<members>
+		<member name="applied" type="int" getter="get_applied">Number of setters accepted into Steam's cache for this action.</member>
+		<member name="failed_at" type="int" getter="get_failed_at">Zero-based index of a rejected edit. Defaults to -1.</member>
+		<member name="steam_result" type="int" getter="get_steam_result">Observed Steam EResult, or 0 if unavailable.</member>
+		<member name="store_submitted" type="bool" getter="was_store_submitted">Whether Steam accepted a native store request for processing.</member>
+	</members>
+</class>

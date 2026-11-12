@@ -99,21 +99,21 @@ private:
 
 } // namespace
 
-void CrimsonCommandRouter::_bind_methods() {
+void CommandRouter::_bind_methods() {
     ClassDB::bind_method(D_METHOD("configure", "match_id", "world_epoch", "possessor"),
-            &CrimsonCommandRouter::configure);
+            &CommandRouter::configure);
     ClassDB::bind_method(D_METHOD("set_accepting_commands", "enabled"),
-            &CrimsonCommandRouter::set_accepting_commands);
-    ClassDB::bind_method(D_METHOD("advance_world", "world_epoch"), &CrimsonCommandRouter::advance_world);
+            &CommandRouter::set_accepting_commands);
+    ClassDB::bind_method(D_METHOD("advance_world", "world_epoch"), &CommandRouter::advance_world);
     ClassDB::bind_method(D_METHOD("reset_player_sequence", "player_id"),
-            &CrimsonCommandRouter::reset_player_sequence);
+            &CommandRouter::reset_player_sequence);
     ClassDB::bind_method(D_METHOD("register_handler", "command_type", "handler", "requires_primary"),
-            &CrimsonCommandRouter::register_handler, DEFVAL(false));
-    ClassDB::bind_method(D_METHOD("submit", "player_id", "intent"), &CrimsonCommandRouter::submit);
+            &CommandRouter::register_handler, DEFVAL(false));
+    ClassDB::bind_method(D_METHOD("submit", "player_id", "intent"), &CommandRouter::submit);
 }
 
-Error CrimsonCommandRouter::configure(const String &new_match_id, int64_t new_world_epoch,
-        const Ref<CrimsonPossession> &new_possessor) {
+Error CommandRouter::configure(const String &new_match_id, int64_t new_world_epoch,
+        const Ref<PlayerPossession> &new_possessor) {
     if (std::this_thread::get_id() != owner_thread || dispatching) {
         return ERR_BUSY;
     }
@@ -129,14 +129,14 @@ Error CrimsonCommandRouter::configure(const String &new_match_id, int64_t new_wo
     return OK;
 }
 
-Error CrimsonCommandRouter::check_configuration_call() const {
+Error CommandRouter::check_configuration_call() const {
     if (std::this_thread::get_id() != owner_thread || dispatching) {
         return ERR_BUSY;
     }
     return world_epoch == 0 ? ERR_UNCONFIGURED : OK;
 }
 
-Error CrimsonCommandRouter::set_accepting_commands(bool enabled) {
+Error CommandRouter::set_accepting_commands(bool enabled) {
     const Error status = check_configuration_call();
     if (status != OK) {
         return status;
@@ -145,7 +145,7 @@ Error CrimsonCommandRouter::set_accepting_commands(bool enabled) {
     return OK;
 }
 
-Error CrimsonCommandRouter::advance_world(int64_t new_world_epoch) {
+Error CommandRouter::advance_world(int64_t new_world_epoch) {
     const Error status = check_configuration_call();
     if (status != OK) {
         return status;
@@ -159,7 +159,7 @@ Error CrimsonCommandRouter::advance_world(int64_t new_world_epoch) {
     return OK;
 }
 
-Error CrimsonCommandRouter::reset_player_sequence(const String &player_id) {
+Error CommandRouter::reset_player_sequence(const String &player_id) {
     const Error status = check_configuration_call();
     if (status != OK) {
         return status;
@@ -171,7 +171,7 @@ Error CrimsonCommandRouter::reset_player_sequence(const String &player_id) {
     return OK;
 }
 
-Error CrimsonCommandRouter::register_handler(const String &command_type, const Callable &handler,
+Error CommandRouter::register_handler(const String &command_type, const Callable &handler,
         bool requires_primary) {
     const Error status = check_configuration_call();
     if (status != OK) {
@@ -190,7 +190,7 @@ Error CrimsonCommandRouter::register_handler(const String &command_type, const C
     return OK;
 }
 
-Dictionary CrimsonCommandRouter::submit(const String &player_id, const Dictionary &raw_intent) {
+Dictionary CommandRouter::submit(const String &player_id, const Dictionary &raw_intent) {
     const Error status = check_configuration_call();
     if (status == ERR_BUSY) {
         return rejected("Busy", "The command router is already dispatching or belongs to another thread.");
@@ -242,7 +242,7 @@ Dictionary CrimsonCommandRouter::submit(const String &player_id, const Dictionar
     }
 
     // Consume the sequence before running game code, including when the handler rejects the command.
-    const Ref<CrimsonCommandRouter> keep_alive(this);
+    const Ref<CommandRouter> keep_alive(this);
     const DispatchScope dispatch_scope(dispatching);
     player_sequences[player_id] = intent.sequence;
     const Variant raw_result = handler.call(player_id, dispatched_intent);

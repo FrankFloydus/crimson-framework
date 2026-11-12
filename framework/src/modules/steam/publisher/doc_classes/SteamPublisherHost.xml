@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="SteamPublisherHost" inherits="Node">
+	<brief_description>Resolves secrets and owns the trusted publisher transport.</brief_description>
+	<description>Attach a subclass on the trusted backend and override [method _resolve_secret]. Production requests use verified HTTPS to the fixed Steam partner origin. Test builds replace the transport with a local override and open no sockets.</description>
+	<tutorials>
+	</tutorials>
+	<methods>
+		<method name="_fixture_transport_enabled" qualifiers="const">
+			<return type="bool" />
+			<description>Returns true in publisher test builds. This fixture method is omitted from production builds.</description>
+		</method>
+		<method name="_resolve_secret" qualifiers="virtual">
+			<return type="String" />
+			<param index="0" name="reference" type="StringName" />
+			<description>Returns the secret for the configured reference or an empty string when unavailable. Keep returned data inside the trusted host.</description>
+		</method>
+		<method name="_resolve_encrypted_ticket_key" qualifiers="virtual">
+			<return type="PackedByteArray" />
+			<param index="0" name="reference" type="StringName" />
+			<description>Returns the exact private Steam app-ticket decryption key bytes for [param reference], or an empty array if unavailable. Resolve this key only inside the trusted backend.</description>
+		</method>
+		<method name="_test_decrypted_ownership_ticket" qualifiers="virtual">
+			<return type="Dictionary" />
+			<param index="0" name="ticket" type="PackedByteArray" />
+			<description>Returns synthetic decrypted ticket claims for encrypted ownership fixtures. This override is available only in the publisher test build.</description>
+		</method>
+		<method name="_test_response" qualifiers="virtual">
+			<return type="Dictionary" />
+			<param index="0" name="method" type="String" />
+			<param index="1" name="host" type="String" />
+			<param index="2" name="target" type="String" />
+			<param index="3" name="body" type="String" />
+			<param index="4" name="authenticated" type="bool" />
+			<description>Returns synthetic [code]status[/code], [code]body[/code] bytes, and optional [code]ticks[/code] in a publisher test build. The hook receives whether a key was resolved and never receives the key value.</description>
+		</method>
+	</methods>
+</class>

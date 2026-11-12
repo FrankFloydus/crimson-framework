@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="SteamMessagePeerResult" inherits="SteamResult">
+	<brief_description>Outcome of authorizing a scoped Steam Messages peer.</brief_description>
+	<members>
+		<member name="value" type="SteamMessagePeer" setter="" getter="get_value">The exact authorization on success. Sending still depends on Steam's native connection.</member>
+	</members>
+</class>

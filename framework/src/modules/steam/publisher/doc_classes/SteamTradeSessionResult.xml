@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="SteamTradeSessionResult" inherits="SteamResult">
+	<brief_description>
+		The result of requesting a trade from the trusted Steam publisher.
+	</brief_description>
+	<description>
+		Check [member SteamResult.ok] before using the acknowledgment. A timeout or unrecognized response can leave the request outcome unresolved. Reconcile Steam's state before submitting another request.
+	</description>
+	<tutorials>
+	</tutorials>
+	<methods>
+		<method name="get_value" qualifiers="const">
+			<return type="SteamTradeSession" />
+			<description>
+				Returns the acknowledged trade request, or [code]null[/code] on failure.
+			</description>
+		</method>
+	</methods>
+	<members>
+		<member name="value" type="SteamTradeSession" setter="" getter="get_value">
+			Read-only acknowledgment carrying both verified participant IDs.
+		</member>
+	</members>
+</class>

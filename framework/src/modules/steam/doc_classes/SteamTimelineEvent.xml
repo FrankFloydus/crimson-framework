@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="SteamTimelineEvent" inherits="RefCounted">
+	<brief_description>
+		Identifies an event created by a Steam Timeline service.
+	</brief_description>
+	<description>
+		Pass this handle back to the issuing [SteamTimeline] to update, end, remove, or inspect an event. The handle expires when its owning client scope stops.
+	</description>
+	<tutorials>
+	</tutorials>
+	<methods>
+		<method name="is_open" qualifiers="const">
+			<return type="bool" />
+			<description>
+				Returns whether the handle identifies a valid range awaiting its end time.
+			</description>
+		</method>
+		<method name="is_valid" qualifiers="const">
+			<return type="bool" />
+			<description>
+				Returns whether the handle still belongs to an active scope and its event has not been removed.
+			</description>
+		</method>
+	</methods>
+</class>

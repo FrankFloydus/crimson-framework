@@ -117,33 +117,33 @@ void drain_abandoned_resource(uint64_t tree_id, const String &path) {
 
 } // namespace
 
-CrimsonSceneLoadManager::CrimsonSceneLoadManager() {
+SceneLoadManager::SceneLoadManager() {
     set_process_mode(PROCESS_MODE_ALWAYS);
 }
 
-void CrimsonSceneLoadManager::_bind_methods() {
-    ClassDB::bind_method(D_METHOD("set_world_container", "container"), &CrimsonSceneLoadManager::set_world_container);
-    ClassDB::bind_method(D_METHOD("get_world_container"), &CrimsonSceneLoadManager::get_world_container);
-    ClassDB::bind_method(D_METHOD("register_scene", "scene_id", "scene_path"), &CrimsonSceneLoadManager::register_scene);
-    ClassDB::bind_method(D_METHOD("request_load", "scene_id"), &CrimsonSceneLoadManager::request_load);
+void SceneLoadManager::_bind_methods() {
+    ClassDB::bind_method(D_METHOD("set_world_container", "container"), &SceneLoadManager::set_world_container);
+    ClassDB::bind_method(D_METHOD("get_world_container"), &SceneLoadManager::get_world_container);
+    ClassDB::bind_method(D_METHOD("register_scene", "scene_id", "scene_path"), &SceneLoadManager::register_scene);
+    ClassDB::bind_method(D_METHOD("request_load", "scene_id"), &SceneLoadManager::request_load);
     ClassDB::bind_method(D_METHOD("request_coordinated_load", "scene_id", "publish_state"),
-            &CrimsonSceneLoadManager::request_coordinated_load);
-    ClassDB::bind_method(D_METHOD("cancel_load"), &CrimsonSceneLoadManager::cancel_load);
-    ClassDB::bind_method(D_METHOD("clear_world"), &CrimsonSceneLoadManager::clear_world);
-    ClassDB::bind_method(D_METHOD("is_loading"), &CrimsonSceneLoadManager::is_loading);
-    ClassDB::bind_method(D_METHOD("get_current_scene"), &CrimsonSceneLoadManager::get_current_scene);
-    ClassDB::bind_method(D_METHOD("get_current_scene_id"), &CrimsonSceneLoadManager::get_current_scene_id);
-    ClassDB::bind_method(D_METHOD("set_load_timeout_msec", "timeout"), &CrimsonSceneLoadManager::set_load_timeout_msec);
-    ClassDB::bind_method(D_METHOD("get_load_timeout_msec"), &CrimsonSceneLoadManager::get_load_timeout_msec);
-    ClassDB::bind_method(D_METHOD("set_manage_admission", "enabled"), &CrimsonSceneLoadManager::set_manage_admission);
-    ClassDB::bind_method(D_METHOD("get_manage_admission"), &CrimsonSceneLoadManager::get_manage_admission);
+            &SceneLoadManager::request_coordinated_load);
+    ClassDB::bind_method(D_METHOD("cancel_load"), &SceneLoadManager::cancel_load);
+    ClassDB::bind_method(D_METHOD("clear_world"), &SceneLoadManager::clear_world);
+    ClassDB::bind_method(D_METHOD("is_loading"), &SceneLoadManager::is_loading);
+    ClassDB::bind_method(D_METHOD("get_current_scene"), &SceneLoadManager::get_current_scene);
+    ClassDB::bind_method(D_METHOD("get_current_scene_id"), &SceneLoadManager::get_current_scene_id);
+    ClassDB::bind_method(D_METHOD("set_load_timeout_msec", "timeout"), &SceneLoadManager::set_load_timeout_msec);
+    ClassDB::bind_method(D_METHOD("get_load_timeout_msec"), &SceneLoadManager::get_load_timeout_msec);
+    ClassDB::bind_method(D_METHOD("set_manage_admission", "enabled"), &SceneLoadManager::set_manage_admission);
+    ClassDB::bind_method(D_METHOD("get_manage_admission"), &SceneLoadManager::get_manage_admission);
 
-    ClassDB::bind_method(D_METHOD(prepare_method, "token", "scene_id", "timeout"), &CrimsonSceneLoadManager::rpc_prepare);
-    ClassDB::bind_method(D_METHOD(ready_method, "token", "error"), &CrimsonSceneLoadManager::rpc_ready);
-    ClassDB::bind_method(D_METHOD(commit_method, "token"), &CrimsonSceneLoadManager::rpc_commit);
-    ClassDB::bind_method(D_METHOD(applied_method, "token", "error"), &CrimsonSceneLoadManager::rpc_applied);
-    ClassDB::bind_method(D_METHOD(finalize_method, "token"), &CrimsonSceneLoadManager::rpc_finalize);
-    ClassDB::bind_method(D_METHOD(abort_method, "token", "error", "after_commit"), &CrimsonSceneLoadManager::rpc_abort);
+    ClassDB::bind_method(D_METHOD(prepare_method, "token", "scene_id", "timeout"), &SceneLoadManager::rpc_prepare);
+    ClassDB::bind_method(D_METHOD(ready_method, "token", "error"), &SceneLoadManager::rpc_ready);
+    ClassDB::bind_method(D_METHOD(commit_method, "token"), &SceneLoadManager::rpc_commit);
+    ClassDB::bind_method(D_METHOD(applied_method, "token", "error"), &SceneLoadManager::rpc_applied);
+    ClassDB::bind_method(D_METHOD(finalize_method, "token"), &SceneLoadManager::rpc_finalize);
+    ClassDB::bind_method(D_METHOD(abort_method, "token", "error", "after_commit"), &SceneLoadManager::rpc_abort);
 
     ADD_SIGNAL(MethodInfo("load_started", PropertyInfo(Variant::STRING_NAME, "scene_id")));
     ADD_SIGNAL(MethodInfo("load_completed", PropertyInfo(Variant::STRING_NAME, "scene_id")));
@@ -153,7 +153,7 @@ void CrimsonSceneLoadManager::_bind_methods() {
             PropertyInfo(Variant::INT, "error"), PropertyInfo(Variant::STRING, "message")));
 }
 
-void CrimsonSceneLoadManager::_enter_tree() {
+void SceneLoadManager::_enter_tree() {
     leaving_tree = false;
     set_multiplayer_authority(server_id, false);
     Dictionary config;
@@ -174,7 +174,7 @@ void CrimsonSceneLoadManager::_enter_tree() {
     set_process(true);
 }
 
-void CrimsonSceneLoadManager::_exit_tree() {
+void SceneLoadManager::_exit_tree() {
     leaving_tree = true;
     if (pending) {
         Transition old = std::move(*pending);
@@ -193,7 +193,7 @@ void CrimsonSceneLoadManager::_exit_tree() {
     last_server_token = 0;
 }
 
-Error CrimsonSceneLoadManager::set_world_container(Node *container) {
+Error SceneLoadManager::set_world_container(Node *container) {
     if (pending || publishing_world) {
         return ERR_BUSY;
     }
@@ -208,13 +208,13 @@ Error CrimsonSceneLoadManager::set_world_container(Node *container) {
     return OK;
 }
 
-Node *CrimsonSceneLoadManager::get_world_container() const {
+Node *SceneLoadManager::get_world_container() const {
     Node *container = find_node(container_id);
     return is_inside_tree() && container && container->is_inside_tree() &&
             !container->is_queued_for_deletion() && container->get_tree() == get_tree() ? container : nullptr;
 }
 
-Error CrimsonSceneLoadManager::register_scene(const StringName &scene_id, const String &scene_path) {
+Error SceneLoadManager::register_scene(const StringName &scene_id, const String &scene_path) {
     if (pending || publishing_world) {
         return ERR_BUSY;
     }
@@ -231,7 +231,7 @@ Error CrimsonSceneLoadManager::register_scene(const StringName &scene_id, const 
     return OK;
 }
 
-bool CrimsonSceneLoadManager::slot_is_available() {
+bool SceneLoadManager::slot_is_available() {
     Node *container = get_world_container();
     if (!container) {
         return false;
@@ -242,23 +242,23 @@ bool CrimsonSceneLoadManager::slot_is_available() {
             (!occupant || occupant == current);
 }
 
-Node *CrimsonSceneLoadManager::get_staged_scene() const {
+Node *SceneLoadManager::get_staged_scene() const {
     Node *candidate = pending ? find_node(pending->candidate_id) : nullptr;
     return candidate && !candidate->get_parent() && !candidate->is_queued_for_deletion() ? candidate : nullptr;
 }
 
-Error CrimsonSceneLoadManager::request_load(const StringName &scene_id) {
+Error SceneLoadManager::request_load(const StringName &scene_id) {
     return begin_load(scene_id, Callable());
 }
 
-Error CrimsonSceneLoadManager::request_coordinated_load(const StringName &scene_id, const Callable &publish_state) {
+Error SceneLoadManager::request_coordinated_load(const StringName &scene_id, const Callable &publish_state) {
     if (!publish_state.is_valid()) {
         return ERR_INVALID_PARAMETER;
     }
     return begin_load(scene_id, publish_state);
 }
 
-Error CrimsonSceneLoadManager::request_local_load(const StringName &scene_id, const Ref<PackedScene> &scene,
+Error SceneLoadManager::request_local_load(const StringName &scene_id, const Ref<PackedScene> &scene,
         const Callable &configure_candidate) {
     if (pending || publishing_world) {
         return ERR_BUSY;
@@ -293,17 +293,17 @@ Error CrimsonSceneLoadManager::request_local_load(const StringName &scene_id, co
     return OK;
 }
 
-bool CrimsonSceneLoadManager::is_publishing() const {
+bool SceneLoadManager::is_publishing() const {
     return publishing_world;
 }
 
-void CrimsonSceneLoadManager::set_coordinated_enabled(bool enabled) {
+void SceneLoadManager::set_coordinated_enabled(bool enabled) {
     if (!pending && !publishing_world) {
         coordinated_enabled = enabled;
     }
 }
 
-Error CrimsonSceneLoadManager::begin_load(const StringName &scene_id, const Callable &publish_state) {
+Error SceneLoadManager::begin_load(const StringName &scene_id, const Callable &publish_state) {
     if (pending || publishing_world || !coordinated_enabled) {
         return ERR_BUSY;
     }
@@ -361,7 +361,7 @@ Error CrimsonSceneLoadManager::begin_load(const StringName &scene_id, const Call
     return OK;
 }
 
-Error CrimsonSceneLoadManager::cancel_load() {
+Error SceneLoadManager::cancel_load() {
     if (!pending) {
         return ERR_DOES_NOT_EXIST;
     }
@@ -376,7 +376,7 @@ Error CrimsonSceneLoadManager::cancel_load() {
     return OK;
 }
 
-Error CrimsonSceneLoadManager::clear_world() {
+Error SceneLoadManager::clear_world() {
     if (pending || publishing_world) {
         return ERR_BUSY;
     }
@@ -400,21 +400,21 @@ Error CrimsonSceneLoadManager::clear_world() {
     return OK;
 }
 
-bool CrimsonSceneLoadManager::is_loading() const {
+bool SceneLoadManager::is_loading() const {
     return pending.has_value();
 }
 
-Node *CrimsonSceneLoadManager::get_current_scene() const {
+Node *SceneLoadManager::get_current_scene() const {
     Node *world = find_node(world_id);
     Node *container = get_world_container();
     return world && container && !world->is_queued_for_deletion() && world->get_parent() == container ? world : nullptr;
 }
 
-StringName CrimsonSceneLoadManager::get_current_scene_id() const {
+StringName SceneLoadManager::get_current_scene_id() const {
     return get_current_scene() ? current_scene_id : StringName();
 }
 
-Error CrimsonSceneLoadManager::set_load_timeout_msec(int64_t timeout) {
+Error SceneLoadManager::set_load_timeout_msec(int64_t timeout) {
     if (pending) {
         return ERR_BUSY;
     }
@@ -425,11 +425,11 @@ Error CrimsonSceneLoadManager::set_load_timeout_msec(int64_t timeout) {
     return OK;
 }
 
-int64_t CrimsonSceneLoadManager::get_load_timeout_msec() const {
+int64_t SceneLoadManager::get_load_timeout_msec() const {
     return load_timeout_msec;
 }
 
-Error CrimsonSceneLoadManager::set_manage_admission(bool enabled) {
+Error SceneLoadManager::set_manage_admission(bool enabled) {
     if (pending || publishing_world || gated_transport.is_valid()) {
         return ERR_BUSY;
     }
@@ -437,11 +437,11 @@ Error CrimsonSceneLoadManager::set_manage_admission(bool enabled) {
     return OK;
 }
 
-bool CrimsonSceneLoadManager::get_manage_admission() const {
+bool SceneLoadManager::get_manage_admission() const {
     return manage_admission;
 }
 
-bool CrimsonSceneLoadManager::transport_matches(const Transition &transition) const {
+bool SceneLoadManager::transport_matches(const Transition &transition) const {
     const Ref<MultiplayerAPI> current = get_multiplayer();
     const Ref<MultiplayerPeer> peer = current.is_valid() ? current->get_multiplayer_peer() : Ref<MultiplayerPeer>();
     if (current != transition.network || peer != transition.transport) {
@@ -459,7 +459,7 @@ bool CrimsonSceneLoadManager::transport_matches(const Transition &transition) co
                                             : !current->is_server() && get_members(current).count(server_id) != 0);
 }
 
-void CrimsonSceneLoadManager::acquire_admission_gate(const Ref<MultiplayerPeer> &transport) {
+void SceneLoadManager::acquire_admission_gate(const Ref<MultiplayerPeer> &transport) {
     if (gated_transport != transport) {
         release_admission_gate();
         gated_transport = transport;
@@ -468,7 +468,7 @@ void CrimsonSceneLoadManager::acquire_admission_gate(const Ref<MultiplayerPeer> 
     transport->set_refuse_new_connections(true);
 }
 
-void CrimsonSceneLoadManager::release_admission_gate() {
+void SceneLoadManager::release_admission_gate() {
     if (gated_transport.is_valid()) {
         gated_transport->set_refuse_new_connections(restore_refuse_connections);
         gated_transport.unref();
@@ -477,7 +477,7 @@ void CrimsonSceneLoadManager::release_admission_gate() {
     gate_requires_recovery = false;
 }
 
-void CrimsonSceneLoadManager::reconcile_admission_gate() {
+void SceneLoadManager::reconcile_admission_gate() {
     if (!last_server_transport_id && gated_transport.is_null()) {
         return;
     }
@@ -498,12 +498,12 @@ void CrimsonSceneLoadManager::reconcile_admission_gate() {
     }
 }
 
-void CrimsonSceneLoadManager::poll_abandoned_loads() {
+void SceneLoadManager::poll_abandoned_loads() {
     abandoned_loads.erase(std::remove_if(abandoned_loads.begin(), abandoned_loads.end(), collect_finished_resource),
             abandoned_loads.end());
 }
 
-void CrimsonSceneLoadManager::_process(double) {
+void SceneLoadManager::_process(double) {
     if (publishing_world) {
         return;
     }
@@ -543,7 +543,7 @@ void CrimsonSceneLoadManager::_process(double) {
     }
 }
 
-void CrimsonSceneLoadManager::prepare_world() {
+void SceneLoadManager::prepare_world() {
     if (pending->local_scene.is_valid()) {
         const Ref<PackedScene> scene = pending->local_scene;
         stage_candidate(scene);
@@ -589,7 +589,7 @@ void CrimsonSceneLoadManager::prepare_world() {
     stage_candidate(packed);
 }
 
-void CrimsonSceneLoadManager::stage_candidate(const Ref<PackedScene> &packed) {
+void SceneLoadManager::stage_candidate(const Ref<PackedScene> &packed) {
     const int64_t token = pending->token;
     Node *world = packed->instantiate();
     if (!pending || pending->token != token) {
@@ -628,7 +628,7 @@ void CrimsonSceneLoadManager::stage_candidate(const Ref<PackedScene> &packed) {
     }
 }
 
-void CrimsonSceneLoadManager::order_commit() {
+void SceneLoadManager::order_commit() {
     if (!slot_is_available() || !get_staged_scene()) {
         finish_failure(ERR_UNCONFIGURED, "The staged scene or world container is unavailable.");
         return;
@@ -672,7 +672,7 @@ void CrimsonSceneLoadManager::order_commit() {
     apply_commit();
 }
 
-bool CrimsonSceneLoadManager::publish_world() {
+bool SceneLoadManager::publish_world() {
     Node *container = get_world_container();
     if (!slot_is_available() || !get_staged_scene()) {
         return false;
@@ -717,7 +717,7 @@ bool CrimsonSceneLoadManager::publish_world() {
     return success;
 }
 
-void CrimsonSceneLoadManager::apply_commit() {
+void SceneLoadManager::apply_commit() {
     const int64_t token = pending->token;
     if (!publish_world()) {
         if (pending && pending->token == token) {
@@ -742,7 +742,7 @@ void CrimsonSceneLoadManager::apply_commit() {
     }
 }
 
-void CrimsonSceneLoadManager::finish_host_barrier() {
+void SceneLoadManager::finish_host_barrier() {
     if (!pending->members.empty() && rpc(finalize_method, pending->token) != OK) {
         finish_failure(ERR_CONNECTION_ERROR, "The final scene confirmation could not reach every peer.");
         return;
@@ -751,13 +751,13 @@ void CrimsonSceneLoadManager::finish_host_barrier() {
     finish_success();
 }
 
-void CrimsonSceneLoadManager::finish_success() {
+void SceneLoadManager::finish_success() {
     const StringName scene_id = pending->scene_id;
     pending.reset();
     emit_signal("load_completed", scene_id);
 }
 
-void CrimsonSceneLoadManager::discard_candidate(Transition &transition) {
+void SceneLoadManager::discard_candidate(Transition &transition) {
     if (transition.resource_requested) {
         abandoned_loads.push_back(transition.resource_path);
     }
@@ -766,7 +766,7 @@ void CrimsonSceneLoadManager::discard_candidate(Transition &transition) {
     }
 }
 
-void CrimsonSceneLoadManager::finish_failure(Error error, const String &message, bool notify_remote) {
+void SceneLoadManager::finish_failure(Error error, const String &message, bool notify_remote) {
     Transition old = std::move(*pending);
     pending.reset();
     const bool coordinated = old.role == Role::Host || old.role == Role::Client;
@@ -792,7 +792,7 @@ void CrimsonSceneLoadManager::finish_failure(Error error, const String &message,
     emit_signal(after_commit ? "load_sync_failed" : "load_failed", old.scene_id, error, message);
 }
 
-Ref<MultiplayerAPI> CrimsonSceneLoadManager::incoming_server() const {
+Ref<MultiplayerAPI> SceneLoadManager::incoming_server() const {
     if (leaving_tree || !is_inside_tree() || !coordinated_enabled) {
         return {};
     }
@@ -804,7 +804,7 @@ Ref<MultiplayerAPI> CrimsonSceneLoadManager::incoming_server() const {
     return network;
 }
 
-int64_t CrimsonSceneLoadManager::incoming_client(int64_t token) const {
+int64_t SceneLoadManager::incoming_client(int64_t token) const {
     if (!pending || pending->role != Role::Host || token != pending->token || !is_inside_tree()) {
         return 0;
     }
@@ -817,7 +817,7 @@ int64_t CrimsonSceneLoadManager::incoming_client(int64_t token) const {
     return pending->members.count(sender) != 0 ? sender : 0;
 }
 
-void CrimsonSceneLoadManager::rpc_prepare(int64_t token, const StringName &scene_id, int64_t timeout) {
+void SceneLoadManager::rpc_prepare(int64_t token, const StringName &scene_id, int64_t timeout) {
     const Ref<MultiplayerAPI> network = incoming_server();
     if (network.is_null() || token <= 0 || !valid_scene_id(scene_id) || !valid_timeout(timeout)) {
         return;
@@ -844,7 +844,7 @@ void CrimsonSceneLoadManager::rpc_prepare(int64_t token, const StringName &scene
     emit_signal("load_started", scene_id);
 }
 
-void CrimsonSceneLoadManager::rpc_ready(int64_t token, int64_t error) {
+void SceneLoadManager::rpc_ready(int64_t token, int64_t error) {
     const int64_t sender = incoming_client(token);
     if (!sender || (pending->phase != Phase::Preparing && pending->phase != Phase::Ready)) {
         return;
@@ -856,7 +856,7 @@ void CrimsonSceneLoadManager::rpc_ready(int64_t token, int64_t error) {
     pending->ready_peers.insert(sender);
 }
 
-void CrimsonSceneLoadManager::rpc_commit(int64_t token) {
+void SceneLoadManager::rpc_commit(int64_t token) {
     const Ref<MultiplayerAPI> network = incoming_server();
     if (network.is_valid() && pending && pending->role == Role::Client && pending->token == token &&
             pending->network == network && network->get_multiplayer_peer() == pending->transport &&
@@ -866,7 +866,7 @@ void CrimsonSceneLoadManager::rpc_commit(int64_t token) {
     }
 }
 
-void CrimsonSceneLoadManager::rpc_applied(int64_t token, int64_t error) {
+void SceneLoadManager::rpc_applied(int64_t token, int64_t error) {
     const int64_t sender = incoming_client(token);
     if (sender && (pending->phase == Phase::CommitOrdered || pending->phase == Phase::Applied)) {
         if (error == OK) {
@@ -877,7 +877,7 @@ void CrimsonSceneLoadManager::rpc_applied(int64_t token, int64_t error) {
     }
 }
 
-void CrimsonSceneLoadManager::rpc_finalize(int64_t token) {
+void SceneLoadManager::rpc_finalize(int64_t token) {
     const Ref<MultiplayerAPI> network = incoming_server();
     if (network.is_valid() && pending && pending->role == Role::Client && pending->token == token &&
             pending->network == network && network->get_multiplayer_peer() == pending->transport &&
@@ -890,7 +890,7 @@ void CrimsonSceneLoadManager::rpc_finalize(int64_t token) {
     }
 }
 
-void CrimsonSceneLoadManager::rpc_abort(int64_t token, int64_t error, bool after_commit) {
+void SceneLoadManager::rpc_abort(int64_t token, int64_t error, bool after_commit) {
     const Ref<MultiplayerAPI> network = incoming_server();
     if (network.is_null() || !pending || pending->role != Role::Client || pending->token != token ||
             pending->network != network || network->get_multiplayer_peer() != pending->transport) {

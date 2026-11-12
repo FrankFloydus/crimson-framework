@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="SteamDlcListResult" inherits="SteamResult">
+	<brief_description>Outcome of a Steam DLC catalog query.</brief_description>
+	<description>Returned by [method SteamApps.dlc]. Check [member SteamResult.ok] before using the catalog. A successful query can contain zero entries.</description>
+	<methods>
+		<method name="get_value" qualifiers="const">
+			<return type="SteamDlcInfo[]" />
+			<description>Returns a detached typed array containing this result's catalog records.</description>
+		</method>
+	</methods>
+	<members>
+		<member name="value" type="SteamDlcInfo[]" setter="" getter="get_value">Read-only catalog payload. Reading this property gives a separate array, and an error result has an empty payload.</member>
+	</members>
+</class>

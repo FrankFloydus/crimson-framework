@@ -176,19 +176,19 @@ Dictionary position_operation(const char *kind, const String &item_id, const Vec
 
 } // namespace
 
-void CrimsonInventoryTransactionAdapter::_bind_methods() {
+void InventoryTransactionAdapter::_bind_methods() {
     ClassDB::bind_method(D_METHOD("configure", "coordinator", "store_id", "initial_snapshot"),
-            &CrimsonInventoryTransactionAdapter::configure);
-    ClassDB::bind_method(D_METHOD("get_snapshot"), &CrimsonInventoryTransactionAdapter::get_snapshot);
+            &InventoryTransactionAdapter::configure);
+    ClassDB::bind_method(D_METHOD("get_snapshot"), &InventoryTransactionAdapter::get_snapshot);
     ClassDB::bind_method(D_METHOD("queue_place", "transaction", "item_id", "footprint", "origin", "rotated"),
-            &CrimsonInventoryTransactionAdapter::queue_place, DEFVAL(false));
+            &InventoryTransactionAdapter::queue_place, DEFVAL(false));
     ClassDB::bind_method(D_METHOD("queue_move", "transaction", "item_id", "origin", "rotated"),
-            &CrimsonInventoryTransactionAdapter::queue_move, DEFVAL(false));
+            &InventoryTransactionAdapter::queue_move, DEFVAL(false));
     ClassDB::bind_method(D_METHOD("queue_remove", "transaction", "item_id"),
-            &CrimsonInventoryTransactionAdapter::queue_remove);
+            &InventoryTransactionAdapter::queue_remove);
 }
 
-Error CrimsonInventoryTransactionAdapter::configure(const Ref<match_runtime::CrimsonTransactionCoordinator> &p_coordinator,
+Error InventoryTransactionAdapter::configure(const Ref<match_runtime::TransactionCoordinator> &p_coordinator,
         const String &p_store_id, const Dictionary &initial_snapshot) {
     if (coordinator.is_valid()) {
         return ERR_ALREADY_IN_USE;
@@ -211,11 +211,11 @@ Error CrimsonInventoryTransactionAdapter::configure(const Ref<match_runtime::Cri
     return registered;
 }
 
-Dictionary CrimsonInventoryTransactionAdapter::get_snapshot() const {
+Dictionary InventoryTransactionAdapter::get_snapshot() const {
     return coordinator.is_valid() ? decode_snapshot(coordinator->read_store(store_id)) : Dictionary();
 }
 
-Error CrimsonInventoryTransactionAdapter::queue_operation(const Ref<match_runtime::CrimsonTransaction> &transaction,
+Error InventoryTransactionAdapter::queue_operation(const Ref<match_runtime::GameTransaction> &transaction,
         const Dictionary &operation) const {
     if (coordinator.is_null()) {
         return ERR_UNCONFIGURED;
@@ -226,19 +226,19 @@ Error CrimsonInventoryTransactionAdapter::queue_operation(const Ref<match_runtim
     return transaction->add_change(store_id, operation, coordinator->get_store_revision(store_id));
 }
 
-Error CrimsonInventoryTransactionAdapter::queue_place(const Ref<match_runtime::CrimsonTransaction> &transaction,
+Error InventoryTransactionAdapter::queue_place(const Ref<match_runtime::GameTransaction> &transaction,
         const String &item_id, const Vector2i &footprint, const Vector2i &origin, bool rotated) const {
     Dictionary operation = position_operation("place", item_id, origin, rotated);
     operation["footprint"] = encode_cell(footprint);
     return queue_operation(transaction, operation);
 }
 
-Error CrimsonInventoryTransactionAdapter::queue_move(const Ref<match_runtime::CrimsonTransaction> &transaction,
+Error InventoryTransactionAdapter::queue_move(const Ref<match_runtime::GameTransaction> &transaction,
         const String &item_id, const Vector2i &origin, bool rotated) const {
     return queue_operation(transaction, position_operation("move", item_id, origin, rotated));
 }
 
-Error CrimsonInventoryTransactionAdapter::queue_remove(const Ref<match_runtime::CrimsonTransaction> &transaction,
+Error InventoryTransactionAdapter::queue_remove(const Ref<match_runtime::GameTransaction> &transaction,
         const String &item_id) const {
     Dictionary operation;
     operation["kind"] = "remove";

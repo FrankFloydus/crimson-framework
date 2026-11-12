@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="SteamPublisherInventory" inherits="RefCounted">
+	<brief_description>
+		Reads and changes Steam Inventory through a trusted publisher.
+	</brief_description>
+	<description>
+		Get this service from [method SteamPublisher.inventory] in a trusted publisher build with Economy permissions for the configured AppID. Use identities verified by that exact publisher. Foreign identities return [constant ERR_UNAUTHORIZED], invalid arguments return [constant ERR_INVALID_PARAMETER], and unavailable scopes return [constant ERR_UNAVAILABLE]. Before calling a write, have the game authorize the action and durably bind its unique request ID to the complete award or consumption intent. After a timeout, a closed observation, or an unrecognized reply, reconcile Steam inventory before retrying with the same request ID and arguments. A Valve replay reports the current state of the affected items.
+	</description>
+	<tutorials>
+		<link title="Steam Inventory publisher endpoints">https://partner.steamgames.com/doc/webapi/IInventoryService</link>
+	</tutorials>
+	<methods>
+		<method name="consume">
+			<return type="Variant" />
+			<param index="0" name="player" type="SteamIdentity" />
+			<param index="1" name="instance_id" type="String" />
+			<param index="2" name="quantity" type="int" />
+			<param index="3" name="request_id" type="String" />
+			<description>
+				Awaits a [SteamInventoryChangeResult] for the permanent consumption of a positive unsigned 32-bit [param quantity] from [param player]'s [param instance_id]. Supply the same nonzero unsigned decimal [param request_id] for a retry of the same authorized operation. A recognized confirmation includes exactly one changed or removed row for the requested stack.
+			</description>
+		</method>
+		<method name="grant">
+			<return type="Variant" />
+			<param index="0" name="player" type="SteamIdentity" />
+			<param index="1" name="definition_ids" type="PackedInt32Array" />
+			<param index="2" name="request_id" type="String" />
+			<description>
+				Awaits a [SteamInventoryChangeResult] for a game-authorized award to [param player]. Supply 1 to 256 published [param definition_ids] and a nonzero unsigned decimal [param request_id]. The result contains the actual item rows Steam reports after bundle and generator expansion. Repeat the same request ID and definitions for a retry of this award.
+			</description>
+		</method>
+		<method name="items">
+			<return type="Variant" />
+			<param index="0" name="player" type="SteamIdentity" />
+			<description>
+				Awaits a [SteamInventorySnapshotResult] for the configured app and verified [param player]. The typed rows are detached and read-only. The publisher endpoint supplies no snapshot freshness evidence.
+			</description>
+		</method>
+		<method name="start_trade">
+			<return type="Variant" />
+			<param index="0" name="player" type="SteamIdentity" />
+			<param index="1" name="partner" type="SteamIdentity" />
+			<description>
+				Awaits a [SteamTradeSessionResult] for a Steam trade request in an eligible Economy app. Verify the distinct [param player] and [param partner] in the same publisher and confirm their consent in the game before calling. A recognized Steam acknowledgment identifies both accounts. The participants confirm any transfer through Steam.
+			</description>
+		</method>
+	</methods>
+</class>

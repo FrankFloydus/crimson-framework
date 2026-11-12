@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="SteamSocketConnectOperation" inherits="RefCounted">
+	<brief_description>A retained operation for one outgoing Steam handshake.</brief_description>
+	<description>Await [method wait] or observe [signal completed]. The terminal result is retained for later reads.</description>
+	<tutorials>
+	</tutorials>
+	<methods>
+		<method name="is_finished" qualifiers="const">
+			<return type="bool" />
+			<description>Returns whether the operation has reached a terminal result.</description>
+		</method>
+		<method name="result" qualifiers="const">
+			<return type="SteamSocketConnectionResult" />
+			<description>Returns the terminal typed result, or [code]null[/code] while pending.</description>
+		</method>
+		<method name="wait">
+			<return type="Variant" />
+			<description>Use [code]var result: SteamSocketConnectionResult = await operation.wait()[/code]. Returns the existing result immediately or a signal that settles with the typed result.</description>
+		</method>
+		<method name="cancel">
+			<return type="int" enum="Error" />
+			<description>Cancels the exact pending handshake and settles it with [constant ERR_SKIP]. A completed operation has no pending handshake to cancel.</description>
+		</method>
+	</methods>
+	<signals>
+		<signal name="completed">
+			<param index="0" name="result" type="SteamSocketConnectionResult" />
+			<description>Emitted once when the operation settles.</description>
+		</signal>
+	</signals>
+</class>

@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="SteamPurchaseReconciliation" inherits="RefCounted">
+	<brief_description>Summary of a bounded Steam settlement page.</brief_description>
+	<description>The inclusive cursor may replay already committed updates. A failed page preserves the input cursor so the failing event remains eligible for retry.</description>
+	<tutorials>
+	</tutorials>
+	<methods>
+		<method name="get_processed" qualifiers="const">
+			<return type="int" />
+			<description>Number of known order observations successfully applied or already recorded.</description>
+		</method>
+		<method name="get_next_since_unix" qualifiers="const">
+			<return type="int" />
+			<description>Unix UTC seconds to use for the next page, or the original cursor on an empty or failed page.</description>
+		</method>
+	</methods>
+	<members>
+		<member name="processed" type="int" setter="" getter="get_processed">Number of known order observations successfully applied or already recorded.</member>
+		<member name="next_since_unix" type="int" setter="" getter="get_next_since_unix">Unix UTC seconds to use for the next page, or the original cursor on an empty or failed page.</member>
+	</members>
+</class>

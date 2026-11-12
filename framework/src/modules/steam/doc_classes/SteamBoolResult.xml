@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="SteamBoolResult" inherits="SteamResult">
+	<brief_description>
+		Holds a boolean returned by a completed Steam action.
+	</brief_description>
+	<description>
+		Holds a boolean returned by a completed Steam action. Check [member SteamResult.ok] before using the value.
+	</description>
+	<members>
+		<member name="value" type="bool" setter="" getter="get_value">
+			The confirmed value. A successful false is distinct from an error.
+		</member>
+	</members>
+</class>

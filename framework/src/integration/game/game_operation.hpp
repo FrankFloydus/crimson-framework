@@ -8,8 +8,8 @@
 
 namespace crimson::integration {
 
-class CrimsonGameOperation : public godot::RefCounted {
-    GDCLASS(CrimsonGameOperation, godot::RefCounted)
+class GameOperation : public godot::RefCounted {
+    GDCLASS(GameOperation, godot::RefCounted)
 
     // Detached terminal result, empty until completion.
     godot::Dictionary result;

@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="SteamLeaderboardQuery" inherits="RefCounted">
+	<brief_description>A branchable leaderboard read bound to one Steam client scope.</brief_description>
+	<description>
+		Start with [method SteamLeaderboards.query] and choose a selection. Each modifier returns an independent branch. The default selection is the first ten global ranks. A stopped scope leaves its queries unavailable.
+	</description>
+	<methods>
+		<method name="around_me" qualifiers="const">
+			<return type="SteamLeaderboardQuery" />
+			<param index="0" name="before" type="int" default="4" />
+			<param index="1" name="after" type="int" default="5" />
+			<description>Returns a branch centered on the signed-in player's score. The nonnegative counts before and after the center plus the center row must total at most 100.</description>
+		</method>
+		<method name="fetch" qualifiers="const">
+			<return type="Variant" />
+			<description>Looks up the existing board and fetches the selected page. Use [code]await[/code] to receive a [SteamLeaderboardPageResult]. Immediate errors return the same result type.</description>
+		</method>
+		<method name="fetch_operation" qualifiers="const">
+			<return type="SteamLeaderboardPageOperation" />
+			<description>Starts the same query as [method fetch] and returns a retained operation for cancellation, completion, or typed result inspection.</description>
+		</method>
+		<method name="friends" qualifiers="const">
+			<return type="SteamLeaderboardQuery" />
+			<param index="0" name="count" type="int" default="10" />
+			<description>Returns a branch that reads the signed-in player's friends view with a display cap from 1 to 100 rows.</description>
+		</method>
+		<method name="global_ranks" qualifiers="const">
+			<return type="SteamLeaderboardQuery" />
+			<param index="0" name="first_rank" type="int" default="1" />
+			<param index="1" name="count" type="int" default="10" />
+			<description>Returns a branch that reads [param count] global ranks from the one-based [param first_rank]. The count must be between 1 and 100.</description>
+		</method>
+		<method name="users" qualifiers="const">
+			<return type="SteamLeaderboardQuery" />
+			<param index="0" name="steam_ids" type="PackedStringArray" />
+			<description>
+				Returns a branch for 1 to 100 distinct individual SteamID64 values in decimal. Only players with scores appear in the page. Steam accepts one selected-user download at a time across the shared runtime. An overlapping download returns [constant @GlobalScope.ERR_BUSY].
+			</description>
+		</method>
+	</methods>
+</class>

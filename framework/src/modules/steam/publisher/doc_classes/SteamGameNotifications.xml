@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="SteamGameNotifications" inherits="RefCounted">
+	<brief_description>
+		Trusted app-scoped Steam asynchronous notifications.
+	</brief_description>
+	<description>
+		Available from [method SteamPublisher.game_notifications] in trusted backend builds. Keep one canonical verified [SteamIdentity] per authenticated game launch and coordinate launch deduplication across workers. Writes require a [SteamNotificationStore]. Operation keys use up to 128 ASCII letters, digits, hyphens, underscores, periods, or colons. The service accepts up to 16 recipients per session and 8 KiB of encoded request JSON. Steam controls notification delivery.
+	</description>
+	<methods>
+		<method name="create">
+			<return type="SteamNotificationSessionOperation" />
+			<param index="0" name="spec" type="SteamNotificationSessionSpec" />
+			<param index="1" name="operation_key" type="String" />
+			<description>Creates an app-owned session from verified participants. Reuse the same immutable operation key to replay an accepted, committed response.</description>
+		</method>
+		<method name="details">
+			<return type="SteamNotificationSessionOperation" />
+			<param index="0" name="session_id" type="String" />
+			<description>Requests one exact session owned by this app in the trusted store.</description>
+		</method>
+		<method name="remove">
+			<return type="SteamNotificationBoolOperation" />
+			<param index="0" name="session_id" type="String" />
+			<param index="1" name="operation_key" type="String" />
+			<description>Removes an owned session and its notifications through a durable operation. A repeated committed key returns the original acknowledgment.</description>
+		</method>
+		<method name="request_opt_in">
+			<return type="SteamNotificationBoolOperation" />
+			<param index="0" name="user" type="SteamIdentity" />
+			<param index="1" name="launch_id" type="String" default="&quot;&quot;" />
+			<description>Requests Steam registration once per verified account and authoritative backend launch ID. Reuse [param launch_id] across authentication refreshes within a launch and issue a fresh ID on the next game launch. Use 1 to 128 ASCII letters, digits, hyphens, underscores, periods, or colons. A missing ID returns [constant ERR_INVALID_PARAMETER]. A claimed launch returns [constant ERR_ALREADY_IN_USE], including after an ambiguous Steam reply. Implement the launch claim hooks in [SteamNotificationStore]. A true receipt means Steam accepted registration. Steam controls the opt-in prompt and decision.</description>
+		</method>
+		<method name="sessions_for">
+			<return type="SteamNotificationSessionsOperation" />
+			<param index="0" name="user" type="SteamIdentity" />
+			<description>Reads up to 128 sessions returned for a user verified by this exact publisher and app.</description>
+		</method>
+		<method name="update">
+			<return type="SteamNotificationSessionOperation" />
+			<param index="0" name="session_id" type="String" />
+			<param index="1" name="spec" type="SteamNotificationSessionSpec" />
+			<param index="2" name="operation_key" type="String" />
+			<description>Replaces the full participant state of an owned session. Supply all users who should remain in the session and a stable operation key. The creation context remains as it was.</description>
+		</method>
+	</methods>
+</class>

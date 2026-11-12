@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="SteamFriendsResult" inherits="SteamResult">
+	<brief_description>The outcome of reading the signed-in player's immediate friends.</brief_description>
+	<description>Use [member SteamResult.ok] to distinguish a successful empty friend list from an unavailable read.</description>
+	<methods>
+		<method name="get_value" qualifiers="const">
+			<return type="SteamFriend[]" />
+			<description>Returns the detached typed friend collection.</description>
+		</method>
+	</methods>
+	<members>
+		<member name="value" type="SteamFriend[]" setter="" getter="get_value">
+			Read-only typed friend snapshots. Empty if no friends match or the read failed.
+		</member>
+	</members>
+</class>

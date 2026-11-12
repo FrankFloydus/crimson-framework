@@ -2,7 +2,11 @@
 
 # Online game composition
 
-- Keep the [directory contract](online_directory.hpp) shared across custom, Steam, and EOS providers. Run callbacks on the scene thread and settle requests asynchronously.
+- Keep the [directory contract](online_directory.hpp) shared by Steam and custom providers. Run callbacks on the scene thread and settle requests asynchronously.
 - Require verified identity before admission. Keep host admission closed until publication succeeds. Remove vendor listings and membership on cancellation, failed startup, and teardown.
-- Keep Steam code in [steam/](steam/) and Epic code in [eos/](eos/). Build both through the same Crimson extension. Preserve SDK-disabled builds and keep SDK includes out of core Session.
+- Game lobby membership uses the Steam module's shared account reservation. The directory owns the Game route and admission state. Its scoped lobby facade observes only the exact membership installed by that directory.
+- Steam listen and dedicated admission bind tickets to the actual certified transport identity and the exact SDK pipe. Hold a pending account reservation until its old callback can no longer settle a newer peer. The listen host rechecks current lobby membership before accepting Steam's result.
+- Publish Steam Rich Presence join routes only from an eligible, ready Game with admission open. Preserve any foreign connect value and clear only the route written by the exact attachment.
+- Keep the dedicated GameServer pipe separate from the signed-in client. Require current secure policy, certificate, world, and listener before publication. Only explicit Internet configuration enables Steam advertisement.
+- Keep Steam provider composition in [steam/](steam/). Build it through the Crimson extension. Preserve SDK-disabled builds and keep Steamworks includes out of core Session.
 - Use the [custom online fixture](../../../project/demo/tests/online_smoke.gd) for separate-process directory and identity checks. Use the [vendor guide](../../../vendor/README.md) for live provider prerequisites and export dependencies.

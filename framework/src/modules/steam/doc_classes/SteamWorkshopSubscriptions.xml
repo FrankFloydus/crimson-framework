@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="SteamWorkshopSubscriptions" inherits="RefCounted">
+	<brief_description>
+		Bounded list of subscribed Workshop item IDs for the current app.
+	</brief_description>
+	<description>
+		The snapshot preserves Steam's subscription order. A truncated snapshot contains the first IDs that fit the requested limit.
+	</description>
+	<methods>
+		<method name="get_published_ids" qualifiers="const">
+			<return type="PackedStringArray" />
+			<description>Returns decimal published file IDs in Steam's subscription order.</description>
+		</method>
+		<method name="get_total_count" qualifiers="const">
+			<return type="int" />
+			<description>Returns the maximum subscription count observed while copying the snapshot.</description>
+		</method>
+		<method name="is_truncated" qualifiers="const">
+			<return type="bool" />
+			<description>Reports whether more subscriptions were observed than could be copied.</description>
+		</method>
+	</methods>
+	<members>
+		<member name="published_ids" type="PackedStringArray" setter="" getter="get_published_ids">
+			Detached IDs copied from Steam's current app list.
+		</member>
+		<member name="total_count" type="int" setter="" getter="get_total_count">
+			Count observed around the bounded SDK enumeration.
+		</member>
+		<member name="truncated" type="bool" setter="" getter="is_truncated">
+			Whether the returned list omits observed subscriptions.
+		</member>
+	</members>
+</class>

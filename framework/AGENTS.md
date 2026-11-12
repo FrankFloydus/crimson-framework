@@ -2,7 +2,7 @@
 
 # Working on Crimson Framework
 
-Crimson is a native C++ GDExtension for Godot 4.7. It provides reusable systems for offline and multiplayer games. Games can use modules independently or compose them through `CrimsonGame` for session, travel, save, and restore. Game projects own their rules, state schemas, controllers, and presentation. Keep cross-module wiring in `src/integration/` and preserve standalone module entry points.
+Crimson is a native C++ GDExtension for Godot 4.7. It provides reusable systems for offline and multiplayer games. Games can use modules independently or compose them through `GameRuntime` for session, travel, save, and restore. Game projects own their rules, state schemas, controllers, and presentation. Keep cross-module wiring in `src/integration/` and preserve standalone module entry points.
 
 Use [Architecture](docs/ARCHITECTURE.md) for ownership, authority, and lifecycle contracts, [Public API](docs/PUBLIC_API.md) for Godot-facing behavior, and [README](README.md) for setup and packaging.
 
@@ -18,9 +18,10 @@ Paths in this guide are relative to `framework/`. Open the guide for each area y
 | Scene catalog, threaded preparation, and world mounting | [Scene Loader](src/modules/scene_load/AGENTS.md) |
 | Transactions, player bindings, possession, and command routing | [Match Runtime](src/modules/match_runtime/AGENTS.md) |
 | Recipient-specific baselines and state deltas | [Replication](src/modules/replication/AGENTS.md) |
-| `CrimsonGame`, Game Flow, and module adapters | [Integration](src/integration/AGENTS.md) |
+| `GameRuntime`, Game Flow, and module adapters | [Integration](src/integration/AGENTS.md) |
 | Fixed-world sessions, spawn placement, and local views | [World Session](src/integration/world_session/AGENTS.md) |
-| Online directories and Steam/EOS provider composition | [Online](src/integration/online/AGENTS.md) |
+| Online directories and Steam provider composition | [Online](src/integration/online/AGENTS.md) |
+| Standalone Steamworks services and SDK lifecycle | [Steamworks](src/modules/steam/AGENTS.md) |
 | Original co-op FPS demo | [Demo project](project/demo/AGENTS.md) |
 
 - `src/register_types.cpp` is the GDExtension entry point. Keep each module's class registration in its own registration code.
@@ -37,7 +38,8 @@ Update the [demo feature inventory](project/demo/AGENTS.md#implemented-features)
 
 - Keep framework systems native C++. Exchange Godot-compatible DTOs at integration boundaries. Preserve documented Godot APIs and update the relevant public guide when behavior changes.
 - Document every first-party framework function and every class property or member field at its declaration. Document file-local functions at their definitions. Explain the purpose, contract, or invariant and update comments with behavior changes.
-- Every first-party property exposed in the Godot Inspector must have explanatory documentation for its tooltip. When adding or changing a property in the framework or demo, supply Godot class documentation XML for native bindings, a documentation comment for GDScript exports, or equivalent help for a custom editor control. Describe the effect and any important default, unit, or constraint.
+- When adding or changing a native public Godot binding, update the owning class XML for its methods, properties, enum values, and signals. Describe arguments, return and failure behavior, defaults, units, and when signals fire. Include the XML in the editor documentation build so Godot's built-in Help shows it. [Godot GDExtension class documentation](https://docs.godotengine.org/en/4.7/tutorials/scripting/cpp/gdextension_docs_system.html)
+- Every first-party property exposed in the Godot Inspector must have an explanatory tooltip. Use class XML for native properties, a documentation comment for GDScript exports, or equivalent help for a custom editor control.
 - Put the exact notice `Copyright Francesco Di Blasi 2026 - All Rights Reserved` at the top of each first-party framework file using its supported comment syntax or metadata. Preserve upstream and dependency notices. For generated files, apply the rule to the source inputs.
 - Keep agent instructions short and actionable. Put rules that apply across the repository here, put local invariants in the nearest scoped guide, and link to maintained contracts for detail.
 

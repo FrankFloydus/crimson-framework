@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="SteamTimelinePhaseOperation" inherits="RefCounted">
+	<brief_description>
+		Carries the asynchronous completion of [method SteamTimeline.phase_recording].
+	</brief_description>
+	<description>
+		Carries the asynchronous completion of [method SteamTimeline.phase_recording]. Await the facade call directly.
+	</description>
+	<signals>
+		<signal name="completed">
+			<param index="0" name="result" type="SteamTimelinePhaseResult" />
+			<description>
+				Emitted when Steam answers, the lookup expires, or the client scope closes.
+			</description>
+		</signal>
+	</signals>
+</class>

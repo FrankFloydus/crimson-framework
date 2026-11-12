@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="SteamScreenshotResult" inherits="SteamResult">
+	<brief_description>Terminal observation of an annotated Steam screenshot save.</brief_description>
+	<description>Success requires the exact native save confirmation. Annotation outcomes are available on the saved screenshot.</description>
+	<tutorials>
+	</tutorials>
+	<members>
+		<member name="value" type="SteamScreenshot" getter="get_value" setter="">
+			Confirmed screenshot, or [code]null[/code] when this operation could not observe a successful save.
+		</member>
+	</members>
+</class>

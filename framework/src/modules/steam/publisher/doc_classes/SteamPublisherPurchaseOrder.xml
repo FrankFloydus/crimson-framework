@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="SteamPublisherPurchaseOrder" inherits="RefCounted">
+	<brief_description>Immutable priced order and its durable progress.</brief_description>
+	<description>Trusted stores persist and rehydrate this value for the exact AppID, environment, Steam account and checkout. Use [method with_progress] to restore a stored revision. The publisher verifies every applicable Steam receipt before using it to grant or reverse entitlement.</description>
+	<tutorials>
+	</tutorials>
+	<methods>
+		<method name="create" qualifiers="static">
+			<return type="SteamPublisherPurchaseOrder" />
+			<param index="0" name="app_id" type="int" />
+			<param index="1" name="environment" type="int" enum="SteamPublisherSettings.Environment" />
+			<param index="2" name="order_id" type="String" />
+			<param index="3" name="steam_id" type="String" />
+			<param index="4" name="checkout_id" type="String" />
+			<param index="5" name="currency" type="String" />
+			<param index="6" name="language" type="String" />
+			<param index="7" name="lines" type="SteamPublisherPurchaseLine[]" />
+			<param index="8" name="tax_basis" type="int" enum="SteamPublisherPurchaseOrder.TaxBasis" default="0" />
+			<description>Returns a new [constant RESERVED] order at revision zero, or null for an invalid configuration, duplicate SKU or item ID, empty or oversized cart, or total overflow.</description>
+		</method>
+		<method name="with_progress" qualifiers="const">
+			<return type="SteamPublisherPurchaseOrder" />
+			<param index="0" name="revision" type="int" />
+			<param index="1" name="phase" type="int" enum="SteamPublisherPurchaseOrder.Phase" />
+			<param index="2" name="transaction_id" type="String" default="&quot;&quot;" />
+			<param index="3" name="vendor_updated_at" type="int" default="0" />
+			<param index="4" name="reversed_item_ids" type="PackedInt64Array" default="PackedInt64Array()" />
+			<description>Returns a copy of the quote with the supplied durable state. Returns null for an invalid revision, phase, transaction ID, timestamp, or reversed item set. This constructs a storage snapshot and does not request a payment or grant an entitlement.</description>
+		</method>
+		<method name="get_app_id" qualifiers="const">
+			<return type="int" />
+			<description>Positive Steamworks AppID for the original order.</description>
+		</method>
+		<method name="get_environment" qualifiers="const">
+			<return type="int" enum="SteamPublisherSettings.Environment" />
+			<description>Steam endpoint environment selected for the original order.</description>
+		</method>
+		<method name="get_order_id" qualifiers="const">
+			<return type="String" />
+			<description>Canonical positive decimal order ID assigned by the publisher.</description>
+		</method>
+		<method name="get_steam_id" qualifiers="const">
+			<return type="String" />
+			<description>Canonical decimal SteamID64 of the authenticated buyer.</description>
+		</method>
+		<method name="get_checkout_id" qualifiers="const">
+			<return type="String" />
+			<description>Stable account-scoped retry ID encoded as 32 lowercase hexadecimal characters.</description>
+		</method>
+		<method name="get_currency" qualifiers="const">
+			<return type="String" />
+			<description>Original uppercase ISO 4217 currency.</description>
+		</method>
+		<method name="get_language" qualifiers="const">
+			<return type="String" />
+			<description>Lowercase ISO 639-1 language code used in the checkout.</description>
+		</method>
+		<method name="get_lines" qualifiers="const">
+			<return type="SteamPublisherPurchaseLine[]" />
+			<description>Read-only list of up to 32 unique priced lines.</description>
+		</method>
+		<method name="get_total" qualifiers="const">
+			<return type="int" />
+			<description>Checked sum of the quoted line totals, in the original currency's Steam units.</description>
+		</method>
+		<method name="get_tax_basis" qualifiers="const">
+			<return type="int" enum="SteamPublisherPurchaseOrder.TaxBasis" />
+			<description>Basis used when verifying a receipt's line amount. Defaults to [constant NET].</description>
+		</method>
+		<method name="get_revision" qualifiers="const">
+			<return type="int" />
+			<description>Optimistic concurrency revision. The reservation begins at zero.</description>
+		</method>
+		<method name="get_phase" qualifiers="const">
+			<return type="int" enum="SteamPublisherPurchaseOrder.Phase" />
+			<description>Latest durable workflow state.</description>
+		</method>
+		<method name="get_transaction_id" qualifiers="const">
+			<return type="String" />
+			<description>Valve's canonical decimal transaction ID, empty before it is known.</description>
+		</method>
+		<method name="get_vendor_updated_at" qualifiers="const">
+			<return type="int" />
+			<description>Latest accepted Steam UTC timestamp in Unix seconds, or zero before an observation.</description>
+		</method>
+		<method name="get_reversed_item_ids" qualifiers="const">
+			<return type="PackedInt64Array" />
+			<description>Exact Steam item IDs whose entitlements have been reversed for this order.</description>
+		</method>
+	</methods>
+	<members>
+		<member name="app_id" type="int" setter="" getter="get_app_id">Positive Steamworks AppID for the original order.</member>
+		<member name="environment" type="int" setter="" getter="get_environment" enum="SteamPublisherSettings.Environment">Steam endpoint environment selected for the original order.</member>
+		<member name="order_id" type="String" setter="" getter="get_order_id">Canonical positive decimal order ID assigned by the publisher.</member>
+		<member name="steam_id" type="String" setter="" getter="get_steam_id">Canonical decimal SteamID64 of the authenticated buyer.</member>
+		<member name="checkout_id" type="String" setter="" getter="get_checkout_id">Stable account-scoped retry ID encoded as 32 lowercase hexadecimal characters.</member>
+		<member name="currency" type="String" setter="" getter="get_currency">Original uppercase ISO 4217 currency.</member>
+		<member name="language" type="String" setter="" getter="get_language">Lowercase ISO 639-1 language code used in the checkout.</member>
+		<member name="lines" type="SteamPublisherPurchaseLine[]" setter="" getter="get_lines">Read-only list of up to 32 unique priced lines.</member>
+		<member name="total" type="int" setter="" getter="get_total">Checked sum of the quoted line totals, in the original currency's Steam units.</member>
+		<member name="tax_basis" type="int" setter="" getter="get_tax_basis" enum="SteamPublisherPurchaseOrder.TaxBasis">Basis used when verifying a receipt's line amount. Defaults to [constant NET].</member>
+		<member name="revision" type="int" setter="" getter="get_revision">Optimistic concurrency revision. The reservation begins at zero.</member>
+		<member name="phase" type="int" setter="" getter="get_phase" enum="SteamPublisherPurchaseOrder.Phase">Latest durable workflow state.</member>
+		<member name="transaction_id" type="String" setter="" getter="get_transaction_id">Valve's canonical decimal transaction ID, empty before it is known.</member>
+		<member name="vendor_updated_at" type="int" setter="" getter="get_vendor_updated_at">Latest accepted Steam UTC timestamp in Unix seconds, or zero before an observation.</member>
+		<member name="reversed_item_ids" type="PackedInt64Array" setter="" getter="get_reversed_item_ids">Exact Steam item IDs whose entitlements have been reversed for this order.</member>
+	</members>
+	<constants>
+		<constant name="NET" value="0" enum="TaxBasis">Compare the quote with Steam's reported amount excluding VAT.</constant>
+		<constant name="GROSS" value="1" enum="TaxBasis">Compare the quote with Steam's reported amount plus VAT after checked addition.</constant>
+		<constant name="RESERVED" value="0" enum="Phase">The original quote is persisted and no authorization request was queued.</constant>
+		<constant name="INITIALIZING" value="1" enum="Phase">The durable authorization claim exists and Steam's response may be uncertain.</constant>
+		<constant name="AWAITING" value="2" enum="Phase">Steam created the order and is waiting for the player's authorization.</constant>
+		<constant name="APPROVED" value="3" enum="Phase">Steam verified that the player authorized this exact order.</constant>
+		<constant name="FINALIZING" value="4" enum="Phase">The durable charge claim exists and Steam's response may be uncertain.</constant>
+		<constant name="DECLINED" value="5" enum="Phase">Steam confirmed denial or failure.</constant>
+		<constant name="FULFILLED" value="6" enum="Phase">Steam confirmed payment and the durable grant was committed.</constant>
+		<constant name="REFUNDING" value="7" enum="Phase">The authorized full refund claim exists and Steam's response may be uncertain.</constant>
+		<constant name="PARTIALLY_REVERSED" value="8" enum="Phase">Steam confirmed item-level reversals and some entitlements remain.</constant>
+		<constant name="REVERSED" value="9" enum="Phase">Steam confirmed a full reversal and the store persisted it.</constant>
+	</constants>
+</class>

@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="SteamBytesResult" inherits="SteamResult">
+	<brief_description>
+		Outcome and detached byte payload from one Steam action.
+	</brief_description>
+	<methods>
+		<method name="get_value" qualifiers="const">
+			<return type="PackedByteArray" />
+			<description>
+				Returns the completed action's bytes. An empty array can also be a successful zero-byte result. Check [member SteamResult.ok] for the outcome.
+			</description>
+		</method>
+	</methods>
+	<members>
+		<member name="value" type="PackedByteArray" setter="" getter="get_value">
+			Detached bytes from Steam. The array is empty on failure.
+		</member>
+	</members>
+</class>

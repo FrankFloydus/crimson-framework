@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="SteamSocketConnection" inherits="RefCounted">
+	<brief_description>An owned standalone connection for authenticated Steam packets.</brief_description>
+	<description>An incoming connection becomes ready after [signal connected]. A successful outgoing operation returns an already connected handle. Use [member steam_id] to authorize game data and apply your own protocol bounds.</description>
+	<tutorials>
+	</tutorials>
+	<methods>
+		<method name="is_connected" qualifiers="const">
+			<return type="bool" />
+			<description>Returns whether the exact live connection passed Steam identity and encryption checks.</description>
+		</method>
+		<method name="get_steam_id" qualifiers="const">
+			<return type="String" />
+			<description>Returns the certified account of the live peer.</description>
+		</method>
+		<method name="send">
+			<return type="int" enum="Error" />
+			<param index="0" name="bytes" type="PackedByteArray" />
+			<param index="1" name="delivery" type="int" enum="SteamDelivery.Mode" default="0" />
+			<description>Queues one message from 1 byte to 32 KiB after authentication. Both directions allow up to 128 frames and 256 KiB per second. [constant ERR_BUSY] reports SDK backpressure or an exhausted outbound budget.</description>
+		</method>
+		<method name="path" qualifiers="const">
+			<return type="SteamConnectionPath" />
+			<description>Returns metrics from the current live socket or [code]null[/code] without a verified path.</description>
+		</method>
+		<method name="close">
+			<return type="int" enum="Error" />
+			<description>Closes this exact socket, including a pending incoming handshake.</description>
+		</method>
+	</methods>
+	<members>
+		<member name="steam_id" type="String" setter="" getter="get_steam_id" default="&quot;&quot;">Canonical certified remote SteamID64 while connected. Empty before connection and after retirement.</member>
+	</members>
+	<signals>
+		<signal name="connected">
+			<description>Emitted once an accepted incoming connection is encrypted and has a certified account.</description>
+		</signal>
+		<signal name="received">
+			<param index="0" name="bytes" type="PackedByteArray" />
+			<param index="1" name="delivery" type="int" enum="SteamDelivery.Mode" />
+			<description>Emitted with a copied packet from the live authenticated socket. Reliable receive overload closes the connection. Unreliable overload can drop packets.</description>
+		</signal>
+		<signal name="closed">
+			<param index="0" name="reason" type="int" enum="Error" />
+			<description>Emitted after the socket has been retired. [constant OK] indicates a local close, [constant ERR_SKIP] indicates scope retirement, and other values report a transport or policy failure.</description>
+		</signal>
+	</signals>
+</class>

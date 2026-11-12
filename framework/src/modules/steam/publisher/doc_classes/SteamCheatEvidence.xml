@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="SteamCheatEvidence" inherits="RefCounted">
+	<brief_description>
+		Game-owned evidence for one authenticated Steam player report or server finding.
+	</brief_description>
+	<description>
+		Create evidence in the trusted game backend after checking match membership. Use [method player] with the exact [SteamIdentity] the same publisher verified. Use [method server] for authoritative server evidence your policy can verify. The match reference stays in the backend and the reason code becomes Steam's app data.
+	</description>
+	<tutorials>
+	</tutorials>
+	<methods>
+		<method name="player" qualifiers="static">
+			<return type="SteamCheatEvidence" />
+			<param index="0" name="match_id" type="String" />
+			<param index="1" name="reason_code" type="int" />
+			<param index="2" name="reporter" type="SteamIdentity" />
+			<description>
+				Returns evidence for the [param match_id] and positive [param reason_code] submitted by [param reporter]. Report submission checks that the identity belongs to this publisher.
+			</description>
+		</method>
+		<method name="server" qualifiers="static">
+			<return type="SteamCheatEvidence" />
+			<param index="0" name="match_id" type="String" />
+			<param index="1" name="reason_code" type="int" />
+			<description>
+				Returns authoritative server evidence for [param match_id] and positive [param reason_code]. The game policy verifies the server and match context before approving the report.
+			</description>
+		</method>
+		<method name="get_match_id" qualifiers="const">
+			<return type="String" />
+			<description>
+				Returns the game-owned match reference for review.
+			</description>
+		</method>
+		<method name="get_reason_code" qualifiers="const">
+			<return type="int" />
+			<description>
+				Returns the positive game-defined reason code sent as Steam app data.
+			</description>
+		</method>
+		<method name="get_source" qualifiers="const">
+			<return type="int" enum="SteamCheatEvidence.Source" />
+			<description>
+				Returns whether a player or the authoritative game server submitted the evidence.
+			</description>
+		</method>
+		<method name="get_reporter_steam_id" qualifiers="const">
+			<return type="String" />
+			<description>
+				Returns the authenticated reporter's SteamID64, or empty for server evidence.
+			</description>
+		</method>
+	</methods>
+	<members>
+		<member name="match_id" type="String" setter="" getter="get_match_id">
+			The game-owned match reference for review.
+		</member>
+		<member name="reason_code" type="int" setter="" getter="get_reason_code">
+			The positive game-defined reason code sent as Steam app data.
+		</member>
+		<member name="source" type="int" enum="SteamCheatEvidence.Source" setter="" getter="get_source">
+			Whether a player or the authoritative game server submitted the evidence.
+		</member>
+		<member name="reporter_steam_id" type="String" setter="" getter="get_reporter_steam_id">
+			The authenticated reporter's SteamID64, or empty for server evidence.
+		</member>
+	</members>
+	<constants>
+		<constant name="PLAYER" value="0" enum="Source">
+			A player authenticated by the exact issuing publisher.
+		</constant>
+		<constant name="SERVER" value="1" enum="Source">
+			An authoritative game server verified by the trusted policy.
+		</constant>
+	</constants>
+</class>

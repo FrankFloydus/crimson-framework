@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="SteamPurchaseCatalog" inherits="RefCounted">
+	<brief_description>Read-only catalog of current offers for the authenticated player.</brief_description>
+	<methods>
+		<method name="create" qualifiers="static">
+			<return type="SteamPurchaseCatalog" />
+			<param index="0" name="entries" type="SteamPurchaseItem[]" />
+			<description>Creates a catalog from up to 256 valid offers with unique SKU IDs. Returns null for invalid data.</description>
+		</method>
+	</methods>
+	<members>
+		<member name="entries" type="SteamPurchaseItem[]" setter="" getter="get_entries">Read-only rows and prices supplied by the game backend.</member>
+	</members>
+</class>

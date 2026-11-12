@@ -7,6 +7,7 @@
 #include "modules/save/register_save.hpp"
 #include "modules/scene_load/register_scene_load.hpp"
 #include "modules/session/register_session.hpp"
+#include "modules/steam/register_steam.hpp"
 
 #include <gdextension_interface.h>
 #include <godot_cpp/core/class_db.hpp>
@@ -23,12 +24,14 @@ void initialize_crimson_framework(godot::ModuleInitializationLevel level) {
     crimson::scene_load::register_types(level);
     crimson::match_runtime::register_types(level);
     crimson::replication::register_types(level);
+    crimson::steam::register_types(level);
     crimson::integration::register_types(level);
 }
 
 // Release module resources when Godot shuts down the extension.
 void uninitialize_crimson_framework(godot::ModuleInitializationLevel level) {
     crimson::integration::unregister_types(level);
+    crimson::steam::unregister_types(level);
     crimson::replication::unregister_types(level);
     crimson::scene_load::unregister_types(level);
     crimson::session::unregister_types(level);

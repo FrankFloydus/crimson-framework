@@ -10,8 +10,8 @@
 
 namespace crimson::match_runtime {
 
-class CrimsonPlayerBindings : public godot::RefCounted {
-    GDCLASS(CrimsonPlayerBindings, godot::RefCounted)
+class PlayerBindings : public godot::RefCounted {
+    GDCLASS(PlayerBindings, godot::RefCounted)
 
 public:
     // Bind an admitted peer to an unused player identity and return the new generation.

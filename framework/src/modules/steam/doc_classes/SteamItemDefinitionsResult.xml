@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="SteamItemDefinitionsResult" inherits="SteamResult">
+	<brief_description>
+		A typed Steam inventory outcome.
+	</brief_description>
+	<description>
+		Check [member SteamResult.ok] before reading [member value]. The typed catalog, empty on error.
+	</description>
+	<tutorials>
+	</tutorials>
+	<methods>
+		<method name="get_value" qualifiers="const">
+			<return type="SteamItemDefinition[]" />
+			<description>
+				Returns the typed catalog, empty on error.
+			</description>
+		</method>
+	</methods>
+	<members>
+		<member name="value" type="SteamItemDefinition[]" setter="" getter="get_value">
+			The typed catalog, empty on error.
+		</member>
+	</members>
+</class>

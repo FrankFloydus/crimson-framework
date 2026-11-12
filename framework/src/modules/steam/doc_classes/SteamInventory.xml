@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="SteamInventory" inherits="RefCounted">
+	<brief_description>
+		Reads and changes the signed-in player's Steam inventory.
+	</brief_description>
+	<description>
+		Get this service from [method SteamClient.inventory] after starting the Steam client. Enable Steam Inventory Service and publish the relevant item definitions for your AppID. Await the methods on the main thread. An inactive or unsupported scope returns [constant ERR_UNAVAILABLE], invalid arguments return [constant ERR_INVALID_PARAMETER], and a full request queue returns [constant ERR_BUSY]. A pending request times out after 15 seconds. A submitted mutation may still apply after local observation ends. Stop or restart the owning client to retire its service and pending reads.
+	</description>
+	<tutorials>
+	</tutorials>
+	<methods>
+		<method name="claim_playtime_drop">
+			<return type="Variant" />
+			<param index="0" name="generator_id" type="int" />
+			<description>
+				Evaluates the published playtime generator [param generator_id]. A successful evaluation can grant no items. Returns [SteamInventoryChangeResult]. Refresh inventory before retrying after a timeout.
+			</description>
+		</method>
+		<method name="claim_promotion">
+			<return type="Variant" />
+			<param index="0" name="definition_id" type="int" />
+			<description>
+				Asks Steam to apply the published promotion [param definition_id] if the signed-in player is eligible. Returns [SteamInventoryChangeResult]. Refresh inventory before retrying after a timeout.
+			</description>
+		</method>
+		<method name="claim_promotions">
+			<return type="Variant" />
+			<description>
+				Asks Steam to apply all eligible configured promotions. A successful result can contain no grants. Returns [SteamInventoryChangeResult]. Refresh inventory before retrying after a timeout.
+			</description>
+		</method>
+		<method name="consume">
+			<return type="Variant" />
+			<param index="0" name="instance_id" type="String" />
+			<param index="1" name="quantity" type="int" default="1" />
+			<description>
+				Permanently consumes [param quantity] units from [param instance_id]. Use a confirmation step in the game UI before submitting this action. Returns [SteamInventoryChangeResult]. Refresh inventory before retrying after a timeout.
+			</description>
+		</method>
+		<method name="craft">
+			<return type="Variant" />
+			<param index="0" name="output_definition_id" type="int" />
+			<param index="1" name="ingredients" type="SteamItemQuantity[]" />
+			<description>
+				Atomically exchanges the distinct owned [param ingredients] for one unit of [param output_definition_id] when a published Steam recipe matches. Steam validates the recipe and quantities before changing either side. Returns [SteamInventoryChangeResult]. Refresh inventory before retrying after a timeout.
+			</description>
+		</method>
+		<method name="definition">
+			<return type="Variant" />
+			<param index="0" name="definition_id" type="int" />
+			<description>
+				Loads the catalog as needed and returns [SteamItemDefinitionResult] for the published [param definition_id]. A valid ID absent from the catalog returns [constant ERR_DOES_NOT_EXIST].
+			</description>
+		</method>
+		<method name="definitions">
+			<return type="Variant" />
+			<description>
+				Loads the app's published catalog on demand and returns [SteamItemDefinitionsResult]. Requests in the same scope share an in-flight load. A successful catalog may be empty.
+			</description>
+		</method>
+		<method name="items">
+			<return type="Variant" />
+			<description>
+				Returns [SteamInventorySnapshotResult] for the signed-in player's full inventory. Call when a view needs refresh. Steam can rate-limit full reads and return cached results. Inspect the snapshot's freshness before making decisions that require current inventory.
+			</description>
+		</method>
+		<method name="items_by_id">
+			<return type="Variant" />
+			<param index="0" name="instance_ids" type="PackedStringArray" />
+			<description>
+				Returns [SteamInventorySnapshotResult] for the available owned instances in [param instance_ids]. Steam may omit instances that are no longer present. Supply one to 256 distinct unsigned decimal IDs.
+			</description>
+		</method>
+		<method name="merge">
+			<return type="Variant" />
+			<param index="0" name="from_instance_id" type="String" />
+			<param index="1" name="into_instance_id" type="String" />
+			<param index="2" name="quantity" type="int" />
+			<description>
+				Moves [param quantity] units from [param from_instance_id] into the distinct [param into_instance_id] stack. Steam enforces the matching definition and trade restrictions. Returns [SteamInventoryChangeResult]. Refresh inventory before retrying after a timeout.
+			</description>
+		</method>
+		<method name="proof">
+			<return type="Variant" />
+			<param index="0" name="instance_ids" type="PackedStringArray" />
+			<description>
+				Returns [SteamBytesResult] with a signed Steam result containing exactly the available owned selection. Supply one to 256 distinct unsigned decimal [param instance_ids]. A missing selected instance returns [constant ERR_DOES_NOT_EXIST]. Proof bytes are limited to 1 MiB. Send them only to the authority that needs to verify this selection.
+			</description>
+		</method>
+		<method name="split">
+			<return type="Variant" />
+			<param index="0" name="instance_id" type="String" />
+			<param index="1" name="quantity" type="int" />
+			<description>
+				Moves [param quantity] units from [param instance_id] into a new instance of the same definition. The result carries the changed or removed source and the new stack. Returns [SteamInventoryChangeResult]. Refresh inventory before retrying after a timeout.
+			</description>
+		</method>
+	</methods>
+	<signals>
+		<signal name="definitions_changed">
+			<description>
+				Emitted after Steam announces a catalog update. An open catalog can call [method definitions] again to read the new revision.
+			</description>
+		</signal>
+		<signal name="items_changed">
+			<param index="0" name="snapshot" type="SteamInventorySnapshot" />
+			<description>
+				Emitted after this scope accepts a newer full inventory response to [method items]. The snapshot is detached and read-only. Mutations return their own changes.
+			</description>
+		</signal>
+	</signals>
+</class>

@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="SteamServerDetails" inherits="RefCounted">
+	<brief_description>Detached metadata and measured ping from a selected Steam server.</brief_description>
+	<methods>
+		<method name="get_listing" qualifiers="const">
+			<return type="SteamListing" />
+			<description>Current Steam observation of the selected server and address. Gameplay still verifies the connection certificate.</description>
+		</method>
+		<method name="get_ping_ms" qualifiers="const">
+			<return type="int" />
+			<description>Measured ping in milliseconds, or -1 for an empty snapshot.</description>
+		</method>
+		<method name="get_tags" qualifiers="const">
+			<return type="PackedStringArray" />
+			<description>Bounded tags copied from Steam server metadata.</description>
+		</method>
+	</methods>
+	<members>
+		<member name="listing" type="SteamListing" getter="get_listing" setter="">Current Steam observation of the selected server and address. Gameplay still verifies the connection certificate.</member>
+		<member name="ping_ms" type="int" getter="get_ping_ms" setter="">Measured ping in milliseconds, or -1 for an empty snapshot.</member>
+		<member name="tags" type="PackedStringArray" getter="get_tags" setter="">Bounded tags copied from Steam server metadata.</member>
+	</members>
+</class>

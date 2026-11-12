@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="SteamSockets" inherits="RefCounted">
+	<brief_description>Create standalone Steam listeners and connections through the owning Steam client.</brief_description>
+	<description>Access from [method SteamClient.sockets] or [method SteamScope.sockets]. Each facade owns up to eight listeners and 64 connections. The process owns up to 16 listeners and 128 connections across standalone facades. These connections have their own admission and packet API, separate from Game session transport.</description>
+	<tutorials>
+	</tutorials>
+	<methods>
+		<method name="listen">
+			<return type="SteamSocketListenerResult" />
+			<param index="0" name="endpoint" type="SteamSocketEndpoint" />
+			<param index="1" name="remote_limit" type="int" default="8" />
+			<description>Listens on a direct endpoint or a P2P endpoint addressed to the current Steam user. Set [param remote_limit] from 1 to 64 to cap pending and accepted connections together. A direct listener cannot have an outgoing peer pin.</description>
+		</method>
+		<method name="connect_to">
+			<return type="SteamSocketConnectOperation" />
+			<param index="0" name="endpoint" type="SteamSocketEndpoint" />
+			<param index="1" name="timeout_ms" type="int" default="10000" />
+			<description>Starts one authenticated outgoing handshake. Specify a timeout from 1000 to 30000 milliseconds. For direct routes requiring a specific Steam account, pass the endpoint returned by [method SteamSocketEndpoint.expect_peer].</description>
+		</method>
+	</methods>
+</class>

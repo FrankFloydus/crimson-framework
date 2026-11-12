@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="SteamBrowser" inherits="RefCounted">
+	<brief_description>Opens game-owned web pages as offscreen Steam textures.</brief_description>
+	<description>Get this service from [method SteamClient.browser]. Open pages on the scene thread in a rendered app. Crimson initializes the Steam HTML interface on first use and allows up to four live or pending browsers per process. Use URLs and content controlled by your game. Steam can fetch redirects before reporting the resulting URL, and its navigation callbacks do not intercept page subresources.</description>
+	<tutorials>
+		<link title="Steam HTML Surface">https://partner.steamgames.com/doc/api/ISteamHTMLSurface</link>
+	</tutorials>
+	<methods>
+		<method name="allow_origins">
+			<return type="SteamBrowserRequest" />
+			<param index="0" name="origins" type="PackedStringArray" />
+			<description>Build a policy with up to sixteen additional exact origins. An origin contains the scheme, ASCII hostname, and optional port. An optional trailing slash is accepted. For controlled local fixtures, explicitly include a numeric loopback HTTP origin. Policy validation occurs when opening the request.</description>
+		</method>
+		<method name="open">
+			<return type="Variant" />
+			<param index="0" name="url" type="String" />
+			<param index="1" name="size" type="Vector2i" default="Vector2i(960, 540)" />
+			<description>Await a [SteamBrowserPageResult] after creating a browser and requesting initial HTTPS navigation. The URL must be absolute with an ASCII authority, no credentials, and percent-encoded non-ASCII URL text. It is limited to 2048 bytes. Use [signal SteamBrowserPage.page_finished] and [signal SteamBrowserPage.frame_updated] to confirm page content. The browser dimensions may each range from 1 to 4096 pixels with a combined limit of 4194304 pixels.</description>
+		</method>
+	</methods>
+</class>

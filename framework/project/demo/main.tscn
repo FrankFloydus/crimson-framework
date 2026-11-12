@@ -2,14 +2,14 @@
 
 [gd_scene format=3]
 
-[ext_resource type="CrimsonGameDefinition" path="res://demo/session/transfer_hall.tres" id="game"]
+[ext_resource type="GameDefinition" path="res://demo/session/transfer_hall.tres" id="game"]
 [ext_resource type="PackedScene" path="res://demo/ui/main_menu.tscn" id="menu"]
 [ext_resource type="Script" path="res://demo/main.gd" id="boot"]
 
 [node name="CrimsonDemo" type="Node"]
 script = ExtResource("boot")
 
-[node name="Game" type="CrimsonGame" parent="."]
+[node name="Game" type="GameRuntime" parent="."]
 definition = ExtResource("game")
 
 [node name="MainMenu" parent="." node_paths=PackedStringArray("game") instance=ExtResource("menu")]

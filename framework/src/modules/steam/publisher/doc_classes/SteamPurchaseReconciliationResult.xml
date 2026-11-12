@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="SteamPurchaseReconciliationResult" inherits="SteamResult">
+	<brief_description>Outcome of processing one Steam settlement page.</brief_description>
+	<description>May retain a partial processed count and the original cursor when a later row fails.</description>
+	<tutorials>
+	</tutorials>
+	<methods>
+		<method name="get_value" qualifiers="const">
+			<return type="SteamPurchaseReconciliation" />
+			<description>Detached summary when a report was received, or null if the request could not start.</description>
+		</method>
+	</methods>
+	<members>
+		<member name="value" type="SteamPurchaseReconciliation" setter="" getter="get_value">Detached summary when a report was received, or null if the request could not start.</member>
+	</members>
+</class>

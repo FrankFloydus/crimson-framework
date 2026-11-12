@@ -10,8 +10,8 @@
 namespace crimson::integration {
 
 // Declares the local camera and optional hidden visuals inside a player scene.
-class CrimsonLocalView : public godot::Node {
-    GDCLASS(CrimsonLocalView, godot::Node)
+class LocalPlayerView : public godot::Node {
+    GDCLASS(LocalPlayerView, godot::Node)
 
     // Weak scene-local reference to the configured camera.
     godot::ObjectID camera_id;

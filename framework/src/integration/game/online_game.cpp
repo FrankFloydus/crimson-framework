@@ -21,20 +21,21 @@ uint64_t directory_deadline() {
 
 } // namespace
 
-Ref<CrimsonGameOperation> CrimsonGame::host_online(const String &public_address, const String &bind_address) {
+Ref<GameOperation> GameRuntime::host_online(const String &public_address, const String &bind_address) {
     return begin_online_host(ImmediateMode::Host, public_address, bind_address);
 }
 
-Ref<CrimsonGameOperation> CrimsonGame::start_dedicated_online(const String &public_address, const String &bind_address) {
+Ref<GameOperation> GameRuntime::start_dedicated_online(const String &public_address, const String &bind_address) {
     return begin_online_host(ImmediateMode::Dedicated, public_address, bind_address);
 }
 
-Ref<CrimsonGameOperation> CrimsonGame::check_online_start() const {
-    if (!session_node || !is_inside_tree() || definition.is_null() || online_directory.is_null()) {
+Ref<GameOperation> GameRuntime::check_online_start() const {
+    if (!session_node || !is_inside_tree() || definition.is_null() || online_directory.is_null() ||
+            !online_directory->is_game_available()) {
         return completed(false, "OnlineUnavailable", "Configure an online directory before starting an online game.");
     }
     if (phase != IDLE || immediate_active || cleaning || publishing || online_start.operation.is_valid() ||
-            session_node->get_state() != session::CrimsonGameSession::IDLE) {
+            session_node->get_state() != session::GameSession::IDLE) {
         return completed(false, "GameBusy", "Leave the current game before starting another.");
     }
     if (session_node->get_authenticator().is_null()) {
@@ -43,22 +44,25 @@ Ref<CrimsonGameOperation> CrimsonGame::check_online_start() const {
     return {};
 }
 
-Ref<CrimsonGameOperation> CrimsonGame::begin_online_host(
+Ref<GameOperation> GameRuntime::begin_online_host(
         ImmediateMode mode, const String &public_address, const String &bind_address) {
     if (const auto rejected = check_online_start(); rejected.is_valid()) {
         return rejected;
     }
-    const Ref<CrimsonMultiplayerRules> rules = definition->get_multiplayer_rules();
+    if (!online_directory->supports_host_mode(mode == ImmediateMode::Dedicated)) {
+        return completed(false, "OnlineModeUnavailable", "The selected online provider does not support this hosting mode.");
+    }
+    const Ref<MultiplayerRules> rules = definition->get_multiplayer_rules();
     if (rules.is_null()) {
         return completed(false, "MultiplayerDisabled", "Configure multiplayer rules before hosting online.");
     }
     const String address = public_address.strip_edges();
-    const auto endpoint = session::CrimsonSessionEndpoint::direct(address, rules->get_port());
+    const auto endpoint = session::SessionEndpoint::direct(address, rules->get_port());
     if (!address.is_empty() && (endpoint.is_null() || address == "*" || address == "0.0.0.0" || address == "::" ||
             address.length() > 255)) {
         return completed(false, "InvalidAddress", "Advertise a host address guests can connect to.");
     }
-    Ref<CrimsonGameOperation> operation;
+    Ref<GameOperation> operation;
     operation.instantiate();
     online_start.operation = operation;
     online_start.authenticator = session_node->get_authenticator();
@@ -71,7 +75,17 @@ Ref<CrimsonGameOperation> CrimsonGame::begin_online_host(
     return operation;
 }
 
-Ref<CrimsonGameOperation> CrimsonGame::join_online(const String &listing_id) {
+Ref<GameOperation> GameRuntime::join_listing(const Ref<OnlineListing> &listing) {
+    if (const auto rejected = check_online_start(); rejected.is_valid()) {
+        return rejected;
+    }
+    if (listing.is_null() || !online_directory->accepts_listing(listing)) {
+        return completed(false, "InvalidListing", "Select a listing from this game's online provider.");
+    }
+    return join_online(listing->get_id());
+}
+
+Ref<GameOperation> GameRuntime::join_online(const String &listing_id) {
     if (const auto rejected = check_online_start(); rejected.is_valid()) {
         return rejected;
     }
@@ -79,7 +93,7 @@ Ref<CrimsonGameOperation> CrimsonGame::join_online(const String &listing_id) {
     if (id.is_empty() || id.length() > 192) {
         return completed(false, "InvalidListing", "Enter a valid online listing ID.");
     }
-    Ref<CrimsonGameOperation> operation;
+    Ref<GameOperation> operation;
     operation.instantiate();
     online_start.operation = operation;
     online_start.authenticator = session_node->get_authenticator();
@@ -95,11 +109,11 @@ Ref<CrimsonGameOperation> CrimsonGame::join_online(const String &listing_id) {
     return operation;
 }
 
-String CrimsonGame::get_online_listing() const {
+String GameRuntime::get_online_listing() const {
     return immediate_active && phase == RUNNING ? online_listing : String();
 }
 
-void CrimsonGame::process_online_start() {
+void GameRuntime::process_online_start() {
     const auto operation = online_start.operation;
     if (online_start.world_start.is_valid()) {
         if (!online_start.world_start->is_finished()) {
@@ -133,7 +147,7 @@ void CrimsonGame::process_online_start() {
         fail_online_start(outcome(false, "DirectoryTimeout", "The online directory did not respond."));
         return;
     }
-    if (request.is_null() || request->state != CrimsonOnlineDirectoryRequest::State::Finished) {
+    if (request.is_null() || request->state != OnlineDirectoryRequest::State::Finished) {
         return;
     }
     if (online_start.hosting) {
@@ -167,7 +181,7 @@ void CrimsonGame::process_online_start() {
     }
 }
 
-Ref<CrimsonGameOperation> CrimsonGame::retire_online_start() {
+Ref<GameOperation> GameRuntime::retire_online_start() {
     const OnlineStart retired = std::exchange(online_start, {});
     if (retired.request.is_valid()) {
         retired.request->cancel();
@@ -175,7 +189,7 @@ Ref<CrimsonGameOperation> CrimsonGame::retire_online_start() {
     return retired.operation;
 }
 
-void CrimsonGame::retire_online_presence() {
+void GameRuntime::retire_online_presence() {
     const String listing = std::exchange(online_listing, String());
     const String joined = std::exchange(online_join, String());
     const auto directory = online_directory;
@@ -187,7 +201,7 @@ void CrimsonGame::retire_online_presence() {
     }
 }
 
-void CrimsonGame::fail_online_start(const Dictionary &result) {
+void GameRuntime::fail_online_start(const Dictionary &result) {
     publishing = true;
     const auto operation = retire_online_start();
     retire_online_presence();
@@ -198,7 +212,7 @@ void CrimsonGame::fail_online_start(const Dictionary &result) {
     operation->finish(result);
 }
 
-void CrimsonGame::finish_online_start() {
+void GameRuntime::finish_online_start() {
     const auto operation = std::exchange(online_start, {}).operation;
     const int64_t ready_epoch = world_epoch;
     Dictionary result = outcome(true, "Ok");

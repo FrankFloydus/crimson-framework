@@ -11,7 +11,7 @@ class Endpoint:
 	## Multiplayer API associated with the branch.
 	var api: SceneMultiplayer
 	## Native session under test.
-	var session: CrimsonGameSession
+	var session: GameSession
 	## Session state transitions in signal order.
 	var states: Array[int] = []
 	## Session states reported when a session becomes active.
@@ -27,29 +27,29 @@ class Endpoint:
 
 
 ## Returns a precise factory failure or replaces the API slot while opening a real server.
-class FactoryProbe extends CrimsonSessionTransport:
+class FactoryProbe extends SessionTransport:
 	var api: SceneMultiplayer
 	var replacement: MultiplayerPeer
 	var candidate: MultiplayerPeer
 
-	func _open_server(port: int, remote_limit: int, bind_address: String) -> CrimsonSessionTransportResult:
-		var result := CrimsonENetSessionTransport.new().open_server(port, remote_limit, bind_address)
+	func _open_server(port: int, remote_limit: int, bind_address: String) -> SessionTransportResult:
+		var result := ENetSessionTransport.new().open_server(port, remote_limit, bind_address)
 		candidate = result.get_peer()
 		api.multiplayer_peer = replacement
 		return result
 
-	func _open_client(_endpoint: CrimsonSessionEndpoint) -> CrimsonSessionTransportResult:
-		return CrimsonSessionTransportResult.failed(ERR_CANT_CONNECT)
+	func _open_client(_endpoint: SessionEndpoint) -> SessionTransportResult:
+		return SessionTransportResult.failed(ERR_CANT_CONNECT)
 
 
 ## Verifies a fixture-only challenge response and can hold a valid request for async completion.
-class AuthProbe extends CrimsonSessionAuthenticator:
+class AuthProbe extends SessionAuthenticator:
 	var local_key: String
 	var expected_key: String
 	var expected_subject: String
 	var hold := false
 	var before_proof: Callable
-	var requests: Array[CrimsonSessionAuthRequest] = []
+	var requests: Array[SessionAuthRequest] = []
 	var denials := 0
 
 	func _make_proof(_peer_id: int, authority: bool, challenge: PackedByteArray) -> PackedByteArray:
@@ -57,7 +57,7 @@ class AuthProbe extends CrimsonSessionAuthenticator:
 			before_proof.call()
 		return _proof(local_key, authority, challenge)
 
-	func _verify(request: CrimsonSessionAuthRequest) -> void:
+	func _verify(request: SessionAuthRequest) -> void:
 		var expected := _proof(expected_key, not request.is_authority(), request.get_challenge())
 		if not Crypto.new().constant_time_compare(expected, request.get_proof()):
 			denials += 1
@@ -65,7 +65,7 @@ class AuthProbe extends CrimsonSessionAuthenticator:
 		elif hold:
 			requests.append(request)
 		else:
-			request.accept(CrimsonSessionIdentity.verified(&"test", expected_subject))
+			request.accept(SessionIdentity.verified(&"test", expected_subject))
 
 	func _proof(key: String, authority: bool, challenge: PackedByteArray) -> PackedByteArray:
 		var message := ("crimson-test-authority" if authority else "crimson-test-guest").to_utf8_buffer()
@@ -92,7 +92,7 @@ func _run() -> void:
 	await _test_loopback()
 	await _test_verified_admission()
 	await _test_timeout_and_cancel()
-	print("CrimsonGameSession: %d checks, %d failures." % [_checks, _failures])
+	print("GameSession: %d checks, %d failures." % [_checks, _failures])
 	if _failures == 0:
 		print("CRIMSON_GAME_SESSION_TESTS_PASSED")
 	quit(0 if _failures == 0 else 1)
@@ -109,7 +109,7 @@ func _make_endpoint(branch_name: String, isolated: bool = true) -> Endpoint:
 		set_multiplayer(endpoint.api, endpoint.branch.get_path())
 	else:
 		endpoint.api = endpoint.branch.get_multiplayer() as SceneMultiplayer
-	endpoint.session = CrimsonGameSession.new()
+	endpoint.session = GameSession.new()
 	endpoint.session.name = "GameSession"
 	# Record state transitions for later order and cardinality checks.
 	endpoint.session.state_changed.connect(func(state: int) -> void: endpoint.states.append(state))
@@ -132,7 +132,7 @@ func _test_offline() -> void:
 	var endpoint := _make_endpoint("Offline", false)
 	var session := endpoint.session
 	var previous := endpoint.api.multiplayer_peer
-	_expect(session.get_state() == CrimsonGameSession.State.IDLE, "New session starts idle.")
+	_expect(session.get_state() == GameSession.State.IDLE, "New session starts idle.")
 	_expect(session.get_local_peer_id() == 0 and not session.is_authority(), "Idle has no local authority.")
 	_expect(session.get_connected_peer_ids().is_empty(), "Idle has no connected peers.")
 	_expect(session.host(-1) != OK, "Reject an invalid host port.")
@@ -140,25 +140,25 @@ func _test_offline() -> void:
 	_expect(session.join("127.0.0.1", 45000, 0.0) != OK, "Reject a zero join timeout.")
 	_expect(endpoint.states.is_empty(), "Invalid arguments leave session state untouched.")
 	_expect(session.start_offline() == OK, "Start offline on the default multiplayer API.")
-	_expect(session.get_state() == CrimsonGameSession.State.OFFLINE, "Offline mode has its own state.")
+	_expect(session.get_state() == GameSession.State.OFFLINE, "Offline mode has its own state.")
 	_expect(session.is_authority() and session.get_local_peer_id() == 1, "Offline uses local authority peer 1.")
 	_expect(session.get_connected_peer_ids().is_empty(), "Offline has no remote peers.")
-	_expect(endpoint.started_states == [CrimsonGameSession.State.OFFLINE] and endpoint.started_ids == [1],
+	_expect(endpoint.started_states == [GameSession.State.OFFLINE] and endpoint.started_ids == [1],
 		"Offline emits one session-start event with the authority ID.")
 	_expect(session.start_offline() != OK, "A second start cannot replace an active offline session.")
 	var offline_peer := endpoint.api.multiplayer_peer
-	var contender := CrimsonGameSession.new()
+	var contender := GameSession.new()
 	endpoint.branch.add_child(contender)
 	_expect(contender.start_offline() != OK, "Another manager cannot take over the active offline API.")
 	contender.free()
-	_expect(endpoint.api.multiplayer_peer == offline_peer and session.get_state() == CrimsonGameSession.State.OFFLINE,
+	_expect(endpoint.api.multiplayer_peer == offline_peer and session.get_state() == GameSession.State.OFFLINE,
 		"Freeing the contender keeps the original offline session active.")
 	session.leave()
 	session.leave()
-	_expect(session.get_state() == CrimsonGameSession.State.IDLE and session.get_local_peer_id() == 0,
+	_expect(session.get_state() == GameSession.State.IDLE and session.get_local_peer_id() == 0,
 		"Leaving offline returns to idle.")
 	_expect(endpoint.ended == [&"left"], "Repeated leave emits one termination event.")
-	_expect(endpoint.states == [CrimsonGameSession.State.OFFLINE, CrimsonGameSession.State.IDLE],
+	_expect(endpoint.states == [GameSession.State.OFFLINE, GameSession.State.IDLE],
 		"Offline lifecycle publishes only its two state changes.")
 	_expect(endpoint.api.multiplayer_peer == previous, "Offline leave restores the original peer.")
 
@@ -174,10 +174,10 @@ func _test_transport_factory() -> void:
 	probe.api = endpoint.api
 	probe.replacement = OfflineMultiplayerPeer.new()
 	_expect(session.set_transport_adapter(probe) == OK, "Set a custom adapter while idle.")
-	var target := CrimsonSessionEndpoint.direct(" 127.0.0.1 ", port)
+	var target := SessionEndpoint.direct(" 127.0.0.1 ", port)
 	_expect(target != null and target.get_address() == "127.0.0.1" and target.get_port() == port,
 		"Construct a normalized direct endpoint.")
-	_expect(CrimsonSessionEndpoint.direct(" ", port) == null and CrimsonSessionEndpoint.direct("127.0.0.1", 0) == null,
+	_expect(SessionEndpoint.direct(" ", port) == null and SessionEndpoint.direct("127.0.0.1", 0) == null,
 		"Reject invalid direct endpoints.")
 	_expect(session.join_endpoint(target) == ERR_CANT_CONNECT, "Keep the adapter's exact client-open error.")
 	_expect(session.host(port, 1, "127.0.0.1") == ERR_BUSY,
@@ -224,7 +224,7 @@ func _test_external_transport() -> void:
 	endpoint.api.allow_object_decoding = true
 	_expect(session.host(port, 2, "127.0.0.1") == ERR_UNAUTHORIZED,
 		"Networking refuses an API that allows object decoding.")
-	_expect(endpoint.api.allow_object_decoding and session.get_state() == CrimsonGameSession.State.IDLE,
+	_expect(endpoint.api.allow_object_decoding and session.get_state() == GameSession.State.IDLE,
 		"Rejection leaves the caller's API settings and session state intact.")
 	endpoint.api.allow_object_decoding = false
 
@@ -241,13 +241,13 @@ func _test_loopback() -> void:
 	var original_host_peer := host.api.multiplayer_peer
 	if not _expect(host_session.host(port, 4, "127.0.0.1") == OK, "Start a real localhost ENet server."):
 		return
-	_expect(host_session.get_state() == CrimsonGameSession.State.HOSTING and host_session.is_authority(),
+	_expect(host_session.get_state() == GameSession.State.HOSTING and host_session.is_authority(),
 		"Host is the session authority.")
 	_expect(host_session.get_local_peer_id() == 1 and host.started_ids == [1], "Host uses ENet server ID 1.")
 	_expect(host_session.is_accepting_connections(), "A newly started host accepts joins.")
 
 	var owned_peer := host.api.multiplayer_peer
-	var contender := CrimsonGameSession.new()
+	var contender := GameSession.new()
 	host.branch.add_child(contender)
 	_expect(contender.start_offline() != OK, "A second session cannot take over the host's multiplayer API.")
 	contender.leave()
@@ -276,12 +276,12 @@ func _test_loopback() -> void:
 	_expect(first.session.set_accepting_connections(false) != OK, "Only the host can change join admission.")
 	_expect(host_session.set_accepting_connections(false) == OK and not host_session.is_accepting_connections(),
 		"The host can pause new joins.")
-	_expect(first.session.get_state() == CrimsonGameSession.State.CLIENT
-		and second.session.get_state() == CrimsonGameSession.State.CLIENT,
+	_expect(first.session.get_state() == GameSession.State.CLIENT
+		and second.session.get_state() == GameSession.State.CLIENT,
 		"Pausing joins keeps existing clients connected.")
 
 	first.session.leave()
-	_expect(first.session.get_state() == CrimsonGameSession.State.IDLE and first.ended == [&"left"],
+	_expect(first.session.get_state() == GameSession.State.IDLE and first.ended == [&"left"],
 		"A voluntary client leave returns to idle and reports its reason.")
 	# Require the removal event and the updated roster before attempting a rejoin.
 	var client_removed := func() -> bool:
@@ -328,7 +328,7 @@ func _test_timeout_and_cancel() -> void:
 	var session := endpoint.session
 	if not _expect(session.join("127.0.0.1", port, 0.15) == OK, "Start a join with no listening server."):
 		return
-	_expect(session.get_state() == CrimsonGameSession.State.CONNECTING and session.get_local_peer_id() == 0,
+	_expect(session.get_state() == GameSession.State.CONNECTING and session.get_local_peer_id() == 0,
 		"Connecting exposes no assigned peer ID.")
 	# Wait for the asynchronous timeout signal from the session.
 	if not await _wait_until(func() -> bool: return not endpoint.ended.is_empty(),
@@ -399,12 +399,12 @@ func _test_verified_admission() -> void:
 		and accepted.is_authority() and guest_id > 1 and host.api.get_authenticating_peers().has(guest_id),
 		"The async request is bound to the engine's pending connection and bounded challenge.")
 	_expect(host.session.get_peer_identity(guest_id) == null and host.joined.is_empty()
-		and guest.session.get_state() == CrimsonGameSession.CONNECTING,
+		and guest.session.get_state() == GameSession.CONNECTING,
 		"An unresolved verifier holds both roster admission and identity publication.")
-	var guest_identity := CrimsonSessionIdentity.verified(&"test", verifier.expected_subject)
+	var guest_identity := SessionIdentity.verified(&"test", verifier.expected_subject)
 	_expect(accepted.accept(guest_identity) == OK and accepted.reject() == ERR_DOES_NOT_EXIST,
 		"The verification request settles exactly once.")
-	if not await _wait_until(func() -> bool: return guest.session.get_state() == CrimsonGameSession.CLIENT,
+	if not await _wait_until(func() -> bool: return guest.session.get_state() == GameSession.CLIENT,
 			"The verified guest receives admission."):
 		return
 	var authority_identity := guest.session.get_peer_identity(1)
@@ -430,7 +430,7 @@ func _test_verified_admission() -> void:
 		return
 	prover.before_proof = guest.session.leave
 	if not _expect(guest.session.join("127.0.0.1", port) == OK, "Start a connection that will cancel in its provider hook.") \
-			or not await _wait_until(func() -> bool: return guest.session.get_state() == CrimsonGameSession.IDLE,
+			or not await _wait_until(func() -> bool: return guest.session.get_state() == GameSession.IDLE,
 				"The provider callback can cancel safely outside the engine packet poll."):
 		return
 	_expect(not guest.api.auth_callback.is_valid() and guest.ended.back() == &"left",
@@ -446,13 +446,13 @@ func _join_client(endpoint: Endpoint, port: int) -> bool:
 	var session := endpoint.session
 	if not _expect(session.join("127.0.0.1", port) == OK, "%s starts a localhost connection." % endpoint.branch.name):
 		return false
-	_expect(session.get_state() == CrimsonGameSession.State.CONNECTING, "Join begins in the connecting state.")
+	_expect(session.get_state() == GameSession.State.CONNECTING, "Join begins in the connecting state.")
 	# Wait for the client to reach its active state before checking its identity.
-	if not await _wait_until(func() -> bool: return session.get_state() == CrimsonGameSession.State.CLIENT,
+	if not await _wait_until(func() -> bool: return session.get_state() == GameSession.State.CLIENT,
 		"%s connects through ENet." % endpoint.branch.name):
 		return false
 	return _expect(not session.is_authority() and session.get_local_peer_id() > 1
-		and endpoint.started_states.back() == CrimsonGameSession.State.CLIENT
+		and endpoint.started_states.back() == GameSession.State.CLIENT
 		and endpoint.started_ids.back() == session.get_local_peer_id(),
 		"The client gets a remote peer ID and publishes it in its start event.")
 

@@ -15,18 +15,18 @@
 
 namespace crimson::integration {
 
-class CrimsonMatchCheckpoint;
+class MatchCheckpoint;
 
 // Opaque detached state owned by one prepared SaveCoordinator operation.
-class CrimsonMatchCheckpointCandidate : public godot::RefCounted {
-    GDCLASS(CrimsonMatchCheckpointCandidate, godot::RefCounted)
+class MatchCheckpointCandidate : public godot::RefCounted {
+    GDCLASS(MatchCheckpointCandidate, godot::RefCounted)
 
 protected:
     // Register the internal type without exposing its mutable fields.
     static void _bind_methods();
 
 private:
-    friend class CrimsonMatchCheckpoint;
+    friend class MatchCheckpoint;
 
     // Identity of the bridge that created this candidate.
     uint64_t checkpoint_id = 0;
@@ -35,16 +35,16 @@ private:
     // Stable world ID resolved by Game Flow before activation.
     godot::String world_id;
     // Coordinator-owned prepared restore token, consumed on publication.
-    godot::Ref<match_runtime::CrimsonTransaction> restore;
+    godot::Ref<match_runtime::GameTransaction> restore;
 };
 
 // Adapts authoritative match stores to one SaveCoordinator host and participant.
-class CrimsonMatchCheckpoint : public godot::RefCounted {
-    GDCLASS(CrimsonMatchCheckpoint, godot::RefCounted)
+class MatchCheckpoint : public godot::RefCounted {
+    GDCLASS(MatchCheckpoint, godot::RefCounted)
 
 public:
     // Bind the current store registry and capture world on the owning thread.
-    void set_context(const godot::Ref<match_runtime::CrimsonTransactionCoordinator> &coordinator,
+    void set_context(const godot::Ref<match_runtime::TransactionCoordinator> &coordinator,
             const godot::String &world_id);
 
     // Return the committed world identity and detached store DTOs.
@@ -70,7 +70,7 @@ private:
     // Identifies the exact coordinator commit awaiting observer notification.
     struct DeferredPublication {
         // Coordinator that published the restore, even if the capture context changes.
-        godot::Ref<match_runtime::CrimsonTransactionCoordinator> coordinator;
+        godot::Ref<match_runtime::TransactionCoordinator> coordinator;
         // Revision of the deferred restore publication.
         int64_t revision;
     };
@@ -78,7 +78,7 @@ private:
     // Creating thread, which owns context changes and all checkpoint callbacks.
     const std::thread::id owner_thread = std::this_thread::get_id();
     // Store coordinator for the current match.
-    godot::Ref<match_runtime::CrimsonTransactionCoordinator> stores;
+    godot::Ref<match_runtime::TransactionCoordinator> stores;
     // Stable ID of the mounted world captured by the participant.
     godot::String active_world;
     // Advances whenever the store coordinator or mounted capture world changes.
@@ -89,7 +89,7 @@ private:
     // Check thread affinity before accessing the bridge context.
     bool on_owner_thread() const;
     // Accept only a detached candidate belonging to the current bridge context.
-    godot::Ref<CrimsonMatchCheckpointCandidate> owned_candidate(const godot::Variant &candidate) const;
+    godot::Ref<MatchCheckpointCandidate> owned_candidate(const godot::Variant &candidate) const;
 };
 
 } // namespace crimson::integration

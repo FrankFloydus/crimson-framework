@@ -1,14 +1,14 @@
 # Copyright Francesco Di Blasi 2026 - All Rights Reserved
 
 extends RefCounted
-## Translates CrimsonGame launch operations and session lifecycle into menu presentation.
+## Translates GameRuntime launch operations and session lifecycle into menu presentation.
 
 signal changed
 ## Reports one settled launch for the demo boot adapter.
 signal launch_finished(ok: bool, message: String)
 
-var _game: CrimsonGame
-var _operation: CrimsonGameOperation
+var _game: GameRuntime
+var _operation: GameOperation
 var _pending_message := ""
 var _validation_message := ""
 var _session_message := ""
@@ -16,7 +16,7 @@ var _cancel_requested := false
 var _entered_game := false
 
 
-func _init(game: CrimsonGame) -> void:
+func _init(game: GameRuntime) -> void:
 	_game = game
 	if _game != null:
 		_entered_game = is_playing()
@@ -31,7 +31,7 @@ func port() -> int:
 
 
 func is_playing() -> bool:
-	return _game != null and _game.get_phase() == CrimsonGame.RUNNING
+	return _game != null and _game.get_phase() == GameRuntime.RUNNING
 
 
 func is_pending() -> bool:
@@ -90,7 +90,7 @@ func show_launch_error(message: String) -> void:
 
 
 func _can_start() -> bool:
-	return _game != null and _operation == null and _game.get_phase() == CrimsonGame.IDLE
+	return _game != null and _operation == null and _game.get_phase() == GameRuntime.IDLE
 
 
 func _launch(action: Callable, pending: String, fallback: String) -> void:
@@ -134,7 +134,7 @@ func _launch_failure(result: Dictionary, fallback: String) -> String:
 
 
 func _on_phase_changed(phase: int) -> void:
-	if phase == CrimsonGame.RUNNING:
+	if phase == GameRuntime.RUNNING:
 		_entered_game = true
 	changed.emit()
 

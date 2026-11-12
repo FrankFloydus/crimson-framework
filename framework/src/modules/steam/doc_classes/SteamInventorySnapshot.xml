@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="SteamInventorySnapshot" inherits="RefCounted">
+	<brief_description>
+		A detached inventory read and its observation metadata.
+	</brief_description>
+	<description>
+		A snapshot remains readable after the Steam client stops. Steam can return cached inventory when an application refreshes rapidly. An unchanged result may also lack freshness evidence. Inspect [member freshness] before relying on this snapshot as a current view.
+	</description>
+	<tutorials>
+	</tutorials>
+	<methods>
+		<method name="get_items" qualifiers="const">
+			<return type="SteamItemInstance[]" />
+			<description>
+				Returns the read-only array of present item instances.
+			</description>
+		</method>
+		<method name="get_freshness" qualifiers="const">
+			<return type="int" enum="SteamInventorySnapshot.Freshness" />
+			<description>
+				Returns the SDK evidence available about the age of this view.
+			</description>
+		</method>
+		<method name="get_observed_at_unix" qualifiers="const">
+			<return type="int" />
+			<description>
+				Returns steam's result timestamp in Unix seconds, or zero if unavailable.
+			</description>
+		</method>
+	</methods>
+	<members>
+		<member name="items" type="SteamItemInstance[]" setter="" getter="get_items">
+			The read-only array of present item instances.
+		</member>
+		<member name="freshness" type="int" enum="SteamInventorySnapshot.Freshness" setter="" getter="get_freshness">
+			The SDK evidence available about the age of this view.
+		</member>
+		<member name="observed_at_unix" type="int" setter="" getter="get_observed_at_unix">
+			Steam's result timestamp in Unix seconds, or zero if unavailable.
+		</member>
+	</members>
+	<constants>
+		<constant name="FRESHNESS_UNCONFIRMED" value="0" enum="Freshness">
+			Steam supplied no freshness evidence. This includes selected reads and full results that Steam may have served from cache or found unchanged.
+		</constant>
+		<constant name="FRESHNESS_FRESH" value="1" enum="Freshness">
+			Steam announced a newer full view for this exact request.
+		</constant>
+		<constant name="FRESHNESS_CACHED" value="2" enum="Freshness">
+			Steam returned readable data with an expired result status.
+		</constant>
+		<constant name="FRESHNESS_VERIFIED_PROOF" value="3" enum="Freshness">
+			A dedicated server verified the signed selection and its age for a currently authenticated owner. The snapshot describes the selected instances at the proof timestamp.
+		</constant>
+	</constants>
+</class>

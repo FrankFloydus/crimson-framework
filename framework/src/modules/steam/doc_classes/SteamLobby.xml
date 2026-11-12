@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="SteamLobby" inherits="RefCounted">
+	<brief_description>Social operations and observations for one exact Steam lobby membership.</brief_description>
+	<methods>
+		<method name="listing" qualifiers="const">
+			<return type="SteamListing" />
+			<description>Return a detached listing using current presentation and counts while active. After closing, return the initial snapshot.</description>
+		</method>
+		<method name="members" qualifiers="const">
+			<return type="SteamLobbyMember[]" />
+			<description>Copy up to 65 current Steam lobby members. An unavailable membership returns an empty array.</description>
+		</method>
+		<method name="edit" qualifiers="const">
+			<return type="SteamLobbyEdit" />
+			<description>Return an empty edit for this membership. Call [method SteamLobbyEdit.submit] to check live ownership and write.</description>
+		</method>
+		<method name="tag" qualifiers="const">
+			<return type="String" />
+			<param index="0" name="key" type="StringName" />
+			<description>Read the bounded value of one nonreserved application key. Return an empty string when unavailable or absent.</description>
+		</method>
+		<method name="set_joinable">
+			<return type="int" enum="Error" />
+			<param index="0" name="open" type="bool" />
+			<description>Set whether Steam can accept new members into this standalone lobby. The current Steam owner can call this. Game-owned lobbies and guests return [constant ERR_UNAUTHORIZED].</description>
+		</method>
+		<method name="leave">
+			<return type="int" enum="Error" />
+			<description>Leave this standalone membership, releasing its account reservation before [signal closed]. A Game-owned membership returns [constant ERR_UNAUTHORIZED].</description>
+		</method>
+		<method name="invite">
+			<return type="int" enum="Error" />
+			<param index="0" name="steam_id" type="String" />
+			<description>Submit one Steam lobby invitation from its current owner to a selected decimal individual SteamID64. A malformed ID or the local account returns [constant ERR_INVALID_PARAMETER]. [constant OK] acknowledges submission.</description>
+		</method>
+		<method name="open_invite_dialog">
+			<return type="int" enum="Error" />
+			<description>Request the Steam invite picker for the current owner's lobby. Return [constant ERR_BUSY] while the overlay is still unavailable and [constant OK] when submitted.</description>
+		</method>
+		<method name="send_chat">
+			<return type="int" enum="Error" />
+			<param index="0" name="text" type="String" />
+			<description>Submit nonempty UTF-8 text of up to 1024 bytes with no ASCII controls, at most once per 250 milliseconds. [constant OK] acknowledges submission. Use [signal chat_received] to observe delivery.</description>
+		</method>
+	</methods>
+	<signals>
+		<signal name="members_changed">
+			<param index="0" name="members" type="SteamLobbyMember[]" />
+			<description>Emitted with a current bounded snapshot after a Steam member event for this lobby.</description>
+		</signal>
+		<signal name="chat_received">
+			<param index="0" name="member" type="SteamLobbyMember" />
+			<param index="1" name="text" type="String" />
+			<description>Emitted for bounded text from a current Steam lobby member, including the local sender. A scope observes at most 20 messages per second.</description>
+		</signal>
+		<signal name="closed">
+			<param index="0" name="reason" type="int" />
+			<description>Emitted once after this view stops serving live actions. Explicit leave uses [constant OK], scope teardown uses [constant ERR_SKIP], and Steam-reported loss uses [constant ERR_CONNECTION_ERROR].</description>
+		</signal>
+	</signals>
+</class>

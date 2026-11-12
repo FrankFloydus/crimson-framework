@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="SteamPublisherResult" inherits="SteamResult">
+	<brief_description>Outcome of booting one trusted publisher scope.</brief_description>
+	<description>Check [member SteamResult.ok] before using the result.</description>
+	<tutorials>
+	</tutorials>
+	<methods>
+		<method name="get_value" qualifiers="const">
+			<return type="SteamPublisher" />
+			<description>Initialized publisher on success, or null when its configuration was rejected.</description>
+		</method>
+	</methods>
+	<members>
+		<member name="value" type="SteamPublisher" setter="" getter="get_value">
+			Initialized publisher on success, or null when its configuration was rejected.
+		</member>
+	</members>
+</class>

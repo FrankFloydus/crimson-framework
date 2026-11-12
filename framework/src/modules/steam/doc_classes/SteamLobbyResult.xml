@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="SteamLobbyResult" inherits="SteamResult">
+	<brief_description>Typed result of a standalone Steam lobby create or join.</brief_description>
+	<methods>
+		<method name="get_value" qualifiers="const">
+			<return type="SteamLobby" />
+			<description>Return the established lobby on success, or null on failure.</description>
+		</method>
+	</methods>
+	<members>
+		<member name="value" type="SteamLobby" setter="" getter="get_value">The lobby established by this operation, or null on failure. Retaining the result does not retain Steam membership.</member>
+	</members>
+</class>

@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="SteamIdentity" inherits="RefCounted">
+	<brief_description>A Steam identity verified by a trusted publisher scope.</brief_description>
+	<description>Use the identity returned by [method SteamPublisherAuth.verify] when calling trusted services. A manually created value carries no verification and cannot authorize an action. The original publisher scope must remain active.</description>
+	<tutorials>
+	</tutorials>
+	<methods>
+		<method name="get_steam_id" qualifiers="const">
+			<return type="String" />
+			<description>Full canonical decimal SteamID64 authenticated by Valve.</description>
+		</method>
+		<method name="get_license_owner_steam_id" qualifiers="const">
+			<return type="String" />
+			<description>Full decimal license owner SteamID64 when Valve supplies it. Empty when omitted.</description>
+		</method>
+		<method name="get_app_id" qualifiers="const">
+			<return type="int" />
+			<description>Steamworks AppID used to verify the ticket.</description>
+		</method>
+	</methods>
+	<members>
+		<member name="steam_id" type="String" setter="" getter="get_steam_id">
+			Full canonical decimal SteamID64 authenticated by Valve.
+		</member>
+		<member name="license_owner_steam_id" type="String" setter="" getter="get_license_owner_steam_id">
+			Full decimal license owner SteamID64 when Valve supplies it. Empty when omitted.
+		</member>
+		<member name="app_id" type="int" setter="" getter="get_app_id">
+			Steamworks AppID used to verify the ticket.
+		</member>
+	</members>
+</class>

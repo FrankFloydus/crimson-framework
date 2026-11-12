@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="SteamCloudFile" inherits="RefCounted">
+	<brief_description>
+		Detached metadata for one local Steam Remote Storage file.
+	</brief_description>
+	<methods>
+		<method name="get_modified_at_unix" qualifiers="const">
+			<return type="int" />
+			<description>Returns the last modification timestamp in Unix seconds.</description>
+		</method>
+		<method name="get_name" qualifiers="const">
+			<return type="String" />
+			<description>Returns the app-relative filename.</description>
+		</method>
+		<method name="get_size_bytes" qualifiers="const">
+			<return type="int" />
+			<description>Returns the file size in bytes.</description>
+		</method>
+		<method name="is_persisted" qualifiers="const">
+			<return type="bool" />
+			<description>Returns Steam's Cloud persistence flag for the file.</description>
+		</method>
+	</methods>
+	<members>
+		<member name="modified_at_unix" type="int" setter="" getter="get_modified_at_unix">
+			The last modification time in Unix seconds.
+		</member>
+		<member name="name" type="String" setter="" getter="get_name">
+			The app-relative Steam Remote Storage filename.
+		</member>
+		<member name="persisted" type="bool" setter="" getter="is_persisted">
+			Whether Steam treats this file as persisted in Cloud storage. Cross-device delivery follows Steam's sync lifecycle.
+		</member>
+		<member name="size_bytes" type="int" setter="" getter="get_size_bytes">
+			The number of bytes in the file.
+		</member>
+	</members>
+</class>

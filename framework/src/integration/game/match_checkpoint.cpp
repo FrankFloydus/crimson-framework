@@ -40,24 +40,24 @@ Dictionary saved_value(const Variant &value) {
 
 } // namespace
 
-void CrimsonMatchCheckpointCandidate::_bind_methods() {
+void MatchCheckpointCandidate::_bind_methods() {
 }
 
-void CrimsonMatchCheckpoint::_bind_methods() {
-    ClassDB::bind_method(D_METHOD("set_context", "coordinator", "world_id"), &CrimsonMatchCheckpoint::set_context);
-    ClassDB::bind_method(D_METHOD("save_capture"), &CrimsonMatchCheckpoint::save_capture);
-    ClassDB::bind_method(D_METHOD("save_create_candidate"), &CrimsonMatchCheckpoint::save_create_candidate);
-    ClassDB::bind_method(D_METHOD("save_stage", "dto", "candidate"), &CrimsonMatchCheckpoint::save_stage);
-    ClassDB::bind_method(D_METHOD("get_candidate_world", "candidate"), &CrimsonMatchCheckpoint::get_candidate_world);
-    ClassDB::bind_method(D_METHOD("save_publish", "candidate"), &CrimsonMatchCheckpoint::save_publish);
-    ClassDB::bind_method(D_METHOD("notify_publication"), &CrimsonMatchCheckpoint::notify_publication);
+void MatchCheckpoint::_bind_methods() {
+    ClassDB::bind_method(D_METHOD("set_context", "coordinator", "world_id"), &MatchCheckpoint::set_context);
+    ClassDB::bind_method(D_METHOD("save_capture"), &MatchCheckpoint::save_capture);
+    ClassDB::bind_method(D_METHOD("save_create_candidate"), &MatchCheckpoint::save_create_candidate);
+    ClassDB::bind_method(D_METHOD("save_stage", "dto", "candidate"), &MatchCheckpoint::save_stage);
+    ClassDB::bind_method(D_METHOD("get_candidate_world", "candidate"), &MatchCheckpoint::get_candidate_world);
+    ClassDB::bind_method(D_METHOD("save_publish", "candidate"), &MatchCheckpoint::save_publish);
+    ClassDB::bind_method(D_METHOD("notify_publication"), &MatchCheckpoint::notify_publication);
 }
 
-bool CrimsonMatchCheckpoint::on_owner_thread() const {
+bool MatchCheckpoint::on_owner_thread() const {
     return std::this_thread::get_id() == owner_thread;
 }
 
-void CrimsonMatchCheckpoint::set_context(const Ref<match_runtime::CrimsonTransactionCoordinator> &coordinator,
+void MatchCheckpoint::set_context(const Ref<match_runtime::TransactionCoordinator> &coordinator,
         const String &world_id) {
     if (!on_owner_thread() || (stores == coordinator && active_world == world_id)) {
         return;
@@ -67,11 +67,11 @@ void CrimsonMatchCheckpoint::set_context(const Ref<match_runtime::CrimsonTransac
     ++context_version;
 }
 
-Ref<CrimsonMatchCheckpointCandidate> CrimsonMatchCheckpoint::owned_candidate(const Variant &value) const {
+Ref<MatchCheckpointCandidate> MatchCheckpoint::owned_candidate(const Variant &value) const {
     if (!on_owner_thread() || stores.is_null() || value.get_type() != Variant::OBJECT) {
         return {};
     }
-    const Ref<CrimsonMatchCheckpointCandidate> candidate = value;
+    const Ref<MatchCheckpointCandidate> candidate = value;
     if (candidate.is_null() || candidate->checkpoint_id != get_instance_id() ||
             candidate->context_version != context_version) {
         return {};
@@ -79,7 +79,7 @@ Ref<CrimsonMatchCheckpointCandidate> CrimsonMatchCheckpoint::owned_candidate(con
     return candidate;
 }
 
-Dictionary CrimsonMatchCheckpoint::save_capture() const {
+Dictionary MatchCheckpoint::save_capture() const {
     if (!on_owner_thread() || stores.is_null() || !valid_world_id(active_world)) {
         return {};
     }
@@ -94,19 +94,19 @@ Dictionary CrimsonMatchCheckpoint::save_capture() const {
     return saved_value(dto);
 }
 
-Dictionary CrimsonMatchCheckpoint::save_create_candidate() const {
+Dictionary MatchCheckpoint::save_create_candidate() const {
     if (!on_owner_thread() || stores.is_null()) {
         return {};
     }
-    Ref<CrimsonMatchCheckpointCandidate> candidate;
+    Ref<MatchCheckpointCandidate> candidate;
     candidate.instantiate();
     candidate->checkpoint_id = get_instance_id();
     candidate->context_version = context_version;
     return saved_value(candidate);
 }
 
-bool CrimsonMatchCheckpoint::save_stage(const Variant &raw, const Variant &value) const {
-    const Ref<CrimsonMatchCheckpointCandidate> candidate = owned_candidate(value);
+bool MatchCheckpoint::save_stage(const Variant &raw, const Variant &value) const {
+    const Ref<MatchCheckpointCandidate> candidate = owned_candidate(value);
     if (candidate.is_null() || !candidate->world_id.is_empty() || raw.get_type() != Variant::DICTIONARY) {
         return false;
     }
@@ -121,11 +121,11 @@ bool CrimsonMatchCheckpoint::save_stage(const Variant &raw, const Variant &value
         return false;
     }
 
-    const Ref<match_runtime::CrimsonTransactionCoordinator> coordinator = stores;
+    const Ref<match_runtime::TransactionCoordinator> coordinator = stores;
     Dictionary context;
     context["world_id"] = world_id;
     const Dictionary prepared = coordinator->prepare_restore(raw_stores, context);
-    const Ref<match_runtime::CrimsonTransaction> restore = prepared.get("candidate", Variant());
+    const Ref<match_runtime::GameTransaction> restore = prepared.get("candidate", Variant());
     if (!succeeded(prepared) || restore.is_null() || candidate->context_version != context_version) {
         return false;
     }
@@ -134,17 +134,17 @@ bool CrimsonMatchCheckpoint::save_stage(const Variant &raw, const Variant &value
     return true;
 }
 
-String CrimsonMatchCheckpoint::get_candidate_world(const Variant &value) const {
-    const Ref<CrimsonMatchCheckpointCandidate> candidate = owned_candidate(value);
+String MatchCheckpoint::get_candidate_world(const Variant &value) const {
+    const Ref<MatchCheckpointCandidate> candidate = owned_candidate(value);
     return candidate.is_valid() && candidate->restore.is_valid() ? candidate->world_id : String();
 }
 
-bool CrimsonMatchCheckpoint::save_publish(const Variant &value) {
-    const Ref<CrimsonMatchCheckpointCandidate> candidate = owned_candidate(value);
+bool MatchCheckpoint::save_publish(const Variant &value) {
+    const Ref<MatchCheckpointCandidate> candidate = owned_candidate(value);
     if (candidate.is_null() || candidate->restore.is_null() || deferred_publication) {
         return false;
     }
-    const Ref<match_runtime::CrimsonTransactionCoordinator> coordinator = stores;
+    const Ref<match_runtime::TransactionCoordinator> coordinator = stores;
     const Dictionary result = coordinator->publish_restore(candidate->restore, true);
     if (!succeeded(result)) {
         return false;
@@ -156,7 +156,7 @@ bool CrimsonMatchCheckpoint::save_publish(const Variant &value) {
     return true;
 }
 
-Error CrimsonMatchCheckpoint::notify_publication() {
+Error MatchCheckpoint::notify_publication() {
     if (!on_owner_thread()) {
         return ERR_BUSY;
     }
@@ -173,7 +173,7 @@ Error CrimsonMatchCheckpoint::notify_publication() {
     return error;
 }
 
-void CrimsonMatchCheckpoint::discard_publication() {
+void MatchCheckpoint::discard_publication() {
     if (on_owner_thread()) {
         deferred_publication.reset();
     }

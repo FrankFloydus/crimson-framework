@@ -2,10 +2,10 @@
 
 [gd_scene format=3]
 
-[ext_resource type="CrimsonGameDefinition" path="res://demo/session/transfer_hall.tres" id="game"]
+[ext_resource type="GameDefinition" path="res://demo/session/transfer_hall.tres" id="game"]
 
-[node name="CrimsonDemo" type="CrimsonDedicatedBoot" node_paths=PackedStringArray("game")]
+[node name="CrimsonDemo" type="DedicatedServerBoot" node_paths=PackedStringArray("game")]
 game = NodePath("Game")
 
-[node name="Game" type="CrimsonGame" parent="."]
+[node name="Game" type="GameRuntime" parent="."]
 definition = ExtResource("game")

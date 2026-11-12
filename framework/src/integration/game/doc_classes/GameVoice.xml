@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="GameVoice" inherits="Node">
+	<brief_description>Opt-in push-to-talk and authority-routed voice for one Steam game.</brief_description>
+	<description>Resolve the persistent service with [method GameRuntime.voice]. The game owns input, user consent and playback. Voice uses an unreliable ordered lane for the current mounted world and accepts only authenticated, world-ready participants. The authority filters recipients and limits sender and relay bandwidth. Local mute removes queued playback without changing the sender's access.</description>
+	<methods>
+		<method name="start_talking">
+			<return type="int" enum="Error" />
+			<description>Requests local microphone capture after explicit opt-in. Requires a ready Steam participant in an online world. An occupied process microphone returns [constant ERR_BUSY].</description>
+		</method>
+		<method name="stop_talking">
+			<return type="int" enum="Error" />
+			<description>Stops transmitting immediately and requests native capture stop. Any final native audio is discarded by the capture scope.</description>
+		</method>
+		<method name="set_muted">
+			<return type="int" enum="Error" />
+			<param index="0" name="peer_id" type="int" />
+			<param index="1" name="muted" type="bool" default="true" />
+			<description>Mutes or unmutes one remote session-local peer on this client. Muting removes queued frames and ends its displayed speaking state.</description>
+		</method>
+		<method name="set_channel">
+			<return type="int" enum="Error" />
+			<param index="0" name="channel" type="int" enum="GameVoice.Channel" />
+			<description>Selects the requested channel for future local frames. The game authority evaluates the channel and recipient policy before any remote delivery.</description>
+		</method>
+		<method name="set_recipient_policy">
+			<return type="int" enum="Error" />
+			<param index="0" name="policy" type="Callable" />
+			<description>Configures trusted authority code accepting sender peer ID, recipient peer ID and channel and returning a boolean. An empty callable enables group delivery to eligible peers only. Supply authority-owned team or proximity state when filtering those channels.</description>
+		</method>
+		<method name="_voice_submit">
+			<return type="void" />
+			<param index="0" name="epoch" type="int" />
+			<param index="1" name="sequence" type="int" />
+			<param index="2" name="channel" type="int" />
+			<param index="3" name="bytes" type="PackedByteArray" />
+			<description>Internal unreliable ordered transport entry point. The authority takes sender identity from the actual multiplayer context and rejects stale or unauthorized frames.</description>
+		</method>
+		<method name="_voice_receive">
+			<return type="void" />
+			<param index="0" name="epoch" type="int" />
+			<param index="1" name="sender" type="int" />
+			<param index="2" name="sequence" type="int" />
+			<param index="3" name="bytes" type="PackedByteArray" />
+			<description>Internal authority-only delivery entry point. Accepts the attributed sender only from the current authenticated authority and applies local mute and queue limits.</description>
+		</method>
+	</methods>
+	<signals>
+		<signal name="talking_changed">
+			<param index="0" name="peer_id" type="int" />
+			<param index="1" name="talking" type="bool" />
+			<description>Emitted when explicit local capture changes or decoded remote audio begins, goes idle, is muted, or leaves the current world.</description>
+		</signal>
+		<signal name="frame_received">
+			<param index="0" name="peer_id" type="int" />
+			<param index="1" name="pcm" type="SteamVoicePcm" />
+			<description>Emitted with authorized decoded signed 16-bit mono samples for one remote peer. Feed them to the game's playback queue at the reported rate.</description>
+		</signal>
+	</signals>
+	<constants>
+		<constant name="GROUP" value="0" enum="Channel">Deliver to eligible group participants under the authority policy.</constant>
+		<constant name="TEAM" value="1" enum="Channel">Require an explicit team recipient policy.</constant>
+		<constant name="PROXIMITY" value="2" enum="Channel">Require an explicit proximity recipient policy.</constant>
+	</constants>
+</class>

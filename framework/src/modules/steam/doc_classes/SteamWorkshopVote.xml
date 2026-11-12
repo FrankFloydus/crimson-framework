@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="SteamWorkshopVote" inherits="RefCounted">
+	<brief_description>
+		The acknowledged vote on one Workshop item.
+	</brief_description>
+	<methods>
+		<method name="get_published_id" qualifiers="const">
+			<return type="String" />
+			<description>Return the canonical unsigned decimal published file ID.</description>
+		</method>
+		<method name="is_up" qualifiers="const">
+			<return type="bool" />
+			<description>Return whether Steam confirmed an upvote.</description>
+		</method>
+	</methods>
+	<members>
+		<member name="published_id" type="String" setter="" getter="get_published_id">
+			The exact published file ID.
+		</member>
+		<member name="up" type="bool" setter="" getter="is_up">
+			Whether Steam confirmed an upvote.
+		</member>
+	</members>
+</class>

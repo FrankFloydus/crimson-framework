@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="SteamAppOwnership" inherits="RefCounted">
+	<brief_description>Current Steam license information for one verified account and app.</brief_description>
+	<description>Use [member owns_app] to check an active license. The other values describe the license where Valve supplies the corresponding fields.</description>
+	<tutorials>
+	</tutorials>
+	<methods>
+		<method name="get_app_id" qualifiers="const">
+			<return type="int" />
+			<description>AppID requested by the trusted ownership check.</description>
+		</method>
+		<method name="get_owns_app" qualifiers="const">
+			<return type="bool" />
+			<description>Whether Steam reports an active license for the requested app.</description>
+		</method>
+		<method name="get_permanent" qualifiers="const">
+			<return type="bool" />
+			<description>Whether Steam reports permanent ownership.</description>
+		</method>
+		<method name="get_license_owner_steam_id" qualifiers="const">
+			<return type="String" />
+			<description>Full decimal SteamID64 of the owner, or an empty string when unavailable.</description>
+		</method>
+		<method name="get_acquired_at" qualifiers="const">
+			<return type="String" />
+			<description>Acquisition time text from Steam, or an empty string when unavailable.</description>
+		</method>
+		<method name="get_expires_at" qualifiers="const">
+			<return type="String" />
+			<description>Expiration time text or Steam's [code]never[/code] sentinel. Empty when unavailable.</description>
+		</method>
+		<method name="get_site_license" qualifiers="const">
+			<return type="bool" />
+			<description>Whether Steam reports a PC Café license.</description>
+		</method>
+		<method name="get_user_canceled" qualifiers="const">
+			<return type="bool" />
+			<description>Whether Steam reports that the user cancelled the license.</description>
+		</method>
+	</methods>
+	<members>
+		<member name="app_id" type="int" setter="" getter="get_app_id">
+			AppID requested by the trusted ownership check.
+		</member>
+		<member name="owns_app" type="bool" setter="" getter="get_owns_app">
+			Whether Steam reports an active license for the requested app.
+		</member>
+		<member name="permanent" type="bool" setter="" getter="get_permanent">
+			Whether Steam reports permanent ownership.
+		</member>
+		<member name="license_owner_steam_id" type="String" setter="" getter="get_license_owner_steam_id">
+			Full decimal SteamID64 of the owner, or an empty string when unavailable.
+		</member>
+		<member name="acquired_at" type="String" setter="" getter="get_acquired_at">
+			Acquisition time text from Steam, or an empty string when unavailable.
+		</member>
+		<member name="expires_at" type="String" setter="" getter="get_expires_at">
+			Expiration time text or Steam's [code]never[/code] sentinel. Empty when unavailable.
+		</member>
+		<member name="site_license" type="bool" setter="" getter="get_site_license">
+			Whether Steam reports a PC Café license.
+		</member>
+		<member name="user_canceled" type="bool" setter="" getter="get_user_canceled">
+			Whether Steam reports that the user cancelled the license.
+		</member>
+	</members>
+</class>

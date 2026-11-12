@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="SteamLeaderboardSubmissionOperation" inherits="RefCounted">
+	<brief_description>Supplies the completion signal for a directly awaited score submission.</brief_description>
+	<description>Use [method SteamLeaderboards.submit_score] or [method SteamScoreOptions.submit_score] to start a submission.</description>
+	<signals>
+		<signal name="completed">
+			<param index="0" name="result" type="SteamLeaderboardSubmissionResult" />
+			<description>Emitted once when score submission and its optional replay stage settle.</description>
+		</signal>
+	</signals>
+</class>

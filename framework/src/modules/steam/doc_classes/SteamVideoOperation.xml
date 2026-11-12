@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="SteamVideoOperation" inherits="RefCounted">
+	<brief_description>Carries a typed completion for a direct Steam Video lookup.</brief_description>
+	<description>Carries a typed completion for a direct Steam Video lookup.</description>
+	<signals>
+		<signal name="completed">
+			<param index="0" name="result" type="SteamStringResult" />
+			<description>Emitted with the stream URL or projection settings result.</description>
+		</signal>
+	</signals>
+</class>

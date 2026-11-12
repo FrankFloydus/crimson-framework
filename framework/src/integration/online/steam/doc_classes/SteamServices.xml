@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="SteamServices" inherits="Object">
+	<brief_description>Resolve the Steam scope already attached to a game.</brief_description>
+	<methods>
+		<method name="for_game" qualifiers="static">
+			<return type="SteamScope" />
+			<param index="0" name="game" type="GameRuntime" />
+			<description>Return the exact game's Steam scope. A failed setup exposes its diagnostic. Closed games and games without Steam return null.</description>
+		</method>
+		<method name="current" qualifiers="static">
+			<return type="SteamScope" />
+			<description>Return Steam for the selected or sole active GameRuntime.</description>
+		</method>
+		<method name="server_for" qualifiers="static">
+			<return type="SteamDedicatedServer" />
+			<param index="0" name="game" type="GameRuntime" />
+			<description>Return the exact Steam dedicated attachment, including an unavailable attachment with a diagnostic. Return null for a client or non-Steam provider.</description>
+		</method>
+	</methods>
+</class>

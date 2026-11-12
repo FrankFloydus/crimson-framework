@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="SteamLeaderboardEntry" inherits="RefCounted">
+	<brief_description>One detached score in a Steam leaderboard page.</brief_description>
+	<methods>
+		<method name="get_details" qualifiers="const">
+			<return type="PackedInt32Array" />
+			<description>Game-defined details copied from the score entry, with at most 64 signed 32-bit integers. Editing a returned packed array leaves the entry unchanged.</description>
+		</method>
+		<method name="get_rank" qualifiers="const">
+			<return type="int" />
+			<description>One-based position on the global board.</description>
+		</method>
+		<method name="get_score" qualifiers="const">
+			<return type="int" />
+			<description>Raw signed 32-bit score widened to a Godot integer. Interpret it using the board's configured units.</description>
+		</method>
+		<method name="get_steam_id" qualifiers="const">
+			<return type="String" />
+			<description>Full decimal SteamID64 of the player who owns this score.</description>
+		</method>
+		<method name="get_ugc_handle" qualifiers="const">
+			<return type="String" />
+			<description>Decimal shared-file handle for a replay attachment. An empty string means there is no attachment.</description>
+		</method>
+	</methods>
+	<members>
+		<member name="details" type="PackedInt32Array" getter="get_details">
+			Game-defined details copied from the score entry, with at most 64 signed 32-bit integers. Editing a returned packed array leaves the entry unchanged.
+		</member>
+		<member name="rank" type="int" getter="get_rank">
+			One-based position on the global board.
+		</member>
+		<member name="score" type="int" getter="get_score">
+			Raw signed 32-bit score widened to a Godot integer. Interpret it using the board's configured units.
+		</member>
+		<member name="steam_id" type="String" getter="get_steam_id">
+			Full decimal SteamID64 of the player who owns this score.
+		</member>
+		<member name="ugc_handle" type="String" getter="get_ugc_handle">
+			Decimal shared-file handle for a replay attachment. An empty string means there is no attachment.
+		</member>
+	</members>
+</class>

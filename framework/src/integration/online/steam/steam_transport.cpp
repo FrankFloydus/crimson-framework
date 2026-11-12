@@ -1,9 +1,13 @@
 // Copyright Francesco Di Blasi 2026 - All Rights Reserved
 
 #include "integration/online/steam/steam_transport.hpp"
+#include "modules/steam/client/steam_networking.hpp"
 
 #ifdef CRIMSON_WITH_STEAM
-#include "integration/online/steam/steam_runtime.hpp"
+#include "modules/steam/runtime/steam_runtime.hpp"
+#include "modules/steam/server/steam_server_route.hpp"
+#include "modules/steam/server/steam_server_runtime.hpp"
+#include "modules/steam/server/steam_sdr.hpp"
 #include <steam/isteamnetworkingsockets.h>
 #endif
 
@@ -20,10 +24,19 @@
 #include <vector>
 
 using namespace godot;
-using crimson::session::CrimsonSessionEndpoint;
-using crimson::session::CrimsonSessionTransportResult;
+using crimson::session::SessionEndpoint;
+using crimson::session::SessionTransportResult;
 
 namespace crimson::integration {
+using steam::SteamRuntime;
+using steam::SteamServer;
+using steam::SteamServerRuntime;
+#ifdef CRIMSON_WITH_STEAM
+using steam::SteamServerRoute;
+using steam::SteamHostedRoute;
+#endif
+using steam::SteamSocketRuntime;
+
 namespace {
 
 constexpr int32_t authority_id = 1;
@@ -70,6 +83,19 @@ bool valid_user(uint64_t id) {
     return account.IsValid() && account.GetEAccountType() == k_EAccountTypeIndividual;
 }
 
+// Check the two Steam account types that can identify a certified dedicated server.
+bool valid_server(uint64_t id) {
+    const CSteamID account(id);
+    return account.IsValid() && (account.GetEAccountType() == k_EAccountTypeGameServer ||
+                                        account.GetEAccountType() == k_EAccountTypeAnonGameServer);
+}
+
+// Disallow wildcard, broadcast and multicast addresses as connection targets.
+bool valid_direct_ipv4(uint32_t address) {
+    const uint32_t first_octet = address >> 24;
+    return first_octet > 0 && first_octet < 224;
+}
+
 // Validate a Steam virtual port, including Valve's default port zero.
 bool valid_virtual_port(int32_t port) {
     return port >= 0 && port <= max_virtual_port;
@@ -95,7 +121,7 @@ bool is_newer(uint32_t sequence, uint32_t last) {
 }
 
 // Decode only an exact versioned Steam endpoint with a valid individual authority account.
-bool parse_route(const Ref<CrimsonSessionEndpoint> &endpoint, uint64_t &owner, int32_t &port) {
+bool parse_route(const Ref<SessionEndpoint> &endpoint, uint64_t &owner, int32_t &port) {
     if (endpoint.is_null() || endpoint->get_transport() != StringName("steam")) {
         return false;
     }
@@ -141,7 +167,7 @@ void release_message(SteamNetworkingMessage_t *message) {
 
 } // namespace
 
-struct CrimsonSteamPeer::State {
+struct SteamPeer::State {
     // Local Godot connection state exposed by the extension.
     ConnectionStatus status = CONNECTION_DISCONNECTED;
     // Invalidates the rest of a poll when a signal listener closes the session.
@@ -183,7 +209,7 @@ struct CrimsonSteamPeer::State {
     };
 
     // Keeps the centrally pumped Steam API alive until sockets and subscriptions are released.
-    std::shared_ptr<SteamRuntime> runtime;
+    std::shared_ptr<SteamSocketRuntime> runtime;
     // Callback subscription owned by this peer.
     uint64_t subscription = 0;
     // Steam authority listener, invalid on guests.
@@ -194,6 +220,8 @@ struct CrimsonSteamPeer::State {
     HSteamNetConnection authority_connection = k_HSteamNetConnection_Invalid;
     // Steam ID authenticated by the resolved client route.
     uint64_t expected_authority = 0;
+    // Direct or hosted dedicated clients require a certified GameServer account.
+    bool dedicated_route = false;
     // Number of pending and ready guest sockets permitted by this host.
     int32_t remote_limit = 0;
     // Next unused guest ID for the lifetime of this listener.
@@ -216,7 +244,7 @@ struct CrimsonSteamPeer::State {
     // Validate the Steam certificate-backed identity and enter native ID assignment.
     void connected(HSteamNetConnection handle, Connection &connection, const SteamNetConnectionInfo_t &info);
     // Queue a validated Steam message or advance native ID assignment.
-    void receive(CrimsonSteamPeer &peer, const SteamNetworkingMessage_t &message);
+    void receive(SteamPeer &peer, const SteamNetworkingMessage_t &message);
     // Send a fixed reliable WELCOME or READY assignment frame.
     Error send_assignment(HSteamNetConnection handle, Frame kind, int32_t peer_id) const;
     // Release one Steam handle and remove pending input and identity for that connection.
@@ -226,11 +254,11 @@ struct CrimsonSteamPeer::State {
 
 #ifdef CRIMSON_WITH_STEAM
 
-ISteamNetworkingSockets *CrimsonSteamPeer::State::sockets() const {
+ISteamNetworkingSockets *SteamPeer::State::sockets() const {
     return runtime ? runtime->get_sockets() : nullptr;
 }
 
-HSteamNetConnection CrimsonSteamPeer::State::find_ready(int32_t peer_id) const {
+HSteamNetConnection SteamPeer::State::find_ready(int32_t peer_id) const {
     for (const auto &[handle, connection] : connections) {
         if (connection.stage == ConnectionStage::READY && connection.peer_id == peer_id) {
             return handle;
@@ -239,7 +267,7 @@ HSteamNetConnection CrimsonSteamPeer::State::find_ready(int32_t peer_id) const {
     return k_HSteamNetConnection_Invalid;
 }
 
-bool CrimsonSteamPeer::State::attach(HSteamNetConnection handle) {
+bool SteamPeer::State::attach(HSteamNetConnection handle) {
     ISteamNetworkingSockets *sdk = sockets();
     if (!sdk || handle == k_HSteamNetConnection_Invalid || next_socket_token == std::numeric_limits<int64_t>::max()) {
         return false;
@@ -254,7 +282,7 @@ bool CrimsonSteamPeer::State::attach(HSteamNetConnection handle) {
     return connections.emplace(handle, connection).second;
 }
 
-void CrimsonSteamPeer::State::on_status(const SteamNetConnectionStatusChangedCallback_t &event) {
+void SteamPeer::State::on_status(const SteamNetConnectionStatusChangedCallback_t &event) {
     ISteamNetworkingSockets *sdk = sockets();
     const HSteamNetConnection handle = event.m_hConn;
     auto found = connections.find(handle);
@@ -305,10 +333,11 @@ void CrimsonSteamPeer::State::on_status(const SteamNetConnectionStatusChangedCal
     }
 }
 
-void CrimsonSteamPeer::State::connected(HSteamNetConnection handle, Connection &connection,
+void SteamPeer::State::connected(HSteamNetConnection handle, Connection &connection,
         const SteamNetConnectionInfo_t &info) {
     const uint64_t identity = info.m_identityRemote.GetSteamID64();
-    if ((info.m_nFlags & secure_mask) != 0 || !valid_user(identity) || identity == runtime->get_user_id() ||
+    const bool allowed_identity = !server && dedicated_route ? valid_server(identity) : valid_user(identity);
+    if ((info.m_nFlags & secure_mask) != 0 || !allowed_identity || identity == runtime->get_local_socket_id() ||
             (!server && identity != expected_authority)) {
         retire(handle, false, false);
         return;
@@ -337,7 +366,7 @@ void CrimsonSteamPeer::State::connected(HSteamNetConnection handle, Connection &
     }
 }
 
-Error CrimsonSteamPeer::State::send_assignment(HSteamNetConnection handle, Frame kind, int32_t peer_id) const {
+Error SteamPeer::State::send_assignment(HSteamNetConnection handle, Frame kind, int32_t peer_id) const {
     ISteamNetworkingSockets *sdk = sockets();
     if (!sdk) {
         return ERR_UNAVAILABLE;
@@ -347,7 +376,7 @@ Error CrimsonSteamPeer::State::send_assignment(HSteamNetConnection handle, Frame
             k_nSteamNetworkingSend_ReliableNoNagle, nullptr), true);
 }
 
-void CrimsonSteamPeer::State::receive(CrimsonSteamPeer &peer, const SteamNetworkingMessage_t &message) {
+void SteamPeer::State::receive(SteamPeer &peer, const SteamNetworkingMessage_t &message) {
     const HSteamNetConnection handle = message.m_conn;
     auto found = connections.find(handle);
     if (found == connections.end() || found->second.token != message.m_nConnUserData) {
@@ -433,7 +462,7 @@ void CrimsonSteamPeer::State::receive(CrimsonSteamPeer &peer, const SteamNetwork
     inbox_bytes += payload_size;
 }
 
-void CrimsonSteamPeer::State::retire(HSteamNetConnection handle, bool notify, bool linger) {
+void SteamPeer::State::retire(HSteamNetConnection handle, bool notify, bool linger) {
     const auto found = connections.find(handle);
     if (found == connections.end()) {
         return;
@@ -466,36 +495,49 @@ void CrimsonSteamPeer::State::retire(HSteamNetConnection handle, bool notify, bo
 
 #endif
 
-CrimsonSteamPeer::CrimsonSteamPeer() : state(std::make_unique<State>()) {}
+SteamPeer::SteamPeer() : state(std::make_unique<State>()) {}
 
-CrimsonSteamPeer::~CrimsonSteamPeer() {
+SteamPeer::~SteamPeer() {
     _close();
 }
 
-void CrimsonSteamPeer::_bind_methods() {
-    ClassDB::bind_method(D_METHOD("get_remote_steam_id", "peer_id"), &CrimsonSteamPeer::get_remote_steam_id);
+void SteamPeer::_bind_methods() {
+    ClassDB::bind_method(D_METHOD("get_remote_steam_id", "peer_id"), &SteamPeer::get_remote_steam_id);
 }
 
-Error CrimsonSteamPeer::open(const std::shared_ptr<SteamRuntime> &runtime, int32_t virtual_port,
-        int32_t remote_limit, uint64_t expected_authority) {
+Error SteamPeer::open(const std::shared_ptr<SteamSocketRuntime> &runtime, int32_t port,
+        int32_t remote_limit, uint64_t expected_authority, std::optional<uint32_t> direct_ipv4, bool hosted,
+        bool prefer_relay) {
 #ifdef CRIMSON_WITH_STEAM
+#ifndef CRIMSON_WITH_STEAM_SDR
+    if (hosted) {
+        return ERR_UNAVAILABLE;
+    }
+#endif
     if (state->runtime) {
         return ERR_ALREADY_IN_USE;
     }
-    if (!valid_virtual_port(virtual_port) || (expected_authority != 0 && !valid_user(expected_authority)) ||
-            (expected_authority == 0 && (remote_limit < 1 || remote_limit > max_remote))) {
+    const bool host = expected_authority == 0;
+    const bool direct = direct_ipv4.has_value();
+    const bool dedicated = direct || hosted;
+    if (!valid_virtual_port(port) || (direct && (port == 0 || hosted)) ||
+            (host && (remote_limit < 1 || remote_limit > max_remote)) ||
+            (!host && (dedicated ? !valid_server(expected_authority) : !valid_user(expected_authority))) ||
+            (!host && direct && !valid_direct_ipv4(*direct_ipv4))) {
         return ERR_INVALID_PARAMETER;
     }
     ISteamNetworkingSockets *sdk = runtime ? runtime->get_sockets() : nullptr;
-    if (!sdk || !valid_user(runtime->get_user_id())) {
+    const uint64_t local = sdk ? runtime->get_local_socket_id() : 0;
+    if (!sdk || (host && dedicated ? local != 0 && !valid_server(local) : !valid_user(local))) {
         return ERR_UNCONFIGURED;
     }
-    if (expected_authority == runtime->get_user_id()) {
+    if (!host && expected_authority == local) {
         return ERR_INVALID_PARAMETER;
     }
 
     state->runtime = runtime;
-    state->server = expected_authority == 0;
+    state->server = host;
+    state->dedicated_route = dedicated;
     state->expected_authority = expected_authority;
     state->remote_limit = remote_limit;
     state->poll_group = sdk->CreatePollGroup();
@@ -508,7 +550,7 @@ Error CrimsonSteamPeer::open(const std::shared_ptr<SteamRuntime> &runtime, int32
     const uint64_t generation = ++state->generation;
     state->subscription = runtime->subscribe(SteamNetConnectionStatusChangedCallback_t::k_iCallback,
             [id, generation](const void *bytes, size_t size) {
-        auto *peer = Object::cast_to<CrimsonSteamPeer>(ObjectDB::get_instance(id));
+        auto *peer = Object::cast_to<SteamPeer>(ObjectDB::get_instance(id));
         if (!peer || peer->state->generation != generation || !bytes ||
                 size != sizeof(SteamNetConnectionStatusChangedCallback_t)) {
             return;
@@ -522,10 +564,28 @@ Error CrimsonSteamPeer::open(const std::shared_ptr<SteamRuntime> &runtime, int32
         return ERR_CANT_CREATE;
     }
 
-    SteamNetworkingConfigValue_t encrypted;
-    encrypted.SetInt32(k_ESteamNetworkingConfig_Unencrypted, 0);
+    SteamNetworkingConfigValue_t security[3];
+    security[0].SetInt32(k_ESteamNetworkingConfig_Unencrypted, 0);
+    SteamNetworkingIPAddr address;
+    address.Clear();
+    if (direct) {
+        security[1].SetInt32(k_ESteamNetworkingConfig_IP_AllowWithoutAuth, 0);
+        security[2].SetInt32(k_ESteamNetworkingConfig_IPLocalHost_AllowWithoutAuth, 0);
+        address.SetIPv4(*direct_ipv4, static_cast<uint16_t>(port));
+    }
     if (state->server) {
-        state->listener = sdk->CreateListenSocketP2P(virtual_port, 1, &encrypted);
+        int p2p_options = 1;
+        if (!dedicated && prefer_relay) {
+            // Steam scores usable routes in milliseconds. Bias ICE without disabling its fallback.
+            constexpr int32_t relay_preference_ms = 500;
+            security[p2p_options++].SetInt32(k_ESteamNetworkingConfig_P2P_Transport_ICE_Penalty, relay_preference_ms);
+        }
+        if (hosted) {
+            state->listener = sdk->CreateHostedDedicatedServerListenSocket(port, 1, security);
+        } else {
+            state->listener = direct ? sdk->CreateListenSocketIP(address, 3, security) :
+                                       sdk->CreateListenSocketP2P(port, p2p_options, security);
+        }
         if (state->listener == k_HSteamListenSocket_Invalid) {
             _close();
             return ERR_CANT_CREATE;
@@ -538,7 +598,12 @@ Error CrimsonSteamPeer::open(const std::shared_ptr<SteamRuntime> &runtime, int32
     SteamNetworkingIdentity remote;
     remote.Clear();
     remote.SetSteamID64(expected_authority);
-    const HSteamNetConnection handle = sdk->ConnectP2P(remote, virtual_port, 1, &encrypted);
+    HSteamNetConnection handle = k_HSteamNetConnection_Invalid;
+    if (hosted) {
+        handle = sdk->ConnectToHostedDedicatedServer(remote, port, 1, security);
+    } else {
+        handle = direct ? sdk->ConnectByIPAddress(address, 3, security) : sdk->ConnectP2P(remote, port, 1, security);
+    }
     if (handle == k_HSteamNetConnection_Invalid) {
         _close();
         return ERR_CANT_CONNECT;
@@ -556,7 +621,7 @@ Error CrimsonSteamPeer::open(const std::shared_ptr<SteamRuntime> &runtime, int32
 #endif
 }
 
-uint64_t CrimsonSteamPeer::get_remote_steam_id(int32_t peer_id) const {
+uint64_t SteamPeer::get_remote_steam_id(int32_t peer_id) const {
 #ifdef CRIMSON_WITH_STEAM
     ISteamNetworkingSockets *sdk = state->sockets();
     const HSteamNetConnection handle = state->find_ready(peer_id);
@@ -574,7 +639,7 @@ uint64_t CrimsonSteamPeer::get_remote_steam_id(int32_t peer_id) const {
     return 0;
 }
 
-void CrimsonSteamPeer::disconnect_after_flush(int32_t peer_id) {
+void SteamPeer::disconnect_after_flush(int32_t peer_id) {
 #ifdef CRIMSON_WITH_STEAM
     if (state->server) {
         state->retire(state->find_ready(peer_id), true, true);
@@ -582,7 +647,7 @@ void CrimsonSteamPeer::disconnect_after_flush(int32_t peer_id) {
 #endif
 }
 
-Error CrimsonSteamPeer::_get_packet(const uint8_t **buffer, int32_t *size) {
+Error SteamPeer::_get_packet(const uint8_t **buffer, int32_t *size) {
     if (state->inbox.empty()) {
         return ERR_UNAVAILABLE;
     }
@@ -594,7 +659,7 @@ Error CrimsonSteamPeer::_get_packet(const uint8_t **buffer, int32_t *size) {
     return OK;
 }
 
-Error CrimsonSteamPeer::_put_packet(const uint8_t *buffer, int32_t size) {
+Error SteamPeer::_put_packet(const uint8_t *buffer, int32_t size) {
     if (!buffer || size <= 0 || size > max_packet_size || state->channel < 0 || state->channel > max_channel ||
             state->mode < TRANSFER_MODE_UNRELIABLE || state->mode > TRANSFER_MODE_RELIABLE) {
         return ERR_INVALID_PARAMETER;
@@ -639,51 +704,51 @@ Error CrimsonSteamPeer::_put_packet(const uint8_t *buffer, int32_t size) {
 #endif
 }
 
-int32_t CrimsonSteamPeer::_get_available_packet_count() const {
+int32_t SteamPeer::_get_available_packet_count() const {
     return static_cast<int32_t>(state->inbox.size());
 }
 
-int32_t CrimsonSteamPeer::_get_max_packet_size() const {
+int32_t SteamPeer::_get_max_packet_size() const {
     return max_packet_size;
 }
 
-int32_t CrimsonSteamPeer::_get_packet_channel() const {
+int32_t SteamPeer::_get_packet_channel() const {
     return state->inbox.empty() ? 0 : state->inbox.front().channel;
 }
 
-CrimsonSteamPeer::TransferMode CrimsonSteamPeer::_get_packet_mode() const {
+SteamPeer::TransferMode SteamPeer::_get_packet_mode() const {
     return state->inbox.empty() ? TRANSFER_MODE_UNRELIABLE : state->inbox.front().mode;
 }
 
-void CrimsonSteamPeer::_set_transfer_channel(int32_t channel) {
+void SteamPeer::_set_transfer_channel(int32_t channel) {
     state->channel = channel;
 }
 
-int32_t CrimsonSteamPeer::_get_transfer_channel() const {
+int32_t SteamPeer::_get_transfer_channel() const {
     return state->channel;
 }
 
-void CrimsonSteamPeer::_set_transfer_mode(TransferMode mode) {
+void SteamPeer::_set_transfer_mode(TransferMode mode) {
     state->mode = mode;
 }
 
-CrimsonSteamPeer::TransferMode CrimsonSteamPeer::_get_transfer_mode() const {
+SteamPeer::TransferMode SteamPeer::_get_transfer_mode() const {
     return state->mode;
 }
 
-void CrimsonSteamPeer::_set_target_peer(int32_t peer_id) {
+void SteamPeer::_set_target_peer(int32_t peer_id) {
     state->target = peer_id;
 }
 
-int32_t CrimsonSteamPeer::_get_packet_peer() const {
+int32_t SteamPeer::_get_packet_peer() const {
     return state->inbox.empty() ? 0 : state->inbox.front().peer;
 }
 
-bool CrimsonSteamPeer::_is_server() const {
+bool SteamPeer::_is_server() const {
     return state->server;
 }
 
-void CrimsonSteamPeer::_poll() {
+void SteamPeer::_poll() {
 #ifdef CRIMSON_WITH_STEAM
     if (state->status == CONNECTION_DISCONNECTED) {
         return;
@@ -693,7 +758,7 @@ void CrimsonSteamPeer::_poll() {
         _close();
         return;
     }
-    const Ref<CrimsonSteamPeer> keep_alive(this);
+    const Ref<SteamPeer> keep_alive(this);
     // Reentrant Godot signals can close this peer while SDK messages still need release.
     const auto keep_runtime = state->runtime;
     const uint64_t generation = state->generation;
@@ -737,7 +802,7 @@ void CrimsonSteamPeer::_poll() {
 #endif
 }
 
-void CrimsonSteamPeer::_close() {
+void SteamPeer::_close() {
     const uint64_t generation = state->generation + 1;
 #ifdef CRIMSON_WITH_STEAM
     if (state->runtime && state->subscription != 0) {
@@ -759,44 +824,45 @@ void CrimsonSteamPeer::_close() {
     state->generation = generation;
 }
 
-void CrimsonSteamPeer::_disconnect_peer(int32_t peer_id, bool force) {
+void SteamPeer::_disconnect_peer(int32_t peer_id, bool force) {
 #ifdef CRIMSON_WITH_STEAM
     state->retire(state->find_ready(peer_id), !force, false);
 #endif
 }
 
-int32_t CrimsonSteamPeer::_get_unique_id() const {
+int32_t SteamPeer::_get_unique_id() const {
     return state->local_id;
 }
 
-void CrimsonSteamPeer::_set_refuse_new_connections(bool enabled) {
+void SteamPeer::_set_refuse_new_connections(bool enabled) {
     state->refusing = enabled;
 }
 
-bool CrimsonSteamPeer::_is_refusing_new_connections() const {
+bool SteamPeer::_is_refusing_new_connections() const {
     return state->refusing;
 }
 
-bool CrimsonSteamPeer::_is_server_relay_supported() const {
+bool SteamPeer::_is_server_relay_supported() const {
     return true;
 }
 
-CrimsonSteamPeer::ConnectionStatus CrimsonSteamPeer::_get_connection_status() const {
+SteamPeer::ConnectionStatus SteamPeer::_get_connection_status() const {
     return state->status;
 }
 
-void CrimsonSteamSessionTransport::_bind_methods() {
+void SteamSessionTransport::_bind_methods() {
     ClassDB::bind_static_method(get_class_static(), D_METHOD("route", "owner_id", "virtual_port"),
-            &CrimsonSteamSessionTransport::route, DEFVAL(0));
-    ClassDB::bind_method(D_METHOD("get_host_endpoint"), &CrimsonSteamSessionTransport::get_host_endpoint);
-    ClassDB::bind_method(D_METHOD("get_host_remote_limit"), &CrimsonSteamSessionTransport::get_host_remote_limit);
-    ClassDB::bind_method(D_METHOD("get_remote_steam_id", "peer_id"), &CrimsonSteamSessionTransport::get_remote_steam_id);
+            &SteamSessionTransport::route, DEFVAL(0));
+    ClassDB::bind_method(D_METHOD("get_host_endpoint"), &SteamSessionTransport::get_host_endpoint);
+    ClassDB::bind_method(D_METHOD("get_host_remote_limit"), &SteamSessionTransport::get_host_remote_limit);
+    ClassDB::bind_method(D_METHOD("get_remote_steam_id", "peer_id"), &SteamSessionTransport::get_remote_steam_id);
     ClassDB::bind_method(D_METHOD("open_server", "port", "remote_limit", "bind_address"),
-            &CrimsonSteamSessionTransport::open_server);
-    ClassDB::bind_method(D_METHOD("open_client", "endpoint"), &CrimsonSteamSessionTransport::open_client);
+            &SteamSessionTransport::open_server);
+    ClassDB::bind_method(D_METHOD("open_client", "endpoint"), &SteamSessionTransport::open_client);
 }
 
-Error CrimsonSteamSessionTransport::configure(const std::shared_ptr<SteamRuntime> &p_runtime, int32_t p_virtual_port) {
+Error SteamSessionTransport::configure(const std::shared_ptr<SteamRuntime> &p_runtime, int32_t p_virtual_port,
+        bool prefer_relay) {
 #ifdef CRIMSON_WITH_STEAM
     if (get_active_peer()) {
         return ERR_BUSY;
@@ -807,15 +873,75 @@ Error CrimsonSteamSessionTransport::configure(const std::shared_ptr<SteamRuntime
     if (!p_runtime || !p_runtime->get_sockets() || !valid_user(p_runtime->get_user_id())) {
         return ERR_UNCONFIGURED;
     }
+    p_runtime->warm_relay();
     runtime = p_runtime;
+    server_runtime.reset();
+    hosted_relay = false;
+    hosted_virtual_port = 0;
+    hosted_endpoint.unref();
+    hosted_client_endpoint.unref();
     virtual_port = p_virtual_port;
+    prefer_relay_routes = prefer_relay;
     return OK;
 #else
     return ERR_UNAVAILABLE;
 #endif
 }
 
-Ref<CrimsonSessionEndpoint> CrimsonSteamSessionTransport::route(uint64_t owner_id, int32_t virtual_port) {
+Error SteamSessionTransport::configure_dedicated(const std::shared_ptr<SteamServerRuntime> &selected,
+        const Ref<SteamServer> &settings, int32_t relay_virtual_port) {
+#ifdef CRIMSON_WITH_STEAM
+    if (get_active_peer()) {
+        return ERR_BUSY;
+    }
+    if (!selected || !selected->get_sockets() || settings.is_null() || !settings->is_valid() ||
+            !valid_virtual_port(relay_virtual_port)) {
+        return ERR_UNCONFIGURED;
+    }
+    runtime.reset();
+    prefer_relay_routes = false;
+    server_runtime = selected;
+    dedicated_ipv4 = settings->get_bind_ipv4();
+    dedicated_port = settings->get_game_port();
+    hosted_relay = !settings->get_relay_profile().is_empty();
+    hosted_virtual_port = relay_virtual_port;
+    hosted_endpoint.unref();
+    hosted_client_endpoint.unref();
+    return OK;
+#else
+    return ERR_UNAVAILABLE;
+#endif
+}
+
+bool SteamSessionTransport::retire_client_runtime() {
+#ifdef CRIMSON_WITH_STEAM
+    if (!runtime) {
+        return false;
+    }
+    const Ref<SteamPeer> peer(get_active_peer());
+    active_peer = ObjectID();
+    hosted_client_endpoint.unref();
+    runtime.reset();
+    if (peer.is_valid()) {
+        peer->_close();
+    }
+    return peer.is_valid();
+#else
+    return false;
+#endif
+}
+
+void SteamSessionTransport::set_hosted_endpoint(const Ref<SessionEndpoint> &endpoint) {
+    if (hosted_relay) {
+        hosted_endpoint = endpoint;
+    }
+}
+
+void SteamSessionTransport::set_hosted_client_endpoint(const Ref<SessionEndpoint> &endpoint) {
+    hosted_client_endpoint = endpoint;
+}
+
+Ref<SessionEndpoint> SteamSessionTransport::route(uint64_t owner_id, int32_t virtual_port) {
 #ifdef CRIMSON_WITH_STEAM
     if (!valid_user(owner_id) || !valid_virtual_port(virtual_port)) {
         return {};
@@ -830,33 +956,42 @@ Ref<CrimsonSessionEndpoint> CrimsonSteamSessionTransport::route(uint64_t owner_i
     }
     bytes[9] = static_cast<uint8_t>(virtual_port);
     bytes[10] = static_cast<uint8_t>(virtual_port >> 8);
-    return CrimsonSessionEndpoint::opaque("steam", bytes);
+    return SessionEndpoint::opaque("steam", bytes);
 #else
     return {};
 #endif
 }
 
-CrimsonSteamPeer *CrimsonSteamSessionTransport::get_active_peer() const {
+SteamPeer *SteamSessionTransport::get_active_peer() const {
     if (!active_peer.is_valid()) {
         return nullptr;
     }
-    auto *peer = Object::cast_to<CrimsonSteamPeer>(ObjectDB::get_instance(active_peer));
+    auto *peer = Object::cast_to<SteamPeer>(ObjectDB::get_instance(active_peer));
     return peer && peer->_get_connection_status() != MultiplayerPeer::CONNECTION_DISCONNECTED ? peer : nullptr;
 }
 
-Ref<CrimsonSessionEndpoint> CrimsonSteamSessionTransport::get_host_endpoint() const {
+Ref<SessionEndpoint> SteamSessionTransport::get_host_endpoint() const {
 #ifdef CRIMSON_WITH_STEAM
-    const CrimsonSteamPeer *peer = get_active_peer();
-    if (peer && peer->_is_server() && runtime) {
-        return route(runtime->get_user_id(), virtual_port);
+    const SteamPeer *peer = get_active_peer();
+    if (peer && peer->_is_server()) {
+        if (server_runtime) {
+            if (hosted_relay) {
+                return hosted_endpoint;
+            }
+            const uint32_t address = dedicated_ipv4 != 0 ? dedicated_ipv4 : server_runtime->get_public_ipv4();
+            return SteamServerRoute{server_runtime->get_local_socket_id(), address, dedicated_port}.endpoint();
+        }
+        if (runtime) {
+            return route(runtime->get_user_id(), virtual_port);
+        }
     }
 #endif
     return {};
 }
 
-int32_t CrimsonSteamSessionTransport::get_host_remote_limit() const {
+int32_t SteamSessionTransport::get_host_remote_limit() const {
 #ifdef CRIMSON_WITH_STEAM
-    const CrimsonSteamPeer *peer = get_active_peer();
+    const SteamPeer *peer = get_active_peer();
     if (peer && peer->_is_server()) {
         return peer->state->remote_limit;
     }
@@ -864,54 +999,105 @@ int32_t CrimsonSteamSessionTransport::get_host_remote_limit() const {
     return 0;
 }
 
-uint64_t CrimsonSteamSessionTransport::get_remote_steam_id(int32_t peer_id) const {
-    const CrimsonSteamPeer *peer = get_active_peer();
+uint64_t SteamSessionTransport::get_remote_steam_id(int32_t peer_id) const {
+    const SteamPeer *peer = get_active_peer();
     return peer ? peer->get_remote_steam_id(peer_id) : 0;
 }
 
-Ref<CrimsonSessionTransportResult> CrimsonSteamSessionTransport::open_server(int64_t, int64_t remote_limit,
-        const String &bind_address) {
-    if (remote_limit < 1 || remote_limit > max_remote || bind_address != "*") {
-        return CrimsonSessionTransportResult::failed(ERR_INVALID_PARAMETER);
+Ref<steam::SteamConnectionPath> SteamSessionTransport::get_peer_path(int32_t peer_id,
+        uint64_t admitted_account) const {
+#ifdef CRIMSON_WITH_STEAM
+    auto *peer = SteamRuntime::on_main_thread() ? get_active_peer() : nullptr;
+    auto *sdk = peer ? peer->state->sockets() : nullptr;
+    const auto handle = sdk ? peer->state->find_ready(peer_id) : k_HSteamNetConnection_Invalid;
+    if (handle != k_HSteamNetConnection_Invalid) {
+        const auto &connection = peer->state->connections.at(handle);
+        if (connection.steam_id == admitted_account) {
+            return steam::sample_steam_path(*sdk, handle, connection.token, admitted_account);
+        }
     }
-    if (get_active_peer()) {
-        return CrimsonSessionTransportResult::failed(ERR_BUSY);
-    }
-    Ref<CrimsonSteamPeer> peer;
-    peer.instantiate();
-    const Error error = peer->open(runtime, virtual_port, static_cast<int32_t>(remote_limit));
-    if (error != OK) {
-        return CrimsonSessionTransportResult::failed(error);
-    }
-    active_peer = ObjectID(peer->get_instance_id());
-    return CrimsonSessionTransportResult::opened(peer);
+#endif
+    return {};
 }
 
-Ref<CrimsonSessionTransportResult> CrimsonSteamSessionTransport::open_client(const Ref<CrimsonSessionEndpoint> &endpoint) {
+Ref<SessionTransportResult> SteamSessionTransport::open_server(int64_t, int64_t remote_limit,
+        const String &bind_address) {
 #ifdef CRIMSON_WITH_STEAM
-    uint64_t owner_id = 0;
-    int32_t port = 0;
-    if (!parse_route(endpoint, owner_id, port)) {
-        return CrimsonSessionTransportResult::failed(ERR_INVALID_PARAMETER);
+    if (!server_runtime && (!runtime || !runtime->is_healthy())) {
+        return SessionTransportResult::failed(ERR_UNAVAILABLE);
+    }
+    uint32_t requested_bind = 0;
+    if (remote_limit < 1 || remote_limit > max_remote ||
+            (bind_address != "*" && (!server_runtime || !SteamServer::parse_ipv4(bind_address, requested_bind) ||
+                                            requested_bind != dedicated_ipv4))) {
+        return SessionTransportResult::failed(ERR_INVALID_PARAMETER);
     }
     if (get_active_peer()) {
-        return CrimsonSessionTransportResult::failed(ERR_BUSY);
+        return SessionTransportResult::failed(ERR_BUSY);
     }
-    Ref<CrimsonSteamPeer> peer;
+    Ref<SteamPeer> peer;
     peer.instantiate();
-    const Error error = peer->open(runtime, port, 0, owner_id);
+    hosted_endpoint.unref();
+    Error error = ERR_UNAVAILABLE;
+    if (server_runtime) {
+        const std::optional<uint32_t> address = hosted_relay ? std::nullopt : std::optional<uint32_t>(dedicated_ipv4);
+        error = peer->open(server_runtime, hosted_relay ? hosted_virtual_port : dedicated_port,
+                static_cast<int32_t>(remote_limit), 0, address, hosted_relay);
+    } else {
+        error = peer->open(runtime, virtual_port, static_cast<int32_t>(remote_limit), 0, {}, false, prefer_relay_routes);
+    }
     if (error != OK) {
-        return CrimsonSessionTransportResult::failed(error);
+        return SessionTransportResult::failed(error);
     }
     active_peer = ObjectID(peer->get_instance_id());
-    return CrimsonSessionTransportResult::opened(peer);
+    return SessionTransportResult::opened(peer);
 #else
-    return CrimsonSessionTransportResult::failed(ERR_UNAVAILABLE);
+    return SessionTransportResult::failed(ERR_UNAVAILABLE);
 #endif
 }
 
-void CrimsonSteamSessionTransport::disconnect_after_flush(const Ref<MultiplayerPeer> &peer, int32_t peer_id) {
-    CrimsonSteamPeer *active = get_active_peer();
+Ref<SessionTransportResult> SteamSessionTransport::open_client(const Ref<SessionEndpoint> &endpoint) {
+#ifdef CRIMSON_WITH_STEAM
+    if (!runtime || !runtime->is_healthy()) {
+        return SessionTransportResult::failed(ERR_UNAVAILABLE);
+    }
+    uint64_t owner_id = 0;
+    int32_t port = 0;
+    const auto direct = SteamServerRoute::from_endpoint(endpoint);
+    const auto hosted = SteamHostedRoute::from_endpoint(endpoint);
+    if (hosted.is_valid() &&
+            (!runtime || endpoint != hosted_client_endpoint || !steam::has_steam_relay_ticket(*runtime, hosted))) {
+        return SessionTransportResult::failed(ERR_UNAUTHORIZED);
+    }
+    if (!hosted.is_valid() && !direct.is_valid() && !parse_route(endpoint, owner_id, port)) {
+        return SessionTransportResult::failed(ERR_INVALID_PARAMETER);
+    }
+    if (get_active_peer()) {
+        return SessionTransportResult::failed(ERR_BUSY);
+    }
+    Ref<SteamPeer> peer;
+    peer.instantiate();
+    Error error = ERR_UNAVAILABLE;
+    if (hosted.is_valid()) {
+        hosted_client_endpoint.unref();
+        error = peer->open(runtime, hosted.virtual_port, 0, hosted.server_id, {}, true);
+    } else if (direct.is_valid()) {
+        error = peer->open(runtime, direct.port, 0, direct.server_id, direct.ipv4);
+    } else {
+        error = peer->open(runtime, port, 0, owner_id);
+    }
+    if (error != OK) {
+        return SessionTransportResult::failed(error);
+    }
+    active_peer = ObjectID(peer->get_instance_id());
+    return SessionTransportResult::opened(peer);
+#else
+    return SessionTransportResult::failed(ERR_UNAVAILABLE);
+#endif
+}
+
+void SteamSessionTransport::disconnect_after_flush(const Ref<MultiplayerPeer> &peer, int32_t peer_id) {
+    SteamPeer *active = get_active_peer();
     if (active && peer.ptr() == active) {
         active->disconnect_after_flush(peer_id);
     }

@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="SteamAuthOperation" inherits="RefCounted">
+	<brief_description>Carries the typed completion of a direct Steam ticket request.</brief_description>
+	<signals>
+		<signal name="web_ticket_completed">
+			<param index="0" name="result" type="SteamWebTicketResult" />
+			<description>Emitted when a Web API ticket request settles.</description>
+		</signal>
+		<signal name="ownership_ticket_completed">
+			<param index="0" name="result" type="SteamOwnershipTicketResult" />
+			<description>Emitted when an encrypted app ticket request settles.</description>
+		</signal>
+	</signals>
+</class>

@@ -118,29 +118,29 @@ void clear_dedicated_cameras(Node &node) {
 
 } // namespace
 
-void CrimsonWorldSession::_bind_methods() {
-    ClassDB::bind_static_method(get_class_static(), D_METHOD("configure"), &CrimsonWorldSession::configure);
-    ClassDB::bind_method(D_METHOD("set_definition", "definition"), &CrimsonWorldSession::set_definition);
-    ClassDB::bind_method(D_METHOD("get_definition"), &CrimsonWorldSession::get_definition);
-    ClassDB::bind_method(D_METHOD("get_port"), &CrimsonWorldSession::get_port);
-    ClassDB::bind_method(D_METHOD("start_offline"), &CrimsonWorldSession::start_offline);
-    ClassDB::bind_method(D_METHOD("host"), &CrimsonWorldSession::host);
-    ClassDB::bind_method(D_METHOD("join", "address"), &CrimsonWorldSession::join);
-    ClassDB::bind_method(D_METHOD("leave"), &CrimsonWorldSession::leave);
-    ClassDB::bind_method(D_METHOD("get_state"), &CrimsonWorldSession::get_state);
-    ClassDB::bind_method(D_METHOD("get_world"), &CrimsonWorldSession::get_world);
-    ClassDB::bind_method(D_METHOD("get_local_player"), &CrimsonWorldSession::get_local_player);
-    ClassDB::bind_method(D_METHOD("get_player", "peer_id"), &CrimsonWorldSession::get_player);
-    ClassDB::bind_method(D_METHOD(roster_method, "roster"), &CrimsonWorldSession::receive_roster);
+void WorldSession::_bind_methods() {
+    ClassDB::bind_static_method(get_class_static(), D_METHOD("configure"), &WorldSession::configure);
+    ClassDB::bind_method(D_METHOD("set_definition", "definition"), &WorldSession::set_definition);
+    ClassDB::bind_method(D_METHOD("get_definition"), &WorldSession::get_definition);
+    ClassDB::bind_method(D_METHOD("get_port"), &WorldSession::get_port);
+    ClassDB::bind_method(D_METHOD("start_offline"), &WorldSession::start_offline);
+    ClassDB::bind_method(D_METHOD("host"), &WorldSession::host);
+    ClassDB::bind_method(D_METHOD("join", "address"), &WorldSession::join);
+    ClassDB::bind_method(D_METHOD("leave"), &WorldSession::leave);
+    ClassDB::bind_method(D_METHOD("get_state"), &WorldSession::get_state);
+    ClassDB::bind_method(D_METHOD("get_world"), &WorldSession::get_world);
+    ClassDB::bind_method(D_METHOD("get_local_player"), &WorldSession::get_local_player);
+    ClassDB::bind_method(D_METHOD("get_player", "peer_id"), &WorldSession::get_player);
+    ClassDB::bind_method(D_METHOD(roster_method, "roster"), &WorldSession::receive_roster);
     ClassDB::bind_method(D_METHOD(offer_method, "world_id", "epoch", "ticket", "candidate_count", "host_limit", "dedicated"),
-            &CrimsonWorldSession::receive_world_offer);
-    ClassDB::bind_method(D_METHOD(mounted_method, "epoch", "ticket"), &CrimsonWorldSession::receive_scene_mounted);
-    ClassDB::bind_method(D_METHOD(assignments_method, "epoch", "ticket", "assignments"), &CrimsonWorldSession::receive_assignments);
-    ClassDB::bind_method(D_METHOD(baseline_applied_method, "epoch", "ticket"), &CrimsonWorldSession::receive_baseline_applied);
-    ClassDB::bind_method(D_METHOD(join_ready_method, "epoch", "ticket"), &CrimsonWorldSession::receive_join_ready);
-    ClassDB::bind_method(D_METHOD(spawn_rejection_method, "reason"), &CrimsonWorldSession::receive_spawn_rejection);
+            &WorldSession::receive_world_offer);
+    ClassDB::bind_method(D_METHOD(mounted_method, "epoch", "ticket"), &WorldSession::receive_scene_mounted);
+    ClassDB::bind_method(D_METHOD(assignments_method, "epoch", "ticket", "assignments"), &WorldSession::receive_assignments);
+    ClassDB::bind_method(D_METHOD(baseline_applied_method, "epoch", "ticket"), &WorldSession::receive_baseline_applied);
+    ClassDB::bind_method(D_METHOD(join_ready_method, "epoch", "ticket"), &WorldSession::receive_join_ready);
+    ClassDB::bind_method(D_METHOD(spawn_rejection_method, "reason"), &WorldSession::receive_spawn_rejection);
     ADD_PROPERTY(PropertyInfo(Variant::OBJECT, "definition", PROPERTY_HINT_RESOURCE_TYPE,
-                         "CrimsonWorldSessionDefinition"),
+                         "WorldSessionDefinition"),
             "set_definition", "get_definition");
     ADD_SIGNAL(MethodInfo("state_changed", PropertyInfo(Variant::INT, "state")));
     ADD_SIGNAL(MethodInfo("session_ended", PropertyInfo(Variant::STRING_NAME, "reason")));
@@ -149,7 +149,7 @@ void CrimsonWorldSession::_bind_methods() {
     BIND_ENUM_CONSTANT(RUNNING);
 }
 
-void CrimsonWorldSession::_enter_tree() {
+void WorldSession::_enter_tree() {
     set_multiplayer_authority(authority_peer, false);
     Dictionary config;
     config["rpc_mode"] = MultiplayerAPI::RPC_MODE_AUTHORITY;
@@ -167,50 +167,50 @@ void CrimsonWorldSession::_enter_tree() {
     rpc_config(baseline_applied_method, reports);
 }
 
-void CrimsonWorldSession::_ready() {
+void WorldSession::_ready() {
     if (!transport) {
-        transport = memnew(session::CrimsonGameSession);
+        transport = memnew(session::GameSession);
         transport->set_name(transport_name);
         add_child(transport, false, INTERNAL_MODE_BACK);
     }
-    transport->connect("session_started", callable_mp(this, &CrimsonWorldSession::on_transport_started));
-    transport->connect("session_ended", callable_mp(this, &CrimsonWorldSession::on_transport_ended));
-    transport->connect("peer_joined", callable_mp(this, &CrimsonWorldSession::on_peer_joined));
-    transport->connect("peer_left", callable_mp(this, &CrimsonWorldSession::on_peer_left));
+    transport->connect("session_started", callable_mp(this, &WorldSession::on_transport_started));
+    transport->connect("session_ended", callable_mp(this, &WorldSession::on_transport_ended));
+    transport->connect("peer_joined", callable_mp(this, &WorldSession::on_peer_joined));
+    transport->connect("peer_left", callable_mp(this, &WorldSession::on_peer_left));
     if (scene_loader) {
-        scene_loader->connect("load_completed", callable_mp(this, &CrimsonWorldSession::on_world_loaded));
-        scene_loader->connect("load_failed", callable_mp(this, &CrimsonWorldSession::on_world_load_failed));
-        scene_loader->connect("load_sync_failed", callable_mp(this, &CrimsonWorldSession::on_world_load_failed));
+        scene_loader->connect("load_completed", callable_mp(this, &WorldSession::on_world_loaded));
+        scene_loader->connect("load_failed", callable_mp(this, &WorldSession::on_world_load_failed));
+        scene_loader->connect("load_sync_failed", callable_mp(this, &WorldSession::on_world_load_failed));
     }
     set_process(false);
 }
 
-void CrimsonWorldSession::_exit_tree() {
+void WorldSession::_exit_tree() {
     const Mutation guard(mutating);
     clear_world(true);
     state = IDLE;
 }
 
-Ref<CrimsonWorldSessionDefinition> CrimsonWorldSession::configure() {
-    return CrimsonWorldSessionDefinition::configure();
+Ref<WorldSessionDefinition> WorldSession::configure() {
+    return WorldSessionDefinition::configure();
 }
 
-void CrimsonWorldSession::set_definition(const Ref<CrimsonWorldSessionDefinition> &value) {
+void WorldSession::set_definition(const Ref<WorldSessionDefinition> &value) {
     if (state == IDLE && !mutating) {
         definition = value;
     }
 }
 
-Ref<CrimsonWorldSessionDefinition> CrimsonWorldSession::get_definition() const {
+Ref<WorldSessionDefinition> WorldSession::get_definition() const {
     return definition;
 }
 
-void CrimsonWorldSession::configure_immediate(const Ref<PackedScene> &world, const Ref<PackedScene> &player,
+void WorldSession::configure_immediate(const Ref<PackedScene> &world, const Ref<PackedScene> &player,
         const StringName &key, int64_t max_total_players, int64_t listen_port, int64_t epoch) {
     if (state != IDLE || mutating) {
         return;
     }
-    Ref<CrimsonWorldSessionDefinition> config = CrimsonWorldSessionDefinition::configure();
+    Ref<WorldSessionDefinition> config = WorldSessionDefinition::configure();
     config->set_world_scene(world);
     config->set_player_scene(player);
     config->set_port(listen_port);
@@ -220,49 +220,49 @@ void CrimsonWorldSession::configure_immediate(const Ref<PackedScene> &world, con
     authority_epoch = epoch;
 }
 
-void CrimsonWorldSession::use_services(session::CrimsonGameSession *session, scene_load::CrimsonSceneLoadManager *loader) {
+void WorldSession::use_services(session::GameSession *session, scene_load::SceneLoadManager *loader) {
     if (!is_inside_tree()) {
         transport = session;
         scene_loader = loader;
     }
 }
 
-Error CrimsonWorldSession::host_immediate(const String &bind_address, bool dedicated, bool hold_admission) {
+Error WorldSession::host_immediate(const String &bind_address, bool dedicated, bool hold_admission) {
     return start(dedicated ? Mode::Dedicated : Mode::Host, bind_address, {}, hold_admission);
 }
 
-Error CrimsonWorldSession::join_endpoint(const Ref<session::CrimsonSessionEndpoint> &endpoint) {
+Error WorldSession::join_endpoint(const Ref<session::SessionEndpoint> &endpoint) {
     return start(Mode::Join, {}, endpoint);
 }
 
-int64_t CrimsonWorldSession::get_world_epoch() const {
+int64_t WorldSession::get_world_epoch() const {
     return authority_epoch;
 }
 
-bool CrimsonWorldSession::is_authority() const {
+bool WorldSession::is_authority() const {
     return transport && transport->is_authority();
 }
 
-int64_t CrimsonWorldSession::get_port() const {
+int64_t WorldSession::get_port() const {
     if (state != IDLE) {
         return port;
     }
-    return definition.is_valid() ? definition->get_port() : CrimsonWorldSessionDefinition::DEFAULT_PORT;
+    return definition.is_valid() ? definition->get_port() : WorldSessionDefinition::DEFAULT_PORT;
 }
 
-Error CrimsonWorldSession::start_offline() {
+Error WorldSession::start_offline() {
     return start(Mode::Offline);
 }
 
-Error CrimsonWorldSession::host() {
+Error WorldSession::host() {
     return start(Mode::Host, "*");
 }
 
-Error CrimsonWorldSession::join(const String &address) {
+Error WorldSession::join(const String &address) {
     return start(Mode::Join, address.strip_edges());
 }
 
-Error CrimsonWorldSession::leave() {
+Error WorldSession::leave() {
     if (mutating || (player_limit != 0 && scene_loader && scene_loader->is_publishing())) {
         return ERR_BUSY;
     }
@@ -272,11 +272,11 @@ Error CrimsonWorldSession::leave() {
     return OK;
 }
 
-CrimsonWorldSession::State CrimsonWorldSession::get_state() const {
+WorldSession::State WorldSession::get_state() const {
     return state;
 }
 
-Node3D *CrimsonWorldSession::get_world() const {
+Node3D *WorldSession::get_world() const {
     if (player_limit != 0 && scene_loader) {
         Node *world = scene_loader->get_current_scene();
         return world && world->get_parent() == this ? Object::cast_to<Node3D>(world) : nullptr;
@@ -285,11 +285,11 @@ Node3D *CrimsonWorldSession::get_world() const {
     return world && world->get_parent() == this && !world->is_queued_for_deletion() ? world : nullptr;
 }
 
-Node3D *CrimsonWorldSession::get_local_player() const {
+Node3D *WorldSession::get_local_player() const {
     return transport && active_mode != Mode::Dedicated ? get_player(transport->get_local_peer_id()) : nullptr;
 }
 
-Node3D *CrimsonWorldSession::get_player(int64_t peer_id) const {
+Node3D *WorldSession::get_player(int64_t peer_id) const {
     Node3D *world = get_world();
     Node3D *players = find_spatial(players_id);
     if (peer_id <= 0 || !world || !players || players->get_parent() != world || players->is_queued_for_deletion()) {
@@ -305,8 +305,23 @@ Node3D *CrimsonWorldSession::get_player(int64_t peer_id) const {
     return nullptr;
 }
 
-Error CrimsonWorldSession::start(Mode mode, const String &address,
-        const Ref<session::CrimsonSessionEndpoint> &endpoint, bool hold_admission) {
+bool WorldSession::is_peer_world_ready(int32_t peer_id) const {
+    return state == RUNNING && is_authority() && peer_id > 0 &&
+            pending_guests.count(peer_id) == 0 && get_player(peer_id) != nullptr;
+}
+
+int32_t WorldSession::available_remote_seats() const {
+    if (state != RUNNING || !transport || !is_authority()) {
+        return 0;
+    }
+    const int32_t total = static_cast<int32_t>(slots.size());
+    const int32_t guests = static_cast<int32_t>(transport->get_connected_peer_ids().size());
+    const int32_t local = get_local_player() ? 1 : 0;
+    return total > guests + local ? total - guests - local : 0;
+}
+
+Error WorldSession::start(Mode mode, const String &address,
+        const Ref<session::SessionEndpoint> &endpoint, bool hold_admission) {
     if (state != IDLE || mutating) {
         return ERR_BUSY;
     }
@@ -365,7 +380,7 @@ Error CrimsonWorldSession::start(Mode mode, const String &address,
     return OK;
 }
 
-Error CrimsonWorldSession::configure_start(Mode mode) {
+Error WorldSession::configure_start(Mode mode) {
     active_mode = mode;
     const Ref<PackedScene> scene = definition->get_world_scene();
     player_scene = definition->get_player_scene();
@@ -401,7 +416,7 @@ Error CrimsonWorldSession::configure_start(Mode mode) {
     return error;
 }
 
-int64_t CrimsonWorldSession::configure_candidate(Node *candidate) {
+int64_t WorldSession::configure_candidate(Node *candidate) {
     const Mutation guard(mutating);
     auto *world = Object::cast_to<Node3D>(candidate);
     if (!world || world->get_node_or_null(NodePath(players_name))) {
@@ -409,13 +424,13 @@ int64_t CrimsonWorldSession::configure_candidate(Node *candidate) {
     }
     std::vector<const Marker3D *> candidates;
     if (player_limit != 0) {
-        std::vector<CrimsonSpawnPoint *> anchors;
+        std::vector<PlayerSpawnPoint *> anchors;
         collect_components(*world, anchors, max_spawn_candidates + 1);
         for (const auto *anchor : anchors) {
             candidates.push_back(anchor);
             for (int index = 0; index < anchor->get_child_count() && candidates.size() <= max_spawn_candidates; ++index) {
                 Node *child = anchor->get_child(index);
-                if (!Object::cast_to<CrimsonSpawnPoint>(child)) {
+                if (!Object::cast_to<PlayerSpawnPoint>(child)) {
                     if (auto *marker = Object::cast_to<Marker3D>(child)) {
                         candidates.push_back(marker);
                     }
@@ -465,12 +480,12 @@ int64_t CrimsonWorldSession::configure_candidate(Node *candidate) {
     return OK;
 }
 
-Error CrimsonWorldSession::request_world() {
+Error WorldSession::request_world() {
     return scene_loader->request_local_load(world_key, definition->get_world_scene(),
-            callable_mp(this, &CrimsonWorldSession::configure_candidate));
+            callable_mp(this, &WorldSession::configure_candidate));
 }
 
-void CrimsonWorldSession::on_world_loaded(const StringName &scene_id) {
+void WorldSession::on_world_loaded(const StringName &scene_id) {
     if (player_limit == 0 || state != STARTING || scene_id != world_key || !get_world()) {
         return;
     }
@@ -503,13 +518,13 @@ void CrimsonWorldSession::on_world_loaded(const StringName &scene_id) {
     }
 }
 
-void CrimsonWorldSession::on_world_load_failed(const StringName &scene_id, int64_t error, const String &) {
+void WorldSession::on_world_load_failed(const StringName &scene_id, int64_t error, const String &) {
     if (!mutating && player_limit != 0 && state == STARTING && scene_id == world_key) {
         fail_session(error == ERR_INVALID_DATA ? "invalid_spawn_setup" : "scene_load_failed");
     }
 }
 
-Node3D *CrimsonWorldSession::instantiate_actor() const {
+Node3D *WorldSession::instantiate_actor() const {
     DetachedNode staged(player_scene->instantiate());
     auto *actor = Object::cast_to<Node3D>(staged.get());
     if (!actor || actor->is_set_as_top_level()) {
@@ -528,11 +543,11 @@ Node3D *CrimsonWorldSession::instantiate_actor() const {
     return actor;
 }
 
-bool CrimsonWorldSession::resolve_view(Node3D &actor, Node3D *&camera, Node3D *&hidden) const {
+bool WorldSession::resolve_view(Node3D &actor, Node3D *&camera, Node3D *&hidden) const {
     camera = nullptr;
     hidden = nullptr;
     if (player_limit != 0) {
-        std::vector<CrimsonLocalView *> views;
+        std::vector<LocalPlayerView *> views;
         collect_components(actor, views, 2);
         if (views.size() > 1) {
             return false;
@@ -558,7 +573,7 @@ bool CrimsonWorldSession::resolve_view(Node3D &actor, Node3D *&camera, Node3D *&
             (!hidden || (actor.is_ancestor_of(hidden) && !hidden->is_queued_for_deletion()));
 }
 
-bool CrimsonWorldSession::apply_roster(const PackedInt32Array &next) {
+bool WorldSession::apply_roster(const PackedInt32Array &next) {
     const uint64_t expected_world = world_id;
     const uint64_t expected_players = players_id;
     Node3D *world = nullptr;
@@ -662,7 +677,7 @@ bool CrimsonWorldSession::apply_roster(const PackedInt32Array &next) {
     return true;
 }
 
-PackedInt32Array CrimsonWorldSession::get_roster() const {
+PackedInt32Array WorldSession::get_roster() const {
     PackedInt32Array roster;
     roster.resize(slots.size());
     for (size_t index = 0; index < slots.size(); ++index) {
@@ -671,7 +686,7 @@ PackedInt32Array CrimsonWorldSession::get_roster() const {
     return roster;
 }
 
-bool CrimsonWorldSession::valid_roster(const PackedInt32Array &roster) const {
+bool WorldSession::valid_roster(const PackedInt32Array &roster) const {
     if (roster.size() != static_cast<int64_t>(slots.size()) || roster.is_empty() ||
             (remote_dedicated ? roster.has(authority_peer) : roster[0] != authority_peer)) {
         return false;
@@ -690,7 +705,7 @@ bool CrimsonWorldSession::valid_roster(const PackedInt32Array &roster) const {
     return seen.count(transport->get_local_peer_id()) != 0;
 }
 
-void CrimsonWorldSession::publish_roster(const PackedInt32Array &roster, int32_t joining_peer) {
+void WorldSession::publish_roster(const PackedInt32Array &roster, int32_t joining_peer) {
     bool applied;
     bool guest_rejected = false;
     {
@@ -732,13 +747,13 @@ void CrimsonWorldSession::publish_roster(const PackedInt32Array &roster, int32_t
     }
 }
 
-void CrimsonWorldSession::receive_roster(const PackedInt32Array &roster) {
+void WorldSession::receive_roster(const PackedInt32Array &roster) {
     if (player_limit == 0 && accepts_authority_rpc()) {
         apply_authority_roster(roster);
     }
 }
 
-void CrimsonWorldSession::receive_world_offer(const StringName &received_world, int64_t epoch, int64_t ticket,
+void WorldSession::receive_world_offer(const StringName &received_world, int64_t epoch, int64_t ticket,
         int64_t candidate_count, int64_t host_limit, bool dedicated) {
     if (player_limit == 0 || state != STARTING || join_ticket != 0 || !accepts_authority_rpc()) {
         return;
@@ -762,7 +777,7 @@ void CrimsonWorldSession::receive_world_offer(const StringName &received_world, 
     }
 }
 
-void CrimsonWorldSession::receive_assignments(int64_t epoch, int64_t ticket, const PackedInt32Array &assignments) {
+void WorldSession::receive_assignments(int64_t epoch, int64_t ticket, const PackedInt32Array &assignments) {
     if (player_limit == 0 || !accepts_authority_rpc() || !get_world() || epoch != authority_epoch ||
             (state == STARTING ? join_ticket == 0 || ticket != join_ticket : ticket != 0)) {
         return;
@@ -785,9 +800,9 @@ void CrimsonWorldSession::receive_assignments(int64_t epoch, int64_t ticket, con
     apply_authority_roster(roster);
 }
 
-int32_t CrimsonWorldSession::reporting_guest(int64_t epoch, int64_t ticket, GuestPhase phase) const {
+int32_t WorldSession::reporting_guest(int64_t epoch, int64_t ticket, GuestPhase phase) const {
     if (mutating || player_limit == 0 || state != RUNNING || epoch != authority_epoch ||
-            transport->get_state() != session::CrimsonGameSession::HOSTING) {
+            transport->get_state() != session::GameSession::HOSTING) {
         return 0;
     }
     const int32_t sender = get_multiplayer()->get_remote_sender_id();
@@ -797,7 +812,7 @@ int32_t CrimsonWorldSession::reporting_guest(int64_t epoch, int64_t ticket, Gues
                     transport->get_connected_peer_ids().has(sender) ? sender : 0;
 }
 
-void CrimsonWorldSession::receive_scene_mounted(int64_t epoch, int64_t ticket) {
+void WorldSession::receive_scene_mounted(int64_t epoch, int64_t ticket) {
     const int32_t sender = reporting_guest(epoch, ticket, GuestPhase::Mounting);
     if (!sender) {
         return;
@@ -815,7 +830,7 @@ void CrimsonWorldSession::receive_scene_mounted(int64_t epoch, int64_t ticket) {
     publish_roster(roster, sender);
 }
 
-void CrimsonWorldSession::receive_baseline_applied(int64_t epoch, int64_t ticket) {
+void WorldSession::receive_baseline_applied(int64_t epoch, int64_t ticket) {
     const int32_t sender = reporting_guest(epoch, ticket, GuestPhase::ApplyingBaseline);
     if (!sender || !get_player(sender)) {
         return;
@@ -829,19 +844,19 @@ void CrimsonWorldSession::receive_baseline_applied(int64_t epoch, int64_t ticket
     set_process(!pending_guests.empty());
 }
 
-void CrimsonWorldSession::receive_join_ready(int64_t epoch, int64_t ticket) {
+void WorldSession::receive_join_ready(int64_t epoch, int64_t ticket) {
     if (player_limit != 0 && state == STARTING && accepts_authority_rpc() && baseline_applied &&
             epoch == authority_epoch && ticket == join_ticket && get_local_player()) {
         finish_start();
     }
 }
 
-bool CrimsonWorldSession::accepts_authority_rpc() const {
-    return !mutating && state != IDLE && transport->get_state() == session::CrimsonGameSession::CLIENT &&
+bool WorldSession::accepts_authority_rpc() const {
+    return !mutating && state != IDLE && transport->get_state() == session::GameSession::CLIENT &&
             get_multiplayer()->get_remote_sender_id() == authority_peer;
 }
 
-void CrimsonWorldSession::receive_spawn_rejection(const StringName &reason) {
+void WorldSession::receive_spawn_rejection(const StringName &reason) {
     if (player_limit != 0 && state == STARTING && accepts_authority_rpc()) {
         if (reason == StringName("spawn_unavailable") || reason == StringName("join_timeout") ||
                 reason == StringName("connection_failed")) {
@@ -850,14 +865,14 @@ void CrimsonWorldSession::receive_spawn_rejection(const StringName &reason) {
     }
 }
 
-void CrimsonWorldSession::reject_spawn(int32_t peer, const StringName &reason) {
+void WorldSession::reject_spawn(int32_t peer, const StringName &reason) {
     pending_guests.erase(peer);
     set_process(!pending_guests.empty());
     rpc_id(peer, spawn_rejection_method, reason);
     transport->disconnect_admitted_peer_after_flush(peer);
 }
 
-void CrimsonWorldSession::apply_authority_roster(const PackedInt32Array &roster) {
+void WorldSession::apply_authority_roster(const PackedInt32Array &roster) {
     if (!valid_roster(roster)) {
         fail_session("invalid_roster");
         return;
@@ -883,19 +898,19 @@ void CrimsonWorldSession::apply_authority_roster(const PackedInt32Array &roster)
     }
 }
 
-void CrimsonWorldSession::finish_start() {
+void WorldSession::finish_start() {
     clear_spawn_deadline();
     state = RUNNING;
     emit_signal("state_changed", state);
 }
 
-void CrimsonWorldSession::on_transport_started(int64_t role, int64_t) {
-    if (role == session::CrimsonGameSession::CLIENT) {
+void WorldSession::on_transport_started(int64_t role, int64_t) {
+    if (role == session::GameSession::CLIENT) {
         start_spawn_deadline(spawn_timeout_seconds);
     }
 }
 
-void CrimsonWorldSession::on_transport_ended(const StringName &reason) {
+void WorldSession::on_transport_ended(const StringName &reason) {
     if (state == IDLE) {
         return;
     }
@@ -909,8 +924,8 @@ void CrimsonWorldSession::on_transport_ended(const StringName &reason) {
     emit_signal("session_ended", resolved);
 }
 
-void CrimsonWorldSession::on_peer_joined(int64_t peer_id) {
-    if (mutating || state != RUNNING || transport->get_state() != session::CrimsonGameSession::HOSTING) {
+void WorldSession::on_peer_joined(int64_t peer_id) {
+    if (mutating || state != RUNNING || transport->get_state() != session::GameSession::HOSTING) {
         return;
     }
     if (player_limit != 0) {
@@ -940,8 +955,8 @@ void CrimsonWorldSession::on_peer_joined(int64_t peer_id) {
     }
 }
 
-void CrimsonWorldSession::on_peer_left(int64_t peer_id) {
-    if (mutating || state != RUNNING || transport->get_state() != session::CrimsonGameSession::HOSTING) {
+void WorldSession::on_peer_left(int64_t peer_id) {
+    if (mutating || state != RUNNING || transport->get_state() != session::GameSession::HOSTING) {
         return;
     }
     pending_guests.erase(static_cast<int32_t>(peer_id));
@@ -954,8 +969,8 @@ void CrimsonWorldSession::on_peer_left(int64_t peer_id) {
     }
 }
 
-void CrimsonWorldSession::_process(double) {
-    if (state != RUNNING || transport->get_state() != session::CrimsonGameSession::HOSTING) {
+void WorldSession::_process(double) {
+    if (state != RUNNING || transport->get_state() != session::GameSession::HOSTING) {
         return;
     }
     const uint64_t now = Time::get_singleton()->get_ticks_msec();
@@ -976,33 +991,33 @@ void CrimsonWorldSession::_process(double) {
     }
 }
 
-void CrimsonWorldSession::on_spawn_timeout() {
+void WorldSession::on_spawn_timeout() {
     if (state == STARTING) {
         fail_session("spawn_timeout");
     }
 }
 
-void CrimsonWorldSession::clear_spawn_deadline() {
+void WorldSession::clear_spawn_deadline() {
     if (spawn_deadline.is_valid()) {
-        spawn_deadline->disconnect("timeout", callable_mp(this, &CrimsonWorldSession::on_spawn_timeout));
+        spawn_deadline->disconnect("timeout", callable_mp(this, &WorldSession::on_spawn_timeout));
         spawn_deadline.unref();
     }
 }
 
-void CrimsonWorldSession::start_spawn_deadline(double seconds) {
+void WorldSession::start_spawn_deadline(double seconds) {
     clear_spawn_deadline();
     spawn_deadline = get_tree()->create_timer(seconds, true, false, true);
-    spawn_deadline->connect("timeout", callable_mp(this, &CrimsonWorldSession::on_spawn_timeout));
+    spawn_deadline->connect("timeout", callable_mp(this, &WorldSession::on_spawn_timeout));
 }
 
-void CrimsonWorldSession::fail_session(const StringName &reason) {
+void WorldSession::fail_session(const StringName &reason) {
     if (state != IDLE) {
         failure_reason = reason;
         transport->leave();
     }
 }
 
-void CrimsonWorldSession::clear_world(bool exiting) {
+void WorldSession::clear_world(bool exiting) {
     clear_spawn_deadline();
     if (Node3D *staged_actor = find_spatial(first_actor_id)) {
         memdelete(staged_actor);

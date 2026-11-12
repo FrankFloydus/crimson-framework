@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="SteamUtils" inherits="RefCounted">
+	<brief_description>
+		Reads platform and overlay state from Steam.
+	</brief_description>
+	<description>
+		Get this service from [method SteamClient.utils]. Hardware, language, and overlay queries read Steam's current client state.
+	</description>
+	<tutorials>
+	</tutorials>
+	<methods>
+		<method name="hardware_default_config" qualifiers="const">
+			<return type="int" enum="SteamUtils.HardwareDefaultConfig" />
+			<description>
+				Returns Steam's suggested starting preset for this game and device. Use it when choosing initial settings and let players retain their own settings. Returns [constant CONFIG_UNAVAILABLE] when Steam cannot supply the query.
+			</description>
+		</method>
+		<method name="hardware_type" qualifiers="const">
+			<return type="int" enum="SteamUtils.HardwareType" />
+			<description>
+				Returns the Steam-reported hardware type. Returns [constant HARDWARE_UNAVAILABLE] when Steam cannot supply the query.
+			</description>
+		</method>
+		<method name="is_available" qualifiers="const">
+			<return type="bool" />
+			<description>
+				Returns whether the active client exposes the Steam Utils interface on the main thread.
+			</description>
+		</method>
+		<method name="is_overlay_ready" qualifiers="const">
+			<return type="bool" />
+			<description>
+				Returns whether the Steam overlay is available to this process now. Check again before requesting an overlay action after startup.
+			</description>
+		</method>
+		<method name="is_running_in_vr" qualifiers="const">
+			<return type="bool" />
+			<description>
+				Returns whether Steam reports that the Steam client is running in VR mode. Returns [code]false[/code] when the query is unavailable.
+			</description>
+		</method>
+		<method name="is_running_under_proton" qualifiers="const">
+			<return type="bool" />
+			<description>
+				Returns whether Steam reports that the game process is running under Proton. Returns [code]false[/code] when the query is unavailable.
+			</description>
+		</method>
+		<method name="ui_language" qualifiers="const">
+			<return type="String" />
+			<description>
+				Returns the Steam client's interface language code, or an empty string when unavailable. For the selected game language, use [method SteamApps.current_language].
+			</description>
+		</method>
+	</methods>
+	<constants>
+		<constant name="HARDWARE_UNAVAILABLE" value="-1" enum="HardwareType">
+			The Steam hardware query is unavailable.
+		</constant>
+		<constant name="HARDWARE_NONE" value="0" enum="HardwareType">
+			Steam reports that the process is running on hardware outside its Steam device families.
+		</constant>
+		<constant name="HARDWARE_STEAM_DECK" value="1" enum="HardwareType">
+			Steam reports a Steam Deck.
+		</constant>
+		<constant name="HARDWARE_STEAM_MACHINE" value="2" enum="HardwareType">
+			Steam reports a Steam Machine.
+		</constant>
+		<constant name="HARDWARE_STEAM_FRAME" value="3" enum="HardwareType">
+			Steam reports a Steam Frame.
+		</constant>
+		<constant name="HARDWARE_OTHER" value="4" enum="HardwareType">
+			Steam reports a hardware type newer than the types recognized by this API.
+		</constant>
+		<constant name="CONFIG_UNAVAILABLE" value="-1" enum="HardwareDefaultConfig">
+			The Steam preset query is unavailable.
+		</constant>
+		<constant name="CONFIG_NONE" value="0" enum="HardwareDefaultConfig">
+			Steam has no preset suggestion for this game and device.
+		</constant>
+		<constant name="CONFIG_LOW" value="1" enum="HardwareDefaultConfig">
+			Steam suggests a low settings preset.
+		</constant>
+		<constant name="CONFIG_MEDIUM" value="2" enum="HardwareDefaultConfig">
+			Steam suggests a medium settings preset.
+		</constant>
+		<constant name="CONFIG_HIGH" value="3" enum="HardwareDefaultConfig">
+			Steam suggests a high settings preset.
+		</constant>
+		<constant name="CONFIG_MAX" value="4" enum="HardwareDefaultConfig">
+			Steam suggests a maximum settings preset.
+		</constant>
+		<constant name="CONFIG_STEAM_DECK" value="5" enum="HardwareDefaultConfig">
+			Steam suggests a preset tuned for Steam Deck.
+		</constant>
+		<constant name="CONFIG_STEAM_MACHINE" value="6" enum="HardwareDefaultConfig">
+			Steam suggests a preset tuned for Steam Machine.
+		</constant>
+		<constant name="CONFIG_STEAM_FRAME" value="7" enum="HardwareDefaultConfig">
+			Steam suggests a preset tuned for Steam Frame.
+		</constant>
+		<constant name="CONFIG_OTHER" value="8" enum="HardwareDefaultConfig">
+			Steam reports a preset newer than those recognized by this API.
+		</constant>
+	</constants>
+</class>

@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="SteamLobbies" inherits="RefCounted">
+	<brief_description>Steam discovery and standalone social membership for one exact client scope.</brief_description>
+	<methods>
+		<method name="is_available" qualifiers="const">
+			<return type="bool" />
+			<description>Return whether this exact attachment can query Steam lobbies.</description>
+		</method>
+		<method name="current" qualifiers="const">
+			<return type="SteamLobby" />
+			<description>Return this scope's current exact lobby, or null when it has none.</description>
+		</method>
+		<method name="query" qualifiers="const">
+			<return type="SteamLobbyQuery" />
+			<param index="0" name="namespace" type="StringName" default="&amp;&quot;&quot;" />
+			<description>Build a detached gameplay lobby query. The namespace defaults to the configured Game namespace or [code]crimson[/code] for standalone clients. A standalone query can opt into social lobbies with [method SteamLobbyQuery.social].</description>
+		</method>
+		<method name="friend_lobby" qualifiers="const">
+			<return type="SteamListingResult" />
+			<param index="0" name="friend_id" type="String" />
+			<description>Read a Steam friend's matching-AppID lobby locator when available. The game verifies its live namespace and owner on join.</description>
+		</method>
+		<method name="create">
+			<return type="SteamLobbyOperation" />
+			<param index="0" name="options" type="SteamLobbyOptions" default="null" />
+			<description>Create a standalone social lobby. Null options use the private default. An existing membership or pending native acquisition in this account returns [constant ERR_BUSY]. A Game scope returns [constant ERR_UNAUTHORIZED].</description>
+		</method>
+		<method name="join">
+			<return type="SteamLobbyOperation" />
+			<param index="0" name="listing" type="SteamListing" />
+			<description>Enter a standalone lobby and recheck its live social protocol, namespace, and Steam owner. A known Game listing is rejected locally. A Game scope cannot submit standalone membership.</description>
+		</method>
+	</methods>
+	<signals>
+		<signal name="invite_received">
+			<param index="0" name="listing" type="SteamListing" />
+			<description>Emitted by a standalone scope after the user accepts a Steam lobby invite. The listing is a candidate and must be explicitly joined.</description>
+		</signal>
+	</signals>
+</class>

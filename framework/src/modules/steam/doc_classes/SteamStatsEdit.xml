@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="SteamStatsEdit" inherits="RefCounted">
+	<brief_description>
+		A branchable draft of changes to the signed-in player's Steam stats and achievements.
+	</brief_description>
+	<description>
+		Create a draft with [method SteamStats.edit]. Each modifier returns an independent branch. Only [method submit] applies edits, in the order they were added. Keep the owning [SteamStats] scope active until submission.
+	</description>
+	<methods>
+		<method name="set_float" qualifiers="const">
+			<return type="SteamStatsEdit" />
+			<param index="0" name="name" type="String" />
+			<param index="1" name="value" type="float" />
+			<description>Returns a branch that sets the published float stat to an absolute value. The value must be finite and fit Steam's single-precision range.</description>
+		</method>
+		<method name="set_int" qualifiers="const">
+			<return type="SteamStatsEdit" />
+			<param index="0" name="name" type="String" />
+			<param index="1" name="value" type="int" />
+			<description>Returns a branch that sets the published integer stat to an absolute value in the signed 32-bit range.</description>
+		</method>
+		<method name="submit" qualifiers="const">
+			<return type="SteamStatsSubmissionResult" />
+			<description>
+				Validates the draft before applying any edits. If a Steam setter rejects an edit after preflight, earlier accepted edits remain in the local cache. Once every edit succeeds, submits one persistence request. The result includes edit counts for every outcome. Observe [signal SteamStats.stats_stored] for the app-wide backend response.
+			</description>
+		</method>
+		<method name="unlock" qualifiers="const">
+			<return type="SteamStatsEdit" />
+			<param index="0" name="name" type="String" />
+			<description>Returns a branch that unlocks the published achievement when the draft is submitted.</description>
+		</method>
+		<method name="update_average_rate" qualifiers="const">
+			<return type="SteamStatsEdit" />
+			<param index="0" name="name" type="String" />
+			<param index="1" name="count" type="float" />
+			<param index="2" name="seconds" type="float" />
+			<description>Returns a branch that adds a finite accumulated count over a finite positive duration in seconds. Steam checks whether the named stat accepts average-rate updates when the draft is applied.</description>
+		</method>
+	</methods>
+</class>

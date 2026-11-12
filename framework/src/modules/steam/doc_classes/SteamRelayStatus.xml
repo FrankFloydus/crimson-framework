@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="SteamRelayStatus" inherits="RefCounted">
+	<brief_description>A snapshot of Steam relay readiness and latency measurement.</brief_description>
+	<description>Relay readiness is a process-wide observation from Steam Networking Utils. Individual connections can use different routes.</description>
+	<tutorials>
+	</tutorials>
+	<methods>
+		<method name="get_availability" qualifiers="const">
+			<return type="int" enum="SteamRelayStatus.Availability" />
+			<description>Returns Steam's current readiness.</description>
+		</method>
+		<method name="is_measuring" qualifiers="const">
+			<return type="bool" />
+			<description>Returns whether Steam is measuring or waiting to measure relay latency.</description>
+		</method>
+	</methods>
+	<members>
+		<member name="availability" type="int" setter="" getter="get_availability" enum="SteamRelayStatus.Availability" default="0">Steam's latest readiness value.</member>
+		<member name="measuring" type="bool" setter="" getter="is_measuring" default="false">Whether Steam is measuring or waiting to measure relay latency.</member>
+	</members>
+	<constants>
+		<constant name="CANNOT_TRY" value="-102" enum="Availability">A dependency required to try relay access is missing.</constant>
+		<constant name="FAILED" value="-101" enum="Availability">Steam has failed to obtain relay access.</constant>
+		<constant name="PREVIOUSLY_AVAILABLE" value="-100" enum="Availability">Previously available relay access is currently unavailable.</constant>
+		<constant name="RETRYING" value="-10" enum="Availability">Steam is retrying a previous failure.</constant>
+		<constant name="UNKNOWN" value="0" enum="Availability">Relay readiness is unknown.</constant>
+		<constant name="NEVER_TRIED" value="1" enum="Availability">Steam has not attempted relay preparation.</constant>
+		<constant name="WAITING" value="2" enum="Availability">Steam is waiting for a dependency.</constant>
+		<constant name="ATTEMPTING" value="3" enum="Availability">Steam is attempting relay preparation.</constant>
+		<constant name="CURRENT" value="100" enum="Availability">Steam reports relay access is ready.</constant>
+	</constants>
+</class>

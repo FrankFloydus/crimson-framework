@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="SteamSocketConnectionResult" inherits="SteamResult">
+	<brief_description>Typed result of an incoming acceptance or outgoing handshake.</brief_description>
+	<description>Outgoing success yields an authenticated connection. For incoming success, wait for [signal SteamSocketConnection.connected] or check [method SteamSocketConnection.is_connected] before sending.</description>
+	<tutorials>
+	</tutorials>
+	<methods>
+		<method name="get_value" qualifiers="const">
+			<return type="SteamSocketConnection" />
+			<description>Returns the issued handle when the result succeeded.</description>
+		</method>
+	</methods>
+	<members>
+		<member name="value" type="SteamSocketConnection" setter="" getter="get_value">The owned handle, or [code]null[/code] on failure.</member>
+	</members>
+</class>

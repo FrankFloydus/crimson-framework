@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="SteamApps" inherits="RefCounted">
+	<brief_description>
+		Reads Steam app and DLC metadata and issues optional DLC install requests.
+	</brief_description>
+	<description>
+		Get this service from [method SteamClient.apps]. Call its methods on the main thread while its client scope is active. Store availability, local subscription, and installation are separate Steam queries. Local metadata is suitable for presentation. Multiplayer entitlement decisions use a verified server-side identity and ownership check.
+	</description>
+	<tutorials>
+	</tutorials>
+	<methods>
+		<method name="available_languages" qualifiers="const">
+			<return type="PackedStringArray" />
+			<description>
+				Returns the app's configured Steam language codes in Steam's order, or an empty array when unavailable.
+			</description>
+		</method>
+		<method name="beta_branch" qualifiers="const">
+			<return type="String" />
+			<description>
+				Returns the selected named beta branch. An empty string indicates the default branch or unavailable data.
+			</description>
+		</method>
+		<method name="build_id" qualifiers="const">
+			<return type="int" />
+			<description>
+				Returns Steam's build ID for the current app. Returns [code]0[/code] when Steam has no build ID for this process, including launches outside a Steam download or an inactive client scope.
+			</description>
+		</method>
+		<method name="current_language" qualifiers="const">
+			<return type="String" />
+			<description>
+				Returns the Steam language code selected for this game, or an empty string when unavailable. For the Steam client interface language, use [method SteamUtils.ui_language].
+			</description>
+		</method>
+		<method name="dlc" qualifiers="const">
+			<return type="SteamDlcListResult" />
+			<description>
+				Returns a detached typed catalog for the current app with at most 256 entries in Steam's order. Steam may limit which entries it reports. Use known DLC AppIDs for required content. The [member SteamDlcInfo.available] flag describes visibility on the Steam store.
+			</description>
+		</method>
+		<method name="download_progress" qualifiers="const">
+			<return type="SteamDlcProgressResult" />
+			<param index="0" name="dlc_app_id" type="int" />
+			<description>
+				Reads a progress snapshot for the optional DLC identified by [param dlc_app_id]. When Steam reports no active download, the query succeeds with an inactive [SteamDlcProgress]. Returns an error for an invalid AppID, unavailable interface, or byte counts beyond the signed integer range.
+			</description>
+		</method>
+		<method name="install_dlc">
+			<return type="int" enum="Error" />
+			<param index="0" name="dlc_app_id" type="int" />
+			<description>
+				Issues an installation request for an optional DLC AppID associated with this game. Steam's local subscription check must report ownership. [constant OK] confirms that the request was issued. Use [method download_progress], [method is_dlc_installed], or [signal dlc_installed] to observe installation.
+			</description>
+		</method>
+		<method name="is_available" qualifiers="const">
+			<return type="bool" />
+			<description>
+				Returns whether the active client exposes the Steam Apps interface on the main thread.
+			</description>
+		</method>
+		<method name="is_dlc_installed" qualifiers="const">
+			<return type="bool" />
+			<param index="0" name="app_id" type="int" />
+			<description>
+				Returns whether the signed-in account owns and has installed the DLC identified by [param app_id]. Returns [code]false[/code] for invalid or unavailable queries.
+			</description>
+		</method>
+		<method name="is_subscribed_to_app" qualifiers="const">
+			<return type="bool" />
+			<param index="0" name="app_id" type="int" />
+			<description>
+				Returns whether the signed-in account has a Steam subscription to the app identified by [param app_id]. The AppID must be positive. Returns [code]false[/code] when the query is invalid or unavailable.
+			</description>
+		</method>
+		<method name="notification_session_id" qualifiers="const">
+			<return type="String" />
+			<description>
+				Returns the nonzero decimal session ID Steam supplied when opening a Game Notification. Returns an empty string when absent, invalid, or unavailable. Ask the game's backend to authorize the selected session for the authenticated player before loading it.
+			</description>
+		</method>
+		<method name="owns_dlc" qualifiers="const">
+			<return type="bool" />
+			<param index="0" name="dlc_app_id" type="int" />
+			<description>
+				Returns Steam's local subscription state for the supplied DLC AppID. Use it as an ownership hint in the UI. Use [method is_dlc_installed] to check whether the local content is installed.
+			</description>
+		</method>
+		<method name="uninstall_dlc">
+			<return type="int" enum="Error" />
+			<param index="0" name="dlc_app_id" type="int" />
+			<description>
+				Issues a removal request for the selected optional DLC. Call after the player confirms removal. [constant OK] confirms that the request was issued. Use [method is_dlc_installed] to check the resulting state.
+			</description>
+		</method>
+	</methods>
+	<signals>
+		<signal name="dlc_installed">
+			<param index="0" name="dlc_app_id" type="int" />
+			<description>
+				Emitted when Steam reports installation of the specified DLC AppID to the active client scope. Refresh the local content catalog before presenting the DLC as playable.
+			</description>
+		</signal>
+		<signal name="notification_session_requested">
+			<param index="0" name="session_id" type="String" />
+			<description>
+				Emitted when Steam supplies a valid Game Notification session ID while the game is running. Validate session membership before resuming it.
+			</description>
+		</signal>
+	</signals>
+</class>

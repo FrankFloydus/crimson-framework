@@ -80,7 +80,7 @@ current = false
 fov = 80.0
 near = 0.05
 
-[node name="LocalView" type="CrimsonLocalView" parent="." node_paths=PackedStringArray("camera", "hidden_visuals")]
+[node name="LocalView" type="LocalPlayerView" parent="." node_paths=PackedStringArray("camera", "hidden_visuals")]
 camera = NodePath("../Camera3D")
 hidden_visuals = NodePath("../Visuals")
 

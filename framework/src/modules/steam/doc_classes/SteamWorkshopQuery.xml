@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="SteamWorkshopQuery" inherits="RefCounted">
+	<brief_description>
+		Branchable filters and paging for the active app's ready-to-use Workshop items.
+	</brief_description>
+	<methods>
+		<method name="after" qualifiers="const">
+			<return type="SteamWorkshopQuery" />
+			<param index="0" name="cursor" type="String" />
+			<description>Returns a branch using the exact [member SteamWorkshopPage.next_cursor] from the same filters and sort. An empty cursor starts from the first page. [param cursor] supports up to 255 UTF-8 bytes.</description>
+		</method>
+		<method name="fetch" qualifiers="const">
+			<return type="Variant" />
+			<description>Use [code]await query.fetch()[/code] to receive a [SteamWorkshopPageResult]. Requests up to 50 items for the active app. A stopped client settles pending observation with [constant ERR_SKIP].</description>
+		</method>
+		<method name="search" qualifiers="const">
+			<return type="SteamWorkshopQuery" />
+			<param index="0" name="text" type="String" />
+			<description>Returns a branch that matches text in item titles or descriptions and starts at the first page. An empty string clears the text filter. [param text] supports up to 255 UTF-8 bytes.</description>
+		</method>
+		<method name="sort_by" qualifiers="const">
+			<return type="SteamWorkshopQuery" />
+			<param index="0" name="sort" type="int" enum="SteamWorkshopQuery.Sort" />
+			<description>Returns a branch with explicit sorting and starts at the first page. Browsing defaults to [constant RATING], and a text search defaults to [constant RELEVANCE].</description>
+		</method>
+		<method name="tagged" qualifiers="const">
+			<return type="SteamWorkshopQuery" />
+			<param index="0" name="tag" type="String" />
+			<description>Returns a branch requiring the additional tag and starts at the first page. A branch supports up to 16 tags, each between 1 and 255 UTF-8 bytes.</description>
+		</method>
+	</methods>
+	<constants>
+		<constant name="RELEVANCE" value="0" enum="Sort">
+			Ranks matches by text relevance. A search term is required.
+		</constant>
+		<constant name="RATING" value="1" enum="Sort">
+			Ranks ready-to-use items by Steam vote popularity.
+		</constant>
+		<constant name="NEWEST" value="2" enum="Sort">
+			Sorts items from newest to oldest publication.
+		</constant>
+	</constants>
+</class>

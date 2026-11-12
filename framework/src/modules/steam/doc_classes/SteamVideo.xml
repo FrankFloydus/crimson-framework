@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="SteamVideo" inherits="RefCounted">
+	<brief_description>Reads Steam video descriptors and local broadcast state.</brief_description>
+	<description>Use [method SteamClient.video] after boot. Entitlement and a processed Steam Video AppID are required for playback. Identical lookups coalesce across client scopes. A pending observation times out after 15 seconds. Steam can still finish the native lookup after that.</description>
+	<methods>
+		<method name="broadcast_status" qualifiers="const">
+			<return type="SteamBroadcastStatusResult" />
+			<description>Reads whether Steam is uploading a broadcast and how many viewers are watching.</description>
+		</method>
+		<method name="projection_settings">
+			<return type="Variant" />
+			<param index="0" name="video_app_id" type="int" />
+			<description>Await a [SteamStringResult] with the 360-degree projection settings for the specified video AppID. Concurrent lookups of the same AppID share a single Steam request.</description>
+		</method>
+		<method name="stream_url">
+			<return type="Variant" />
+			<param index="0" name="video_app_id" type="int" />
+			<description>Await a [SteamStringResult] with the Steam-issued stream URL for an entitled video AppID. Treat this URL as temporary and keep it out of logs.</description>
+		</method>
+	</methods>
+	<signals>
+		<signal name="broadcast_started">
+			<description>Emitted when Steam reports a local broadcast upload started.</description>
+		</signal>
+		<signal name="broadcast_stopped">
+			<param index="0" name="reason" type="int" />
+			<description>Emitted with the SDK broadcast upload result code when the local upload stops.</description>
+		</signal>
+	</signals>
+</class>

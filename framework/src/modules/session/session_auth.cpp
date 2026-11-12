@@ -11,71 +11,71 @@ using namespace godot;
 
 namespace crimson::session {
 
-void CrimsonSessionIdentity::_bind_methods() {
+void SessionIdentity::_bind_methods() {
     ClassDB::bind_static_method(get_class_static(), D_METHOD("verified", "provider", "subject"),
-            &CrimsonSessionIdentity::verified);
-    ClassDB::bind_method(D_METHOD("get_provider"), &CrimsonSessionIdentity::get_provider);
-    ClassDB::bind_method(D_METHOD("get_subject"), &CrimsonSessionIdentity::get_subject);
+            &SessionIdentity::verified);
+    ClassDB::bind_method(D_METHOD("get_provider"), &SessionIdentity::get_provider);
+    ClassDB::bind_method(D_METHOD("get_subject"), &SessionIdentity::get_subject);
 }
 
-Ref<CrimsonSessionIdentity> CrimsonSessionIdentity::verified(const StringName &p_provider, const String &p_subject) {
+Ref<SessionIdentity> SessionIdentity::verified(const StringName &p_provider, const String &p_subject) {
     const String provider_text = p_provider;
     if (provider_text.strip_edges().is_empty() || provider_text.length() > 64 ||
             p_subject.strip_edges().is_empty() || p_subject.length() > 256) {
         return {};
     }
-    Ref<CrimsonSessionIdentity> identity;
+    Ref<SessionIdentity> identity;
     identity.instantiate();
     identity->provider = p_provider;
     identity->subject = p_subject;
     return identity;
 }
 
-StringName CrimsonSessionIdentity::get_provider() const {
+StringName SessionIdentity::get_provider() const {
     return provider;
 }
 
-String CrimsonSessionIdentity::get_subject() const {
+String SessionIdentity::get_subject() const {
     return subject;
 }
 
-void CrimsonSessionAuthRequest::_bind_methods() {
-    ClassDB::bind_method(D_METHOD("get_peer_id"), &CrimsonSessionAuthRequest::get_peer_id);
-    ClassDB::bind_method(D_METHOD("is_authority"), &CrimsonSessionAuthRequest::is_authority);
-    ClassDB::bind_method(D_METHOD("get_challenge"), &CrimsonSessionAuthRequest::get_challenge);
-    ClassDB::bind_method(D_METHOD("get_proof"), &CrimsonSessionAuthRequest::get_proof);
-    ClassDB::bind_method(D_METHOD("accept", "identity"), &CrimsonSessionAuthRequest::accept);
-    ClassDB::bind_method(D_METHOD("reject"), &CrimsonSessionAuthRequest::reject);
+void SessionAuthRequest::_bind_methods() {
+    ClassDB::bind_method(D_METHOD("get_peer_id"), &SessionAuthRequest::get_peer_id);
+    ClassDB::bind_method(D_METHOD("is_authority"), &SessionAuthRequest::is_authority);
+    ClassDB::bind_method(D_METHOD("get_challenge"), &SessionAuthRequest::get_challenge);
+    ClassDB::bind_method(D_METHOD("get_proof"), &SessionAuthRequest::get_proof);
+    ClassDB::bind_method(D_METHOD("accept", "identity"), &SessionAuthRequest::accept);
+    ClassDB::bind_method(D_METHOD("reject"), &SessionAuthRequest::reject);
 }
 
-int32_t CrimsonSessionAuthRequest::get_peer_id() const {
+int32_t SessionAuthRequest::get_peer_id() const {
     return peer_id;
 }
 
-bool CrimsonSessionAuthRequest::is_authority() const {
+bool SessionAuthRequest::is_authority() const {
     return authority;
 }
 
-PackedByteArray CrimsonSessionAuthRequest::get_challenge() const {
+PackedByteArray SessionAuthRequest::get_challenge() const {
     return challenge;
 }
 
-PackedByteArray CrimsonSessionAuthRequest::get_proof() const {
+PackedByteArray SessionAuthRequest::get_proof() const {
     return proof;
 }
 
-Error CrimsonSessionAuthRequest::accept(const Ref<CrimsonSessionIdentity> &identity) {
+Error SessionAuthRequest::accept(const Ref<SessionIdentity> &identity) {
     if (identity.is_null() || identity->get_provider().is_empty() || identity->get_subject().is_empty()) {
         return ERR_INVALID_PARAMETER;
     }
     return finish(identity, true);
 }
 
-Error CrimsonSessionAuthRequest::reject() {
+Error SessionAuthRequest::reject() {
     return finish({}, false);
 }
 
-Error CrimsonSessionAuthRequest::finish(const Ref<CrimsonSessionIdentity> &identity, bool accepted) {
+Error SessionAuthRequest::finish(const Ref<SessionIdentity> &identity, bool accepted) {
     const OS *os = OS::get_singleton();
     if (os->get_thread_caller_id() != os->get_main_thread_id()) {
         return ERR_BUSY;
@@ -83,23 +83,23 @@ Error CrimsonSessionAuthRequest::finish(const Ref<CrimsonSessionIdentity> &ident
     if (!session_id.is_valid()) {
         return ERR_DOES_NOT_EXIST;
     }
-    auto *session = Object::cast_to<CrimsonGameSession>(ObjectDB::get_instance(session_id));
+    auto *session = Object::cast_to<GameSession>(ObjectDB::get_instance(session_id));
     return session ? session->finish_auth(*this, identity, accepted) : ERR_DOES_NOT_EXIST;
 }
 
-void CrimsonSessionAuthenticator::_bind_methods() {
+void SessionAuthenticator::_bind_methods() {
     GDVIRTUAL_BIND(_make_proof, "peer_id", "authority", "challenge");
     GDVIRTUAL_BIND(_verify, "request");
 }
 
-PackedByteArray CrimsonSessionAuthenticator::make_proof(int32_t peer_id, bool authority,
+PackedByteArray SessionAuthenticator::make_proof(int32_t peer_id, bool authority,
         const PackedByteArray &challenge) {
     PackedByteArray proof;
     GDVIRTUAL_CALL(_make_proof, peer_id, authority, challenge, proof);
     return proof;
 }
 
-void CrimsonSessionAuthenticator::verify(const Ref<CrimsonSessionAuthRequest> &request) {
+void SessionAuthenticator::verify(const Ref<SessionAuthRequest> &request) {
     if (!GDVIRTUAL_CALL(_verify, request)) {
         request->reject();
     }

@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="SteamPartySlotsOperation" inherits="RefCounted">
+	<brief_description>Cancellable observer of an explicit change to available beacon slots.</brief_description>
+	<methods>
+		<method name="is_finished" qualifiers="const">
+			<return type="bool" />
+			<description>Returns whether this observer reached a terminal result.</description>
+		</method>
+		<method name="result" qualifiers="const">
+			<return type="SteamBoolResult" />
+			<description>Returns the terminal result or null while pending.</description>
+		</method>
+		<method name="wait">
+			<return type="Variant" />
+			<description>Returns the completed typed result, or the signal to await it.</description>
+		</method>
+		<method name="cancel">
+			<return type="int" enum="Error" />
+			<description>Settles local observation with [constant ERR_SKIP]. Steam may still apply the submitted update.</description>
+		</method>
+	</methods>
+	<signals>
+		<signal name="completed">
+			<param index="0" name="result" type="SteamBoolResult" />
+			<description>Emitted once with this operation's terminal result.</description>
+		</signal>
+	</signals>
+</class>

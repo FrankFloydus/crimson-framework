@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="SteamNotificationSessionsResult" inherits="SteamResult">
+	<brief_description>
+		Typed outcome and bounded list of sessions.
+	</brief_description>
+	<methods>
+		<method name="get_value" qualifiers="const">
+			<return type="SteamNotificationSession[]" />
+			<description>A read-only array of detached sessions. An unsuccessful query yields an empty array.</description>
+		</method>
+	</methods>
+	<members>
+		<member name="value" type="SteamNotificationSession[]" setter="" getter="get_value">
+			A read-only array of detached sessions. An unsuccessful query yields an empty array.
+		</member>
+	</members>
+</class>

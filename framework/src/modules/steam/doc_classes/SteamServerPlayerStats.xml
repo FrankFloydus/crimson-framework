@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="SteamServerPlayerStats" inherits="RefCounted">
+	<brief_description>Steam GameServer progression for one currently authenticated player.</brief_description>
+	<description>Resolve this handle through [method SteamDedicatedServer.stats]. Use it on the scene thread from authoritative game code. Steamworks definitions must allow Game Server or Official GS writes. The handle expires on departure or retirement of the dedicated attachment, even when the same account reconnects.</description>
+	<tutorials>
+		<link title="Steam GameServer stats and achievements">https://partner.steamgames.com/doc/api/ISteamGameServerStats</link>
+	</tutorials>
+	<methods>
+		<method name="is_available" qualifiers="const">
+			<return type="bool" />
+			<description>Return whether the dedicated interface is available and this exact admission remains active.</description>
+		</method>
+		<method name="is_loaded" qualifiers="const">
+			<return type="bool" />
+			<description>Return whether Steam successfully loaded the cache for this admission. Returns false before the first successful load and after Steam evicts the cache.</description>
+		</method>
+		<method name="load" qualifiers="const">
+			<return type="SteamServerStatsOperation" />
+			<description>Load stats and achievements for this admission, without changing any stats. An already loaded cache returns success immediately. Steam can refuse the request for an account or app without eligible stats. If another operation on the account is pending, this returns [constant ERR_BUSY].</description>
+		</method>
+		<method name="stat_int" qualifiers="const">
+			<return type="SteamIntResult" />
+			<param index="0" name="name" type="StringName" />
+			<description>Read the signed 32-bit value of the published stat [param name] from the loaded cache. A missing definition or wrong type returns [constant ERR_DOES_NOT_EXIST]. An unloaded cache returns [constant ERR_UNCONFIGURED].</description>
+		</method>
+		<method name="stat_float" qualifiers="const">
+			<return type="SteamFloatResult" />
+			<param index="0" name="name" type="StringName" />
+			<description>Read the finite single-precision value of the published stat [param name] from the loaded cache. A missing definition or wrong type returns [constant ERR_DOES_NOT_EXIST]. An unloaded cache returns [constant ERR_UNCONFIGURED].</description>
+		</method>
+		<method name="achievement" qualifiers="const">
+			<return type="SteamBoolResult" />
+			<param index="0" name="name" type="StringName" />
+			<description>Read whether [param name] is unlocked in the loaded cache. A locked achievement is a successful false result. A missing definition returns [constant ERR_DOES_NOT_EXIST], and an unloaded cache returns [constant ERR_UNCONFIGURED].</description>
+		</method>
+		<method name="edit">
+			<return type="SteamServerStatsEdit" />
+			<description>Create a new draft to set stats or achievements in this player's cache and submit them to Steam. Editing the draft has no immediate effect.</description>
+		</method>
+		<method name="store" qualifiers="const">
+			<return type="SteamServerStatsOperation" />
+			<description>Store previously accepted cache changes without repeating the setters. Use this after a partially applied batch or a drained failed store if the game intends to persist those accepted changes. An unloaded cache returns [constant ERR_UNCONFIGURED]. An undrained call returns [constant ERR_BUSY]. A loaded cache without pending changes returns success without issuing a Steam call.</description>
+		</method>
+	</methods>
+</class>

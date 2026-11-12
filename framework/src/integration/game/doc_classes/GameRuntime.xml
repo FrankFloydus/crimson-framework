@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="GameRuntime" inherits="Node">
+	<brief_description>
+		The persistent entry point for starting and coordinating a Crimson game.
+	</brief_description>
+	<methods>
+		<method name="voice" qualifiers="const">
+			<return type="GameVoice" />
+			<description>Returns the persistent voice service for this exact Steam game attachment. Returns null when no Steam client or dedicated Steam service is configured.</description>
+		</method>
+		<method name="invites" qualifiers="const">
+			<return type="GameInvites" />
+			<description>Return this attachment's invite gateway if its provider supplies one. A failed Steam attachment has an unavailable gateway.</description>
+		</method>
+		<method name="join_listing">
+			<return type="GameOperation" />
+			<param index="0" name="listing" type="OnlineListing" />
+			<description>Join a provider-owned discovery or invite snapshot through the normal online game lifecycle. The provider resolves the current lobby, and the operation succeeds after authenticated world and player readiness.</description>
+		</method>
+	</methods>
+	<members>
+		<member name="definition" type="GameDefinition" setter="set_definition" getter="get_definition">
+			Assign the world, player scene, and multiplayer rules used to start the game. Use the same definition and game node path in the host and guest builds.
+		</member>
+		<member name="possession" type="PlayerPossession" setter="" getter="get_possession">
+			Read-only possession service for the current coordinated match. Use it to inspect or change player control assignments through its public API.
+		</member>
+		<member name="transactions" type="TransactionCoordinator" setter="" getter="get_transactions">
+			Read-only authority transaction coordinator for registering game stores and committing coordinated match state.
+		</member>
+	</members>
+</class>

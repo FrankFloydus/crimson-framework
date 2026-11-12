@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="SteamBrowserPage" inherits="RefCounted">
+	<brief_description>A scoped Steam browser texture with explicit game-owned input focus.</brief_description>
+	<description>Display [method texture] in a UI and forward local keyboard and pointer events only while the panel owns focus. Close the page when removing the panel. The game owns control focus and panel lifetime. Steam dialog, popup, and file chooser requests are dismissed without opening another game UI. This facade exposes no downloads or native script bridge.</description>
+	<tutorials>
+	</tutorials>
+	<methods>
+		<method name="close">
+			<return type="void" />
+			<description>Release this browser handle. Repeated calls have no effect. Ending the original Steam client scope also closes the page.</description>
+		</method>
+		<method name="navigate">
+			<return type="int" enum="Error" />
+			<param index="0" name="url" type="String" />
+			<description>Submit navigation to an absolute URL covered by this page's original origin policy. Return [constant ERR_UNAUTHORIZED] and emit [signal navigation_blocked] for a rejected URL. Steam callbacks check later requests and the final document. An unexpected document closes the browser before displaying its frame.</description>
+		</method>
+		<method name="resize">
+			<return type="int" enum="Error" />
+			<param index="0" name="size" type="Vector2i" />
+			<description>Request a new width and height in browser pixels. Both sides must be in the range 1 to 4096 with at most 4194304 total pixels. The texture updates after Steam provides a frame at the new size.</description>
+		</method>
+		<method name="send_input">
+			<return type="int" enum="Error" />
+			<param index="0" name="event" type="InputEvent" />
+			<description>Forward supported keyboard, mouse motion, button and vertical wheel input. Convert pointer coordinates to browser-local pixels first. Out-of-bounds input returns [constant ERR_INVALID_PARAMETER], except release of a previously pressed button. Return [constant ERR_UNAUTHORIZED] until the game gives this page input focus.</description>
+		</method>
+		<method name="set_focused">
+			<return type="int" enum="Error" />
+			<param index="0" name="focused" type="bool" />
+			<description>Enable forwarding while the game UI owns focus. Passing false stops new forwarded events and releases keys and buttons held by the page.</description>
+		</method>
+		<method name="texture" qualifiers="const">
+			<return type="Texture2D" />
+			<description>Return the page's owned texture, which becomes displayable on the first [signal frame_updated]. Returns null after the page or its client scope closes.</description>
+		</method>
+	</methods>
+	<signals>
+		<signal name="frame_updated">
+			<description>Emitted after the page texture receives the newest accepted browser frame for this Godot process frame.</description>
+		</signal>
+		<signal name="navigation_blocked">
+			<param index="0" name="url" type="String" />
+			<description>Emitted when a direct request, native navigation, redirect, or attempted new window is rejected. The URL may be empty if Steam supplied an invalid URL.</description>
+		</signal>
+		<signal name="page_finished">
+			<param index="0" name="url" type="String" />
+			<param index="1" name="title" type="String" />
+			<description>Emitted after Steam reports that an allowed page finished loading. A frame is observed separately.</description>
+		</signal>
+	</signals>
+</class>

@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="SteamNotificationSession" inherits="RefCounted">
+	<brief_description>
+		Detached Steam session identity and the confirmed asynchronous state available for it.
+	</brief_description>
+	<methods>
+		<method name="get_session_id" qualifiers="const">
+			<return type="String" />
+			<description>Return the exact provider session ID as an unsigned decimal string.</description>
+		</method>
+		<method name="get_context" qualifiers="const">
+			<return type="String" />
+			<description>Return the known creation context, or an empty string when unavailable.</description>
+		</method>
+		<method name="get_title" qualifiers="const">
+			<return type="SteamLocalizedText" />
+			<description>Return the confirmed localized session title.</description>
+		</method>
+		<method name="get_users" qualifiers="const">
+			<return type="SteamNotificationParticipant[]" />
+			<description>Return the detached read-only participant snapshots.</description>
+		</method>
+	</methods>
+	<members>
+		<member name="session_id" type="String" setter="" getter="get_session_id">
+			The canonical Steam session ID.
+		</member>
+		<member name="context" type="String" setter="" getter="get_context">
+			Creation context if known from the request or Steam response.
+		</member>
+		<member name="title" type="SteamLocalizedText" setter="" getter="get_title">
+			The Steam session title.
+		</member>
+		<member name="users" type="SteamNotificationParticipant[]" setter="" getter="get_users">
+			Participant states available in this receipt.
+		</member>
+	</members>
+</class>

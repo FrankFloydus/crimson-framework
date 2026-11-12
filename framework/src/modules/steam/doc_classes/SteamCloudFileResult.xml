@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="SteamCloudFileResult" inherits="SteamResult">
+	<brief_description>
+		Outcome and metadata from a named Steam Cloud file lookup.
+	</brief_description>
+	<methods>
+		<method name="get_value" qualifiers="const">
+			<return type="SteamCloudFile" />
+			<description>Returns the detached metadata on success, or [code]null[/code] on failure.</description>
+		</method>
+	</methods>
+	<members>
+		<member name="value" type="SteamCloudFile" setter="" getter="get_value">
+			The metadata copied from Steam for the requested file.
+		</member>
+	</members>
+</class>

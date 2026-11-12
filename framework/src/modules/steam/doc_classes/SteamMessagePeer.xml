@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="SteamMessagePeer" inherits="RefCounted">
+	<brief_description>Exact scoped permission to exchange Steam Messages.</brief_description>
+	<methods>
+		<method name="send">
+			<return type="int" enum="Error" />
+			<param index="0" name="channel" type="StringName" />
+			<param index="1" name="bytes" type="PackedByteArray" />
+			<param index="2" name="delivery" type="int" enum="SteamDelivery.Mode" default="0" />
+			<description>Queues one packet of 1 to 4096 bytes on an allowed app channel. Defaults to reliable ordered delivery. [constant OK] confirms local queue acceptance. Pending binding proof can queue up to eight reliable frames and 16 KiB. A remote binding change drops queued packets from the previous binding. Unreliable sends return [constant ERR_BUSY] until the exact binding is proven. An unconfigured channel returns [constant ERR_UNAUTHORIZED].</description>
+		</method>
+		<method name="close">
+			<return type="int" enum="Error" />
+			<description>Retires this exact local authorization and closes its framework-owned native channel. Native channels owned by other SDK consumers are preserved.</description>
+		</method>
+	</methods>
+	<signals>
+		<signal name="received">
+			<param index="0" name="channel" type="StringName" />
+			<param index="1" name="bytes" type="PackedByteArray" />
+			<param index="2" name="delivery" type="int" enum="SteamDelivery.Mode" />
+			<description>Emitted after copying and releasing the exact SDK packet. The app channel, identity, current scope, sequence, and size have been checked.</description>
+		</signal>
+		<signal name="closed">
+			<param index="0" name="reason" type="int" enum="Error" />
+			<description>Emitted once when local authorization is withdrawn, its Game generation retires, its pending proof expires, or an exact send reports a connection failure.</description>
+		</signal>
+	</signals>
+</class>

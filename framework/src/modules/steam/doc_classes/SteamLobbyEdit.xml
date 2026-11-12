@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="SteamLobbyEdit" inherits="RefCounted">
+	<brief_description>Stages display metadata for one exact Steam lobby membership.</brief_description>
+	<methods>
+		<method name="named" qualifiers="const">
+			<return type="SteamLobbyEdit" />
+			<param index="0" name="name" type="String" />
+			<description>Return a branch staging a display name of up to 127 UTF-8 bytes. An empty name clears the current name.</description>
+		</method>
+		<method name="tag" qualifiers="const">
+			<return type="SteamLobbyEdit" />
+			<param index="0" name="key" type="StringName" />
+			<param index="1" name="value" type="String" />
+			<description>Return a branch staging a key of 1 to 32 ASCII letters, numbers, underscores or hyphens and a value up to 255 UTF-8 bytes. Keys starting with [code]crimson_[/code], including case variants, are reserved. An empty value clears the tag.</description>
+		</method>
+		<method name="submit" qualifiers="const">
+			<return type="int" enum="Error" />
+			<description>Recheck Steam's current owner and submit up to 16 distinct staged keys. [constant OK] means each write was accepted. Steam may accept earlier keys before a later write fails. Invalid or empty edits return [constant ERR_INVALID_PARAMETER], closed membership returns [constant ERR_UNAVAILABLE], and guests receive [constant ERR_UNAUTHORIZED].</description>
+		</method>
+	</methods>
+</class>

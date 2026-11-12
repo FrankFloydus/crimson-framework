@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="SteamHttpResponse" inherits="RefCounted">
+	<brief_description>
+		Owned metadata and bytes for a complete HTTP response.
+	</brief_description>
+	<description>
+		A complete HTTP response can carry an unsuccessful HTTP status. The enclosing [SteamHttpResponseResult] reports transport and completion errors.
+	</description>
+	<methods>
+		<method name="get_status">
+			<return type="int" />
+			<description>
+				Return the final HTTP status code.
+			</description>
+		</method>
+		<method name="get_body">
+			<return type="PackedByteArray" />
+			<description>
+				Return the bounded response bytes. HEAD responses have an empty body.
+			</description>
+		</method>
+		<method name="header">
+			<return type="String" />
+			<param index="0" name="name" type="String" />
+			<description>
+				Return a captured response header by case-insensitive name. An absent, empty, or unselected field returns an empty string.
+			</description>
+		</method>
+		<method name="json">
+			<return type="SteamJsonResult" />
+			<description>
+				Parse the body as UTF-8 JSON and return its separate decoding result. Check the parsing outcome independently of the response status.
+			</description>
+		</method>
+		<method name="is_successful">
+			<return type="bool" />
+			<description>
+				Return true when the HTTP status is in the 2xx range.
+			</description>
+		</method>
+	</methods>
+</class>

@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="SteamMusicStatus" inherits="RefCounted">
+	<brief_description>Snapshot of the optional Steam client music player.</brief_description>
+	<description>Snapshot of the optional Steam client music player.</description>
+	<members>
+		<member name="enabled" type="bool" setter="" getter="is_enabled">Whether the Steam client has enabled the music player.</member>
+		<member name="playback" type="int" enum="Playback" setter="" getter="get_playback">The current playback state, or [constant UNKNOWN] if the player is disabled or Steam did not recognize the state.</member>
+		<member name="volume" type="float" setter="" getter="get_volume">Normalized Steam player volume from 0 through 1. Returns 0 when the player is disabled.</member>
+	</members>
+	<constants>
+		<constant name="UNKNOWN" value="0" enum="Playback">The player does not report a known playback state.</constant>
+		<constant name="PLAYING" value="1" enum="Playback">The player is currently playing.</constant>
+		<constant name="PAUSED" value="2" enum="Playback">Playback is paused.</constant>
+		<constant name="IDLE" value="3" enum="Playback">The player is stopped.</constant>
+	</constants>
+</class>

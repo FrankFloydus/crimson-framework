@@ -19,11 +19,11 @@ namespace crimson::match_runtime {
 // Copy bounded, acyclic runtime DTO data without retaining mutable container aliases.
 bool copy_runtime_dto(const godot::Dictionary &value, godot::Dictionary &output);
 
-class CrimsonTransactionCoordinator;
+class TransactionCoordinator;
 
 // A coordinator-owned transaction or prepared restore that can be submitted once.
-class CrimsonTransaction : public godot::RefCounted {
-    GDCLASS(CrimsonTransaction, godot::RefCounted)
+class GameTransaction : public godot::RefCounted {
+    GDCLASS(GameTransaction, godot::RefCounted)
 
 public:
     // Copy an operation into the plan with the caller's expected store revision.
@@ -35,7 +35,7 @@ protected:
     static void _bind_methods();
 
 private:
-    friend class CrimsonTransactionCoordinator;
+    friend class TransactionCoordinator;
 
     // A detached operation for one store in the order supplied by the caller.
     struct Change {
@@ -70,8 +70,8 @@ private:
 };
 
 // Owns authoritative DTO stores and publishes complete transactions on its owner thread.
-class CrimsonTransactionCoordinator : public godot::RefCounted {
-    GDCLASS(CrimsonTransactionCoordinator, godot::RefCounted)
+class TransactionCoordinator : public godot::RefCounted {
+    GDCLASS(TransactionCoordinator, godot::RefCounted)
 
 public:
     // Register a store and its preparation callback using a detached initial state.
@@ -90,21 +90,21 @@ public:
     // Return the current coordinator revision or -1 from another thread.
     int64_t get_revision() const;
     // Create a new plan for a detached authority context.
-    godot::Ref<CrimsonTransaction> begin(const godot::Dictionary &context = {});
+    godot::Ref<GameTransaction> begin(const godot::Dictionary &context = {});
     // Prepare, validate, and install an owned plan before notifying observers.
-    godot::Dictionary commit(const godot::Ref<CrimsonTransaction> &transaction);
+    godot::Dictionary commit(const godot::Ref<GameTransaction> &transaction);
 
     // Capture a bounded, detached stores map at one committed revision.
     godot::Dictionary capture_snapshot() const;
     // Validate the exact registered stores and return a detached, single-use candidate.
     godot::Dictionary prepare_restore(const godot::Dictionary &snapshot, const godot::Dictionary &context = {});
     // Publish every store at one revision and optionally hold observers until scene activation completes.
-    godot::Dictionary publish_restore(const godot::Ref<CrimsonTransaction> &candidate, bool defer_notification = false);
+    godot::Dictionary publish_restore(const godot::Ref<GameTransaction> &candidate, bool defer_notification = false);
     // Notify observers of a deferred restore and release its mutation gate after they return.
     godot::Error notify_restore_published(int64_t published_revision);
 
     // Check plan ownership for native subsystems before they add operations.
-    bool owns_transaction(const godot::Ref<CrimsonTransaction> &transaction) const;
+    bool owns_transaction(const godot::Ref<GameTransaction> &transaction) const;
     // Register a native subsystem's store and validator as one setup operation.
     godot::Error register_store_with_validator(const godot::String &store_id,
             const godot::Dictionary &initial_state, const godot::Callable &prepare, const godot::String &validator_id,

@@ -59,22 +59,22 @@ bool valid_world_id(const StringName &world_id) {
 
 } // namespace
 
-CrimsonMatchNetwork::CrimsonMatchNetwork() {
+MatchNetwork::MatchNetwork() {
     set_process_mode(PROCESS_MODE_ALWAYS);
 }
 
-void CrimsonMatchNetwork::_bind_methods() {
-    ClassDB::bind_method(D_METHOD(submit_method, "request_id", "intent"), &CrimsonMatchNetwork::rpc_submit);
-    ClassDB::bind_method(D_METHOD(receipt_method, "request_id", "result"), &CrimsonMatchNetwork::rpc_receipt);
-    ClassDB::bind_method(D_METHOD(announce_method, "world_id", "epoch"), &CrimsonMatchNetwork::rpc_world_announced);
-    ClassDB::bind_method(D_METHOD(finish_method, "epoch", "ok", "recovery"), &CrimsonMatchNetwork::rpc_world_finished);
+void MatchNetwork::_bind_methods() {
+    ClassDB::bind_method(D_METHOD(submit_method, "request_id", "intent"), &MatchNetwork::rpc_submit);
+    ClassDB::bind_method(D_METHOD(receipt_method, "request_id", "result"), &MatchNetwork::rpc_receipt);
+    ClassDB::bind_method(D_METHOD(announce_method, "world_id", "epoch"), &MatchNetwork::rpc_world_announced);
+    ClassDB::bind_method(D_METHOD(finish_method, "epoch", "ok", "recovery"), &MatchNetwork::rpc_world_finished);
     ADD_SIGNAL(MethodInfo("world_announced", PropertyInfo(Variant::STRING_NAME, "world_id"),
             PropertyInfo(Variant::INT, "epoch")));
     ADD_SIGNAL(MethodInfo("world_finished", PropertyInfo(Variant::INT, "epoch"),
             PropertyInfo(Variant::BOOL, "ok"), PropertyInfo(Variant::BOOL, "recovery")));
 }
 
-void CrimsonMatchNetwork::_enter_tree() {
+void MatchNetwork::_enter_tree() {
     leaving_tree = false;
     set_multiplayer_authority(server_id, false);
     Dictionary authority_config;
@@ -91,12 +91,12 @@ void CrimsonMatchNetwork::_enter_tree() {
     rpc_config(submit_method, submit_config);
 }
 
-void CrimsonMatchNetwork::_exit_tree() {
+void MatchNetwork::_exit_tree() {
     leaving_tree = true;
     reset();
 }
 
-Error CrimsonMatchNetwork::bind_transport() {
+Error MatchNetwork::bind_transport() {
     if (leaving_tree || !is_inside_tree()) {
         return ERR_UNCONFIGURED;
     }
@@ -122,12 +122,12 @@ Error CrimsonMatchNetwork::bind_transport() {
     return OK;
 }
 
-void CrimsonMatchNetwork::set_dispatcher(const Callable &callback) {
+void MatchNetwork::set_dispatcher(const Callable &callback) {
     dispatcher = callback;
 }
 
-Ref<CrimsonGameOperation> CrimsonMatchNetwork::submit_remote(const Dictionary &intent) {
-    Ref<CrimsonGameOperation> operation;
+Ref<GameOperation> MatchNetwork::submit_remote(const Dictionary &intent) {
+    Ref<GameOperation> operation;
     operation.instantiate();
     if (!owns_transport() || network->is_server()) {
         operation->finish(failure("Disconnected", "A connected client session is required."));
@@ -153,7 +153,7 @@ Ref<CrimsonGameOperation> CrimsonMatchNetwork::submit_remote(const Dictionary &i
     return operation;
 }
 
-void CrimsonMatchNetwork::reset() {
+void MatchNetwork::reset() {
     auto disconnected = std::exchange(pending, {});
     network.unref();
     transport.unref();
@@ -164,7 +164,7 @@ void CrimsonMatchNetwork::reset() {
     }
 }
 
-Error CrimsonMatchNetwork::announce_world(const StringName &world_id, int64_t epoch) {
+Error MatchNetwork::announce_world(const StringName &world_id, int64_t epoch) {
     if (!is_bound_authority()) {
         return ERR_UNAUTHORIZED;
     }
@@ -174,7 +174,7 @@ Error CrimsonMatchNetwork::announce_world(const StringName &world_id, int64_t ep
     return network->get_peers().is_empty() ? OK : rpc(announce_method, world_id, epoch);
 }
 
-Error CrimsonMatchNetwork::finish_world(int64_t epoch, bool ok, bool recovery) {
+Error MatchNetwork::finish_world(int64_t epoch, bool ok, bool recovery) {
     if (!is_bound_authority()) {
         return ERR_UNAUTHORIZED;
     }
@@ -184,13 +184,13 @@ Error CrimsonMatchNetwork::finish_world(int64_t epoch, bool ok, bool recovery) {
     return network->get_peers().is_empty() ? OK : rpc(finish_method, epoch, ok, recovery);
 }
 
-void CrimsonMatchNetwork::_process(double) {
+void MatchNetwork::_process(double) {
     if (!owns_transport()) {
         reset();
         return;
     }
     const uint64_t now = Time::get_singleton()->get_ticks_msec();
-    std::vector<Ref<CrimsonGameOperation>> expired;
+    std::vector<Ref<GameOperation>> expired;
     for (auto entry = pending.begin(); entry != pending.end();) {
         if (entry->second.deadline_msec > now) {
             ++entry;
@@ -199,12 +199,12 @@ void CrimsonMatchNetwork::_process(double) {
         expired.push_back(entry->second.operation);
         entry = pending.erase(entry);
     }
-    for (const Ref<CrimsonGameOperation> &operation : expired) {
+    for (const Ref<GameOperation> &operation : expired) {
         operation->finish(failure("Timeout", "The authority's command receipt did not arrive before the deadline."));
     }
 }
 
-bool CrimsonMatchNetwork::owns_transport() const {
+bool MatchNetwork::owns_transport() const {
     if (leaving_tree || !is_inside_tree() || network.is_null() || !is_transport_connected(transport)) {
         return false;
     }
@@ -212,15 +212,15 @@ bool CrimsonMatchNetwork::owns_transport() const {
     return current == network && current->get_multiplayer_peer() == transport;
 }
 
-bool CrimsonMatchNetwork::is_bound_authority() const {
+bool MatchNetwork::is_bound_authority() const {
     return owns_transport() && network->is_server() && network->get_unique_id() == server_id;
 }
 
-bool CrimsonMatchNetwork::is_incoming_authority() const {
+bool MatchNetwork::is_incoming_authority() const {
     return owns_transport() && !network->is_server() && network->get_remote_sender_id() == server_id;
 }
 
-int64_t CrimsonMatchNetwork::get_incoming_client() const {
+int64_t MatchNetwork::get_incoming_client() const {
     if (!is_bound_authority()) {
         return 0;
     }
@@ -228,7 +228,7 @@ int64_t CrimsonMatchNetwork::get_incoming_client() const {
     return sender > server_id && network->get_peers().has(sender) ? sender : 0;
 }
 
-void CrimsonMatchNetwork::rpc_submit(int64_t request_id, const Dictionary &intent) {
+void MatchNetwork::rpc_submit(int64_t request_id, const Dictionary &intent) {
     const int64_t sender = get_incoming_client();
     if (sender == 0 || request_id <= 0) {
         return;
@@ -251,7 +251,7 @@ void CrimsonMatchNetwork::rpc_submit(int64_t request_id, const Dictionary &inten
     }
 }
 
-void CrimsonMatchNetwork::rpc_receipt(int64_t request_id, const Dictionary &result) {
+void MatchNetwork::rpc_receipt(int64_t request_id, const Dictionary &result) {
     if (!is_incoming_authority()) {
         return;
     }
@@ -259,7 +259,7 @@ void CrimsonMatchNetwork::rpc_receipt(int64_t request_id, const Dictionary &resu
     if (entry == pending.end()) {
         return;
     }
-    const Ref<CrimsonGameOperation> operation = entry->second.operation;
+    const Ref<GameOperation> operation = entry->second.operation;
     const uint64_t deadline_msec = entry->second.deadline_msec;
     pending.erase(entry);
     Dictionary detached;
@@ -272,13 +272,13 @@ void CrimsonMatchNetwork::rpc_receipt(int64_t request_id, const Dictionary &resu
     }
 }
 
-void CrimsonMatchNetwork::rpc_world_announced(const StringName &world_id, int64_t epoch) {
+void MatchNetwork::rpc_world_announced(const StringName &world_id, int64_t epoch) {
     if (is_incoming_authority() && epoch > 0 && valid_world_id(world_id)) {
         emit_signal("world_announced", world_id, epoch);
     }
 }
 
-void CrimsonMatchNetwork::rpc_world_finished(int64_t epoch, bool ok, bool recovery) {
+void MatchNetwork::rpc_world_finished(int64_t epoch, bool ok, bool recovery) {
     if (is_incoming_authority() && epoch > 0 && !(ok && recovery)) {
         emit_signal("world_finished", epoch, ok, recovery);
     }

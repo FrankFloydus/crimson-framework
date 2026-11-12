@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="SteamSocketEndpoint" inherits="RefCounted">
+	<brief_description>An immutable direct or Steam P2P route for a standalone socket.</brief_description>
+	<description>Use [method direct] for numeric IP routes and [method p2p] for a Steam individual account and virtual port. For direct outgoing connections that must reach a specific account, add [method expect_peer]. Direct connections without a pin still require the connected endpoint to have a Steam-certified identity and encrypted transport.</description>
+	<tutorials>
+	</tutorials>
+	<methods>
+		<method name="direct" qualifiers="static">
+			<return type="SteamSocketEndpoint" />
+			<param index="0" name="address" type="String" />
+			<param index="1" name="port" type="int" />
+			<description>Returns a numeric IPv4 or IPv6 route with a physical UDP port from 1 to 65535. Returns [code]null[/code] for invalid input. Wildcard addresses are for listeners.</description>
+		</method>
+		<method name="p2p" qualifiers="static">
+			<return type="SteamSocketEndpoint" />
+			<param index="0" name="steam_id" type="String" />
+			<param index="1" name="virtual_port" type="int" default="0" />
+			<description>Returns a route to a canonical decimal SteamID64 for an individual Steam account. Use your own ID for a listener and the remote account for a connection. The virtual port is from 0 to 65535. Returns [code]null[/code] for invalid input.</description>
+		</method>
+		<method name="expect_peer" qualifiers="const">
+			<return type="SteamSocketEndpoint" />
+			<param index="0" name="steam_id" type="String" />
+			<description>Branches a direct route with a pinned certified individual or game server identity. Returns [code]null[/code] for an invalid account or P2P route. Apply the returned route to [method SteamSockets.connect_to].</description>
+		</method>
+		<method name="get_kind" qualifiers="const">
+			<return type="int" enum="SteamSocketEndpoint.Kind" />
+			<description>Returns the route kind.</description>
+		</method>
+		<method name="get_address" qualifiers="const">
+			<return type="String" />
+			<description>Returns the specified address or an empty string for P2P.</description>
+		</method>
+		<method name="get_port" qualifiers="const">
+			<return type="int" />
+			<description>Returns the configured physical or virtual port.</description>
+		</method>
+		<method name="get_steam_id" qualifiers="const">
+			<return type="String" />
+			<description>Returns the P2P identity or optional direct identity pin.</description>
+		</method>
+	</methods>
+	<members>
+		<member name="kind" type="int" setter="" getter="get_kind" enum="SteamSocketEndpoint.Kind" default="0">The selected addressing policy.</member>
+		<member name="address" type="String" setter="" getter="get_address" default="&quot;&quot;">The supplied numeric direct address. P2P routes have an empty address.</member>
+		<member name="port" type="int" setter="" getter="get_port" default="0">The physical UDP port for direct routes or logical port for P2P routes.</member>
+		<member name="steam_id" type="String" setter="" getter="get_steam_id" default="&quot;&quot;">The canonical P2P identity or optional direct identity pin.</member>
+	</members>
+	<constants>
+		<constant name="DIRECT" value="0" enum="Kind">Numeric IP address with a physical UDP port.</constant>
+		<constant name="P2P" value="1" enum="Kind">Steam individual identity with a virtual port.</constant>
+	</constants>
+</class>

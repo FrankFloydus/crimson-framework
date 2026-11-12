@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="SteamIntResult" inherits="SteamResult">
+	<brief_description>
+		The outcome and typed value of a cached Steam integer stat read.
+	</brief_description>
+	<methods>
+		<method name="get_value" qualifiers="const">
+			<return type="int" />
+			<description>Returns the cached integer on success or zero on failure. Check [member SteamResult.ok] to distinguish the outcomes.</description>
+		</method>
+	</methods>
+	<members>
+		<member name="value" type="int" getter="get_value">
+			Signed 32-bit Steam stat value widened to a Godot integer. Meaningful when [member SteamResult.ok] is true. Zero is also the fallback for a failed read.
+		</member>
+	</members>
+</class>

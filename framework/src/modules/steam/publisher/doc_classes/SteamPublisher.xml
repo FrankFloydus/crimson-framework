@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="SteamPublisher" inherits="RefCounted">
+	<brief_description>Owns one trusted Steam Web API scope.</brief_description>
+	<description>Available only in an explicit publisher build for a server or operator tool. Keep this scope alive while its services or verified identities are in use.</description>
+	<tutorials>
+	</tutorials>
+	<methods>
+		<method name="boot" qualifiers="static">
+			<return type="SteamPublisherResult" />
+			<param index="0" name="settings" type="SteamPublisherSettings" />
+			<description>Validates and snapshots settings and the attached trusted host. Resolves the credential on the first request.</description>
+		</method>
+		<method name="is_ready" qualifiers="const">
+			<return type="bool" />
+			<description>Returns whether the publisher still belongs to its original attached host generation.</description>
+		</method>
+		<method name="close">
+			<return type="void" />
+			<description>Invalidates the issuer and its services. Pending local observations settle on the next host tick.</description>
+		</method>
+		<method name="auth" qualifiers="const">
+			<return type="SteamPublisherAuth" />
+			<description>Returns the trusted authentication and ownership service, or null if the scope has closed.</description>
+		</method>
+		<method name="leaderboards" qualifiers="const">
+			<return type="SteamPublisherLeaderboards" />
+			<description>Returns the trusted leaderboard service, or null if the scope has closed.</description>
+		</method>
+		<method name="game_notifications" qualifiers="const">
+			<return type="SteamGameNotifications" />
+			<description>Returns the scoped game notification service, or null if the scope has closed. Durable mutations require an injected [member SteamPublisherSettings.notification_store].</description>
+		</method>
+		<method name="moderation" qualifiers="const">
+			<return type="SteamPublisherModeration" />
+			<description>Returns the scoped publisher moderation service, or null if the scope has closed. Actions require an injected [member SteamPublisherSettings.moderation_policy].</description>
+		</method>
+		<method name="purchases" qualifiers="const">
+			<return type="SteamPublisherPurchases" />
+			<description>Returns the scoped trusted Steam Wallet service, or null if the scope has closed. Actions require an injected [member SteamPublisherSettings.purchase_store].</description>
+		</method>
+		<method name="inventory" qualifiers="const">
+			<return type="SteamPublisherInventory" />
+			<description>Returns the trusted Steam Inventory service for this app, or null if the scope has closed.</description>
+		</method>
+	</methods>
+</class>

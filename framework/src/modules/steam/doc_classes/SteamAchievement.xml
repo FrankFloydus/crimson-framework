@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="SteamAchievement" inherits="RefCounted">
+	<brief_description>
+		A read-only snapshot of an achievement and the signed-in player's unlock state.
+	</brief_description>
+	<description>
+		Get snapshots from [method SteamStats.achievements] or [method SteamStats.achievement]. A snapshot remains readable after Steam stops. Read it again through [SteamStats] to observe a change.
+	</description>
+	<methods>
+		<method name="get_api_name" qualifiers="const">
+			<return type="StringName" />
+			<description>Returns the app's published achievement identifier.</description>
+		</method>
+		<method name="get_description" qualifiers="const">
+			<return type="String" />
+			<description>Returns the localized description copied from Steam, or an empty string if unavailable.</description>
+		</method>
+		<method name="get_display_name" qualifiers="const">
+			<return type="String" />
+			<description>Returns the localized name copied from Steam, or [member api_name] as a string if unavailable.</description>
+		</method>
+		<method name="get_unlocked_at_unix" qualifiers="const">
+			<return type="int" />
+			<description>Returns the unlock time in Unix seconds, or zero when no timestamp is available.</description>
+		</method>
+		<method name="is_hidden" qualifiers="const">
+			<return type="bool" />
+			<description>Returns whether Steam marks the achievement as hidden.</description>
+		</method>
+		<method name="is_unlocked" qualifiers="const">
+			<return type="bool" />
+			<description>Returns whether the signed-in player had unlocked this achievement at the time of the snapshot.</description>
+		</method>
+	</methods>
+	<members>
+		<member name="api_name" type="StringName" getter="get_api_name">
+			Stable Steamworks API name. Use it in lookups and stat drafts.
+		</member>
+		<member name="description" type="String" getter="get_description">
+			Localized Steamworks description. An empty string means Steam supplied no description. For a hidden locked entry, keep the description out of the player-facing achievement list.
+		</member>
+		<member name="display_name" type="String" getter="get_display_name">
+			Localized achievement name supplied by Steam. Uses [member api_name] as a string when Steam omits the name.
+		</member>
+		<member name="hidden" type="bool" getter="is_hidden">
+			Whether the app marks the achievement as hidden. Defaults to [code]false[/code] when Steam omits the flag. Use it with [member unlocked] to decide whether to show its name and description.
+		</member>
+		<member name="unlocked" type="bool" getter="is_unlocked">
+			Whether the signed-in player had unlocked the achievement at the time of the snapshot.
+		</member>
+		<member name="unlocked_at_unix" type="int" getter="get_unlocked_at_unix">
+			Unlock time as Unix seconds. Zero means the achievement is locked or Steam has no timestamp. Use [member unlocked] to determine the unlock state.
+		</member>
+	</members>
+</class>

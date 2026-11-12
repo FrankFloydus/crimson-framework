@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="SteamCloudQuota" inherits="RefCounted">
+	<brief_description>
+		Detached storage capacity for the signed-in account and active app.
+	</brief_description>
+	<methods>
+		<method name="get_available_bytes" qualifiers="const">
+			<return type="int" />
+			<description>Returns the available capacity in bytes.</description>
+		</method>
+		<method name="get_total_bytes" qualifiers="const">
+			<return type="int" />
+			<description>Returns the total capacity in bytes.</description>
+		</method>
+	</methods>
+	<members>
+		<member name="available_bytes" type="int" setter="" getter="get_available_bytes">
+			The free storage capacity Steam reported, in bytes.
+		</member>
+		<member name="total_bytes" type="int" setter="" getter="get_total_bytes">
+			The total storage capacity Steam reported, in bytes.
+		</member>
+	</members>
+</class>

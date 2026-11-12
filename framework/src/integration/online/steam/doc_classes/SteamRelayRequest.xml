@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="SteamRelayRequest" inherits="RefCounted">
+	<brief_description>One exact request to the game's trusted hosted relay coordinator.</brief_description>
+	<methods>
+		<method name="get_kind" qualifiers="const">
+			<return type="int" enum="SteamRelayRequest.Kind" />
+			<description>Return the native hosted step, registration or authorization.</description>
+		</method>
+		<method name="get_profile" qualifiers="const">
+			<return type="StringName" />
+			<description>The operator-defined hosted relay deployment profile.</description>
+		</method>
+		<method name="get_listing_id" qualifiers="const">
+			<return type="String" />
+			<description>The exact generation-scoped hosted locator. The coordinator must use this same value to register and withdraw.</description>
+		</method>
+		<method name="get_app_id" qualifiers="const">
+			<return type="int" />
+			<description>The Steam AppID selected and validated by the native SDK.</description>
+		</method>
+		<method name="get_namespace" qualifiers="const">
+			<return type="StringName" />
+			<description>The matching game's namespace, bound to the selected hosted locator.</description>
+		</method>
+		<method name="get_server_steam_id" qualifiers="const">
+			<return type="String" />
+			<description>The expected certified Steam GameServer identity as a decimal SteamID64.</description>
+		</method>
+		<method name="get_virtual_port" qualifiers="const">
+			<return type="int" />
+			<description>The exact Steam hosted virtual port, from zero through 65535.</description>
+		</method>
+		<method name="get_registration_id" qualifiers="const">
+			<return type="String" />
+			<description>The generation nonce as a decimal unsigned 64-bit string. The backend signs this value into the relay ticket's [code]crimson_registration[/code] fixed64 extra field.</description>
+		</method>
+		<method name="get_world_id" qualifiers="const">
+			<return type="StringName" />
+			<description>The authority's mounted world during registration. Empty during client authorization.</description>
+		</method>
+		<method name="get_login_blob" qualifiers="const">
+			<return type="PackedByteArray" />
+			<description>Copy the Steam-signed server login blob on the scene thread before dispatching backend work. Send it only to the authenticated coordinator backend. Empty off the scene thread, during client authorization, or after settlement.</description>
+		</method>
+		<method name="get_local_steam_id" qualifiers="const">
+			<return type="String" />
+			<description>The signed-in client's candidate SteamID64. The coordinator independently authenticates the caller before using this value. Empty during registration.</description>
+		</method>
+		<method name="is_cancelled" qualifiers="const">
+			<return type="bool" />
+			<description>Return true once the owning Game abandoned this exact request.</description>
+		</method>
+		<method name="registered">
+			<return type="int" enum="Error" />
+			<description>Acknowledge registration of the exact signed server login. If the Game cancelled, the request withdraws that same registration. [constant ERR_UNAVAILABLE] means the backend must compensate itself.</description>
+		</method>
+		<method name="authorize">
+			<return type="int" enum="Error" />
+			<param index="0" name="ticket" type="PackedByteArray" />
+			<description>Return a fresh signed Steam relay ticket of 1 to 4096 bytes for this exact client, AppID, authority, virtual port and registration. Crimson verifies the SDK-parsed fields and cache selection before opening any peer.</description>
+		</method>
+		<method name="fail">
+			<return type="int" enum="Error" />
+			<description>Settle the pending request without a registration or authorization. A settled or unconfigured request returns [constant ERR_ALREADY_IN_USE].</description>
+		</method>
+	</methods>
+	<constants>
+		<constant name="UNCONFIGURED" value="0" enum="Kind">No native Game owns this request.</constant>
+		<constant name="REGISTER" value="1" enum="Kind">Authenticate and register the exact server login with the trusted coordinator.</constant>
+		<constant name="AUTHORIZE" value="2" enum="Kind">Authenticate the current client independently and sign a ticket for the exact server registration.</constant>
+	</constants>
+</class>

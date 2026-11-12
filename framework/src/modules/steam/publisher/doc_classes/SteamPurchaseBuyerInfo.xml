@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="SteamPurchaseBuyerInfo" inherits="RefCounted">
+	<brief_description>Steam Wallet quote metadata for a verified account.</brief_description>
+	<description>Read through [method SteamPublisherPurchases.buyer_info] before preparing a localized quote. The purchasing status is advisory. The backend must apply its own eligibility and pricing policy.</description>
+	<methods>
+		<method name="get_account_status" qualifiers="const">
+			<return type="int" enum="SteamPurchaseBuyerInfo.AccountStatus" />
+			<description>Returns the Steam purchasing status, or [constant UNKNOWN] if Valve omitted it or returned a new value.</description>
+		</method>
+		<method name="get_country" qualifiers="const">
+			<return type="String" />
+			<description>Returns the two-letter uppercase ISO 3166-1 country code.</description>
+		</method>
+		<method name="get_currency" qualifiers="const">
+			<return type="String" />
+			<description>Returns the three-letter uppercase ISO 4217 Steam Wallet currency code.</description>
+		</method>
+		<method name="get_region" qualifiers="const">
+			<return type="String" />
+			<description>Returns the state or region Steam supplied, or an empty string.</description>
+		</method>
+	</methods>
+	<members>
+		<member name="account_status" type="int" setter="" getter="get_account_status" enum="SteamPurchaseBuyerInfo.AccountStatus">Purchasing status reported by Steam. Missing or unrecognized values use [constant UNKNOWN].</member>
+		<member name="country" type="String" setter="" getter="get_country">Two-letter uppercase ISO 3166-1 country code used to choose a local price.</member>
+		<member name="currency" type="String" setter="" getter="get_currency">Three-letter uppercase ISO 4217 Steam Wallet currency code used to quote a purchase.</member>
+		<member name="region" type="String" setter="" getter="get_region">State or region Steam supplied, or an empty string when unavailable.</member>
+	</members>
+	<constants>
+		<constant name="UNKNOWN" value="0" enum="AccountStatus">Steam omitted the status or supplied a value Crimson does not recognize.</constant>
+		<constant name="ACTIVE" value="1" enum="AccountStatus">Steam reports its default purchasing status.</constant>
+		<constant name="TRUSTED" value="2" enum="AccountStatus">Steam reports an established purchase history.</constant>
+		<constant name="LOCKED" value="3" enum="AccountStatus">Steam reports that purchasing is blocked.</constant>
+	</constants>
+</class>

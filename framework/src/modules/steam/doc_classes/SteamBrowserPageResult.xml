@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="SteamBrowserPageResult" inherits="SteamResult">
+	<brief_description>Terminal result of an offscreen Steam browser opening.</brief_description>
+	<description>Success means Steam created the browser and the framework submitted its initial navigation. Unsupported runtime, invalid input, a busy process, a timed-out create, and scope stop yield error results.</description>
+	<tutorials>
+	</tutorials>
+	<members>
+		<member name="value" type="SteamBrowserPage" getter="get_value" setter="">
+			The created page on success, or null after failed creation.
+		</member>
+	</members>
+</class>

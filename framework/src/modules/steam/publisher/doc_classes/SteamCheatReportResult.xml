@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="SteamCheatReportResult" inherits="SteamResult">
+	<brief_description>
+		A typed result from trusted Steam moderation.
+	</brief_description>
+	<description>
+		Check [member SteamResult.ok] for success. The acknowledged Steam report, or null on failure.
+	</description>
+	<tutorials>
+	</tutorials>
+	<methods>
+		<method name="get_value" qualifiers="const">
+			<return type="SteamCheatReport" />
+			<description>
+				Returns the acknowledged Steam report, or null on failure.
+			</description>
+		</method>
+	</methods>
+	<members>
+		<member name="value" type="SteamCheatReport" setter="" getter="get_value">
+			The acknowledged Steam report, or null on failure.
+		</member>
+	</members>
+</class>

@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="SteamPartyBeacon" inherits="RefCounted">
+	<brief_description>An owned Steam Party publication scoped to its active Game lobby.</brief_description>
+	<methods>
+		<method name="change_open_slots">
+			<return type="SteamPartySlotsOperation" />
+			<param index="0" name="slots" type="int" />
+			<description>Requests a new count of zero to 64 unreserved seats. The count cannot exceed current authority capacity after outstanding reservations. Await the operation to observe Steam's response.</description>
+		</method>
+		<method name="complete">
+			<return type="int" enum="Error" />
+			<param index="0" name="reservation" type="SteamPartyReservation" />
+			<description>Acknowledges the exact reserved account after the authority confirms that it reached the current world. The Game also performs this acknowledgment automatically.</description>
+		</method>
+		<method name="cancel">
+			<return type="int" enum="Error" />
+			<param index="0" name="reservation" type="SteamPartyReservation" />
+			<description>Returns the exact pending reservation to Steam. A guest already in flight still follows the ordinary Game admission rules.</description>
+		</method>
+		<method name="close">
+			<return type="int" enum="Error" />
+			<description>Withdraws the exact beacon and retires its reservations and local slot observer.</description>
+		</method>
+	</methods>
+	<members>
+		<member name="id" type="String" setter="" getter="get_id">Opaque decimal identifier of this publication. The identifier remains readable after closure.</member>
+	</members>
+	<signals>
+		<signal name="reservation_received">
+			<param index="0" name="reservation" type="SteamPartyReservation" />
+			<description>Emitted for an exact Steam reservation on this live beacon. The authority returns abandoned seats after its deadline.</description>
+		</signal>
+		<signal name="closed">
+			<param index="0" name="reason" type="int" />
+			<description>Emitted after the beacon is retired and local reservation state is cleared.</description>
+		</signal>
+	</signals>
+</class>

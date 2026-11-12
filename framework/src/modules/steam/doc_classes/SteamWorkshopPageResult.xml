@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="SteamWorkshopPageResult" inherits="SteamResult">
+	<brief_description>
+		Outcome and one page of Workshop query results.
+	</brief_description>
+	<methods>
+		<method name="get_value" qualifiers="const">
+			<return type="SteamWorkshopPage" />
+			<description>Returns Workshop page data on success, or [code]null[/code] on failure.</description>
+		</method>
+	</methods>
+	<members>
+		<member name="value" type="SteamWorkshopPage" setter="" getter="get_value">
+			Detached Workshop page data for the successful query.
+		</member>
+	</members>
+</class>

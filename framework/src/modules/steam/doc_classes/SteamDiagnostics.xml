@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="SteamDiagnostics" inherits="RefCounted">
+	<brief_description>
+		Captures Steam SDK diagnostic severities for a client scope.
+	</brief_description>
+	<description>
+		Get this service from [method SteamClient.diagnostics]. Start capture and drain snapshots from the main thread. One client scope can own the process-wide SDK warning hook at a time. The client releases capture automatically when it stops or exits the scene tree.
+	</description>
+	<methods>
+		<method name="drain">
+			<return type="SteamDiagnosticBatch" />
+			<description>
+				Takes the current messages in capture order and resets the queue and overflow count. Returns an empty snapshot for an inactive scope, a caller without ownership, or a call from outside the main thread.
+			</description>
+		</method>
+		<method name="start">
+			<return type="int" enum="Error" />
+			<description>
+				Claims the process-wide warning hook. Returns [constant OK] for a new capture or if this service already owns it. Returns [constant ERR_BUSY] when another scope owns it or a caller invokes this method outside the main thread. Returns [constant ERR_UNAVAILABLE] when the scope or SDK hook is unavailable.
+			</description>
+		</method>
+		<method name="stop">
+			<return type="void" />
+			<description>
+				Releases this service's hook and discards pending diagnostics on the main thread. Repeated calls and calls by other scopes leave the hook state as it is.
+			</description>
+		</method>
+	</methods>
+</class>

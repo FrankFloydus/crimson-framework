@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="SteamWorkshopPage" inherits="RefCounted">
+	<brief_description>
+		A bounded Workshop result page and continuation cursor.
+	</brief_description>
+	<methods>
+		<method name="get_items" qualifiers="const">
+			<return type="SteamWorkshopItem[]" />
+			<description>Read-only, detached item snapshots in Steam's result order. A page contains up to 50 items.</description>
+		</method>
+		<method name="get_next_cursor" qualifiers="const">
+			<return type="String" />
+			<description>The opaque cursor for the next page. An empty cursor marks the end.</description>
+		</method>
+	</methods>
+	<members>
+		<member name="items" type="SteamWorkshopItem[]" setter="" getter="get_items">
+			Read-only, detached item snapshots in Steam's result order. A page contains up to 50 items.
+		</member>
+		<member name="next_cursor" type="String" setter="" getter="get_next_cursor">
+			The opaque cursor for the next page. An empty cursor marks the end.
+		</member>
+	</members>
+</class>

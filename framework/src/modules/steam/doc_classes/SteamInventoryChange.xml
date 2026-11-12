@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="SteamInventoryChange" inherits="RefCounted">
+	<brief_description>
+		The confirmed item rows returned by a Steam mutation.
+	</brief_description>
+	<description>
+		The granted and changed rows carry the quantities Steam reports for the resulting stacks. Steam identifies fully removed stacks separately. A successful promotional or playtime claim can contain no changes.
+	</description>
+	<tutorials>
+	</tutorials>
+	<methods>
+		<method name="get_granted" qualifiers="const">
+			<return type="SteamItemInstance[]" />
+			<description>
+				Returns the read-only array of item rows Steam granted or created.
+			</description>
+		</method>
+		<method name="get_changed" qualifiers="const">
+			<return type="SteamItemInstance[]" />
+			<description>
+				Returns the read-only array of existing item rows updated by Steam.
+			</description>
+		</method>
+		<method name="get_removed_instance_ids" qualifiers="const">
+			<return type="PackedStringArray" />
+			<description>
+				Returns the decimal instance IDs Steam reports as removed.
+			</description>
+		</method>
+	</methods>
+	<members>
+		<member name="granted" type="SteamItemInstance[]" setter="" getter="get_granted">
+			The read-only array of item rows Steam granted or created.
+		</member>
+		<member name="changed" type="SteamItemInstance[]" setter="" getter="get_changed">
+			The read-only array of existing item rows updated by Steam.
+		</member>
+		<member name="removed_instance_ids" type="PackedStringArray" setter="" getter="get_removed_instance_ids">
+			The decimal instance IDs Steam reports as removed.
+		</member>
+	</members>
+</class>

@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="SteamPublisherModeration" inherits="RefCounted">
+	<brief_description>
+		Reports, reviews, and requests app-scoped Steam game sanctions.
+	</brief_description>
+	<description>
+		Get this service from [method SteamPublisher.moderation] in an explicitly enabled trusted publisher build. Configure the app for Valve's anti-cheat Web API and inject [SteamModerationPolicy]. Await the actions on the main thread. Report submission creates evidence for review. Steam's game sanctions require a separate reviewed request. A missing policy returns [constant ERR_UNCONFIGURED], and a denied or mismatched authorization returns [constant ERR_UNAUTHORIZED].
+	</description>
+	<tutorials>
+		<link title="Valve moderation service">https://partner.steamgames.com/doc/webapi/ICheatReportingService</link>
+	</tutorials>
+	<methods>
+		<method name="ban">
+			<return type="Variant" />
+			<param index="0" name="report_id" type="String" />
+			<param index="1" name="reason" type="String" />
+			<description>
+				Requests a permanent game ban for the policy-resolved player associated with [param report_id]. Supply the reviewed [param reason]. Returns [SteamModerationReceiptResult]. The exact game policy must authorize the request and reserve the audit record before Steam receives it. An expired or closed observation can leave the remote outcome unresolved.
+			</description>
+		</method>
+		<method name="remove_ban">
+			<return type="Variant" />
+			<param index="0" name="player_id" type="String" />
+			<param index="1" name="reason" type="String" />
+			<description>
+				Requests removal of the game ban for [param player_id] on the configured AppID. The [param reason] stays in the trusted audit record. Returns [SteamModerationReceiptResult]. The exact game policy must authorize the request and reserve the audit record before Steam receives it. An expired or closed observation can leave the remote outcome unresolved.
+			</description>
+		</method>
+		<method name="report">
+			<return type="Variant" />
+			<param index="0" name="player_id" type="String" />
+			<param index="1" name="evidence" type="SteamCheatEvidence" />
+			<description>
+				Submits [param evidence] about [param player_id] after policy approval. The player ID is an individual SteamID64 in decimal form. A player reporter must be verified by the same publisher. Returns [SteamCheatReportResult] with the full unsigned Valve report ID.
+			</description>
+		</method>
+		<method name="reports">
+			<return type="Variant" />
+			<param index="0" name="from_unix" type="int" />
+			<param index="1" name="to_unix" type="int" />
+			<param index="2" name="after_report_id" type="String" default="&quot;0&quot;" />
+			<description>
+				Lists reports from [param from_unix] to [param to_unix], in UTC Unix seconds, with a maximum span of seven days. Use the exclusive decimal [param after_report_id] cursor from the previous page or [code]"0"[/code] for the first page. Returns [SteamCheatReportPageResult].
+			</description>
+		</method>
+		<method name="suspend">
+			<return type="Variant" />
+			<param index="0" name="report_id" type="String" />
+			<param index="1" name="seconds" type="int" />
+			<param index="2" name="reason" type="String" />
+			<description>
+				Requests a suspension for the policy-resolved player associated with [param report_id]. [param seconds] must be from 1 through 31535999. Valve treats durations under one year as suspensions hidden from the player's public profile. Supply the reviewed [param reason]. Returns [SteamModerationReceiptResult]. An invalid duration returns [constant ERR_INVALID_PARAMETER] before invoking the policy. The exact game policy must authorize the request and reserve the audit record before Steam receives it. An expired or closed observation can leave the remote outcome unresolved.
+			</description>
+		</method>
+	</methods>
+</class>

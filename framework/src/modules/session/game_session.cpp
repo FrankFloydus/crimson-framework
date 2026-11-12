@@ -41,30 +41,30 @@ bool valid_port(int64_t port) {
 
 } // namespace
 
-CrimsonGameSession::CrimsonGameSession() {
+GameSession::GameSession() {
     set_process_mode(PROCESS_MODE_ALWAYS);
 }
 
-void CrimsonGameSession::_bind_methods() {
-    ClassDB::bind_method(D_METHOD("start_offline"), &CrimsonGameSession::start_offline);
-    ClassDB::bind_method(D_METHOD("host", "port", "max_clients", "bind_address"), &CrimsonGameSession::host,
+void GameSession::_bind_methods() {
+    ClassDB::bind_method(D_METHOD("start_offline"), &GameSession::start_offline);
+    ClassDB::bind_method(D_METHOD("host", "port", "max_clients", "bind_address"), &GameSession::host,
             DEFVAL(32), DEFVAL(String("*")));
-    ClassDB::bind_method(D_METHOD("join", "address", "port", "timeout_seconds"), &CrimsonGameSession::join,
+    ClassDB::bind_method(D_METHOD("join", "address", "port", "timeout_seconds"), &GameSession::join,
             DEFVAL(10.0));
-    ClassDB::bind_method(D_METHOD("join_endpoint", "endpoint", "timeout_seconds"), &CrimsonGameSession::join_endpoint,
+    ClassDB::bind_method(D_METHOD("join_endpoint", "endpoint", "timeout_seconds"), &GameSession::join_endpoint,
             DEFVAL(10.0));
-    ClassDB::bind_method(D_METHOD("set_transport_adapter", "adapter"), &CrimsonGameSession::set_transport_adapter);
-    ClassDB::bind_method(D_METHOD("set_authenticator", "authenticator"), &CrimsonGameSession::set_authenticator);
-    ClassDB::bind_method(D_METHOD("get_authenticator"), &CrimsonGameSession::get_authenticator);
-    ClassDB::bind_method(D_METHOD("get_peer_identity", "peer_id"), &CrimsonGameSession::get_peer_identity);
-    ClassDB::bind_method(D_METHOD("leave"), &CrimsonGameSession::leave);
-    ClassDB::bind_method(D_METHOD("get_state"), &CrimsonGameSession::get_state);
-    ClassDB::bind_method(D_METHOD("is_authority"), &CrimsonGameSession::is_authority);
-    ClassDB::bind_method(D_METHOD("get_local_peer_id"), &CrimsonGameSession::get_local_peer_id);
-    ClassDB::bind_method(D_METHOD("get_connected_peer_ids"), &CrimsonGameSession::get_connected_peer_ids);
-    ClassDB::bind_method(D_METHOD("set_accepting_connections", "enabled"), &CrimsonGameSession::set_accepting_connections);
-    ClassDB::bind_method(D_METHOD("is_accepting_connections"), &CrimsonGameSession::is_accepting_connections);
-    ClassDB::bind_method(D_METHOD(admission_method, "version"), &CrimsonGameSession::rpc_confirm_admission);
+    ClassDB::bind_method(D_METHOD("set_transport_adapter", "adapter"), &GameSession::set_transport_adapter);
+    ClassDB::bind_method(D_METHOD("set_authenticator", "authenticator"), &GameSession::set_authenticator);
+    ClassDB::bind_method(D_METHOD("get_authenticator"), &GameSession::get_authenticator);
+    ClassDB::bind_method(D_METHOD("get_peer_identity", "peer_id"), &GameSession::get_peer_identity);
+    ClassDB::bind_method(D_METHOD("leave"), &GameSession::leave);
+    ClassDB::bind_method(D_METHOD("get_state"), &GameSession::get_state);
+    ClassDB::bind_method(D_METHOD("is_authority"), &GameSession::is_authority);
+    ClassDB::bind_method(D_METHOD("get_local_peer_id"), &GameSession::get_local_peer_id);
+    ClassDB::bind_method(D_METHOD("get_connected_peer_ids"), &GameSession::get_connected_peer_ids);
+    ClassDB::bind_method(D_METHOD("set_accepting_connections", "enabled"), &GameSession::set_accepting_connections);
+    ClassDB::bind_method(D_METHOD("is_accepting_connections"), &GameSession::is_accepting_connections);
+    ClassDB::bind_method(D_METHOD(admission_method, "version"), &GameSession::rpc_confirm_admission);
 
     ADD_SIGNAL(MethodInfo("state_changed", PropertyInfo(Variant::INT, "state")));
     ADD_SIGNAL(MethodInfo("session_started", PropertyInfo(Variant::INT, "state"),
@@ -80,7 +80,7 @@ void CrimsonGameSession::_bind_methods() {
     BIND_ENUM_CONSTANT(CLIENT);
 }
 
-Error CrimsonGameSession::get_available_api(Ref<MultiplayerAPI> &api, bool networked) const {
+Error GameSession::get_available_api(Ref<MultiplayerAPI> &api, bool networked) const {
     if (!is_inside_tree()) {
         return ERR_UNCONFIGURED;
     }
@@ -103,7 +103,7 @@ Error CrimsonGameSession::get_available_api(Ref<MultiplayerAPI> &api, bool netwo
     return networked ? check_auth_scope(api) : OK;
 }
 
-Error CrimsonGameSession::start_offline() {
+Error GameSession::start_offline() {
     Ref<MultiplayerAPI> api;
     const Error available = get_available_api(api, false);
     if (available != OK) {
@@ -114,35 +114,35 @@ Error CrimsonGameSession::start_offline() {
     return activate_transport(api, peer, OFFLINE);
 }
 
-Error CrimsonGameSession::host(int64_t port, int64_t max_clients, const String &bind_address) {
+Error GameSession::host(int64_t port, int64_t max_clients, const String &bind_address) {
     return host_with_admission(port, max_clients, bind_address, true);
 }
 
-Error CrimsonGameSession::host_with_admission(int64_t port, int64_t max_clients, const String &bind_address,
+Error GameSession::host_with_admission(int64_t port, int64_t max_clients, const String &bind_address,
         bool accepting) {
     if (!valid_port(port) || max_clients < 1 || max_clients > max_remote_clients ||
             (bind_address != "*" && !bind_address.is_valid_ip_address())) {
         return ERR_INVALID_PARAMETER;
     }
     return open_network_transport(HOSTING, 0, static_cast<size_t>(max_clients), accepting,
-            [&](CrimsonSessionTransport &adapter) { return adapter.open_server(port, max_clients, bind_address); });
+            [&](SessionTransport &adapter) { return adapter.open_server(port, max_clients, bind_address); });
 }
 
-Error CrimsonGameSession::join(const String &address, int64_t port, double timeout_seconds) {
-    return join_endpoint(CrimsonSessionEndpoint::direct(address, port), timeout_seconds);
+Error GameSession::join(const String &address, int64_t port, double timeout_seconds) {
+    return join_endpoint(SessionEndpoint::direct(address, port), timeout_seconds);
 }
 
-Error CrimsonGameSession::join_endpoint(const Ref<CrimsonSessionEndpoint> &endpoint, double timeout_seconds) {
+Error GameSession::join_endpoint(const Ref<SessionEndpoint> &endpoint, double timeout_seconds) {
     if (endpoint.is_null() || !std::isfinite(timeout_seconds) || timeout_seconds <= 0.0 ||
             timeout_seconds > max_join_timeout) {
         return ERR_INVALID_PARAMETER;
     }
     const auto timeout_ms = static_cast<uint64_t>(std::ceil(timeout_seconds * 1000.0));
     return open_network_transport(CONNECTING, timeout_ms, 0, false,
-            [&](CrimsonSessionTransport &adapter) { return adapter.open_client(endpoint); });
+            [&](SessionTransport &adapter) { return adapter.open_client(endpoint); });
 }
 
-Error CrimsonGameSession::set_transport_adapter(const Ref<CrimsonSessionTransport> &adapter) {
+Error GameSession::set_transport_adapter(const Ref<SessionTransport> &adapter) {
     if (state != IDLE || ending || opening) {
         return ERR_BUSY;
     }
@@ -150,8 +150,8 @@ Error CrimsonGameSession::set_transport_adapter(const Ref<CrimsonSessionTranspor
     return OK;
 }
 
-Error CrimsonGameSession::open_network_transport(State role, uint64_t timeout_ms, size_t max_remote, bool accepting,
-        const std::function<Ref<CrimsonSessionTransportResult>(CrimsonSessionTransport &)> &factory) {
+Error GameSession::open_network_transport(State role, uint64_t timeout_ms, size_t max_remote, bool accepting,
+        const std::function<Ref<SessionTransportResult>(SessionTransport &)> &factory) {
     Ref<MultiplayerAPI> api;
     const Error available = get_available_api(api, true);
     if (available != OK) {
@@ -165,13 +165,13 @@ Error CrimsonGameSession::open_network_transport(State role, uint64_t timeout_ms
     }
     opening = true;
     const uint64_t opening_generation = generation;
-    Ref<CrimsonSessionTransport> adapter = configured_adapter;
+    Ref<SessionTransport> adapter = configured_adapter;
     if (adapter.is_null()) {
-        Ref<CrimsonENetSessionTransport> enet;
+        Ref<ENetSessionTransport> enet;
         enet.instantiate();
         adapter = enet;
     }
-    const Ref<CrimsonSessionTransportResult> result = factory(**adapter);
+    const Ref<SessionTransportResult> result = factory(**adapter);
     const Ref<MultiplayerPeer> peer = result.is_valid() ? result->get_peer() : Ref<MultiplayerPeer>();
     Error error = result.is_valid() ? result->get_error() : ERR_CANT_CREATE;
     const bool fresh = peer.is_valid() && peer != prior && peer != api->get_multiplayer_peer() &&
@@ -213,9 +213,9 @@ Error CrimsonGameSession::open_network_transport(State role, uint64_t timeout_ms
     return activate_transport(api, peer, role, deadline, adapter, max_remote);
 }
 
-Error CrimsonGameSession::activate_transport(const Ref<MultiplayerAPI> &api,
+Error GameSession::activate_transport(const Ref<MultiplayerAPI> &api,
         const Ref<MultiplayerPeer> &peer, State new_state, uint64_t deadline,
-        const Ref<CrimsonSessionTransport> &adapter, size_t max_remote) {
+        const Ref<SessionTransport> &adapter, size_t max_remote) {
     const auto api_id = api->get_instance_id();
     if (!owned_apis.insert(api_id).second) {
         if (new_state != OFFLINE) {
@@ -255,12 +255,12 @@ Error CrimsonGameSession::activate_transport(const Ref<MultiplayerAPI> &api,
     return OK;
 }
 
-Error CrimsonGameSession::connect_api_signals() {
+Error GameSession::connect_api_signals() {
     callbacks = {
-        callable_mp(this, &CrimsonGameSession::on_connection_failed),
-        callable_mp(this, &CrimsonGameSession::on_server_disconnected),
-        callable_mp(this, &CrimsonGameSession::on_peer_connected),
-        callable_mp(this, &CrimsonGameSession::on_peer_disconnected),
+        callable_mp(this, &GameSession::on_connection_failed),
+        callable_mp(this, &GameSession::on_server_disconnected),
+        callable_mp(this, &GameSession::on_peer_connected),
+        callable_mp(this, &GameSession::on_peer_disconnected),
     };
     for (size_t i = 0; i < callbacks.size(); ++i) {
         const Error error = session_api->connect(signal_names[i], callbacks[i]);
@@ -271,7 +271,7 @@ Error CrimsonGameSession::connect_api_signals() {
     return OK;
 }
 
-void CrimsonGameSession::disconnect_api_signals() {
+void GameSession::disconnect_api_signals() {
     if (session_api.is_valid()) {
         for (size_t i = 0; i < callbacks.size(); ++i) {
             if (session_api->is_connected(signal_names[i], callbacks[i])) {
@@ -282,12 +282,12 @@ void CrimsonGameSession::disconnect_api_signals() {
     callbacks = {};
 }
 
-bool CrimsonGameSession::owns_current_transport() const {
+bool GameSession::owns_current_transport() const {
     return is_inside_tree() && session_api.is_valid() && transport.is_valid() &&
             get_multiplayer() == session_api && session_api->get_multiplayer_peer() == transport;
 }
 
-CrimsonGameSession::State CrimsonGameSession::get_state() const {
+GameSession::State GameSession::get_state() const {
     if (state == IDLE || !owns_current_transport() ||
             transport->get_connection_status() == MultiplayerPeer::CONNECTION_DISCONNECTED) {
         return IDLE;
@@ -295,12 +295,12 @@ CrimsonGameSession::State CrimsonGameSession::get_state() const {
     return state;
 }
 
-bool CrimsonGameSession::is_authority() const {
+bool GameSession::is_authority() const {
     const State current = get_state();
     return current == OFFLINE || current == HOSTING;
 }
 
-int32_t CrimsonGameSession::get_local_peer_id() const {
+int32_t GameSession::get_local_peer_id() const {
     const State current = get_state();
     if (current == OFFLINE || current == HOSTING) {
         return server_id;
@@ -308,7 +308,7 @@ int32_t CrimsonGameSession::get_local_peer_id() const {
     return current == CLIENT ? session_api->get_unique_id() : 0;
 }
 
-PackedInt32Array CrimsonGameSession::get_connected_peer_ids() const {
+PackedInt32Array GameSession::get_connected_peer_ids() const {
     PackedInt32Array ids;
     if (get_state() != IDLE) {
         for (int32_t id : connected_peers) {
@@ -318,7 +318,7 @@ PackedInt32Array CrimsonGameSession::get_connected_peer_ids() const {
     return ids;
 }
 
-Error CrimsonGameSession::set_accepting_connections(bool enabled) {
+Error GameSession::set_accepting_connections(bool enabled) {
     if (get_state() != HOSTING) {
         return ERR_UNAUTHORIZED;
     }
@@ -331,20 +331,20 @@ Error CrimsonGameSession::set_accepting_connections(bool enabled) {
     return peer->is_refusing_new_connections() == !enabled ? OK : ERR_UNAVAILABLE;
 }
 
-bool CrimsonGameSession::is_accepting_connections() const {
+bool GameSession::is_accepting_connections() const {
     return get_state() == HOSTING && !transport->is_refusing_new_connections();
 }
 
-void CrimsonGameSession::disconnect_admitted_peer_after_flush(int32_t peer_id) {
+void GameSession::disconnect_admitted_peer_after_flush(int32_t peer_id) {
     if (get_state() != HOSTING || connected_peers.count(peer_id) == 0 || active_adapter.is_null()) {
         return;
     }
-    const Ref<CrimsonSessionTransport> adapter = active_adapter;
+    const Ref<SessionTransport> adapter = active_adapter;
     const Ref<MultiplayerPeer> peer = transport;
     adapter->disconnect_after_flush(peer, peer_id);
 }
 
-void CrimsonGameSession::_process(double) {
+void GameSession::_process(double) {
     if (state == IDLE) {
         return;
     }
@@ -380,7 +380,7 @@ void CrimsonGameSession::_process(double) {
     }
 }
 
-void CrimsonGameSession::_enter_tree() {
+void GameSession::_enter_tree() {
     set_multiplayer_authority(server_id, false);
     Dictionary config;
     config["rpc_mode"] = MultiplayerAPI::RPC_MODE_AUTHORITY;
@@ -390,21 +390,21 @@ void CrimsonGameSession::_enter_tree() {
     rpc_config(admission_method, config);
 }
 
-void CrimsonGameSession::_exit_tree() {
+void GameSession::_exit_tree() {
     if (opening) {
         ++generation;
     }
     end_session("left", false);
 }
 
-void CrimsonGameSession::leave() {
+void GameSession::leave() {
     if (opening) {
         ++generation;
     }
     end_session("left");
 }
 
-void CrimsonGameSession::notify_state_started(State new_state) {
+void GameSession::notify_state_started(State new_state) {
     const auto started_generation = generation;
     emit_signal("state_changed", new_state);
     if (new_state != CONNECTING && generation == started_generation && get_state() == new_state) {
@@ -412,7 +412,7 @@ void CrimsonGameSession::notify_state_started(State new_state) {
     }
 }
 
-void CrimsonGameSession::end_session(const StringName &reason, bool notify) {
+void GameSession::end_session(const StringName &reason, bool notify) {
     if (state == IDLE || ending) {
         return;
     }
@@ -453,7 +453,7 @@ void CrimsonGameSession::end_session(const StringName &reason, bool notify) {
     }
 }
 
-void CrimsonGameSession::rpc_confirm_admission(int64_t version) {
+void GameSession::rpc_confirm_admission(int64_t version) {
     if (state != CONNECTING || !owns_current_transport() ||
             session_api->get_remote_sender_id() != server_id ||
             transport->get_connection_status() != MultiplayerPeer::CONNECTION_CONNECTED) {
@@ -487,13 +487,13 @@ void CrimsonGameSession::rpc_confirm_admission(int64_t version) {
     }
 }
 
-void CrimsonGameSession::on_connection_failed() {
+void GameSession::on_connection_failed() {
     if (state == CONNECTING && owns_current_transport()) {
         end_session(auth_failed || auth_attempts.count(server_id) ? "authentication_failed" : "connection_failed");
     }
 }
 
-void CrimsonGameSession::on_server_disconnected() {
+void GameSession::on_server_disconnected() {
     if ((state == CLIENT || state == CONNECTING) && owns_current_transport()) {
         const StringName reason = state == CLIENT ? "server_disconnected" :
                 auth_failed || auth_attempts.count(server_id) ? "authentication_failed" : "connection_failed";
@@ -501,7 +501,7 @@ void CrimsonGameSession::on_server_disconnected() {
     }
 }
 
-void CrimsonGameSession::on_peer_connected(int64_t id) {
+void GameSession::on_peer_connected(int64_t id) {
     const State current = get_state();
     if (id <= 0 || id > std::numeric_limits<int32_t>::max() || id == get_local_peer_id() ||
             connected_peers.count(static_cast<int32_t>(id))) {
@@ -545,7 +545,7 @@ void CrimsonGameSession::on_peer_connected(int64_t id) {
     emit_signal("peer_joined", id);
 }
 
-void CrimsonGameSession::on_peer_disconnected(int64_t id) {
+void GameSession::on_peer_disconnected(int64_t id) {
     if (!owns_current_transport() || id <= 0 || id > std::numeric_limits<int32_t>::max()) {
         return;
     }

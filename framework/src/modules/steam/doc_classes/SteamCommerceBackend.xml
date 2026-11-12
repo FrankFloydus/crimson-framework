@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="SteamCommerceBackend" inherits="RefCounted">
+	<brief_description>Script adapter for the game's authenticated purchasing service.</brief_description>
+	<description>Implement the virtual hooks and complete the supplied request once, on the main thread. For asynchronous transport, retain the request until the game backend replies. Bind the adapter with [method SteamProvider.with_commerce_backend].</description>
+	<methods>
+		<method name="_catalog" qualifiers="virtual">
+			<return type="void" />
+			<param index="0" name="request" type="SteamCommerceRequest" />
+			<description>Fetch the current player's server-priced offers and call [method SteamCommerceRequest.complete_catalog].</description>
+		</method>
+		<method name="_begin" qualifiers="virtual">
+			<return type="void" />
+			<param index="0" name="cart" type="SteamPurchaseCart" />
+			<param index="1" name="checkout_id" type="String" />
+			<param index="2" name="request" type="SteamCommerceRequest" />
+			<description>Create or resume the persisted order for this checkout ID and authenticated account. On success, echo the checkout ID in the typed response.</description>
+		</method>
+		<method name="_observe_authorization" qualifiers="virtual">
+			<return type="void" />
+			<param index="0" name="order_id" type="String" />
+			<param index="1" name="authorized" type="bool" />
+			<param index="2" name="request" type="SteamCommerceRequest" />
+			<description>Use Steam's authorization hint to ask the game backend to query the known order. Return the verified backend state. The hint alone does not grant an entitlement.</description>
+		</method>
+		<method name="_order" qualifiers="virtual">
+			<return type="void" />
+			<param index="0" name="order_id" type="String" />
+			<param index="1" name="request" type="SteamCommerceRequest" />
+			<description>Refresh the current authenticated player's exact order from the game backend.</description>
+		</method>
+	</methods>
+</class>

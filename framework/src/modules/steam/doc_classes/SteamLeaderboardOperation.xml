@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="SteamLeaderboardOperation" inherits="RefCounted">
+	<brief_description>Observes a Steam leaderboard lookup or creation.</brief_description>
+	<description>Use [method SteamLeaderboards.find] to read an existing board and [method SteamLeaderboards.find_or_create] to allow creation. Cancellation cannot undo a creation Steam already accepted.</description>
+	<methods>
+		<method name="cancel">
+			<return type="int" enum="Error" />
+			<description>Ends local observation with [constant @GlobalScope.ERR_SKIP]. Returns [constant @GlobalScope.ERR_DOES_NOT_EXIST] when already settled.</description>
+		</method>
+		<method name="is_finished" qualifiers="const">
+			<return type="bool" />
+			<description>Returns whether the operation has settled.</description>
+		</method>
+		<method name="result" qualifiers="const">
+			<return type="SteamLeaderboardResult" />
+			<description>Returns the typed terminal result, or [code]null[/code] while pending.</description>
+		</method>
+		<method name="wait">
+			<return type="Variant" />
+			<description>Use [code]await[/code] to receive a [SteamLeaderboardResult]. A settled operation returns the same result immediately.</description>
+		</method>
+	</methods>
+	<signals>
+		<signal name="completed">
+			<param index="0" name="result" type="SteamLeaderboardResult" />
+			<description>Emitted once after the operation settles with its typed result.</description>
+		</signal>
+	</signals>
+</class>

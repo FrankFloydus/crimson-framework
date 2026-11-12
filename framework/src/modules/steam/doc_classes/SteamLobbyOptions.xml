@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="SteamLobbyOptions" inherits="RefCounted">
+	<brief_description>Fluent configuration for creating a standalone Steam social lobby.</brief_description>
+	<methods>
+		<method name="configure" qualifiers="static">
+			<return type="SteamLobbyOptions" />
+			<description>Start with an invite-only lobby in [code]crimson[/code] with four seats, including the local creator.</description>
+		</method>
+		<method name="with_visibility" qualifiers="const">
+			<return type="SteamLobbyOptions" />
+			<param index="0" name="visibility" type="int" enum="SteamLobbyOptions.Visibility" />
+			<description>Return a branch with the selected Steam lobby visibility. Unrecognized values make the branch invalid at creation.</description>
+		</method>
+		<method name="in_namespace" qualifiers="const">
+			<return type="SteamLobbyOptions" />
+			<param index="0" name="namespace" type="StringName" />
+			<description>Return a branch with a matchmaking namespace of 1 to 64 ASCII letters, numbers, underscores or hyphens.</description>
+		</method>
+		<method name="for_players" qualifiers="const">
+			<return type="SteamLobbyOptions" />
+			<param index="0" name="capacity" type="int" />
+			<description>Return a branch with 1 to 65 member seats, including the creator.</description>
+		</method>
+	</methods>
+	<constants>
+		<constant name="PRIVATE" value="0" enum="Visibility">Steam invitees can join.</constant>
+		<constant name="FRIENDS_ONLY" value="1" enum="Visibility">Steam friends and invitees can join.</constant>
+		<constant name="PUBLIC" value="2" enum="Visibility">Steam clients can find the lobby in compatible searches.</constant>
+		<constant name="INVISIBLE" value="3" enum="Visibility">Compatible searches can find the lobby without Steam friends visibility.</constant>
+	</constants>
+</class>

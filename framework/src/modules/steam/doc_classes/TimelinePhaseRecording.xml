@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="TimelinePhaseRecording" inherits="RefCounted">
+	<brief_description>
+		Contains the recording and capture counts Steam returned for one game phase.
+	</brief_description>
+	<description>
+		Contains the recording and capture counts Steam returned for one game phase.
+	</description>
+	<members>
+		<member name="clip_count" type="int" setter="" getter="get_clip_count">
+			Number of saved clips associated with the phase.
+		</member>
+		<member name="longest_clip_ms" type="int" setter="" getter="get_longest_clip_ms">
+			Length of the longest saved clip in milliseconds.
+		</member>
+		<member name="recording_ms" type="int" setter="" getter="get_recording_ms">
+			Available background recording duration in milliseconds.
+		</member>
+		<member name="screenshot_count" type="int" setter="" getter="get_screenshot_count">
+			Number of saved screenshots associated with the phase.
+		</member>
+	</members>
+</class>

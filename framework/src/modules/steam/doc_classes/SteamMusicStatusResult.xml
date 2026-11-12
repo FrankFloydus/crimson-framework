@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="SteamMusicStatusResult" inherits="SteamResult">
+	<brief_description>Reports whether the music player status could be read.</brief_description>
+	<description>Reports whether the music player status could be read.</description>
+	<members>
+		<member name="value" type="SteamMusicStatus" setter="" getter="get_value">The status snapshot on success. Inspect its enabled property before requesting playback changes.</member>
+	</members>
+</class>

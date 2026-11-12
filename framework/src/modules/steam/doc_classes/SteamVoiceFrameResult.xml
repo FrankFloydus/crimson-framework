@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="SteamVoiceFrameResult" inherits="SteamResult">
+	<brief_description>Result of polling a captured Steam voice frame.</brief_description>
+	<members>
+		<member name="value" type="SteamVoiceFrame" setter="" getter="get_value">Captured frame on success. Empty polls and errors leave the value null.</member>
+	</members>
+</class>

@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="SteamTexturesResult" inherits="SteamResult">
+	<brief_description>
+		A typed Steam Input result.
+	</brief_description>
+	<description>
+		Check [member SteamResult.ok] before reading [member value]. The read-only textures in Steam's reported origin order, empty if the operation failed.
+	</description>
+	<tutorials>
+	</tutorials>
+	<methods>
+		<method name="get_value" qualifiers="const">
+			<return type="Texture2D[]" />
+			<description>
+				Returns the read-only textures in Steam's reported origin order, empty if the operation failed.
+			</description>
+		</method>
+	</methods>
+	<members>
+		<member name="value" type="Texture2D[]" setter="" getter="get_value">
+			The read-only textures in Steam's reported origin order, empty if the operation failed.
+		</member>
+	</members>
+</class>

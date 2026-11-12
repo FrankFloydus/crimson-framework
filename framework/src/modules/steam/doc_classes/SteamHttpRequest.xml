@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="SteamHttpRequest" inherits="RefCounted">
+	<brief_description>
+		Branchable draft for one URL and HTTP method.
+	</brief_description>
+	<description>
+		Use [method send] to submit the draft and retain a cancellable operation. Each option returns an independent draft.
+	</description>
+	<methods>
+		<method name="accept_json">
+			<return type="SteamHttpRequest" />
+			<description>
+				Return a branch with the request's Accept header set to [code]application/json[/code].
+			</description>
+		</method>
+		<method name="with_header">
+			<return type="SteamHttpRequest" />
+			<param index="0" name="name" type="String" />
+			<param index="1" name="value" type="String" />
+			<description>
+				Return a branch with a request header. Header names are case-insensitive, and a new value replaces the same header on that branch. Steam manages framing and connection headers.
+			</description>
+		</method>
+		<method name="with_timeout">
+			<return type="SteamHttpRequest" />
+			<param index="0" name="milliseconds" type="int" />
+			<description>
+				Return a branch with an absolute deadline from 100 to 120,000 milliseconds. The default is 15,000 milliseconds.
+			</description>
+		</method>
+		<method name="with_max_response_bytes">
+			<return type="SteamHttpRequest" />
+			<param index="0" name="bytes" type="int" />
+			<description>
+				Return a branch with a response body limit from 1 byte to 4 MiB. The default is 1 MiB. Larger bodies return a limit error and expose no partial response.
+			</description>
+		</method>
+		<method name="with_response_headers">
+			<return type="SteamHttpRequest" />
+			<param index="0" name="names" type="PackedStringArray" />
+			<description>
+				Return a branch that replaces the selected response header names. Select up to 16 additional names. Matching ignores case, and Content-Type is captured when present. A selected field larger than 2,048 bytes returns a limit error.
+			</description>
+		</method>
+		<method name="with_body">
+			<return type="SteamHttpRequest" />
+			<param index="0" name="bytes" type="PackedByteArray" />
+			<param index="1" name="content_type" type="String" />
+			<description>
+				Return a branch that owns raw bytes and their media type for POST, PUT, or PATCH. The body limit is 1 MiB. This media type supplies the request's Content-Type header.
+			</description>
+		</method>
+		<method name="send">
+			<return type="SteamHttpResponseOperation" />
+			<description>
+				Submit this draft on its original Steam client scope. Invalid drafts and stopped scopes return already-settled failures.
+			</description>
+		</method>
+	</methods>
+</class>

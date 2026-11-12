@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="SteamResult" inherits="RefCounted">
+	<brief_description>
+		Terminal status shared by Steam client actions.
+	</brief_description>
+	<methods>
+		<method name="get_error" qualifiers="const">
+			<return type="int" enum="Error" />
+			<description>
+				Returns the terminal Godot error. [constant OK] means the action succeeded under its documented completion contract.
+			</description>
+		</method>
+		<method name="get_message" qualifiers="const">
+			<return type="String" />
+			<description>
+				Returns the diagnostic for this result, or an empty string if the action supplied none.
+			</description>
+		</method>
+		<method name="is_ok" qualifiers="const">
+			<return type="bool" />
+			<description>
+				Returns [code]true[/code] when [member error] is [constant OK].
+			</description>
+		</method>
+	</methods>
+	<members>
+		<member name="ok" type="bool" setter="" getter="is_ok">
+			True if the action succeeded under its documented completion contract.
+		</member>
+		<member name="error" type="int" setter="" getter="get_error">
+			Godot error for the terminal outcome. Zero indicates success.
+		</member>
+		<member name="message" type="String" setter="" getter="get_message">
+			Optional diagnostic that explains the outcome. An empty string means no extra detail is available.
+		</member>
+	</members>
+</class>

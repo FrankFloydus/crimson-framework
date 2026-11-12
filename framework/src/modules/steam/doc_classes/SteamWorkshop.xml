@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="SteamWorkshop" inherits="RefCounted">
+	<brief_description>
+		Scoped Steam Workshop access from [method SteamClient.workshop].
+	</brief_description>
+	<methods>
+		<method name="item" qualifiers="const">
+			<return type="SteamWorkshopItemRef" />
+			<param index="0" name="published_id" type="String" />
+			<description>Creates a reference to one item. Pass the canonical unsigned decimal published file ID. [method SteamWorkshopItemRef.fetch] validates the ID before using Steam.</description>
+		</method>
+		<method name="legal_agreement_status" qualifiers="const">
+			<return type="Variant" />
+			<description>Use [code]await workshop.legal_agreement_status()[/code] for a [SteamWorkshopLegalAgreementStatusResult] for the exact active app. Check [member SteamWorkshopLegalAgreementStatus.needs_action] and offer [method show_legal_agreement] as an explicit player action when needed.</description>
+		</method>
+		<method name="new_item" qualifiers="const">
+			<return type="SteamWorkshopPublishRequest" />
+			<description>Creates a branchable draft for a new item. The draft remains local until [method SteamWorkshopPublishRequest.submit]. New items default to private visibility.</description>
+		</method>
+		<method name="query" qualifiers="const">
+			<return type="SteamWorkshopQuery" />
+			<description>Creates a fresh query starting at the first page. Use the query methods to branch filters before calling [method SteamWorkshopQuery.fetch].</description>
+		</method>
+		<method name="show_legal_agreement" qualifiers="const">
+			<return type="int" enum="Error" />
+			<description>Asks Steam to open the active app's Workshop legal agreement in its overlay. Call this in response to a player or author action. [constant OK] acknowledges the request. Query [method legal_agreement_status] after the user closes the overlay to read the current decision.</description>
+		</method>
+		<method name="subscriptions" qualifiers="const">
+			<return type="SteamWorkshopSubscriptionsResult" />
+			<param index="0" name="limit" type="int" default="128" />
+			<param index="1" name="include_locally_disabled" type="bool" default="false" />
+			<description>Copies up to [param limit] Workshop subscriptions for the signed-in user and current app in Steam's subscription order. Set [param include_locally_disabled] to include subscriptions disabled in the Steam client. The limit ranges from 1 to [constant MAX_SUBSCRIPTIONS]. Use a returned decimal ID with [method item] to inspect or install that item.</description>
+		</method>
+	</methods>
+	<signals>
+		<signal name="install_changed">
+			<param index="0" name="published_id" type="String" />
+			<param index="1" name="install" type="SteamWorkshopInstall" />
+			<description>Emitted for Steam's matching same-app installation or update event. [param published_id] identifies the item. Passive events provide a [code]null[/code] [param install]. Call [method SteamWorkshopItemRef.installed] to inspect its current directory when needed.</description>
+		</signal>
+	</signals>
+	<constants>
+		<constant name="MAX_SUBSCRIPTIONS" value="512">Maximum number of subscription IDs copied by one request.</constant>
+	</constants>
+</class>

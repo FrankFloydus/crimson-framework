@@ -23,18 +23,6 @@ if (env["platform"] != "windows" or env["arch"] != "x86_64"
     Exit(1)
 
 env.Append(CPPPATH=["#src", "#src/modules/save/third_party"], LIBS=["bcrypt"])
-eos_default = os.path.join(root, "vendor", "eos", "SDK")
-eos_override = ARGUMENTS.get("eos_sdk") or os.environ.get("CRIMSON_EOS_SDK")
-eos_sdk = eos_override or eos_default
-eos_dll = None
-if eos_sdk.lower() != "off" and (eos_override or os.path.isdir(eos_sdk)):
-    eos_sdk = os.path.abspath(eos_sdk)
-    eos_include = os.path.join(eos_sdk, "Include")
-    eos_dll = os.path.join(eos_sdk, "Bin", "EOSSDK-Win64-Shipping.dll")
-    if not os.path.isfile(os.path.join(eos_include, "eos_sdk.h")) or not os.path.isfile(eos_dll):
-        print_error("Set eos_sdk to the extracted EOS C SDK's SDK directory, or set eos_sdk=off.")
-        Exit(1)
-    env.Append(CPPPATH=[eos_include], CPPDEFINES=["CRIMSON_WITH_EOS"])
 steam_default = os.path.join(root, "vendor", "steamworks", "sdk")
 steam_headers = os.path.join(root, "vendor", "steamworks", "proton-1.65")
 if not os.path.isdir(steam_default) and os.path.isdir(steam_headers):
@@ -42,6 +30,7 @@ if not os.path.isdir(steam_default) and os.path.isdir(steam_headers):
 steam_override = ARGUMENTS.get("steam_sdk") or os.environ.get("CRIMSON_STEAMWORKS_SDK")
 steam_sdk = steam_override or steam_default
 steam_dll = None
+encrypted_ticket_dll = None
 if steam_sdk.lower() != "off" and (steam_override or os.path.isdir(steam_sdk)):
     steam_sdk = os.path.abspath(steam_sdk)
     steam_include = os.path.join(steam_sdk, "public", "steam")
@@ -50,22 +39,54 @@ if steam_sdk.lower() != "off" and (steam_override or os.path.isdir(steam_sdk)):
         Exit(1)
     env.Append(CPPPATH=[os.path.dirname(steam_include), steam_include], CPPDEFINES=["CRIMSON_WITH_STEAM"])
     steam_dll = os.path.join(steam_sdk, "redistributable_bin", "win64", "steam_api64.dll")
+    encrypted_ticket_dll = os.path.join(steam_include, "lib", "win64", "sdkencryptedappticket64.dll")
+    sdr_default = os.path.join(root, "vendor", "steamworks", "sdr")
+    sdr_override = ARGUMENTS.get("steam_sdr_sdk") or os.environ.get("CRIMSON_STEAM_SDR_SDK")
+    sdr_sdk = sdr_override or sdr_default
+    if sdr_sdk.lower() != "off" and (sdr_override or os.path.isdir(sdr_sdk)):
+        sdr_include = os.path.join(os.path.abspath(sdr_sdk), "include")
+        if not os.path.isfile(os.path.join(sdr_include, "steam", "steamdatagram_tickets.h")):
+            print_error("Set steam_sdr_sdk to the Steam Game Coordinator SDK root, or set steam_sdr_sdk=off.")
+            Exit(1)
+        env.Append(CPPPATH=[sdr_include, os.path.join(sdr_include, "steam")],
+                   CPPDEFINES=["CRIMSON_WITH_STEAM_SDR"])
 sources = Glob("src/*.cpp")
-for module in ("inventory", "save", "session", "scene_load", "match_runtime", "replication"):
+for module in ("inventory", "save", "session", "scene_load", "match_runtime", "replication",
+               "steam", "steam/client", "steam/client/workshop", "steam/commerce", "steam/lobbies", "steam/runtime",
+               "steam/server"):
     sources += Glob(f"src/modules/{module}/*.cpp")
 sources += ["src/integration/register_integration.cpp"]
-doc_xml = Glob("src/modules/inventory/doc_classes/*.xml")
-for area in ("game", "world_session", "adapters", "online", "online/steam", "online/eos"):
+doc_xml = (Glob("src/modules/inventory/doc_classes/*.xml") + Glob("src/modules/session/doc_classes/*.xml")
+           + Glob("src/modules/steam/doc_classes/*.xml"))
+steam_publisher = ARGUMENTS.get("steam_publisher", "no")
+steam_publisher_tests = ARGUMENTS.get("steam_publisher_tests", "no")
+if steam_publisher not in ("yes", "no") or steam_publisher_tests not in ("yes", "no"):
+    print_error("Use yes or no for steam_publisher and steam_publisher_tests.")
+    Exit(1)
+if steam_publisher_tests == "yes" and steam_publisher != "yes":
+    print_error("Set steam_publisher=yes to enable the publisher test transport.")
+    Exit(1)
+if steam_publisher == "yes":
+    sources += Glob("src/modules/steam/publisher/*.cpp")
+    doc_xml += Glob("src/modules/steam/publisher/doc_classes/*.xml")
+    env.Append(CPPDEFINES=["CRIMSON_WITH_STEAM_PUBLISHER"])
+if steam_publisher_tests == "yes":
+    env.Append(CPPDEFINES=["CRIMSON_WITH_STEAM_PUBLISHER_TESTS"])
+for area in ("game", "world_session", "adapters", "online", "online/steam"):
     sources += Glob(f"src/integration/{area}/*.cpp")
     doc_xml += Glob(f"src/integration/{area}/doc_classes/*.xml")
 if env["target"] == "template_debug" and doc_xml:
     sources.append(env.GodotCPPDocData("src/gen/doc_data.gen.cpp", source=doc_xml))
-addon = "project/addons/crimson-framework/bin"
+output = "bin/publisher/windows" if steam_publisher == "yes" else "bin/windows"
+install = output if steam_publisher == "yes" else "project/addons/crimson-framework/bin"
 suffix = env["suffix"].replace(".dev", "")
 filename = f"crimson_framework{suffix}{env['SHLIBSUFFIX']}"
-library = env.SharedLibrary(f"bin/windows/{filename}", source=sources)
-Default(env.InstallAs(f"{addon}/{filename}", library[0]))
-if eos_dll:
-    Default(env.InstallAs(f"{addon}/EOSSDK-Win64-Shipping.dll", eos_dll))
+library = env.SharedLibrary(f"{output}/{filename}", source=sources)
+if steam_publisher == "yes":
+    Default(library)
+else:
+    Default(env.InstallAs(f"{install}/{filename}", library[0]))
 if steam_dll and os.path.isfile(steam_dll):
-    Default(env.InstallAs(f"{addon}/steam_api64.dll", steam_dll))
+    Default(env.InstallAs(f"{install}/steam_api64.dll", steam_dll))
+if steam_publisher == "yes" and encrypted_ticket_dll and os.path.isfile(encrypted_ticket_dll):
+    Default(env.InstallAs(f"{install}/sdkencryptedappticket64.dll", encrypted_ticket_dll))

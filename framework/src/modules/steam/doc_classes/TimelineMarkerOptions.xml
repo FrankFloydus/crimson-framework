@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="TimelineMarkerOptions" inherits="TimelineMarkerPresentation">
+	<brief_description>
+		Adds a relative start time to the display options for a new Steam Timeline marker.
+	</brief_description>
+	<description>
+		Adds a relative start time to the display options for a new Steam Timeline marker.
+	</description>
+	<members>
+		<member name="offset_seconds" type="float" setter="set_offset_seconds" getter="get_offset_seconds" default="0.0">
+			Start time relative to now in seconds. Negative values place the marker in the past. Supply a finite value.
+		</member>
+	</members>
+</class>

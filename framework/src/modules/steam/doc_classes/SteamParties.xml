@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="SteamParties" inherits="RefCounted">
+	<brief_description>Steam Party discovery, reservations and exact Game-owned publication.</brief_description>
+	<methods>
+		<method name="locations" qualifiers="const">
+			<return type="SteamPartyLocationsResult" />
+			<description>Reads up to 128 eligible Steam Chat locations as typed snapshots. Empty eligible lists are valid.</description>
+		</method>
+		<method name="beacons" qualifiers="const">
+			<return type="SteamPartyListingsResult" />
+			<description>Reads visible beacons with compatible bounded Game lobby metadata. Snapshots remain readable after the SDK changes its visible list.</description>
+		</method>
+		<method name="publish">
+			<return type="Variant" />
+			<param index="0" name="listing" type="SteamListing" />
+			<param index="1" name="location" type="SteamPartyLocation" />
+			<param index="2" name="open_slots" type="int" />
+			<description>Await a [SteamPartyBeaconResult]. The listing must be this Game scope's live owned non-private Steam lobby. Choose a currently eligible location and one to 64 unreserved seats within authority capacity. A process can publish one beacon at a time.</description>
+		</method>
+		<method name="reserve">
+			<return type="Variant" />
+			<param index="0" name="beacon" type="SteamPartyListing" />
+			<description>Await a [SteamListingResult]. Steam reserves a seat and returns an owner-bound locator for [method GameRuntime.join_listing]. Game admission still verifies the live lobby owner and rules. An abandoned reservation expires on the host.</description>
+		</method>
+	</methods>
+	<signals>
+		<signal name="beacons_changed">
+			<description>Emitted when Steam says the visible beacons or eligible locations changed. Read a fresh snapshot when handling it.</description>
+		</signal>
+	</signals>
+</class>

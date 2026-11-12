@@ -13,9 +13,9 @@ func _initialize() -> void:
 
 
 func _run() -> void:
-	var transport := CrimsonSteamSessionTransport.new()
-	var endpoint := CrimsonSteamSessionTransport.route(EXAMPLE_ACCOUNT)
-	var upper_port := CrimsonSteamSessionTransport.route(EXAMPLE_ACCOUNT, 65535)
+	var transport := SteamSessionTransport.new()
+	var endpoint := SteamSessionTransport.route(EXAMPLE_ACCOUNT)
+	var upper_port := SteamSessionTransport.route(EXAMPLE_ACCOUNT, 65535)
 	_check(endpoint != null and upper_port != null and endpoint.get_transport() == &"steam"
 		and endpoint.get_address().is_empty() and endpoint.get_port() == 0,
 		"Steam routes use an opaque account and virtual port rather than an ENet address.")
@@ -26,15 +26,15 @@ func _run() -> void:
 			and route != upper, "Steam routes encode exact versioned virtual ports.")
 		route[0] = 0
 		_check(endpoint.get_route()[0] == 1, "Endpoint route bytes remain immutable.")
-		_check(transport.open_client(CrimsonSessionEndpoint.opaque(&"steam", route)).get_error() == ERR_INVALID_PARAMETER,
+		_check(transport.open_client(SessionEndpoint.opaque(&"steam", route)).get_error() == ERR_INVALID_PARAMETER,
 			"An unknown route version is rejected before Steam setup.")
 		_check(transport.open_client(endpoint).get_error() == ERR_UNCONFIGURED,
 			"A valid route requires an explicitly configured Steam runtime.")
-	_check(CrimsonSteamSessionTransport.route(0) == null
-		and CrimsonSteamSessionTransport.route(EXAMPLE_ACCOUNT, -1) == null
-		and CrimsonSteamSessionTransport.route(EXAMPLE_ACCOUNT, 65536) == null,
+	_check(SteamSessionTransport.route(0) == null
+		and SteamSessionTransport.route(EXAMPLE_ACCOUNT, -1) == null
+		and SteamSessionTransport.route(EXAMPLE_ACCOUNT, 65536) == null,
 		"Steam rejects invalid account IDs and virtual ports.")
-	_check(transport.open_client(CrimsonSessionEndpoint.direct("127.0.0.1", 24830)).get_error() == ERR_INVALID_PARAMETER
+	_check(transport.open_client(SessionEndpoint.direct("127.0.0.1", 24830)).get_error() == ERR_INVALID_PARAMETER
 		and transport.open_server(24830, 65, "*").get_error() == ERR_INVALID_PARAMETER
 		and transport.open_server(24830, 3, "127.0.0.1").get_error() == ERR_INVALID_PARAMETER,
 		"Steam declines incompatible endpoints, oversized seat counts and UDP bind addresses.")
@@ -43,7 +43,7 @@ func _run() -> void:
 		"Disconnected Steam objects expose no host route or verified identity.")
 	_check(transport.open_server(24830, 3, "*").get_error() == ERR_UNCONFIGURED,
 		"An unconfigured adapter cannot create a Steam listener.")
-	var provider := CrimsonSteamProvider.new()
+	var provider := SteamProvider.new()
 	_check(provider.invite_player("invalid") == ERR_INVALID_PARAMETER
 		and provider.invite_player(str(EXAMPLE_ACCOUNT)) == ERR_UNCONFIGURED,
 		"A detached provider rejects malformed recipients and lacks a private lobby.")

@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="SteamLeaderboardSubmission" inherits="RefCounted">
+	<brief_description>An accepted score receipt and its optional replay outcome.</brief_description>
+	<methods>
+		<method name="get_replay_state" qualifiers="const">
+			<return type="int" enum="SteamLeaderboardSubmission.ReplayState" />
+			<description>Outcome of attaching the requested replay. Check this even when the result reports an attachment failure.</description>
+		</method>
+		<method name="get_upload" qualifiers="const">
+			<return type="SteamScoreUpload" />
+			<description>Returns the native client upload receipt. A publisher submission can acknowledge the score without a native rank or change receipt, in which case this returns [code]null[/code].</description>
+		</method>
+		<method name="get_submitted_score" qualifiers="const">
+			<return type="int" />
+			<description>Returns the signed score sent in the acknowledged submission.</description>
+		</method>
+	</methods>
+	<members>
+		<member name="replay_state" type="int" getter="get_replay_state" enum="SteamLeaderboardSubmission.ReplayState">
+			Outcome of attaching the requested replay. Check this even when the result reports an attachment failure.
+		</member>
+		<member name="upload" type="SteamScoreUpload" getter="get_upload">
+			Native client receipt when available, including if a subsequent replay attachment failed. Publisher acknowledgments can leave this null.
+		</member>
+		<member name="submitted_score" type="int" setter="" getter="get_submitted_score">
+			Signed score submitted to Steam. Check [member upload] for any native rank or change information.
+		</member>
+	</members>
+	<constants>
+		<constant name="NONE" value="0" enum="ReplayState">The caller did not request a replay.</constant>
+		<constant name="SKIPPED" value="1" enum="ReplayState">Keep-best retained the previous entry.</constant>
+		<constant name="ATTACHED" value="2" enum="ReplayState">Steam attached the requested replay.</constant>
+		<constant name="FAILED" value="3" enum="ReplayState">Steam accepted the score, then attachment failed or was cancelled locally.</constant>
+	</constants>
+</class>

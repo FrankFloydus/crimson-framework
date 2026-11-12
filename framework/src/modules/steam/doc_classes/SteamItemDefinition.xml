@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="SteamItemDefinition" inherits="RefCounted">
+	<brief_description>
+		One published item definition copied from the Steam catalog.
+	</brief_description>
+	<description>
+		[method SteamInventory.definitions] and [method SteamInventory.definition] copy the app's published definitions. The read-only dictionary contains Steam's available custom properties. The display name or type is empty if the corresponding property is absent.
+	</description>
+	<tutorials>
+	</tutorials>
+	<methods>
+		<method name="get_definition_id" qualifiers="const">
+			<return type="int" />
+			<description>
+				Returns the published numeric item definition ID.
+			</description>
+		</method>
+		<method name="get_display_name" qualifiers="const">
+			<return type="String" />
+			<description>
+				Returns steam's localized display name for this item.
+			</description>
+		</method>
+		<method name="get_type" qualifiers="const">
+			<return type="StringName" />
+			<description>
+				Returns the item type configured in the Steam definition.
+			</description>
+		</method>
+		<method name="get_properties" qualifiers="const">
+			<return type="Dictionary[String, String]" />
+			<description>
+				Returns the typed read-only dictionary of published properties.
+			</description>
+		</method>
+	</methods>
+	<members>
+		<member name="definition_id" type="int" setter="" getter="get_definition_id">
+			The published numeric item definition ID.
+		</member>
+		<member name="display_name" type="String" setter="" getter="get_display_name">
+			Steam's localized display name for this item.
+		</member>
+		<member name="type" type="StringName" setter="" getter="get_type">
+			The item type configured in the Steam definition.
+		</member>
+		<member name="properties" type="Dictionary[String, String]" setter="" getter="get_properties">
+			The typed read-only dictionary of published properties.
+		</member>
+	</members>
+</class>

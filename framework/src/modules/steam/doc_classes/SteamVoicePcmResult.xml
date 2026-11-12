@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="SteamVoicePcmResult" inherits="SteamResult">
+	<brief_description>Result of decoding a Steam voice frame.</brief_description>
+	<members>
+		<member name="value" type="SteamVoicePcm" setter="" getter="get_value">Decoded samples and rate on success. Errors leave the value null.</member>
+	</members>
+</class>

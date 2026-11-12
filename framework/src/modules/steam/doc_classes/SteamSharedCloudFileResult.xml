@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="SteamSharedCloudFileResult" inherits="SteamResult">
+	<brief_description>
+		Outcome and detached file from a shared Steam Cloud download.
+	</brief_description>
+	<methods>
+		<method name="get_value" qualifiers="const">
+			<return type="SteamSharedCloudFile" />
+			<description>Returns the downloaded file on success, or [code]null[/code] on failure.</description>
+		</method>
+	</methods>
+	<members>
+		<member name="value" type="SteamSharedCloudFile" setter="" getter="get_value">
+			The validated metadata and bounded bytes from the successful download.
+		</member>
+	</members>
+</class>

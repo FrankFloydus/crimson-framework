@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="SteamItemDefinitionsOperation" inherits="RefCounted">
+	<brief_description>
+		The completion object behind an awaited inventory call.
+	</brief_description>
+	<description>
+		Await the corresponding [SteamInventory] method to receive its typed terminal result. The service retains the completion object while Steam replies.
+	</description>
+	<tutorials>
+	</tutorials>
+	<methods>
+		<method name="is_finished" qualifiers="const">
+			<return type="bool" />
+			<description>
+				Returns whether this request has reached a terminal result.
+			</description>
+		</method>
+		<method name="result" qualifiers="const">
+			<return type="SteamItemDefinitionsResult" />
+			<description>
+				Returns the terminal result, or [code]null[/code] while the request is pending.
+			</description>
+		</method>
+		<method name="wait">
+			<return type="Variant" />
+			<description>
+				Returns the typed terminal result immediately if available, or the completion signal to await.
+			</description>
+		</method>
+	</methods>
+	<signals>
+		<signal name="completed">
+			<param index="0" name="result" type="SteamItemDefinitionsResult" />
+			<description>
+				Emitted once after the operation settles and releases its native result handle.
+			</description>
+		</signal>
+	</signals>
+</class>

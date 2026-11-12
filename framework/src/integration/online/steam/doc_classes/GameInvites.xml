@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="GameInvites" inherits="RefCounted">
+	<brief_description>The invite gateway for one game attachment.</brief_description>
+	<methods>
+		<method name="is_available" qualifiers="const">
+			<return type="bool" />
+			<description>Return whether this exact attachment has a ready invite backend.</description>
+		</method>
+		<method name="open_overlay">
+			<return type="int" enum="Error" />
+			<description>Request the current hosted Steam lobby's invite picker. [constant OK] means Steam accepted the request, and [constant ERR_BUSY] means the overlay is loading.</description>
+		</method>
+		<method name="send">
+			<return type="int" enum="Error" />
+			<param index="0" name="steam_id" type="String" />
+			<description>Submit one invite to the selected decimal SteamID64 from the current owned lobby. [constant OK] means the request was submitted to Steam.</description>
+		</method>
+		<method name="pending" qualifiers="const">
+			<return type="SteamInvite" />
+			<description>Return the latest invite in this attachment, including one captured from Steam Apps launch arguments or the ordinary lobby command line. Crimson ignores malformed or conflicting lobby candidates. The game decides when to join.</description>
+		</method>
+	</methods>
+	<signals>
+		<signal name="received">
+			<param index="0" name="invite" type="SteamInvite" />
+			<description>Emitted for a Steam request to join while this game attachment is active, including Steam URL launches with a supported lobby argument. Duplicate notifications for the same lobby within two seconds are coalesced.</description>
+		</signal>
+	</signals>
+</class>

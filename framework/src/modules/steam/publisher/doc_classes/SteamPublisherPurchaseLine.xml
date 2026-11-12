@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="SteamPublisherPurchaseLine" inherits="RefCounted">
+	<brief_description>An immutable server-priced Steam Wallet line.</brief_description>
+	<description>The trusted store maps one unpriced cart SKU to a positive Steam item ID and localized description. [member total] covers the entire quantity.</description>
+	<tutorials>
+	</tutorials>
+	<methods>
+		<method name="create" qualifiers="static">
+			<return type="SteamPublisherPurchaseLine" />
+			<param index="0" name="sku" type="StringName" />
+			<param index="1" name="item_id" type="int" />
+			<param index="2" name="quantity" type="int" />
+			<param index="3" name="total" type="int" />
+			<param index="4" name="description" type="String" />
+			<description>Returns a validated priced line, or null for an empty or oversized SKU or description, out-of-range item ID or quantity, or nonpositive total.</description>
+		</method>
+		<method name="get_sku" qualifiers="const">
+			<return type="StringName" />
+			<description>Game catalog SKU, up to 96 characters.</description>
+		</method>
+		<method name="get_item_id" qualifiers="const">
+			<return type="int" />
+			<description>Positive unsigned 32-bit Steam item ID configured by the game.</description>
+		</method>
+		<method name="get_quantity" qualifiers="const">
+			<return type="int" />
+			<description>Positive count of units, up to 32767.</description>
+		</method>
+		<method name="get_total" qualifiers="const">
+			<return type="int" />
+			<description>Total for the whole line in the original quote's Steam currency units.</description>
+		</method>
+		<method name="get_description" qualifiers="const">
+			<return type="String" />
+			<description>Trusted localized Steam checkout text, up to 128 characters.</description>
+		</method>
+	</methods>
+	<members>
+		<member name="sku" type="StringName" setter="" getter="get_sku">Game catalog SKU, up to 96 characters.</member>
+		<member name="item_id" type="int" setter="" getter="get_item_id">Positive unsigned 32-bit Steam item ID configured by the game.</member>
+		<member name="quantity" type="int" setter="" getter="get_quantity">Positive count of units, up to 32767.</member>
+		<member name="total" type="int" setter="" getter="get_total">Total for the whole line in the original quote's Steam currency units.</member>
+		<member name="description" type="String" setter="" getter="get_description">Trusted localized Steam checkout text, up to 128 characters.</member>
+	</members>
+</class>

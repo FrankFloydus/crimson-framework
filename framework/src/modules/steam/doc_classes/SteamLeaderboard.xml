@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="SteamLeaderboard" inherits="RefCounted">
+	<brief_description>
+		Reads or updates one leaderboard in an active Steam client scope.
+	</brief_description>
+	<description>
+		Get a board from a successful [method SteamLeaderboards.find] or [method SteamLeaderboards.find_or_create] result. Read operations settle through [SteamLeaderboardPageOperation]. Score upload and attachment share a process-local write reservation. The board expires with the scope that found it.
+	</description>
+	<tutorials>
+	</tutorials>
+	<methods>
+		<method name="around_user">
+			<return type="SteamLeaderboardPageOperation" />
+			<param index="0" name="before" type="int" />
+			<param index="1" name="after" type="int" />
+			<description>
+				Fetches a range around the signed-in user's score. [param before] and [param after] are nonnegative counts and the requested page, including the center, is at most 100 entries. Results use the same page format as [method entries].
+			</description>
+		</method>
+		<method name="attach_ugc">
+			<return type="SteamOperation" />
+			<param index="0" name="shared_file_handle" type="String" />
+			<description>
+				Attaches an existing Steam Remote Storage shared-file handle to the signed-in user's score. Pass the handle as a decimal string. Await the operation to receive a [SteamResult]. An overlapping score write or attachment returns [constant @GlobalScope.ERR_BUSY].
+			</description>
+		</method>
+		<method name="entries">
+			<return type="SteamLeaderboardPageOperation" />
+			<param index="0" name="first_rank" type="int" />
+			<param index="1" name="count" type="int" />
+			<description>
+				Fetches a page starting at the one-based global [param first_rank]. [param count] must be between 1 and 100. Await the operation to receive a [SteamLeaderboardPageResult] containing a [SteamLeaderboardPage] on success.
+			</description>
+		</method>
+		<method name="friends">
+			<return type="SteamLeaderboardPageOperation" />
+			<param index="0" name="limit" type="int" default="100" />
+			<description>
+				Fetches up to [param limit] entries from Steam's friends view for the signed-in account. The limit is between 1 and 100. Results use the same page format as [method entries].
+			</description>
+		</method>
+		<method name="is_available" qualifiers="const">
+			<return type="bool" />
+			<description>
+				Returns whether this handle still belongs to an active client scope with leaderboard access.
+			</description>
+		</method>
+		<method name="metadata" qualifiers="const">
+			<return type="SteamLeaderboardInfoResult" />
+			<description>
+				Returns the detached [SteamLeaderboardInfo] when the read succeeds. The result reports [constant @GlobalScope.ERR_UNAVAILABLE] after the board scope stops.
+			</description>
+		</method>
+		<method name="upload">
+			<return type="SteamScoreUploadOperation" />
+			<param index="0" name="score" type="int" />
+			<param index="1" name="details" type="PackedInt32Array" default="PackedInt32Array()" />
+			<param index="2" name="force_update" type="bool" default="false" />
+			<description>
+				Uploads the signed-in user's signed 32-bit score with up to 64 optional signed 32-bit details. Steam keeps the best score by default. Set [param force_update] to replace it. Await a [SteamScoreUploadResult] for the typed score receipt. An overlapping write returns [constant @GlobalScope.ERR_BUSY].
+			</description>
+		</method>
+	</methods>
+</class>

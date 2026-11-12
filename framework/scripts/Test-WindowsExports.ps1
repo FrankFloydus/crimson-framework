@@ -15,7 +15,6 @@ $framework = Split-Path -Parent $PSScriptRoot
 $sourceAddon = Join-Path $framework 'project/addons/crimson-framework'
 $crimson = 'crimson_framework.windows.template_debug.x86_64.dll'
 $steam = 'steam_api64.dll'
-$eos = 'EOSSDK-Win64-Shipping.dll'
 
 # Run Godot against the staged project and keep its export diagnostics.
 function Invoke-Editor {
@@ -56,9 +55,10 @@ $addon = Join-Path $project 'addons/crimson-framework'
 New-Item -ItemType Directory -Path (Join-Path $addon 'bin') -Force | Out-Null
 Write-Host "Windows export evidence: $area"
 Copy-Item -LiteralPath (Join-Path $sourceAddon 'crimson-framework.gdextension') -Destination $addon
-foreach ($file in @($crimson, $steam, $eos)) {
+Copy-Item -LiteralPath (Join-Path $sourceAddon 'images') -Destination $addon -Recurse
+foreach ($file in @($crimson, $steam)) {
     $source = Join-Path $sourceAddon "bin/$file"
-    if (!(Test-Path -LiteralPath $source -PathType Leaf)) { throw "Build the debug DLL with both SDKs first. Missing $source." }
+    if (!(Test-Path -LiteralPath $source -PathType Leaf)) { throw "Build the debug DLL with Steamworks first. Missing $source." }
     Copy-Item -LiteralPath $source -Destination (Join-Path $addon 'bin')
 }
 
@@ -81,19 +81,14 @@ script = ExtResource("1")
 @'
 extends Node
 
-# Verify Crimson loads and the selected EOS runtime is beside its native library.
+# Verify the framework's native classes are available in the exported game.
 func _ready() -> void:
-	var ready := ClassDB.class_exists("CrimsonGame")
-	if OS.has_feature("crimson_eos"):
-		ready = ready and CrimsonEOS.initialize() == OK and not CrimsonEOS.get_runtime_version().is_empty()
-	get_tree().quit(0 if ready else 1)
+	get_tree().quit(0 if ClassDB.class_exists("GameRuntime") else 1)
 '@ | Set-Content -Encoding utf8NoBOM -LiteralPath (Join-Path $project 'boot.gd')
 
 $presets = @(
     @{Name='direct'; Tags=''; Files=@()},
-    @{Name='steam'; Tags='crimson_steam'; Files=@($steam)},
-    @{Name='eos'; Tags='crimson_eos'; Files=@($eos)},
-    @{Name='both'; Tags='crimson_steam,crimson_eos'; Files=@($steam, $eos)}
+    @{Name='steam'; Tags='crimson_steam'; Files=@($steam)}
 )
 $config = for ($index = 0; $index -lt $presets.Count; $index++) {
     $preset = $presets[$index]
@@ -125,7 +120,7 @@ foreach ($preset in $presets) {
     $output = (New-Item -ItemType Directory -Path (Join-Path $area $preset.Name)).FullName
     $exe = Join-Path $output 'CrimsonExport.exe'
     Invoke-Editor -Log (Join-Path $area "$($preset.Name)-export.log") -Arguments @('--export-debug', $preset.Name, $exe)
-    foreach ($file in @($crimson, $steam, $eos)) {
+    foreach ($file in @($crimson, $steam)) {
         $path = Join-Path $output $file
         if ($file -eq $crimson -or $file -in $preset.Files) {
             $original = Join-Path $addon "bin/$file"

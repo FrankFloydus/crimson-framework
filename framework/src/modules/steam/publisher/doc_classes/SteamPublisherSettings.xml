@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="SteamPublisherSettings" inherits="RefCounted">
+	<brief_description>Explicit configuration for the trusted Steam publisher.</brief_description>
+	<description>Create this only in a server or operator process. [method SteamPublisher.boot] takes a snapshot of the configuration. The host resolves the credential by reference for each request.</description>
+	<tutorials>
+	</tutorials>
+	<methods>
+		<method name="set_app_id">
+			<return type="void" />
+			<param index="0" name="app_id" type="int" />
+			<description>Positive Steamworks AppID verified by the backend and used for publisher writes.</description>
+		</method>
+		<method name="get_app_id" qualifiers="const">
+			<return type="int" />
+			<description>Positive Steamworks AppID verified by the backend and used for publisher writes.</description>
+		</method>
+		<method name="set_environment">
+			<return type="void" />
+			<param index="0" name="environment" type="int" enum="SteamPublisherSettings.Environment" />
+			<description>Vendor environment for features with a separate sandbox. The default is [constant LIVE].</description>
+		</method>
+		<method name="get_environment" qualifiers="const">
+			<return type="int" enum="SteamPublisherSettings.Environment" />
+			<description>Vendor environment for features with a separate sandbox. The default is [constant LIVE].</description>
+		</method>
+		<method name="set_publisher_key_ref">
+			<return type="void" />
+			<param index="0" name="publisher_key_ref" type="StringName" />
+			<description>Name of a publisher credential in the host's secret store, such as a vault identifier. Required for Steam partner Web API calls.</description>
+		</method>
+		<method name="get_publisher_key_ref" qualifiers="const">
+			<return type="StringName" />
+			<description>Name of a publisher credential in the host's secret store, such as a vault identifier. Required for Steam partner Web API calls.</description>
+		</method>
+		<method name="set_encrypted_ticket_key_ref">
+			<return type="void" />
+			<param index="0" name="encrypted_ticket_key_ref" type="StringName" />
+			<description>Optional reference for the separate private encrypted app-ticket decryption key. Required for local encrypted ownership verification.</description>
+		</method>
+		<method name="get_encrypted_ticket_key_ref" qualifiers="const">
+			<return type="StringName" />
+			<description>Optional reference for the separate private encrypted app-ticket decryption key. Required for local encrypted ownership verification.</description>
+		</method>
+		<method name="set_host">
+			<return type="void" />
+			<param index="0" name="host" type="SteamPublisherHost" />
+			<description>Attached trusted scene-tree node that resolves credential references and owns requests.</description>
+		</method>
+		<method name="get_host" qualifiers="const">
+			<return type="SteamPublisherHost" />
+			<description>Attached trusted scene-tree node that resolves credential references and owns requests.</description>
+		</method>
+		<method name="set_notification_store">
+			<return type="void" />
+			<param index="0" name="store" type="SteamNotificationStore" />
+			<description>Durable app-owned store for exact notification operations and session ownership. The default null leaves notification mutations unavailable.</description>
+		</method>
+		<method name="get_notification_store" qualifiers="const">
+			<return type="SteamNotificationStore" />
+			<description>Durable app-owned store for exact notification operations and session ownership. The default null leaves notification mutations unavailable.</description>
+		</method>
+		<method name="set_moderation_policy">
+			<return type="void" />
+			<param index="0" name="policy" type="SteamModerationPolicy" />
+			<description>Trusted app policy for authorizing and auditing reports and sanctions. The default null leaves moderation unavailable.</description>
+		</method>
+		<method name="get_moderation_policy" qualifiers="const">
+			<return type="SteamModerationPolicy" />
+			<description>Trusted app policy for authorizing and auditing reports and sanctions. The default null leaves moderation unavailable.</description>
+		</method>
+		<method name="set_purchase_store">
+			<return type="void" />
+			<param index="0" name="store" type="SteamPurchaseStore" />
+			<description>Trusted backend adapter for atomic pricing, order persistence, refund policy, and entitlement changes. The default null leaves Steam Wallet actions unavailable.</description>
+		</method>
+		<method name="get_purchase_store" qualifiers="const">
+			<return type="SteamPurchaseStore" />
+			<description>Trusted backend adapter for atomic pricing, order persistence, refund policy, and entitlement changes. The default null leaves Steam Wallet actions unavailable.</description>
+		</method>
+		<method name="set_ownership_challenge_store">
+			<return type="void" />
+			<param index="0" name="store" type="SteamOwnershipChallengeStore" />
+			<description>Injects the durable game store that atomically consumes one-time ownership challenges. The default null leaves encrypted ownership verification unavailable.</description>
+		</method>
+		<method name="get_ownership_challenge_store" qualifiers="const">
+			<return type="SteamOwnershipChallengeStore" />
+			<description>Returns the configured one-time ownership challenge store, or null if absent.</description>
+		</method>
+	</methods>
+	<members>
+		<member name="app_id" type="int" setter="set_app_id" getter="get_app_id">
+			Positive Steamworks AppID verified by the backend and used for publisher writes.
+		</member>
+		<member name="environment" type="int" setter="set_environment" getter="get_environment" enum="SteamPublisherSettings.Environment">
+			Vendor environment for features with a separate sandbox. The default is [constant LIVE].
+		</member>
+		<member name="publisher_key_ref" type="StringName" setter="set_publisher_key_ref" getter="get_publisher_key_ref">
+			Name of a publisher credential in the host's secret store, such as a vault identifier. Required for Steam partner Web API calls.
+		</member>
+		<member name="encrypted_ticket_key_ref" type="StringName" setter="set_encrypted_ticket_key_ref" getter="get_encrypted_ticket_key_ref">
+			Optional reference for the separate private encrypted app-ticket decryption key. Required for local encrypted ownership verification.
+		</member>
+		<member name="host" type="SteamPublisherHost" setter="set_host" getter="get_host">
+			Attached trusted scene-tree node that resolves credential references and owns requests.
+		</member>
+		<member name="notification_store" type="SteamNotificationStore" setter="set_notification_store" getter="get_notification_store">Durable app-owned store for exact notification operations and session ownership. The default null leaves notification mutations unavailable.</member>
+		<member name="moderation_policy" type="SteamModerationPolicy" setter="set_moderation_policy" getter="get_moderation_policy">Trusted app policy for authorizing and auditing reports and sanctions. The default null leaves moderation unavailable.</member>
+		<member name="purchase_store" type="SteamPurchaseStore" setter="set_purchase_store" getter="get_purchase_store">Trusted backend adapter for atomic pricing, order persistence, refund policy, and entitlement changes. The default null leaves Steam Wallet actions unavailable.</member>
+		<member name="ownership_challenge_store" type="SteamOwnershipChallengeStore" setter="set_ownership_challenge_store" getter="get_ownership_challenge_store">Trusted store for atomic one-time challenge consumption. The default null leaves encrypted ownership verification unavailable.</member>
+	</members>
+	<constants>
+		<constant name="LIVE" value="0" enum="Environment">Use Valve's live endpoints for capabilities with separate environments.</constant>
+		<constant name="SANDBOX" value="1" enum="Environment">Use a Valve sandbox when a feature has one. Other calls use the configured test AppID on its documented endpoint.</constant>
+	</constants>
+</class>

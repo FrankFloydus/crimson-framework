@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="SteamPurchaseCatalogResult" inherits="SteamResult">
+	<brief_description>Result of reading the authenticated player's catalog.</brief_description>
+	<methods>
+		<method name="create" qualifiers="static">
+			<return type="SteamPurchaseCatalogResult" />
+			<param index="0" name="error" type="int" enum="Error" />
+			<param index="1" name="value" type="SteamPurchaseCatalog" default="null" />
+			<description>Creates a result for the game adapter. A successful result requires a typed catalog.</description>
+		</method>
+	</methods>
+	<members>
+		<member name="value" type="SteamPurchaseCatalog" setter="" getter="get_value">Catalog confirmed by the backend on success.</member>
+	</members>
+</class>

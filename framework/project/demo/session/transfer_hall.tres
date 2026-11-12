@@ -1,11 +1,11 @@
 ; Copyright Francesco Di Blasi 2026 - All Rights Reserved
 
-[gd_resource type="CrimsonGameDefinition" format=3]
+[gd_resource type="GameDefinition" format=3]
 
 [ext_resource type="PackedScene" path="res://demo/hub/starting_hub.tscn" id="world"]
 [ext_resource type="PackedScene" path="res://demo/player/stationary_player.tscn" id="player"]
 
-[sub_resource type="CrimsonMultiplayerRules" id="listen_coop"]
+[sub_resource type="MultiplayerRules" id="listen_coop"]
 max_players = 4
 join_in_progress = true
 port = 24830

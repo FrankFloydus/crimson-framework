@@ -30,7 +30,7 @@ Automatic launches use the same menu actions and feedback as interactive play. A
 
 ## Menu architecture
 
-[Main](main.tscn) assigns its native `CrimsonGame` to the [menu view](ui/main_menu.tscn) in the Inspector. The [boot script](main.gd) forwards optional command-line requests to the menu. The [view model](ui/menu_view_model.gd) calls `play_solo()`, `host_game()`, or `join_game(address)` and presents each operation's pending, failure, and ready states.
+[Main](main.tscn) assigns its native `GameRuntime` to the [menu view](ui/main_menu.tscn) in the Inspector. The [boot script](main.gd) forwards optional command-line requests to the menu. The [view model](ui/menu_view_model.gd) calls `play_solo()`, `host_game()`, or `join_game(address)` and presents each operation's pending, failure, and ready states.
 
 [ScreenNavigator](ui/screen_navigator.gd) owns push, pop, and focus restoration for screen controls. It can be reused by other menus by passing the screen and its initial focus target. Session commands, connection feedback, and the shared [menu theme](ui/menu_theme.tres) are outside the navigator.
 
@@ -38,13 +38,13 @@ The [UI guide](ui/README.md) documents the navigator's calls and the menu input 
 
 ## Session and scene ownership
 
-The [Transfer Hall definition](session/transfer_hall.tres) supplies the [hub](hub/starting_hub.tscn), [player](player/stationary_player.tscn), and rules to [CrimsonGame](../../docs/PUBLIC_API.md#start-a-game). The definition permits four total players, enables join in progress, and uses UDP port `24830`. The authority chooses a placement from the hub's `CrimsonSpawnPoint` nodes. The player scene's `CrimsonLocalView` sets the camera and local body visibility through same-scene Inspector references.
+The [Transfer Hall definition](session/transfer_hall.tres) supplies the [hub](hub/starting_hub.tscn), [player](player/stationary_player.tscn), and rules to [GameRuntime](../../docs/PUBLIC_API.md#start-a-game). The definition permits four total players, enables join in progress, and uses UDP port `24830`. The authority chooses a placement from the hub's `PlayerSpawnPoint` nodes. The player scene's `LocalPlayerView` sets the camera and local body visibility through same-scene Inspector references.
 
 In the hub scene, each room or tunnel has a `Lighting` child that holds its fixtures. The reusable [portal scene](hub/portal/portal.tscn) has its own `Lighting` child for its terminal light. The [concrete wall shader](hub/concrete_wall.gdshader) follows each tunnel wall face and carries texture alignment through the bends.
 
 The [PowerShell harness](../../scripts/Test-Multiplayer.ps1) runs the demo against the debug and release DLLs in isolated projects. The [demo fixture](tests/session_smoke.gd) covers solo play, independent guests joining an active host, distinct spawn slots, departure and rejoin, and returning to the menu on host loss.
 
-The [live provider fixtures](../../vendor/README.md#live-provider-verification) use Transfer Hall to exercise the built-in Steam and EOS providers. The custom online provider runs in the regular PowerShell harness.
+The live Steam fixtures use Transfer Hall to exercise the built-in Steam provider. The custom online provider runs in the regular PowerShell harness. [Live Steam verification](../../vendor/README.md#live-provider-verification)
 
 ## Visual references
 

@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="SteamScoreUpload" inherits="RefCounted">
+	<brief_description>The receipt Steam returned for an accepted score submission.</brief_description>
+	<methods>
+		<method name="get_changed" qualifiers="const">
+			<return type="bool" />
+			<description>Whether the submission became the current leaderboard score. Keep-best can accept the submission while retaining the old score.</description>
+		</method>
+		<method name="get_previous_rank" qualifiers="const">
+			<return type="int" />
+			<description>The player's rank before submission. Zero means the player had no previous entry.</description>
+		</method>
+		<method name="get_rank" qualifiers="const">
+			<return type="int" />
+			<description>The player's global rank after Steam evaluated the submission.</description>
+		</method>
+		<method name="get_score" qualifiers="const">
+			<return type="int" />
+			<description>The signed 32-bit score submitted to Steam.</description>
+		</method>
+	</methods>
+	<members>
+		<member name="changed" type="bool" getter="get_changed">
+			Whether the submission became the current leaderboard score. Keep-best can accept the submission while retaining the old score.
+		</member>
+		<member name="previous_rank" type="int" getter="get_previous_rank">
+			The player's rank before submission. Zero means the player had no previous entry.
+		</member>
+		<member name="rank" type="int" getter="get_rank">
+			The player's global rank after Steam evaluated the submission.
+		</member>
+		<member name="score" type="int" getter="get_score">
+			The signed 32-bit score submitted to Steam.
+		</member>
+	</members>
+</class>

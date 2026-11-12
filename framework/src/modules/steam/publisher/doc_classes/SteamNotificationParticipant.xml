@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="SteamNotificationParticipant" inherits="RefCounted">
+	<brief_description>
+		Detached participant state reported by Steam or accepted by a session mutation.
+	</brief_description>
+	<methods>
+		<method name="get_steam_id" qualifiers="const">
+			<return type="String" />
+			<description>Return the provider's unsigned decimal participant SteamID64.</description>
+		</method>
+		<method name="get_state" qualifiers="const">
+			<return type="int" enum="SteamNotificationUserState.State" />
+			<description>Return the participant's confirmed asynchronous state.</description>
+		</method>
+		<method name="get_message" qualifiers="const">
+			<return type="SteamLocalizedText" />
+			<description>Return the localized message when available.</description>
+		</method>
+	</methods>
+	<members>
+		<member name="steam_id" type="String" setter="" getter="get_steam_id">
+			Provider participant account ID. This does not grant trusted identity.
+		</member>
+		<member name="state" type="int" enum="SteamNotificationUserState.State" setter="" getter="get_state">
+			Participant state accepted or returned by Steam.
+		</member>
+		<member name="message" type="SteamLocalizedText" setter="" getter="get_message">
+			Participant message returned when requested and available.
+		</member>
+	</members>
+</class>

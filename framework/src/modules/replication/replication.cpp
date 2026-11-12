@@ -117,38 +117,38 @@ uint64_t ticks_msec() {
 
 } // namespace
 
-CrimsonReplication::CrimsonReplication() {
+StateReplication::StateReplication() {
     set_process_mode(PROCESS_MODE_ALWAYS);
 }
 
-void CrimsonReplication::_bind_methods() {
-    ClassDB::bind_method(D_METHOD("set_projector", "callback"), &CrimsonReplication::set_projector);
-    ClassDB::bind_method(D_METHOD("advance_world", "world_epoch", "committed_revision"), &CrimsonReplication::advance_world);
+void StateReplication::_bind_methods() {
+    ClassDB::bind_method(D_METHOD("set_projector", "callback"), &StateReplication::set_projector);
+    ClassDB::bind_method(D_METHOD("advance_world", "world_epoch", "committed_revision"), &StateReplication::advance_world);
     ClassDB::bind_method(D_METHOD("register_peer", "peer_id", "player_id", "binding_generation"),
-            &CrimsonReplication::register_peer);
-    ClassDB::bind_method(D_METHOD("send_baseline", "peer_id"), &CrimsonReplication::send_baseline);
-    ClassDB::bind_method(D_METHOD("publish_changes", "committed_revision"), &CrimsonReplication::publish_changes);
-    ClassDB::bind_method(D_METHOD("remove_peer", "peer_id", "binding_generation"), &CrimsonReplication::remove_peer,
+            &StateReplication::register_peer);
+    ClassDB::bind_method(D_METHOD("send_baseline", "peer_id"), &StateReplication::send_baseline);
+    ClassDB::bind_method(D_METHOD("publish_changes", "committed_revision"), &StateReplication::publish_changes);
+    ClassDB::bind_method(D_METHOD("remove_peer", "peer_id", "binding_generation"), &StateReplication::remove_peer,
             DEFVAL(0));
-    ClassDB::bind_method(D_METHOD("is_peer_ready", "peer_id", "binding_generation"), &CrimsonReplication::is_peer_ready,
+    ClassDB::bind_method(D_METHOD("is_peer_ready", "peer_id", "binding_generation"), &StateReplication::is_peer_ready,
             DEFVAL(0));
-    ClassDB::bind_method(D_METHOD("is_client_ready"), &CrimsonReplication::is_client_ready);
-    ClassDB::bind_method(D_METHOD("get_projection"), &CrimsonReplication::get_projection);
-    ClassDB::bind_method(D_METHOD("clear_projection"), &CrimsonReplication::clear_projection);
-    ClassDB::bind_method(D_METHOD("get_world_epoch"), &CrimsonReplication::get_world_epoch);
-    ClassDB::bind_method(D_METHOD("get_revision"), &CrimsonReplication::get_revision);
-    ClassDB::bind_method(D_METHOD("reset"), &CrimsonReplication::reset);
+    ClassDB::bind_method(D_METHOD("is_client_ready"), &StateReplication::is_client_ready);
+    ClassDB::bind_method(D_METHOD("get_projection"), &StateReplication::get_projection);
+    ClassDB::bind_method(D_METHOD("clear_projection"), &StateReplication::clear_projection);
+    ClassDB::bind_method(D_METHOD("get_world_epoch"), &StateReplication::get_world_epoch);
+    ClassDB::bind_method(D_METHOD("get_revision"), &StateReplication::get_revision);
+    ClassDB::bind_method(D_METHOD("reset"), &StateReplication::reset);
 
     ClassDB::bind_method(D_METHOD("_crimson_replication_baseline_v1", "world_epoch", "generation", "baseline",
                                  "committed_revision", "view"),
-            &CrimsonReplication::rpc_baseline);
+            &StateReplication::rpc_baseline);
     ClassDB::bind_method(D_METHOD("_crimson_replication_delta_v1", "world_epoch", "generation", "baseline",
                                  "sequence", "committed_revision", "changed", "removed"),
-            &CrimsonReplication::rpc_delta);
+            &StateReplication::rpc_delta);
     ClassDB::bind_method(D_METHOD("_crimson_replication_ack_v1", "world_epoch", "generation", "baseline"),
-            &CrimsonReplication::rpc_ack);
+            &StateReplication::rpc_ack);
     ClassDB::bind_method(D_METHOD("_crimson_replication_resync_v1", "world_epoch", "generation", "baseline"),
-            &CrimsonReplication::rpc_resync);
+            &StateReplication::rpc_resync);
 
     ADD_SIGNAL(MethodInfo("peer_ready", PropertyInfo(Variant::INT, "peer_id"),
             PropertyInfo(Variant::INT, "world_epoch"), PropertyInfo(Variant::INT, "binding_generation")));
@@ -159,7 +159,7 @@ void CrimsonReplication::_bind_methods() {
     ADD_SIGNAL(MethodInfo("projection_cleared"));
 }
 
-void CrimsonReplication::_enter_tree() {
+void StateReplication::_enter_tree() {
     leaving_tree = false;
 
     Dictionary authority_config;
@@ -177,7 +177,7 @@ void CrimsonReplication::_enter_tree() {
     set_process(true);
 }
 
-void CrimsonReplication::_exit_tree() {
+void StateReplication::_exit_tree() {
     leaving_tree = true;
     clear_state(false);
     network.unref();
@@ -185,7 +185,7 @@ void CrimsonReplication::_exit_tree() {
     last_server_baseline = 0;
 }
 
-void CrimsonReplication::clear_state(bool notify) {
+void StateReplication::clear_state(bool notify) {
     const bool had_projection = client.ready;
     ++state_generation;
     peers.clear();
@@ -197,7 +197,7 @@ void CrimsonReplication::clear_state(bool notify) {
     }
 }
 
-void CrimsonReplication::refresh_transport() {
+void StateReplication::refresh_transport() {
     if (!is_inside_tree() || leaving_tree) {
         return;
     }
@@ -212,22 +212,22 @@ void CrimsonReplication::refresh_transport() {
     }
 }
 
-bool CrimsonReplication::transport_is_current() const {
+bool StateReplication::transport_is_current() const {
     return !leaving_tree && is_inside_tree() && network.is_valid() && transport.is_valid() &&
             get_multiplayer() == network && network->get_multiplayer_peer() == transport &&
             transport->get_connection_status() == MultiplayerPeer::CONNECTION_CONNECTED;
 }
 
-bool CrimsonReplication::is_authority() const {
+bool StateReplication::is_authority() const {
     return transport_is_current() && network->is_server();
 }
 
-bool CrimsonReplication::peer_is_connected(int64_t peer_id) const {
+bool StateReplication::peer_is_connected(int64_t peer_id) const {
     return peer_id > server_id && peer_id <= std::numeric_limits<int32_t>::max() &&
             network->get_peers().has(static_cast<int32_t>(peer_id));
 }
 
-int64_t CrimsonReplication::incoming_client() const {
+int64_t StateReplication::incoming_client() const {
     if (!is_authority()) {
         return 0;
     }
@@ -235,11 +235,11 @@ int64_t CrimsonReplication::incoming_client() const {
     return peers.find(sender) != peers.end() && peer_is_connected(sender) ? sender : 0;
 }
 
-bool CrimsonReplication::incoming_server() const {
+bool StateReplication::incoming_server() const {
     return transport_is_current() && !network->is_server() && network->get_remote_sender_id() == server_id;
 }
 
-Error CrimsonReplication::set_projector(const Callable &callback) {
+Error StateReplication::set_projector(const Callable &callback) {
     if (projecting) {
         return ERR_BUSY;
     }
@@ -254,7 +254,7 @@ Error CrimsonReplication::set_projector(const Callable &callback) {
     return OK;
 }
 
-Error CrimsonReplication::advance_world(int64_t world_epoch, int64_t committed_revision) {
+Error StateReplication::advance_world(int64_t world_epoch, int64_t committed_revision) {
     if (projecting) {
         return ERR_BUSY;
     }
@@ -277,7 +277,7 @@ Error CrimsonReplication::advance_world(int64_t world_epoch, int64_t committed_r
     return OK;
 }
 
-Error CrimsonReplication::register_peer(int64_t peer_id, const String &player_id, int64_t binding_generation) {
+Error StateReplication::register_peer(int64_t peer_id, const String &player_id, int64_t binding_generation) {
     if (projecting) {
         return ERR_BUSY;
     }
@@ -301,7 +301,7 @@ Error CrimsonReplication::register_peer(int64_t peer_id, const String &player_id
     return OK;
 }
 
-void CrimsonReplication::remove_peer(int64_t peer_id, int64_t binding_generation) {
+void StateReplication::remove_peer(int64_t peer_id, int64_t binding_generation) {
     if (projecting) {
         return;
     }
@@ -311,7 +311,7 @@ void CrimsonReplication::remove_peer(int64_t peer_id, int64_t binding_generation
     }
 }
 
-bool CrimsonReplication::is_peer_ready(int64_t peer_id, int64_t binding_generation) const {
+bool StateReplication::is_peer_ready(int64_t peer_id, int64_t binding_generation) const {
     if (!is_authority() || !peer_is_connected(peer_id)) {
         return false;
     }
@@ -320,15 +320,15 @@ bool CrimsonReplication::is_peer_ready(int64_t peer_id, int64_t binding_generati
             (binding_generation == 0 || binding_generation == found->second.generation);
 }
 
-bool CrimsonReplication::is_client_ready() const {
+bool StateReplication::is_client_ready() const {
     return client.ready && transport_is_current();
 }
 
-Dictionary CrimsonReplication::get_projection() const {
+Dictionary StateReplication::get_projection() const {
     return is_client_ready() ? client.view.duplicate(true) : Dictionary();
 }
 
-void CrimsonReplication::clear_projection() {
+void StateReplication::clear_projection() {
     if (projecting || !client.ready) {
         return;
     }
@@ -337,27 +337,27 @@ void CrimsonReplication::clear_projection() {
     emit_signal("projection_cleared");
 }
 
-int64_t CrimsonReplication::get_world_epoch() const {
+int64_t StateReplication::get_world_epoch() const {
     if (!transport_is_current()) {
         return 0;
     }
     return network->is_server() ? epoch : client.epoch;
 }
 
-int64_t CrimsonReplication::get_revision() const {
+int64_t StateReplication::get_revision() const {
     if (!transport_is_current()) {
         return 0;
     }
     return network->is_server() ? revision : client.revision;
 }
 
-void CrimsonReplication::reset() {
+void StateReplication::reset() {
     if (!projecting) {
         clear_state(true);
     }
 }
 
-Error CrimsonReplication::project(int64_t peer_id, const PeerStream &peer, Dictionary &view) {
+Error StateReplication::project(int64_t peer_id, const PeerStream &peer, Dictionary &view) {
     if (!projector.is_valid()) {
         return ERR_UNCONFIGURED;
     }
@@ -382,7 +382,7 @@ Error CrimsonReplication::project(int64_t peer_id, const PeerStream &peer, Dicti
     return OK;
 }
 
-Error CrimsonReplication::send_baseline(int64_t peer_id) {
+Error StateReplication::send_baseline(int64_t peer_id) {
     if (projecting) {
         return ERR_BUSY;
     }
@@ -425,7 +425,7 @@ Error CrimsonReplication::send_baseline(int64_t peer_id) {
     return OK;
 }
 
-Error CrimsonReplication::send_changes(int64_t peer_id, PeerStream &peer) {
+Error StateReplication::send_changes(int64_t peer_id, PeerStream &peer) {
     Dictionary next_view;
     const Error error = project(peer_id, peer, next_view);
     if (error != OK) {
@@ -468,7 +468,7 @@ Error CrimsonReplication::send_changes(int64_t peer_id, PeerStream &peer) {
     return OK;
 }
 
-Error CrimsonReplication::publish_changes(int64_t committed_revision) {
+Error StateReplication::publish_changes(int64_t committed_revision) {
     if (projecting) {
         return ERR_BUSY;
     }
@@ -517,7 +517,7 @@ Error CrimsonReplication::publish_changes(int64_t committed_revision) {
     return first_error;
 }
 
-void CrimsonReplication::_process(double) {
+void StateReplication::_process(double) {
     refresh_transport();
     if (!transport_is_current()) {
         if (client.baseline != 0 || epoch != 0 || !peers.empty()) {
@@ -561,7 +561,7 @@ void CrimsonReplication::_process(double) {
     }
 }
 
-void CrimsonReplication::rpc_baseline(int64_t world_epoch, int64_t generation, int64_t baseline,
+void StateReplication::rpc_baseline(int64_t world_epoch, int64_t generation, int64_t baseline,
         int64_t committed_revision, const Dictionary &view) {
     refresh_transport();
     if (!incoming_server() || world_epoch <= 0 || generation <= 0 || baseline <= last_server_baseline ||
@@ -586,7 +586,7 @@ void CrimsonReplication::rpc_baseline(int64_t world_epoch, int64_t generation, i
     emit_signal("projection_updated", world_epoch, committed_revision, true);
 }
 
-void CrimsonReplication::rpc_delta(int64_t world_epoch, int64_t generation, int64_t baseline, int64_t sequence,
+void StateReplication::rpc_delta(int64_t world_epoch, int64_t generation, int64_t baseline, int64_t sequence,
         int64_t committed_revision, const Dictionary &changed, const PackedStringArray &removed) {
     refresh_transport();
     if (!incoming_server() || !client.ready || world_epoch != client.epoch || generation != client.generation ||
@@ -623,14 +623,14 @@ void CrimsonReplication::rpc_delta(int64_t world_epoch, int64_t generation, int6
     emit_signal("projection_updated", world_epoch, committed_revision, false);
 }
 
-void CrimsonReplication::request_resync() {
+void StateReplication::request_resync() {
     if (client.ready) {
         rpc_id(server_id, resync_method, client.epoch, client.generation, client.baseline);
         clear_projection();
     }
 }
 
-void CrimsonReplication::rpc_ack(int64_t world_epoch, int64_t generation, int64_t baseline) {
+void StateReplication::rpc_ack(int64_t world_epoch, int64_t generation, int64_t baseline) {
     if (projecting) {
         return;
     }
@@ -663,7 +663,7 @@ void CrimsonReplication::rpc_ack(int64_t world_epoch, int64_t generation, int64_
     emit_signal("peer_ready", sender, world_epoch, generation);
 }
 
-void CrimsonReplication::rpc_resync(int64_t world_epoch, int64_t generation, int64_t baseline) {
+void StateReplication::rpc_resync(int64_t world_epoch, int64_t generation, int64_t baseline) {
     if (projecting) {
         return;
     }

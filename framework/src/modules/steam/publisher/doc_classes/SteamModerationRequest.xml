@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="SteamModerationRequest" inherits="RefCounted">
+	<brief_description>
+		Immutable moderation facts handed to the injected authorization policy.
+	</brief_description>
+	<description>
+		The publisher passes this exact object to [method SteamModerationPolicy._authorize]. For a reviewed suspension or ban, resolve the report and its target in the game-owned review store. For a removal, check the supplied target. Persist the exact app, operation, report or target, reason, and duration before approving a reviewed write.
+	</description>
+	<tutorials>
+	</tutorials>
+	<methods>
+		<method name="get_action" qualifiers="const">
+			<return type="int" enum="SteamModerationRequest.Action" />
+			<description>
+				Returns the exact moderation action the trusted caller wants to perform.
+			</description>
+		</method>
+		<method name="get_app_id" qualifiers="const">
+			<return type="int" />
+			<description>
+				Returns the trusted publisher AppID.
+			</description>
+		</method>
+		<method name="get_environment" qualifiers="const">
+			<return type="int" enum="SteamPublisherSettings.Environment" />
+			<description>
+				Returns the trusted publisher environment selection.
+			</description>
+		</method>
+		<method name="get_player_id" qualifiers="const">
+			<return type="String" />
+			<description>
+				Returns the requested target SteamID64 when known.
+			</description>
+		</method>
+		<method name="get_report_id" qualifiers="const">
+			<return type="String" />
+			<description>
+				Returns the reviewed Valve report ID for a suspension or permanent ban.
+			</description>
+		</method>
+		<method name="get_reason" qualifiers="const">
+			<return type="String" />
+			<description>
+				Returns the requested sanction or removal reason supplied to the policy.
+			</description>
+		</method>
+		<method name="get_duration_seconds" qualifiers="const">
+			<return type="int" />
+			<description>
+				Returns the requested suspension duration, in seconds.
+			</description>
+		</method>
+		<method name="get_evidence" qualifiers="const">
+			<return type="SteamCheatEvidence" />
+			<description>
+				Returns the report evidence, or null for other actions.
+			</description>
+		</method>
+		<method name="get_from_unix" qualifiers="const">
+			<return type="int" />
+			<description>
+				Returns the inclusive UTC report-window start in Unix seconds.
+			</description>
+		</method>
+		<method name="get_to_unix" qualifiers="const">
+			<return type="int" />
+			<description>
+				Returns the inclusive UTC report-window end in Unix seconds.
+			</description>
+		</method>
+		<method name="get_after_report_id" qualifiers="const">
+			<return type="String" />
+			<description>
+				Returns the exclusive decimal report cursor for a read.
+			</description>
+		</method>
+	</methods>
+	<members>
+		<member name="action" type="int" enum="SteamModerationRequest.Action" setter="" getter="get_action">
+			The exact moderation action the trusted caller wants to perform.
+		</member>
+		<member name="app_id" type="int" setter="" getter="get_app_id">
+			The trusted publisher AppID.
+		</member>
+		<member name="environment" type="int" enum="SteamPublisherSettings.Environment" setter="" getter="get_environment">
+			The trusted publisher environment selection.
+		</member>
+		<member name="player_id" type="String" setter="" getter="get_player_id">
+			The requested target SteamID64 when known.
+		</member>
+		<member name="report_id" type="String" setter="" getter="get_report_id">
+			The reviewed Valve report ID for a suspension or permanent ban.
+		</member>
+		<member name="reason" type="String" setter="" getter="get_reason">
+			The requested sanction or removal reason supplied to the policy.
+		</member>
+		<member name="duration_seconds" type="int" setter="" getter="get_duration_seconds">
+			The requested suspension duration, in seconds.
+		</member>
+		<member name="evidence" type="SteamCheatEvidence" setter="" getter="get_evidence">
+			The report evidence, or null for other actions.
+		</member>
+		<member name="from_unix" type="int" setter="" getter="get_from_unix">
+			The inclusive UTC report-window start in Unix seconds.
+		</member>
+		<member name="to_unix" type="int" setter="" getter="get_to_unix">
+			The inclusive UTC report-window end in Unix seconds.
+		</member>
+		<member name="after_report_id" type="String" setter="" getter="get_after_report_id">
+			The exclusive decimal report cursor for a read.
+		</member>
+	</members>
+	<constants>
+		<constant name="REPORT" value="0" enum="Action">
+			Submit authenticated cheating evidence for review.
+		</constant>
+		<constant name="READ_REPORTS" value="1" enum="Action">
+			Read reports in a bounded UTC window.
+		</constant>
+		<constant name="SUSPEND" value="2" enum="Action">
+			Request a time-limited game sanction after review.
+		</constant>
+		<constant name="BAN" value="3" enum="Action">
+			Request a permanent game ban after review.
+		</constant>
+		<constant name="REMOVE_BAN" value="4" enum="Action">
+			Request removal of the app's game ban.
+		</constant>
+	</constants>
+</class>

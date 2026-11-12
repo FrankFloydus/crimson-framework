@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="SteamFriend" inherits="RefCounted">
+	<brief_description>A cached snapshot of one Steam friend.</brief_description>
+	<description>Get snapshots from [method SteamFriends.list]. They remain readable after the Steam client stops.</description>
+	<methods>
+		<method name="get_display_name" qualifiers="const">
+			<return type="String" />
+			<description>Returns the cached Steam persona name, or an empty string if unavailable.</description>
+		</method>
+		<method name="get_steam_id" qualifiers="const">
+			<return type="String" />
+			<description>Returns the full SteamID64 as a decimal string.</description>
+		</method>
+		<method name="is_online" qualifiers="const">
+			<return type="bool" />
+			<description>Returns whether Steam presented the friend as online at snapshot time.</description>
+		</method>
+	</methods>
+	<members>
+		<member name="display_name" type="String" setter="" getter="get_display_name">
+			Cached Steam persona name. An empty string means Steam supplied no name.
+		</member>
+		<member name="online" type="bool" setter="" getter="is_online">
+			Whether Steam presented the friend as online when this snapshot was taken. Use a new list read to refresh it.
+		</member>
+		<member name="steam_id" type="String" setter="" getter="get_steam_id">
+			Full decimal SteamID64 used by Steam friend actions.
+		</member>
+	</members>
+</class>

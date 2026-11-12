@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="SteamScreenshotRequest" inherits="RefCounted">
+	<brief_description>Branchable screenshot draft created from a game-owned image.</brief_description>
+	<description>Each edit returns a new draft. Steam receives the image only when an explicit submission starts. Location and tags are submitted after the exact save is confirmed.</description>
+	<tutorials>
+	</tutorials>
+	<methods>
+		<method name="at" qualifiers="const">
+			<return type="SteamScreenshotRequest" />
+			<param index="0" name="location" type="String" />
+			<description>Return a copy with the optional location label. Pass empty text to omit it. Steam accepts at most 255 UTF-8 bytes without embedded NUL characters.</description>
+		</method>
+		<method name="send" qualifiers="const">
+			<return type="SteamScreenshotOperation" />
+			<description>Submit the draft once and return a retained operation. The scope validates all input before writing, waits up to 15 seconds for the exact save confirmation, and then applies requested metadata. A timeout does not cancel the Steam write.</description>
+		</method>
+		<method name="submit" qualifiers="const">
+			<return type="Variant" />
+			<description>Submit the draft once. Await this call for a [SteamScreenshotResult], including immediate validation or availability failures.</description>
+		</method>
+		<method name="tag" qualifiers="const">
+			<return type="SteamScreenshotRequest" />
+			<param index="0" name="steam_id" type="String" />
+			<description>Return a copy with an individual decimal SteamID64 tag. Submission rejects a malformed ID or more than 32 user tag requests. Duplicate IDs are submitted once.</description>
+		</method>
+		<method name="tag_item" qualifiers="const">
+			<return type="SteamScreenshotRequest" />
+			<param index="0" name="published_id" type="String" />
+			<description>Return a copy with a nonzero decimal Workshop published-file ID. Submission rejects a malformed ID or more than 32 item tag requests. Duplicate IDs are submitted once.</description>
+		</method>
+	</methods>
+</class>

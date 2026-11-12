@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="SteamLobbyQuery" inherits="RefCounted">
+	<brief_description>Branchable options for a search within this game's Steam AppID and namespace.</brief_description>
+	<methods>
+		<method name="on_map" qualifiers="const">
+			<return type="SteamLobbyQuery" />
+			<param index="0" name="world_id" type="StringName" />
+			<description>Return a branch for the supplied world identifier. Steam discovery accepts up to 128 characters and 512 UTF-8 bytes without control characters.</description>
+		</method>
+		<method name="with_room_for" qualifiers="const">
+			<return type="SteamLobbyQuery" />
+			<param index="0" name="players" type="int" />
+			<description>Return a branch requiring one to 64 available lobby seats. The default is one.</description>
+		</method>
+		<method name="within" qualifiers="const">
+			<return type="SteamLobbyQuery" />
+			<param index="0" name="distance" type="int" enum="SteamLobbyQuery.Distance" />
+			<description>Return a branch with the selected Steam region preference. The default is nearby.</description>
+		</method>
+		<method name="limit" qualifiers="const">
+			<return type="SteamLobbyQuery" />
+			<param index="0" name="count" type="int" />
+			<description>Return a branch capped at one to 50 results. The default is 20.</description>
+		</method>
+		<method name="fetch" qualifiers="const">
+			<return type="Variant" />
+			<description>Start the search and await its typed result directly.</description>
+		</method>
+		<method name="fetch_operation" qualifiers="const">
+			<return type="SteamListingsOperation" />
+			<description>Start the same search and retain an operation for cancellation or repeated reads. An overlapping SDK search returns busy.</description>
+		</method>
+		<method name="social" qualifiers="const">
+			<return type="SteamLobbyQuery" />
+			<description>Return a branch searching standalone social lobbies. Use a standalone [SteamLobbies] scope. Gameplay map filters do not apply to social searches.</description>
+		</method>
+	</methods>
+	<constants>
+		<constant name="CLOSE" value="0" enum="Distance">Prefer lobbies in the immediate region.</constant>
+		<constant name="NEARBY" value="1" enum="Distance">Search this region and nearby regions.</constant>
+		<constant name="FAR" value="2" enum="Distance">Extend the search across more regions.</constant>
+		<constant name="WORLDWIDE" value="3" enum="Distance">Search every Steam region.</constant>
+	</constants>
+</class>

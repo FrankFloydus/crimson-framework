@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="SteamWorkshopSubscription" inherits="RefCounted">
+	<brief_description>
+		The acknowledged subscription state of one Workshop item.
+	</brief_description>
+	<methods>
+		<method name="get_published_id" qualifiers="const">
+			<return type="String" />
+			<description>Return the canonical unsigned decimal published file ID.</description>
+		</method>
+		<method name="is_subscribed" qualifiers="const">
+			<return type="bool" />
+			<description>Return the acknowledged subscription state.</description>
+		</method>
+	</methods>
+	<members>
+		<member name="published_id" type="String" setter="" getter="get_published_id">
+			The exact published file ID.
+		</member>
+		<member name="subscribed" type="bool" setter="" getter="is_subscribed">
+			Whether Steam confirmed a subscription.
+		</member>
+	</members>
+</class>

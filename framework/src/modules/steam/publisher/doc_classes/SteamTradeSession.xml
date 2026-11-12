@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="SteamTradeSession" inherits="RefCounted">
+	<brief_description>
+		Steam's acknowledgment of a request to open a trade between verified participants.
+	</brief_description>
+	<description>
+		[method SteamPublisherInventory.start_trade] returns this detached record after a recognized affirmative response. The participants complete the transfer in Steam. Refresh inventory to observe changes after the transfer.
+	</description>
+	<tutorials>
+	</tutorials>
+	<methods>
+		<method name="get_partner_id" qualifiers="const">
+			<return type="String" />
+			<description>
+				Returns the verified partner's SteamID64 as a decimal string.
+			</description>
+		</method>
+		<method name="get_player_id" qualifiers="const">
+			<return type="String" />
+			<description>
+				Returns the verified first player's SteamID64 as a decimal string.
+			</description>
+		</method>
+		<method name="is_acknowledged" qualifiers="const">
+			<return type="bool" />
+			<description>
+				Returns whether Steam acknowledged the request to start a trade.
+			</description>
+		</method>
+	</methods>
+	<members>
+		<member name="acknowledged" type="bool" setter="" getter="is_acknowledged">
+			Read-only acknowledgment of the trade request.
+		</member>
+		<member name="partner_id" type="String" setter="" getter="get_partner_id">
+			Read-only decimal SteamID64 of the verified partner.
+		</member>
+		<member name="player_id" type="String" setter="" getter="get_player_id">
+			Read-only decimal SteamID64 of the verified first player.
+		</member>
+	</members>
+</class>

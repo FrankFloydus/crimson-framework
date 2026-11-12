@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="SteamSessionTransport" inherits="SessionTransport">
+	<brief_description>The Steam Networking Sockets adapter selected by the native Steam game provider.</brief_description>
+	<description>Listen games use a Steam individual account and virtual port. A Steam dedicated game uses the certificate-pinned direct IPv4 [code]steam_server[/code] or hosted relay [code]steam_hosted[/code] endpoint. The hosted endpoint also requires a fresh one-shot coordinator grant from the Game provider.</description>
+	<methods>
+		<method name="route" qualifiers="static">
+			<return type="SessionEndpoint" />
+			<param index="0" name="owner_id" type="int" />
+			<param index="1" name="virtual_port" type="int" default="0" />
+			<description>Construct a versioned P2P endpoint for a valid individual SteamID64 and virtual port from 0 to 65535. Return null when unavailable or invalid. Dedicated locators are resolved by the Steam game provider instead.</description>
+		</method>
+		<method name="get_host_endpoint" qualifiers="const">
+			<return type="SessionEndpoint" />
+			<description>Return the typed route for the current authenticated authority when the listener and Steam identity are available.</description>
+		</method>
+		<method name="get_host_remote_limit" qualifiers="const">
+			<return type="int" />
+			<description>Return the active authority's remote seat limit, or zero without a live listener.</description>
+		</method>
+		<method name="get_remote_steam_id" qualifiers="const">
+			<return type="int" />
+			<param index="0" name="peer_id" type="int" />
+			<description>Return the certified Steam identity for the exact ready physical Godot peer, or zero when it is unavailable. Gameplay admission also validates its Session identity.</description>
+		</method>
+		<method name="open_server">
+			<return type="SessionTransportResult" />
+			<param index="0" name="port" type="int" />
+			<param index="1" name="remote_limit" type="int" />
+			<param index="2" name="bind_address" type="String" />
+			<description>Open a listener on the configured Steam virtual port or dedicated gameplay port. The bound peer count is 1 to 64. Listen Steam accepts the wildcard bind. A dedicated adapter accepts its configured IPv4 address or the wildcard selection of its configured interface.</description>
+		</method>
+		<method name="open_client">
+			<return type="SessionTransportResult" />
+			<param index="0" name="endpoint" type="SessionEndpoint" />
+			<description>Connect on the configured signed-in Steam pipe. The adapter accepts its versioned Steam P2P, dedicated direct, or coordinator-authorized hosted endpoint and checks the remote identity against the expected certificate.</description>
+		</method>
+	</methods>
+</class>

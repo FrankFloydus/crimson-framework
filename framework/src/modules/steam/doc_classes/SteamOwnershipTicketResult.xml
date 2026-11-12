@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="SteamOwnershipTicketResult" inherits="SteamResult">
+	<brief_description>Reports whether Steam issued an encrypted app ticket.</brief_description>
+	<members>
+		<member name="value" type="SteamOwnershipTicket" setter="" getter="get_value">The encrypted ticket when issuance succeeds. The backend verifies and consumes the associated challenge.</member>
+	</members>
+</class>

@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="SteamCheatReport" inherits="RefCounted">
+	<brief_description>
+		One detached Valve report identity and its known app and target context.
+	</brief_description>
+	<description>
+		Returned by [method SteamPublisherModeration.report] or within [SteamCheatReportPage]. A report is evidence for review. The trusted game retains the match and reviewer context.
+	</description>
+	<tutorials>
+	</tutorials>
+	<methods>
+		<method name="get_report_id" qualifiers="const">
+			<return type="String" />
+			<description>
+				Returns valve's report ID in unsigned decimal form.
+			</description>
+		</method>
+		<method name="get_app_id" qualifiers="const">
+			<return type="int" />
+			<description>
+				Returns the publisher AppID that scoped the report.
+			</description>
+		</method>
+		<method name="get_player_id" qualifiers="const">
+			<return type="String" />
+			<description>
+				Returns the reported player's SteamID64.
+			</description>
+		</method>
+		<method name="get_match_id" qualifiers="const">
+			<return type="String" />
+			<description>
+				Returns the game-owned match reference when available from local submission.
+			</description>
+		</method>
+		<method name="get_reason_code" qualifiers="const">
+			<return type="int" />
+			<description>
+				Returns the game-defined report reason code, or zero when unavailable.
+			</description>
+		</method>
+		<method name="get_reported_at_unix" qualifiers="const">
+			<return type="int" />
+			<description>
+				Returns the Valve report timestamp in Unix seconds, or zero when unavailable.
+			</description>
+		</method>
+	</methods>
+	<members>
+		<member name="report_id" type="String" setter="" getter="get_report_id">
+			Valve's report ID in unsigned decimal form.
+		</member>
+		<member name="app_id" type="int" setter="" getter="get_app_id">
+			The publisher AppID that scoped the report.
+		</member>
+		<member name="player_id" type="String" setter="" getter="get_player_id">
+			The reported player's SteamID64.
+		</member>
+		<member name="match_id" type="String" setter="" getter="get_match_id">
+			The game-owned match reference when available from local submission.
+		</member>
+		<member name="reason_code" type="int" setter="" getter="get_reason_code">
+			The game-defined report reason code, or zero when unavailable.
+		</member>
+		<member name="reported_at_unix" type="int" setter="" getter="get_reported_at_unix">
+			The Valve report timestamp in Unix seconds, or zero when unavailable.
+		</member>
+	</members>
+</class>

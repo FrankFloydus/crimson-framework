@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="SteamConnectionPathResult" inherits="SteamResult">
+	<brief_description>Typed result of reading an admitted Game peer's Steam connection path.</brief_description>
+	<description>A successful result contains a detached [SteamConnectionPath].</description>
+	<tutorials>
+	</tutorials>
+	<methods>
+		<method name="get_value" qualifiers="const">
+			<return type="SteamConnectionPath" />
+			<description>Returns the detached path when the result succeeded.</description>
+		</method>
+	</methods>
+	<members>
+		<member name="value" type="SteamConnectionPath" setter="" getter="get_value">Path sampled for the current verified peer, or [code]null[/code] on failure.</member>
+	</members>
+</class>

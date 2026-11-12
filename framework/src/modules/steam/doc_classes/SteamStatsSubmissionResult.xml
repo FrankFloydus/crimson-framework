@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="SteamStatsSubmissionResult" inherits="SteamResult">
+	<brief_description>
+		The local result of applying a stats draft and asking Steam to persist it.
+	</brief_description>
+	<description>
+		Successful submission means Steam accepted the cache changes and the request to store them. Observe [signal SteamStats.stats_stored] for app-wide persistence outcomes.
+	</description>
+	<methods>
+		<method name="get_value" qualifiers="const">
+			<return type="SteamStatsSubmission" />
+			<description>Returns the edit counters, including on failure.</description>
+		</method>
+	</methods>
+	<members>
+		<member name="value" type="SteamStatsSubmission" getter="get_value">
+			Read-only edit counters produced by [method SteamStatsEdit.submit]. Available for successful, failed, and partially applied drafts.
+		</member>
+	</members>
+</class>

@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="SteamDiagnosticBatch" inherits="RefCounted">
+	<brief_description>
+		A read-only snapshot of Steam SDK diagnostics.
+	</brief_description>
+	<description>
+		[method SteamDiagnostics.drain] returns an independent snapshot of the current capture queue. Later drains or capture stops leave earlier snapshots usable.
+	</description>
+	<methods>
+		<method name="get_dropped_count" qualifiers="const">
+			<return type="int" />
+			<description>
+				Returns the number of additional callbacks discarded after the queue reached capacity, since capture started or since the previous drain.
+			</description>
+		</method>
+		<method name="get_messages" qualifiers="const">
+			<return type="SteamDiagnosticMessage[]" />
+			<description>
+				Returns the read-only array of up to 32 messages in capture order. An empty snapshot returns an empty typed array.
+			</description>
+		</method>
+	</methods>
+	<members>
+		<member name="dropped_count" type="int" setter="" getter="get_dropped_count">
+			Read-only overflow count for this snapshot.
+		</member>
+		<member name="messages" type="SteamDiagnosticMessage[]" setter="" getter="get_messages">
+			Read-only typed array of diagnostics in capture order.
+		</member>
+	</members>
+</class>

@@ -76,31 +76,31 @@ Dictionary request_error(const String &code, const String &message, int64_t revi
 
 } // namespace
 
-void CrimsonPossession::_bind_methods() {
+void PlayerPossession::_bind_methods() {
     ClassDB::bind_method(D_METHOD("configure", "coordinator", "players_store", "characters_store", "eligibility"),
-            &CrimsonPossession::configure, DEFVAL(Callable()));
-    ClassDB::bind_method(D_METHOD("get_primary", "player_id"), &CrimsonPossession::get_primary);
-    ClassDB::bind_method(D_METHOD("get_controller", "character_id"), &CrimsonPossession::get_controller);
-    ClassDB::bind_method(D_METHOD("get_revision", "player_id"), &CrimsonPossession::get_revision);
+            &PlayerPossession::configure, DEFVAL(Callable()));
+    ClassDB::bind_method(D_METHOD("get_primary", "player_id"), &PlayerPossession::get_primary);
+    ClassDB::bind_method(D_METHOD("get_controller", "character_id"), &PlayerPossession::get_controller);
+    ClassDB::bind_method(D_METHOD("get_revision", "player_id"), &PlayerPossession::get_revision);
     ClassDB::bind_method(D_METHOD("queue_primary_change", "transaction", "player_id", "character_id", "expected_revision"),
-            &CrimsonPossession::queue_primary_change);
+            &PlayerPossession::queue_primary_change);
     ClassDB::bind_method(D_METHOD("try_set_primary", "player_id", "character_id", "expected_revision"),
-            &CrimsonPossession::try_set_primary);
+            &PlayerPossession::try_set_primary);
 
     // Standard object-bound Callables look up this object by ID. The coordinator
     // can reject a change safely if the owning Possession service is gone.
     ClassDB::bind_method(D_METHOD("_prepare_store", "current", "operations", "context"),
-            &CrimsonPossession::prepare_store);
+            &PlayerPossession::prepare_store);
     ClassDB::bind_method(D_METHOD("_validate_references", "prepared", "context"),
-            &CrimsonPossession::validate_references);
+            &PlayerPossession::validate_references);
     ClassDB::bind_method(D_METHOD("_on_committed", "revision", "stores"),
-            &CrimsonPossession::on_committed);
+            &PlayerPossession::on_committed);
     ADD_SIGNAL(MethodInfo("primary_changed", PropertyInfo(Variant::STRING, "player_id"),
             PropertyInfo(Variant::STRING, "old_id"), PropertyInfo(Variant::STRING, "new_id"),
             PropertyInfo(Variant::INT, "revision")));
 }
 
-Error CrimsonPossession::configure(const Ref<CrimsonTransactionCoordinator> &new_coordinator,
+Error PlayerPossession::configure(const Ref<TransactionCoordinator> &new_coordinator,
         const String &new_players_store, const String &new_characters_store, const Callable &new_eligibility) {
     if (!on_owner_thread()) {
         return ERR_BUSY;
@@ -138,22 +138,22 @@ Error CrimsonPossession::configure(const Ref<CrimsonTransactionCoordinator> &new
     return OK;
 }
 
-String CrimsonPossession::get_primary(const String &player_id) const {
+String PlayerPossession::get_primary(const String &player_id) const {
     return on_owner_thread() && coordinator.is_valid() ?
             read_assignment(coordinator->read_store_value(store_id, player_id)).character : String();
 }
 
-String CrimsonPossession::get_controller(const String &character_id) const {
+String PlayerPossession::get_controller(const String &character_id) const {
     return on_owner_thread() && coordinator.is_valid() ?
             find_controller(coordinator->read_store(store_id), character_id) : String();
 }
 
-int64_t CrimsonPossession::get_revision(const String &player_id) const {
+int64_t PlayerPossession::get_revision(const String &player_id) const {
     return on_owner_thread() && coordinator.is_valid() ?
             read_assignment(coordinator->read_store_value(store_id, player_id)).revision : 0;
 }
 
-Error CrimsonPossession::queue_primary_change(const Ref<CrimsonTransaction> &transaction,
+Error PlayerPossession::queue_primary_change(const Ref<GameTransaction> &transaction,
         const String &player_id, const String &character_id, int64_t expected_revision) {
     if (!on_owner_thread()) {
         return ERR_BUSY;
@@ -171,17 +171,17 @@ Error CrimsonPossession::queue_primary_change(const Ref<CrimsonTransaction> &tra
     return transaction->add_change(store_id, operation, coordinator->get_store_revision(store_id));
 }
 
-Dictionary CrimsonPossession::try_set_primary(const String &player_id, const String &character_id, int64_t expected_revision) {
+Dictionary PlayerPossession::try_set_primary(const String &player_id, const String &character_id, int64_t expected_revision) {
     if (!on_owner_thread()) {
         return request_error("busy", "The possession service belongs to another thread.", -1);
     }
     if (coordinator.is_null()) {
         return request_error("unconfigured", "Configure possession before changing control.", 0);
     }
-    const Ref<CrimsonPossession> keep_alive(this);
+    const Ref<PlayerPossession> keep_alive(this);
     Dictionary context;
     context["player_id"] = player_id;
-    const Ref<CrimsonTransaction> transaction = coordinator->begin(context);
+    const Ref<GameTransaction> transaction = coordinator->begin(context);
     if (transaction.is_null()) {
         return request_error("busy", "The coordinator cannot begin a possession transaction.", coordinator->get_revision());
     }
@@ -191,15 +191,15 @@ Dictionary CrimsonPossession::try_set_primary(const String &player_id, const Str
     return coordinator->commit(transaction);
 }
 
-bool CrimsonPossession::on_owner_thread() const {
+bool PlayerPossession::on_owner_thread() const {
     return std::this_thread::get_id() == owner_thread;
 }
 
-Dictionary CrimsonPossession::prepare_store(const Dictionary &current, const Array &operations, const Dictionary &context) {
+Dictionary PlayerPossession::prepare_store(const Dictionary &current, const Array &operations, const Dictionary &context) {
     if (!on_owner_thread() || coordinator.is_null()) {
         return rejected("The possession store is unavailable.");
     }
-    const Ref<CrimsonPossession> keep_alive(this);
+    const Ref<PlayerPossession> keep_alive(this);
     const Dictionary players = coordinator->read_store(players_store);
     const Dictionary characters = coordinator->read_store(characters_store);
     Dictionary next = current.duplicate(true);
@@ -261,7 +261,7 @@ Dictionary CrimsonPossession::prepare_store(const Dictionary &current, const Arr
     return result;
 }
 
-Dictionary CrimsonPossession::validate_references(const Dictionary &prepared, const Dictionary &) const {
+Dictionary PlayerPossession::validate_references(const Dictionary &prepared, const Dictionary &) const {
     if (!on_owner_thread() || coordinator.is_null()) {
         return rejected("The possession store is unavailable.");
     }
@@ -305,7 +305,7 @@ Dictionary CrimsonPossession::validate_references(const Dictionary &prepared, co
     return result;
 }
 
-void CrimsonPossession::on_committed(int64_t revision, const PackedStringArray &stores) {
+void PlayerPossession::on_committed(int64_t revision, const PackedStringArray &stores) {
     if (!on_owner_thread() || coordinator.is_null() || coordinator->get_revision() != revision || !stores.has(store_id)) {
         return;
     }
@@ -313,7 +313,7 @@ void CrimsonPossession::on_committed(int64_t revision, const PackedStringArray &
     if (store_revision <= last_store_revision) {
         return;
     }
-    const Ref<CrimsonPossession> keep_alive(this);
+    const Ref<PlayerPossession> keep_alive(this);
     const Dictionary previous = last_published;
     last_published = coordinator->read_store(store_id);
     last_store_revision = store_revision;

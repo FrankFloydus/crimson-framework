@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="SteamMusic" inherits="RefCounted">
+	<brief_description>Queries and controls the optional Steam client music player.</brief_description>
+	<description>Use [method SteamClient.music] after boot. [constant OK] on a control acknowledges submission. Controls return [constant ERR_UNAVAILABLE] when Steam Music is disabled.</description>
+	<methods>
+		<method name="next">
+			<return type="int" enum="Error" />
+			<description>Requests the next track in the current Steam queue.</description>
+		</method>
+		<method name="pause">
+			<return type="int" enum="Error" />
+			<description>Requests a pause of the current Steam queue.</description>
+		</method>
+		<method name="play">
+			<return type="int" enum="Error" />
+			<description>Requests resume or playback of the current Steam queue.</description>
+		</method>
+		<method name="previous">
+			<return type="int" enum="Error" />
+			<description>Requests the previous track in the current Steam queue.</description>
+		</method>
+		<method name="set_volume">
+			<return type="int" enum="Error" />
+			<param index="0" name="level" type="float" />
+			<description>Requests the normalized volume [param level] from 0 through 1.</description>
+		</method>
+		<method name="status" qualifiers="const">
+			<return type="SteamMusicStatusResult" />
+			<description>Reads the player's enabled state, playback state, and volume.</description>
+		</method>
+	</methods>
+	<signals>
+		<signal name="playback_changed">
+			<description>Emitted after Steam reports a playback change. Read the new state with [method status].</description>
+		</signal>
+		<signal name="volume_changed">
+			<param index="0" name="level" type="float" />
+			<description>Emitted with the normalized volume reported by Steam.</description>
+		</signal>
+	</signals>
+</class>

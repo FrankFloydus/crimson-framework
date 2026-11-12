@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="LocalPlayerView" inherits="Node">
+	<brief_description>
+		Selects the camera and optional hidden visuals for a local player instance.
+	</brief_description>
+	<members>
+		<member name="camera" type="Camera3D" setter="set_camera" getter="get_camera">
+			Camera activated when this actor belongs to the local player. Pick a Camera3D from this same player scene.
+		</member>
+		<member name="hidden_visuals" type="Node3D" setter="set_hidden_visuals" getter="get_hidden_visuals">
+			Optional visual subtree hidden only on the local player's actor. Pick the body mesh or its container inside this same player scene.
+		</member>
+	</members>
+</class>

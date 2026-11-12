@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="SteamWorkshopPublicationResult" inherits="SteamResult">
+	<brief_description>
+		Typed outcome for a Workshop publication.
+	</brief_description>
+	<methods>
+		<method name="get_value" qualifiers="const">
+			<return type="SteamWorkshopPublication" />
+			<description>Returns the publication identity when Steam reports one. Inspect [member SteamResult.ok] for completion and retain the ID for a retry through [method SteamWorkshopItemRef.edit].</description>
+		</method>
+	</methods>
+	<members>
+		<member name="value" type="SteamWorkshopPublication" setter="" getter="get_value">
+			The detached snapshot Steam supplied for this result.
+		</member>
+	</members>
+</class>

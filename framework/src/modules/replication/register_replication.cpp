@@ -10,7 +10,7 @@ namespace crimson::replication {
 
 void register_types(godot::ModuleInitializationLevel level) {
     if (level == godot::MODULE_INITIALIZATION_LEVEL_SCENE) {
-        GDREGISTER_CLASS(CrimsonReplication);
+        GDREGISTER_CLASS(StateReplication);
     }
 }
 

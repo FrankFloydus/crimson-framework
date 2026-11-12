@@ -9,8 +9,8 @@ const ScreenNavigator := preload("res://demo/ui/screen_navigator.gd")
 ## Relays the launch result to an optional command-line caller.
 signal launch_finished(ok: bool, message: String)
 
-## Persistent CrimsonGame that starts and joins sessions for this menu.
-@export var game: CrimsonGame
+## Persistent GameRuntime that starts and joins sessions for this menu.
+@export var game: GameRuntime
 
 @onready var _screens: ScreenNavigator = %Screens
 @onready var _address: LineEdit = %Address

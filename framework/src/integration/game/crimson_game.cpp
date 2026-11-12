@@ -1,8 +1,11 @@
 // Copyright Francesco Di Blasi 2026 - All Rights Reserved
 
 #include "integration/game/crimson_game.hpp"
+#include "integration/online/steam/steam_online.hpp"
 #include "integration/game/game_services.hpp"
+#include "integration/game/game_voice.hpp"
 #include "integration/game/multiplayer_rules.hpp"
+#include "integration/online/steam/steam_dedicated.hpp"
 
 #include <godot_cpp/classes/time.hpp>
 #include <godot_cpp/core/class_db.hpp>
@@ -46,56 +49,59 @@ T *add_service(Node &owner, const StringName &name) {
 
 } // namespace
 
-void CrimsonGame::_bind_methods() {
-    ClassDB::bind_static_method(get_class_static(), D_METHOD("configure"), &CrimsonGame::configure);
-    ClassDB::bind_method(D_METHOD("set_definition", "definition"), &CrimsonGame::set_definition);
-    ClassDB::bind_method(D_METHOD("get_definition"), &CrimsonGame::get_definition);
-    ClassDB::bind_method(D_METHOD("start_offline"), &CrimsonGame::start_offline);
-    ClassDB::bind_method(D_METHOD("play_solo"), &CrimsonGame::play_solo);
-    ClassDB::bind_method(D_METHOD("host_game", "bind_address"), &CrimsonGame::host_game, DEFVAL(String("*")));
-    ClassDB::bind_method(D_METHOD("start_dedicated", "bind_address"), &CrimsonGame::start_dedicated, DEFVAL(String("*")));
-    ClassDB::bind_method(D_METHOD("join_game", "address"), &CrimsonGame::join_game);
-    ClassDB::bind_method(D_METHOD("host_online", "public_address", "bind_address"), &CrimsonGame::host_online,
+void GameRuntime::_bind_methods() {
+    ClassDB::bind_static_method(get_class_static(), D_METHOD("configure"), &GameRuntime::configure);
+    ClassDB::bind_method(D_METHOD("set_definition", "definition"), &GameRuntime::set_definition);
+    ClassDB::bind_method(D_METHOD("get_definition"), &GameRuntime::get_definition);
+    ClassDB::bind_method(D_METHOD("start_offline"), &GameRuntime::start_offline);
+    ClassDB::bind_method(D_METHOD("play_solo"), &GameRuntime::play_solo);
+    ClassDB::bind_method(D_METHOD("host_game", "bind_address"), &GameRuntime::host_game, DEFVAL(String("*")));
+    ClassDB::bind_method(D_METHOD("start_dedicated", "bind_address"), &GameRuntime::start_dedicated, DEFVAL(String("*")));
+    ClassDB::bind_method(D_METHOD("join_game", "address"), &GameRuntime::join_game);
+    ClassDB::bind_method(D_METHOD("host_online", "public_address", "bind_address"), &GameRuntime::host_online,
             DEFVAL(String()), DEFVAL(String("*")));
     ClassDB::bind_method(D_METHOD("start_dedicated_online", "public_address", "bind_address"),
-            &CrimsonGame::start_dedicated_online, DEFVAL(String()), DEFVAL(String("*")));
-    ClassDB::bind_method(D_METHOD("join_online", "listing_id"), &CrimsonGame::join_online);
-    ClassDB::bind_method(D_METHOD("get_online_listing"), &CrimsonGame::get_online_listing);
-    ClassDB::bind_method(D_METHOD("open_offline"), &CrimsonGame::open_offline);
-    ClassDB::bind_method(D_METHOD("host", "port", "max_clients", "bind_address"), &CrimsonGame::host,
+            &GameRuntime::start_dedicated_online, DEFVAL(String()), DEFVAL(String("*")));
+    ClassDB::bind_method(D_METHOD("join_online", "listing_id"), &GameRuntime::join_online);
+    ClassDB::bind_method(D_METHOD("join_listing", "listing"), &GameRuntime::join_listing);
+    ClassDB::bind_method(D_METHOD("invites"), &GameRuntime::invites);
+    ClassDB::bind_method(D_METHOD("voice"), &GameRuntime::voice);
+    ClassDB::bind_method(D_METHOD("get_online_listing"), &GameRuntime::get_online_listing);
+    ClassDB::bind_method(D_METHOD("open_offline"), &GameRuntime::open_offline);
+    ClassDB::bind_method(D_METHOD("host", "port", "max_clients", "bind_address"), &GameRuntime::host,
             DEFVAL(32), DEFVAL(String("*")));
-    ClassDB::bind_method(D_METHOD("join", "address", "port", "timeout_seconds"), &CrimsonGame::join, DEFVAL(10.0));
-    ClassDB::bind_method(D_METHOD("leave"), &CrimsonGame::leave);
-    ClassDB::bind_method(D_METHOD("start_match", "world"), &CrimsonGame::start_match, DEFVAL(StringName()));
-    ClassDB::bind_method(D_METHOD("travel_to", "world"), &CrimsonGame::travel_to);
-    ClassDB::bind_method(D_METHOD("save_slot", "profile", "slot"), &CrimsonGame::save_slot);
-    ClassDB::bind_method(D_METHOD("save", "profile", "slot", "metadata", "autosave"), &CrimsonGame::save,
+    ClassDB::bind_method(D_METHOD("join", "address", "port", "timeout_seconds"), &GameRuntime::join, DEFVAL(10.0));
+    ClassDB::bind_method(D_METHOD("leave"), &GameRuntime::leave);
+    ClassDB::bind_method(D_METHOD("start_match", "world"), &GameRuntime::start_match, DEFVAL(StringName()));
+    ClassDB::bind_method(D_METHOD("travel_to", "world"), &GameRuntime::travel_to);
+    ClassDB::bind_method(D_METHOD("save_slot", "profile", "slot"), &GameRuntime::save_slot);
+    ClassDB::bind_method(D_METHOD("save", "profile", "slot", "metadata", "autosave"), &GameRuntime::save,
             DEFVAL(Dictionary()), DEFVAL(false));
     ClassDB::bind_method(D_METHOD("restore", "profile", "slot", "sequence", "generation_id"),
-            &CrimsonGame::restore, DEFVAL(String()), DEFVAL(String()));
+            &GameRuntime::restore, DEFVAL(String()), DEFVAL(String()));
     ClassDB::bind_method(D_METHOD("save_history", "profile", "slot", "before_sequence", "before_id", "limit"),
-            &CrimsonGame::save_history, DEFVAL(String()), DEFVAL(String()), DEFVAL(16));
-    ClassDB::bind_method(D_METHOD("bind_player", "peer", "player_id"), &CrimsonGame::bind_player);
+            &GameRuntime::save_history, DEFVAL(String()), DEFVAL(String()), DEFVAL(16));
+    ClassDB::bind_method(D_METHOD("bind_player", "peer", "player_id"), &GameRuntime::bind_player);
     ClassDB::bind_method(D_METHOD("register_command", "name", "handler", "requires_primary"),
-            &CrimsonGame::register_command, DEFVAL(false));
+            &GameRuntime::register_command, DEFVAL(false));
     ClassDB::bind_method(D_METHOD("declare_command", "name", "requires_primary"),
-            &CrimsonGame::declare_command, DEFVAL(false));
-    ClassDB::bind_method(D_METHOD("get_local_player_id"), &CrimsonGame::get_local_player_id);
-    ClassDB::bind_method(D_METHOD("get_local_character_id"), &CrimsonGame::get_local_character_id);
-    ClassDB::bind_method(D_METHOD("submit", "name", "payload"), &CrimsonGame::submit, DEFVAL(Dictionary()));
-    ClassDB::bind_method(D_METHOD("set_shared_stores", "store_ids"), &CrimsonGame::set_shared_stores);
-    ClassDB::bind_method(D_METHOD("set_projector", "projector"), &CrimsonGame::set_projector);
-    ClassDB::bind_method(D_METHOD("get_phase"), &CrimsonGame::get_phase);
-    ClassDB::bind_method(D_METHOD("get_world_id"), &CrimsonGame::get_world_id);
-    ClassDB::bind_method(D_METHOD("get_world_epoch"), &CrimsonGame::get_world_epoch);
-    ClassDB::bind_method(D_METHOD("get_world"), &CrimsonGame::get_world);
-    ClassDB::bind_method(D_METHOD("get_local_player"), &CrimsonGame::get_local_player);
-    ClassDB::bind_method(D_METHOD("get_player", "peer_id"), &CrimsonGame::get_player);
-    ClassDB::bind_method(D_METHOD("get_transactions"), &CrimsonGame::get_transactions);
-    ClassDB::bind_method(D_METHOD("get_possession"), &CrimsonGame::get_possession);
-    ClassDB::bind_method(D_METHOD("get_projection"), &CrimsonGame::get_projection);
-    ClassDB::bind_method(D_METHOD("is_authority"), &CrimsonGame::is_authority);
-    ADD_PROPERTY(PropertyInfo(Variant::OBJECT, "definition", PROPERTY_HINT_RESOURCE_TYPE, "CrimsonGameDefinition"),
+            &GameRuntime::declare_command, DEFVAL(false));
+    ClassDB::bind_method(D_METHOD("get_local_player_id"), &GameRuntime::get_local_player_id);
+    ClassDB::bind_method(D_METHOD("get_local_character_id"), &GameRuntime::get_local_character_id);
+    ClassDB::bind_method(D_METHOD("submit", "name", "payload"), &GameRuntime::submit, DEFVAL(Dictionary()));
+    ClassDB::bind_method(D_METHOD("set_shared_stores", "store_ids"), &GameRuntime::set_shared_stores);
+    ClassDB::bind_method(D_METHOD("set_projector", "projector"), &GameRuntime::set_projector);
+    ClassDB::bind_method(D_METHOD("get_phase"), &GameRuntime::get_phase);
+    ClassDB::bind_method(D_METHOD("get_world_id"), &GameRuntime::get_world_id);
+    ClassDB::bind_method(D_METHOD("get_world_epoch"), &GameRuntime::get_world_epoch);
+    ClassDB::bind_method(D_METHOD("get_world"), &GameRuntime::get_world);
+    ClassDB::bind_method(D_METHOD("get_local_player"), &GameRuntime::get_local_player);
+    ClassDB::bind_method(D_METHOD("get_player", "peer_id"), &GameRuntime::get_player);
+    ClassDB::bind_method(D_METHOD("get_transactions"), &GameRuntime::get_transactions);
+    ClassDB::bind_method(D_METHOD("get_possession"), &GameRuntime::get_possession);
+    ClassDB::bind_method(D_METHOD("get_projection"), &GameRuntime::get_projection);
+    ClassDB::bind_method(D_METHOD("is_authority"), &GameRuntime::is_authority);
+    ADD_PROPERTY(PropertyInfo(Variant::OBJECT, "definition", PROPERTY_HINT_RESOURCE_TYPE, "GameDefinition"),
             "set_definition", "get_definition");
     ADD_PROPERTY(PropertyInfo(Variant::OBJECT, "transactions"), "", "get_transactions");
     ADD_PROPERTY(PropertyInfo(Variant::OBJECT, "possession"), "", "get_possession");
@@ -114,25 +120,25 @@ void CrimsonGame::_bind_methods() {
     BIND_ENUM_CONSTANT(RECOVERING);
 }
 
-void CrimsonGame::_enter_tree() {
+void GameRuntime::_enter_tree() {
     if (session_node || service_setup_failed) {
         request_ready();
     }
 }
 
-void CrimsonGame::_ready() {
+void GameRuntime::_ready() {
     if (session_node) {
-        CrimsonServiceContainer::open(*this);
-        online_directory = CrimsonServiceContainer::make_online_directory(*this);
+        GameServiceContainer::open(*this);
+        online_directory = GameServiceContainer::make_online_directory(*this, *session_node);
         republish_after_cleanup = true;
         cleanup_session();
         return;
     }
     cleaning = false;
     service_setup_failed = false;
-    CrimsonServiceContainer::open(*this);
-    session_node = CrimsonServiceContainer::make_session(*this);
-    loader = CrimsonServiceContainer::make_scene_loader(*this);
+    GameServiceContainer::open(*this);
+    session_node = GameServiceContainer::make_session(*this);
+    loader = GameServiceContainer::make_scene_loader(*this);
     if (!session_node || !loader) {
         service_setup_failed = true;
         if (session_node) {
@@ -143,7 +149,7 @@ void CrimsonGame::_ready() {
             memdelete(loader);
             loader = nullptr;
         }
-        CrimsonServiceContainer::close(*this);
+        GameServiceContainer::close(*this);
         return;
     }
     world_container = add_service<Node>(*this, "WorldContainer");
@@ -151,49 +157,60 @@ void CrimsonGame::_ready() {
     add_child(session_node);
     loader->set_name("SceneLoader");
     add_child(loader);
-    replication_node = add_service<replication::CrimsonReplication>(*this, "Replication");
-    network = add_service<CrimsonMatchNetwork>(*this, "MatchNetwork");
+    replication_node = add_service<replication::StateReplication>(*this, "Replication");
+    network = add_service<MatchNetwork>(*this, "MatchNetwork");
+    voice_service = add_service<GameVoice>(*this, "Voice");
     saves = add_service<checkpoint::SaveCoordinator>(*this, "Checkpoints");
 
     loader->set_world_container(world_container);
     loader->set_manage_admission(false);
-    replication_node->set_projector(callable_mp(this, &CrimsonGame::project));
-    network->set_dispatcher(callable_mp(this, &CrimsonGame::dispatch_remote));
+    replication_node->set_projector(callable_mp(this, &GameRuntime::project));
+    network->set_dispatcher(callable_mp(this, &GameRuntime::dispatch_remote));
     checkpoint_adapter.instantiate();
     reset_match();
 
-    session_node->connect("session_started", callable_mp(this, &CrimsonGame::on_session_started));
-    session_node->connect("session_ended", callable_mp(this, &CrimsonGame::on_session_ended));
-    session_node->connect("peer_joined", callable_mp(this, &CrimsonGame::on_peer_joined));
-    session_node->connect("peer_left", callable_mp(this, &CrimsonGame::on_peer_left));
-    loader->connect("load_completed", callable_mp(this, &CrimsonGame::on_scene_completed));
-    loader->connect("load_failed", callable_mp(this, &CrimsonGame::on_scene_failed));
-    loader->connect("load_sync_failed", callable_mp(this, &CrimsonGame::on_scene_sync_failed));
-    saves->connect("load_prepared", callable_mp(this, &CrimsonGame::on_load_prepared));
-    saves->connect("operation_finished", callable_mp(this, &CrimsonGame::on_save_finished));
-    network->connect("world_announced", callable_mp(this, &CrimsonGame::on_world_announced));
-    network->connect("world_finished", callable_mp(this, &CrimsonGame::on_world_finished));
-    replication_node->connect("peer_ready", callable_mp(this, &CrimsonGame::on_peer_ready));
-    replication_node->connect("peer_sync_failed", callable_mp(this, &CrimsonGame::on_peer_sync_failed));
-    replication_node->connect("projection_updated", callable_mp(this, &CrimsonGame::on_projection_updated));
+    session_node->connect("session_started", callable_mp(this, &GameRuntime::on_session_started));
+    session_node->connect("session_ended", callable_mp(this, &GameRuntime::on_session_ended));
+    session_node->connect("peer_joined", callable_mp(this, &GameRuntime::on_peer_joined));
+    session_node->connect("peer_left", callable_mp(this, &GameRuntime::on_peer_left));
+    loader->connect("load_completed", callable_mp(this, &GameRuntime::on_scene_completed));
+    loader->connect("load_failed", callable_mp(this, &GameRuntime::on_scene_failed));
+    loader->connect("load_sync_failed", callable_mp(this, &GameRuntime::on_scene_sync_failed));
+    saves->connect("load_prepared", callable_mp(this, &GameRuntime::on_load_prepared));
+    saves->connect("operation_finished", callable_mp(this, &GameRuntime::on_save_finished));
+    network->connect("world_announced", callable_mp(this, &GameRuntime::on_world_announced));
+    network->connect("world_finished", callable_mp(this, &GameRuntime::on_world_finished));
+    replication_node->connect("peer_ready", callable_mp(this, &GameRuntime::on_peer_ready));
+    replication_node->connect("peer_sync_failed", callable_mp(this, &GameRuntime::on_peer_sync_failed));
+    replication_node->connect("projection_updated", callable_mp(this, &GameRuntime::on_projection_updated));
     set_process_mode(PROCESS_MODE_ALWAYS);
     set_process(true);
     publishing = true;
-    online_directory = CrimsonServiceContainer::make_online_directory(*this);
+    online_directory = GameServiceContainer::make_online_directory(*this, *session_node);
     publishing = false;
-    CrimsonServiceContainer::publish(*this);
+    GameServiceContainer::publish(*this);
 }
 
-void CrimsonGame::_exit_tree() {
+GameVoice *GameRuntime::voice() const {
+    if (!voice_service || !is_inside_tree() || cleaning) {
+        return nullptr;
+    }
+    auto *owner = const_cast<GameRuntime *>(this);
+    const auto steam = SteamServices::for_game(owner);
+    const auto server = SteamServices::server_for(owner);
+    return (steam.is_valid() && steam->voice().is_valid()) || server.is_valid() ? voice_service : nullptr;
+}
+
+void GameRuntime::_exit_tree() {
     cleaning = true;
     republish_after_cleanup = false;
-    CrimsonServiceContainer::close(*this);
+    GameServiceContainer::close(*this);
     if (network) {
         network->reset();
     }
     cancel_save_operations();
     if (transition.operation.is_valid()) {
-        const Ref<CrimsonGameOperation> operation = transition.operation;
+        const Ref<GameOperation> operation = transition.operation;
         transition = {};
         operation->finish(outcome(false, "Cancelled", "The game left the scene tree."));
     }
@@ -212,13 +229,15 @@ void CrimsonGame::_exit_tree() {
     phase = IDLE;
 }
 
-void CrimsonGame::_process(double) {
+void GameRuntime::_process(double) {
     if (cleaning) {
         cleanup_session();
         return;
     }
     if (online_start.operation.is_valid()) {
         process_online_start();
+        // Completing online startup can resume a caller that frees this game.
+        return;
     }
     if (pending_captures != 0) {
         capture_saves();
@@ -226,9 +245,10 @@ void CrimsonGame::_process(double) {
     if (phase == TRANSITIONING && transition.deadline != 0 &&
             Time::get_singleton()->get_ticks_msec() >= transition.deadline) {
         finish_transition(false, "BaselineTimeout", "A participant did not acknowledge the world baseline.", true);
+        return;
     }
     if (!immediate_active && phase == RUNNING && is_authority() &&
-            session_node->get_state() == session::CrimsonGameSession::HOSTING) {
+            session_node->get_state() == session::GameSession::HOSTING) {
         const int64_t revision = transactions->get_revision();
         if (revision > replication_node->get_revision()) {
             replication_node->publish_changes(revision);
@@ -236,21 +256,21 @@ void CrimsonGame::_process(double) {
     }
 }
 
-void CrimsonGame::set_definition(const Ref<CrimsonGameDefinition> &value) {
+void GameRuntime::set_definition(const Ref<GameDefinition> &value) {
     if (!configured && !immediate_active && !publishing && !online_start.operation.is_valid()) {
         definition = value;
     }
 }
 
-Ref<CrimsonGameDefinition> CrimsonGame::configure() {
-    return CrimsonGameDefinition::configure();
+Ref<GameDefinition> GameRuntime::configure() {
+    return GameDefinition::configure();
 }
 
-Ref<CrimsonGameDefinition> CrimsonGame::get_definition() const {
+Ref<GameDefinition> GameRuntime::get_definition() const {
     return definition;
 }
 
-Error CrimsonGame::configure_game() {
+Error GameRuntime::configure_game() {
     if (cleaning || immediate_active || publishing || online_start.operation.is_valid()) {
         return ERR_BUSY;
     }
@@ -319,7 +339,7 @@ Error CrimsonGame::configure_game() {
     return OK;
 }
 
-void CrimsonGame::reset_match() {
+void GameRuntime::reset_match() {
     transactions.instantiate();
     possession.instantiate();
     bindings.instantiate();
@@ -333,14 +353,14 @@ void CrimsonGame::reset_match() {
     checkpoint_adapter->set_context(transactions, String());
 }
 
-void CrimsonGame::set_phase(Phase value) {
+void GameRuntime::set_phase(Phase value) {
     if (phase != value) {
         phase = value;
         emit_signal("phase_changed", int64_t(value));
     }
 }
 
-Dictionary CrimsonGame::outcome(bool ok, const String &code, const String &message) const {
+Dictionary GameRuntime::outcome(bool ok, const String &code, const String &message) const {
     Dictionary result;
     result["ok"] = ok;
     result["code"] = code;
@@ -350,14 +370,14 @@ Dictionary CrimsonGame::outcome(bool ok, const String &code, const String &messa
     return result;
 }
 
-Ref<CrimsonGameOperation> CrimsonGame::completed(bool ok, const String &code, const String &message) const {
-    Ref<CrimsonGameOperation> operation;
+Ref<GameOperation> GameRuntime::completed(bool ok, const String &code, const String &message) const {
+    Ref<GameOperation> operation;
     operation.instantiate();
     operation->finish(outcome(ok, code, message));
     return operation;
 }
 
-Error CrimsonGame::open_offline() {
+Error GameRuntime::open_offline() {
     const Error error = configure_game();
     if (error != OK) {
         return error;
@@ -369,7 +389,7 @@ Error CrimsonGame::open_offline() {
     return start;
 }
 
-Ref<CrimsonGameOperation> CrimsonGame::start_offline() {
+Ref<GameOperation> GameRuntime::start_offline() {
     const Error error = open_offline();
     if (error != OK) {
         return completed(false, "OfflineStartRejected", "Could not open the offline lobby.");
@@ -377,24 +397,24 @@ Ref<CrimsonGameOperation> CrimsonGame::start_offline() {
     return start_match();
 }
 
-Ref<CrimsonGameOperation> CrimsonGame::play_solo() {
+Ref<GameOperation> GameRuntime::play_solo() {
     return start_immediate(ImmediateMode::Solo);
 }
 
-Ref<CrimsonGameOperation> CrimsonGame::host_game(const String &bind_address) {
+Ref<GameOperation> GameRuntime::host_game(const String &bind_address) {
     return start_immediate(ImmediateMode::Host, bind_address.strip_edges());
 }
 
-Ref<CrimsonGameOperation> CrimsonGame::start_dedicated(const String &bind_address) {
+Ref<GameOperation> GameRuntime::start_dedicated(const String &bind_address) {
     return start_immediate(ImmediateMode::Dedicated, bind_address.strip_edges());
 }
 
-Ref<CrimsonGameOperation> CrimsonGame::join_game(const String &address) {
+Ref<GameOperation> GameRuntime::join_game(const String &address) {
     return start_immediate(ImmediateMode::Join, address.strip_edges());
 }
 
-Ref<CrimsonGameOperation> CrimsonGame::start_immediate(ImmediateMode mode, const String &address,
-        const Ref<session::CrimsonSessionEndpoint> &endpoint, bool online) {
+Ref<GameOperation> GameRuntime::start_immediate(ImmediateMode mode, const String &address,
+        const Ref<session::SessionEndpoint> &endpoint, bool online) {
     if (service_setup_failed) {
         return completed(false, "ServiceInitializationFailed", "Could not initialize the game session and scene loader.");
     }
@@ -403,7 +423,7 @@ Ref<CrimsonGameOperation> CrimsonGame::start_immediate(ImmediateMode mode, const
     }
     if (phase != IDLE || immediate_active || cleaning || publishing ||
             (!online && online_start.operation.is_valid()) ||
-            session_node->get_state() != session::CrimsonGameSession::IDLE) {
+            session_node->get_state() != session::GameSession::IDLE) {
         return completed(false, "GameBusy", "Leave the current game before starting another.");
     }
     if (online && (online_start.authenticator.is_null() ||
@@ -416,7 +436,7 @@ Ref<CrimsonGameOperation> CrimsonGame::start_immediate(ImmediateMode mode, const
     if (world.is_null() || player.is_null() || !valid_world_key(String(target))) {
         return completed(false, "Unconfigured", "Assign a starting world and a player scene.");
     }
-    const Ref<CrimsonMultiplayerRules> rules = definition->get_multiplayer_rules();
+    const Ref<MultiplayerRules> rules = definition->get_multiplayer_rules();
     if (mode != ImmediateMode::Solo) {
         if (rules.is_null()) {
             return completed(false, "MultiplayerDisabled", "Configure multiplayer rules before hosting or joining.");
@@ -425,7 +445,7 @@ Ref<CrimsonGameOperation> CrimsonGame::start_immediate(ImmediateMode mode, const
             return completed(false, "LobbyRequired", "Use the coordinated host, join, and start_match actions for lobby-only admission.");
         }
         const int64_t minimum = mode == ImmediateMode::Host ? 2 : 1;
-        if (rules->get_max_players() < minimum || rules->get_max_players() > CrimsonWorldSession::MAX_PLAYERS ||
+        if (rules->get_max_players() < minimum || rules->get_max_players() > WorldSession::MAX_PLAYERS ||
                 rules->get_port() < 1 || rules->get_port() > 65535) {
             return completed(false, "InvalidMultiplayerRules", "Choose a valid player limit and UDP port.");
         }
@@ -443,17 +463,17 @@ Ref<CrimsonGameOperation> CrimsonGame::start_immediate(ImmediateMode mode, const
     immediate_active = true;
     immediate_mode = mode;
     if (!immediate) {
-        immediate = memnew(CrimsonWorldSession);
+        immediate = memnew(WorldSession);
         immediate->set_name("Immediate");
         immediate->use_services(session_node, loader);
         add_child(immediate);
-        immediate->connect("state_changed", callable_mp(this, &CrimsonGame::on_immediate_state));
-        immediate->connect("session_ended", callable_mp(this, &CrimsonGame::on_immediate_ended));
+        immediate->connect("state_changed", callable_mp(this, &GameRuntime::on_immediate_state));
+        immediate->connect("session_ended", callable_mp(this, &GameRuntime::on_immediate_ended));
     }
     immediate->configure_immediate(world, player, target, mode == ImmediateMode::Solo ? 1 : rules->get_max_players(),
-            mode == ImmediateMode::Solo ? CrimsonWorldSessionDefinition::DEFAULT_PORT : rules->get_port(),
+            mode == ImmediateMode::Solo ? WorldSessionDefinition::DEFAULT_PORT : rules->get_port(),
             mode == ImmediateMode::Join ? 0 : ++next_epoch);
-    Ref<CrimsonGameOperation> operation;
+    Ref<GameOperation> operation;
     operation.instantiate();
     immediate_start = operation;
     immediate_world_id = target;
@@ -485,13 +505,13 @@ Ref<CrimsonGameOperation> CrimsonGame::start_immediate(ImmediateMode mode, const
     return operation;
 }
 
-void CrimsonGame::on_immediate_state(int64_t state) {
+void GameRuntime::on_immediate_state(int64_t state) {
     if (!immediate_active || !immediate_start.is_valid()) {
         return;
     }
-    if (state == CrimsonWorldSession::STARTING) {
+    if (state == WorldSession::STARTING) {
         set_phase(TRANSITIONING);
-    } else if (state == CrimsonWorldSession::RUNNING) {
+    } else if (state == WorldSession::RUNNING) {
         const auto operation = std::exchange(immediate_start, {});
         world_id = immediate_world_id;
         world_epoch = immediate->get_world_epoch();
@@ -509,7 +529,7 @@ void CrimsonGame::on_immediate_state(int64_t state) {
     }
 }
 
-void CrimsonGame::on_immediate_ended(const StringName &reason) {
+void GameRuntime::on_immediate_ended(const StringName &reason) {
     if (!immediate_active) {
         return;
     }
@@ -571,17 +591,17 @@ void CrimsonGame::on_immediate_ended(const StringName &reason) {
     }
 }
 
-Error CrimsonGame::host(int64_t port, int64_t max_clients, const String &bind_address) {
+Error GameRuntime::host(int64_t port, int64_t max_clients, const String &bind_address) {
     const Error error = configure_game();
     return error == OK ? session_node->host(port, max_clients, bind_address) : error;
 }
 
-Error CrimsonGame::join(const String &address, int64_t port, double timeout_seconds) {
+Error GameRuntime::join(const String &address, int64_t port, double timeout_seconds) {
     const Error error = configure_game();
     return error == OK ? session_node->join(address, port, timeout_seconds) : error;
 }
 
-Error CrimsonGame::leave() {
+Error GameRuntime::leave() {
     if (!session_node || cleaning || publishing) {
         return ERR_BUSY;
     }
@@ -600,21 +620,21 @@ Error CrimsonGame::leave() {
     return OK;
 }
 
-Ref<CrimsonGameOperation> CrimsonGame::start_match(const StringName &world) {
+Ref<GameOperation> GameRuntime::start_match(const StringName &world) {
     if (phase != LOBBY || !is_authority()) {
         return completed(false, "NotInAuthorityLobby", "Start the match from the authority lobby.");
     }
     return travel_to(world.is_empty() ? starting_world : world);
 }
 
-Ref<CrimsonGameOperation> CrimsonGame::travel_to(const StringName &world) {
+Ref<GameOperation> GameRuntime::travel_to(const StringName &world) {
     if (immediate_active) {
         return completed(false, "CoordinatedGameRequired", "Use the coordinated game flow for world travel.");
     }
     if (worlds.find(world) == worlds.end()) {
         return completed(false, "UnknownWorld", "The requested world is absent from the game definition.");
     }
-    Ref<CrimsonGameOperation> operation;
+    Ref<GameOperation> operation;
     operation.instantiate();
     const Error error = begin_transition(operation);
     if (error != OK) {
@@ -625,7 +645,7 @@ Ref<CrimsonGameOperation> CrimsonGame::travel_to(const StringName &world) {
     return operation;
 }
 
-Error CrimsonGame::begin_transition(const Ref<CrimsonGameOperation> &operation) {
+Error GameRuntime::begin_transition(const Ref<GameOperation> &operation) {
     if (immediate_active) {
         return ERR_UNAVAILABLE;
     }
@@ -640,7 +660,7 @@ Error CrimsonGame::begin_transition(const Ref<CrimsonGameOperation> &operation) 
     transition.operation = operation;
     transition.previous = phase;
     transition.epoch = ++next_epoch;
-    if (session_node->get_state() == session::CrimsonGameSession::HOSTING) {
+    if (session_node->get_state() == session::GameSession::HOSTING) {
         transition.reopen_lobby = session_node->is_accepting_connections();
         if (session_node->set_accepting_connections(false) != OK) {
             transition = {};
@@ -652,7 +672,7 @@ Error CrimsonGame::begin_transition(const Ref<CrimsonGameOperation> &operation) 
     return OK;
 }
 
-void CrimsonGame::stage_scene(const StringName &target) {
+void GameRuntime::stage_scene(const StringName &target) {
     if (cleaning || transition.operation.is_null()) {
         return;
     }
@@ -667,13 +687,13 @@ void CrimsonGame::stage_scene(const StringName &target) {
         finish_transition(false, "WorldAnnouncementFailed", "Could not announce the destination to the session.");
         return;
     }
-    const Error error = loader->request_coordinated_load(worlds.at(target), callable_mp(this, &CrimsonGame::publish_world));
+    const Error error = loader->request_coordinated_load(worlds.at(target), callable_mp(this, &GameRuntime::publish_world));
     if (error != OK && transition.operation.is_valid()) {
         finish_transition(false, "SceneRejected", "The scene loader rejected the transition.");
     }
 }
 
-int64_t CrimsonGame::publish_world() {
+int64_t GameRuntime::publish_world() {
     if (cleaning || transition.operation.is_null() || !is_authority()) {
         return ERR_UNAUTHORIZED;
     }
@@ -690,7 +710,7 @@ int64_t CrimsonGame::publish_world() {
     return OK;
 }
 
-void CrimsonGame::finish_transition(bool ok, const String &code, const String &message, bool recovery) {
+void GameRuntime::finish_transition(bool ok, const String &code, const String &message, bool recovery) {
     if (transition.operation.is_null()) {
         return;
     }
@@ -723,14 +743,14 @@ void CrimsonGame::finish_transition(bool ok, const String &code, const String &m
     finished.operation->finish(result);
 }
 
-Ref<CrimsonSaveSlot> CrimsonGame::save_slot(const String &profile, const String &slot) {
-    Ref<CrimsonSaveSlot> handle;
+Ref<SaveSlot> GameRuntime::save_slot(const String &profile, const String &slot) {
+    Ref<SaveSlot> handle;
     handle.instantiate();
     handle->configure(this, profile, slot);
     return handle;
 }
 
-Ref<CrimsonGameOperation> CrimsonGame::save(const String &profile, const String &slot,
+Ref<GameOperation> GameRuntime::save(const String &profile, const String &slot,
         const Dictionary &metadata, bool autosave) {
     if (immediate_active || !is_authority() || phase != RUNNING || cleaning) {
         return completed(false, "SaveNotReady", "A world must be running on the authority to capture a save.");
@@ -740,16 +760,16 @@ Ref<CrimsonGameOperation> CrimsonGame::save(const String &profile, const String 
     if (ticket == 0) {
         return completed(false, saves->get_last_admission_error(), "The checkpoint coordinator rejected the save.");
     }
-    Ref<CrimsonGameOperation> operation;
+    Ref<GameOperation> operation;
     operation.instantiate();
     save_operations.emplace(ticket, operation);
     ++pending_captures;
     return operation;
 }
 
-Ref<CrimsonGameOperation> CrimsonGame::restore(const String &profile, const String &slot,
+Ref<GameOperation> GameRuntime::restore(const String &profile, const String &slot,
         const String &sequence, const String &generation_id) {
-    Ref<CrimsonGameOperation> operation;
+    Ref<GameOperation> operation;
     operation.instantiate();
     if (begin_transition(operation) != OK) {
         operation->finish(outcome(false, "RestoreRejected", "Restore requires an authority lobby or ready world."));
@@ -765,7 +785,7 @@ Ref<CrimsonGameOperation> CrimsonGame::restore(const String &profile, const Stri
     return operation;
 }
 
-Ref<CrimsonGameOperation> CrimsonGame::save_history(const String &profile, const String &slot,
+Ref<GameOperation> GameRuntime::save_history(const String &profile, const String &slot,
         const String &before_sequence, const String &before_id, int64_t limit) {
     if (configure_game() != OK) {
         return completed(false, "Unconfigured", "Assign a valid game definition before reading save history.");
@@ -774,27 +794,27 @@ Ref<CrimsonGameOperation> CrimsonGame::save_history(const String &profile, const
     if (ticket == 0) {
         return completed(false, saves->get_last_admission_error(), "The checkpoint coordinator rejected the read.");
     }
-    Ref<CrimsonGameOperation> operation;
+    Ref<GameOperation> operation;
     operation.instantiate();
     save_operations.emplace(ticket, operation);
     return operation;
 }
 
-void CrimsonGame::capture_saves() {
+void GameRuntime::capture_saves() {
     const int64_t count = std::exchange(pending_captures, int64_t(0));
     for (int64_t index = 0; index < count; ++index) {
         saves->capture_pending(String::num_int64(transactions->get_revision()));
     }
 }
 
-void CrimsonGame::on_load_prepared(int64_t ticket, const Dictionary &generation) {
+void GameRuntime::on_load_prepared(int64_t ticket, const Dictionary &generation) {
     if (ticket == transition.save_ticket && transition.operation.is_valid() && !cleaning) {
         transition.generation = generation.duplicate(true);
         stage_scene(StringName(checkpoint_adapter->get_candidate_world(saves->get_prepared_candidate(ticket))));
     }
 }
 
-void CrimsonGame::on_save_finished(int64_t ticket, const Dictionary &result) {
+void GameRuntime::on_save_finished(int64_t ticket, const Dictionary &result) {
     auto pending = save_operations.extract(ticket);
     if (!pending.empty()) {
         pending.mapped()->finish(result);
@@ -804,7 +824,7 @@ void CrimsonGame::on_save_finished(int64_t ticket, const Dictionary &result) {
     }
 }
 
-void CrimsonGame::cancel_save_operations() {
+void GameRuntime::cancel_save_operations() {
     pending_captures = 0;
     auto pending = std::exchange(save_operations, {});
     for (const auto &[ticket, operation] : pending) {
@@ -813,7 +833,7 @@ void CrimsonGame::cancel_save_operations() {
     }
 }
 
-void CrimsonGame::on_session_started(int64_t role, int64_t local_peer) {
+void GameRuntime::on_session_started(int64_t role, int64_t local_peer) {
     if (immediate_active) {
         return;
     }
@@ -821,7 +841,7 @@ void CrimsonGame::on_session_started(int64_t role, int64_t local_peer) {
         session_node->leave();
         return;
     }
-    if (role != session::CrimsonGameSession::CLIENT) {
+    if (role != session::GameSession::CLIENT) {
         match_id = String("match.") + String::num_uint64(Time::get_singleton()->get_ticks_usec());
         if (router->configure(match_id, 1, possession) != OK) {
             session_node->leave();
@@ -834,14 +854,14 @@ void CrimsonGame::on_session_started(int64_t role, int64_t local_peer) {
                 return;
             }
         }
-        if (role == session::CrimsonGameSession::OFFLINE) {
+        if (role == session::GameSession::OFFLINE) {
             bindings->bind_peer(local_peer, "local");
         }
     }
     set_phase(LOBBY);
 }
 
-void CrimsonGame::on_session_ended(const StringName &reason) {
+void GameRuntime::on_session_ended(const StringName &reason) {
     if (immediate_active) {
         return;
     }
@@ -851,7 +871,7 @@ void CrimsonGame::on_session_ended(const StringName &reason) {
     ended_reason = reason;
 }
 
-void CrimsonGame::cleanup_session() {
+void GameRuntime::cleanup_session() {
     if (loader->is_loading() || loader->clear_world() != OK || !saves->invalidate_world()) {
         return;
     }
@@ -871,19 +891,19 @@ void CrimsonGame::cleanup_session() {
     cleaning = false;
     set_phase(IDLE);
     if (reattached) {
-        CrimsonServiceContainer::publish(*this);
+        GameServiceContainer::publish(*this);
     } else {
         emit_signal("session_ended", reason);
     }
 }
 
-void CrimsonGame::on_peer_joined(int64_t peer) {
+void GameRuntime::on_peer_joined(int64_t peer) {
     if (!immediate_active) {
         emit_signal("peer_joined", peer);
     }
 }
 
-void CrimsonGame::on_peer_left(int64_t peer) {
+void GameRuntime::on_peer_left(int64_t peer) {
     if (immediate_active) {
         return;
     }
@@ -900,7 +920,7 @@ void CrimsonGame::on_peer_left(int64_t peer) {
     emit_signal("peer_left", peer);
 }
 
-Error CrimsonGame::bind_player(int64_t peer, const String &player_id) {
+Error GameRuntime::bind_player(int64_t peer, const String &player_id) {
     if (!is_authority() || phase != LOBBY || cleaning) {
         return ERR_UNAUTHORIZED;
     }
@@ -924,7 +944,7 @@ Error CrimsonGame::bind_player(int64_t peer, const String &player_id) {
     return OK;
 }
 
-bool CrimsonGame::peers_are_bound() const {
+bool GameRuntime::peers_are_bound() const {
     for (const int32_t peer : session_node->get_connected_peer_ids()) {
         if (bindings->get_binding_generation(peer) == 0) {
             return false;
@@ -933,8 +953,8 @@ bool CrimsonGame::peers_are_bound() const {
     return true;
 }
 
-void CrimsonGame::on_world_announced(const StringName &target, int64_t epoch) {
-    if (cleaning || session_node->get_state() != session::CrimsonGameSession::CLIENT ||
+void GameRuntime::on_world_announced(const StringName &target, int64_t epoch) {
+    if (cleaning || session_node->get_state() != session::GameSession::CLIENT ||
             worlds.find(target) == worlds.end() || epoch <= world_epoch || remote_epoch != 0 ||
             (phase != LOBBY && phase != RUNNING)) {
         return;
@@ -945,8 +965,8 @@ void CrimsonGame::on_world_announced(const StringName &target, int64_t epoch) {
     set_phase(TRANSITIONING);
 }
 
-void CrimsonGame::on_world_finished(int64_t epoch, bool ok, bool recovery) {
-    if (cleaning || session_node->get_state() != session::CrimsonGameSession::CLIENT) {
+void GameRuntime::on_world_finished(int64_t epoch, bool ok, bool recovery) {
+    if (cleaning || session_node->get_state() != session::GameSession::CLIENT) {
         return;
     }
     if (epoch != remote_epoch || remote_epoch == 0) {
@@ -976,7 +996,7 @@ void CrimsonGame::on_world_finished(int64_t epoch, bool ok, bool recovery) {
     }
 }
 
-void CrimsonGame::on_scene_completed(const StringName &) {
+void GameRuntime::on_scene_completed(const StringName &) {
     if (immediate_active) {
         return;
     }
@@ -990,7 +1010,7 @@ void CrimsonGame::on_scene_completed(const StringName &) {
         return;
     }
     publishing = false;
-    if (session_node->get_state() == session::CrimsonGameSession::OFFLINE) {
+    if (session_node->get_state() == session::GameSession::OFFLINE) {
         finish_transition(true, "OK");
         return;
     }
@@ -1016,13 +1036,13 @@ void CrimsonGame::on_scene_completed(const StringName &) {
     }
 }
 
-void CrimsonGame::on_scene_failed(const StringName &, int64_t, const String &message) {
+void GameRuntime::on_scene_failed(const StringName &, int64_t, const String &message) {
     if (!cleaning && transition.operation.is_valid()) {
         finish_transition(false, "ScenePreparationFailed", message);
     }
 }
 
-void CrimsonGame::on_scene_sync_failed(const StringName &, int64_t, const String &message) {
+void GameRuntime::on_scene_sync_failed(const StringName &, int64_t, const String &message) {
     if (cleaning || immediate_active) {
         return;
     }
@@ -1033,7 +1053,7 @@ void CrimsonGame::on_scene_sync_failed(const StringName &, int64_t, const String
     }
 }
 
-void CrimsonGame::on_peer_ready(int64_t peer, int64_t epoch, int64_t generation) {
+void GameRuntime::on_peer_ready(int64_t peer, int64_t epoch, int64_t generation) {
     if (!cleaning && transition.operation.is_valid() && transition.epoch == epoch &&
             generation == bindings->get_binding_generation(peer) && transition.waiting.erase(peer) != 0 &&
             transition.waiting.empty()) {
@@ -1041,7 +1061,7 @@ void CrimsonGame::on_peer_ready(int64_t peer, int64_t epoch, int64_t generation)
     }
 }
 
-void CrimsonGame::on_peer_sync_failed(int64_t peer, int64_t epoch, int64_t) {
+void GameRuntime::on_peer_sync_failed(int64_t peer, int64_t epoch, int64_t) {
     if (cleaning || epoch != world_epoch) {
         return;
     }
@@ -1054,13 +1074,13 @@ void CrimsonGame::on_peer_sync_failed(int64_t peer, int64_t epoch, int64_t) {
     }
 }
 
-void CrimsonGame::on_projection_updated(int64_t epoch, int64_t revision, bool baseline) {
+void GameRuntime::on_projection_updated(int64_t epoch, int64_t revision, bool baseline) {
     if (phase == RUNNING && epoch == world_epoch && !cleaning) {
         emit_signal("projection_updated", revision, baseline);
     }
 }
 
-Error CrimsonGame::declare_command(const String &name, bool requires_primary) {
+Error GameRuntime::declare_command(const String &name, bool requires_primary) {
     if (cleaning || (phase != IDLE && phase != LOBBY)) {
         return ERR_BUSY;
     }
@@ -1075,7 +1095,7 @@ Error CrimsonGame::declare_command(const String &name, bool requires_primary) {
     return OK;
 }
 
-Error CrimsonGame::register_command(const String &name, const Callable &handler, bool requires_primary) {
+Error GameRuntime::register_command(const String &name, const Callable &handler, bool requires_primary) {
     if (!handler.is_valid()) {
         return ERR_INVALID_PARAMETER;
     }
@@ -1096,7 +1116,7 @@ Error CrimsonGame::register_command(const String &name, const Callable &handler,
     command.handler = handler;
     return OK;
 }
-Error CrimsonGame::set_shared_stores(const PackedStringArray &store_ids) {
+Error GameRuntime::set_shared_stores(const PackedStringArray &store_ids) {
     if (phase != IDLE && phase != LOBBY) {
         return ERR_BUSY;
     }
@@ -1109,7 +1129,7 @@ Error CrimsonGame::set_shared_stores(const PackedStringArray &store_ids) {
     return OK;
 }
 
-Error CrimsonGame::set_projector(const Callable &projector) {
+Error GameRuntime::set_projector(const Callable &projector) {
     if (phase != IDLE && phase != LOBBY) {
         return ERR_BUSY;
     }
@@ -1117,7 +1137,7 @@ Error CrimsonGame::set_projector(const Callable &projector) {
     return OK;
 }
 
-Dictionary CrimsonGame::project(int64_t peer, const String &player, int64_t epoch, int64_t revision) {
+Dictionary GameRuntime::project(int64_t peer, const String &player, int64_t epoch, int64_t revision) {
     Dictionary view;
     if (project_view.is_valid()) {
         const Variant projected = project_view.call(peer, player, epoch, revision);
@@ -1150,7 +1170,7 @@ Dictionary CrimsonGame::project(int64_t peer, const String &player, int64_t epoc
     return result;
 }
 
-Dictionary CrimsonGame::dispatch_remote(int64_t peer, const Dictionary &intent) {
+Dictionary GameRuntime::dispatch_remote(int64_t peer, const Dictionary &intent) {
     const int64_t generation = bindings->get_binding_generation(peer);
     if (!is_authority() || phase != RUNNING || cleaning || generation == 0 ||
             !replication_node->is_peer_ready(peer, generation)) {
@@ -1159,7 +1179,7 @@ Dictionary CrimsonGame::dispatch_remote(int64_t peer, const Dictionary &intent) 
     return router->submit(bindings->get_player(peer), intent);
 }
 
-Dictionary CrimsonGame::local_command_context() const {
+Dictionary GameRuntime::local_command_context() const {
     if (!is_authority()) {
         return replication_node->get_projection().get(context_record, Dictionary());
     }
@@ -1172,7 +1192,7 @@ Dictionary CrimsonGame::local_command_context() const {
     return context;
 }
 
-Ref<CrimsonGameOperation> CrimsonGame::submit(const String &name, const Dictionary &payload) {
+Ref<GameOperation> GameRuntime::submit(const String &name, const Dictionary &payload) {
     if (immediate_active || phase != RUNNING || cleaning || local_sequence == std::numeric_limits<int64_t>::max()) {
         return completed(false, "CommandsClosed", "The game must be ready before submitting commands.");
     }
@@ -1202,73 +1222,73 @@ Ref<CrimsonGameOperation> CrimsonGame::submit(const String &name, const Dictiona
     if (!is_authority()) {
         return network->submit_remote(intent);
     }
-    Ref<CrimsonGameOperation> operation;
+    Ref<GameOperation> operation;
     operation.instantiate();
     operation->finish(router->submit(player, intent));
     return operation;
 }
 
-CrimsonGame::Phase CrimsonGame::get_phase() const {
+GameRuntime::Phase GameRuntime::get_phase() const {
     return phase;
 }
 
-StringName CrimsonGame::get_world_id() const {
+StringName GameRuntime::get_world_id() const {
     return world_id;
 }
 
-int64_t CrimsonGame::get_world_epoch() const {
+int64_t GameRuntime::get_world_epoch() const {
     return world_epoch;
 }
 
-Node *CrimsonGame::get_world() const {
+Node *GameRuntime::get_world() const {
     if (immediate_active) {
         return immediate ? immediate->get_world() : nullptr;
     }
     return loader ? loader->get_current_scene() : nullptr;
 }
 
-Node3D *CrimsonGame::get_local_player() const {
+Node3D *GameRuntime::get_local_player() const {
     return immediate_active && immediate ? immediate->get_local_player() : nullptr;
 }
 
-Node3D *CrimsonGame::get_player(int64_t peer_id) const {
+Node3D *GameRuntime::get_player(int64_t peer_id) const {
     return immediate_active && immediate ? immediate->get_player(peer_id) : nullptr;
 }
 
-Ref<match_runtime::CrimsonTransactionCoordinator> CrimsonGame::get_transactions() const {
+Ref<match_runtime::TransactionCoordinator> GameRuntime::get_transactions() const {
     if (immediate_active) {
         return {};
     }
-    return session_node && (session_node->get_state() == session::CrimsonGameSession::CLIENT ||
-            session_node->get_state() == session::CrimsonGameSession::CONNECTING) ?
-            Ref<match_runtime::CrimsonTransactionCoordinator>() : transactions;
+    return session_node && (session_node->get_state() == session::GameSession::CLIENT ||
+            session_node->get_state() == session::GameSession::CONNECTING) ?
+            Ref<match_runtime::TransactionCoordinator>() : transactions;
 }
 
-Ref<match_runtime::CrimsonPossession> CrimsonGame::get_possession() const {
-    return get_transactions().is_valid() ? possession : Ref<match_runtime::CrimsonPossession>();
+Ref<match_runtime::PlayerPossession> GameRuntime::get_possession() const {
+    return get_transactions().is_valid() ? possession : Ref<match_runtime::PlayerPossession>();
 }
 
-String CrimsonGame::get_local_player_id() const {
+String GameRuntime::get_local_player_id() const {
     if (!session_node || immediate_active || phase == IDLE || cleaning) {
         return {};
     }
     return local_command_context().get("player_id", String());
 }
 
-String CrimsonGame::get_local_character_id() const {
+String GameRuntime::get_local_character_id() const {
     if (immediate_active || phase != RUNNING || cleaning) {
         return {};
     }
     return local_command_context().get("character_id", String());
 }
 
-Dictionary CrimsonGame::get_projection() const {
+Dictionary GameRuntime::get_projection() const {
     Dictionary view = !immediate_active && phase == RUNNING && replication_node ? replication_node->get_projection() : Dictionary();
     view.erase(context_record);
     return view;
 }
 
-bool CrimsonGame::is_authority() const {
+bool GameRuntime::is_authority() const {
     if (immediate_active) {
         return immediate && immediate->is_authority();
     }
