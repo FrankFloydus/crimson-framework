@@ -65,6 +65,8 @@
 
 ## Changed
 
+- Captured the Steam API design lessons in the framework-wide guidelines, including Godot autocomplete, typed results, asynchronous success and partial effects, and optional service fallbacks. `Pending push`
+
 - Audited the current Steam implementation against Valve's documentation and the approved API. Identified gaps in offline startup, Steam launch and join controls, dedicated server metadata, and publisher notification and moderation behavior. `e5c51b338dafe38b5693dca206909e0aa2657699`
 
 - Required native Godot class XML for public methods, properties, enum values, and signals, and added Steam class documentation to the editor build. `e5c51b338dafe38b5693dca206909e0aa2657699`
