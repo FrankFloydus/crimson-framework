@@ -7,3 +7,4 @@ Record each versioned work commit after Git assigns its SHA. Add the verified Gi
 | Version and tag | Commit SHA | Description | Repository ZIP | GitHub Release ZIP |
 | --- | --- | --- | --- | --- |
 | v0.0.1 | `e83f32f806417f36379fb381e6f9cb5b6461e836` | Game composition, shared world startup, local multiplayer launchers, and native online providers. | [ZIP](releases/crimson-framework-0.0.1.zip) | [Download](https://github.com/FrankFloydus/crimson-framework/releases/download/v0.0.1/crimson-framework-0.0.1.zip) |
+| v0.0.2 | `e5c51b338dafe38b5693dca206909e0aa2657699` | Steamworks client, server, and trusted publisher APIs, provider cleanup, and a clean Godot editor import. | [ZIP](releases/crimson-framework-0.0.2.zip) | [Download](https://github.com/FrankFloydus/crimson-framework/releases/download/v0.0.2/crimson-framework-0.0.2.zip) |
