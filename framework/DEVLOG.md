@@ -6,3 +6,4 @@ Record each versioned work commit after Git assigns its SHA. Add the verified Gi
 
 | Version and tag | Commit SHA | Description | Repository ZIP | GitHub Release ZIP |
 | --- | --- | --- | --- | --- |
+| v0.0.1 | `e83f32f806417f36379fb381e6f9cb5b6461e836` | Game composition, shared world startup, local multiplayer launchers, and native online providers. | [ZIP](releases/crimson-framework-0.0.1.zip) | [Download](https://github.com/FrankFloydus/crimson-framework/releases/download/v0.0.1/crimson-framework-0.0.1.zip) |
