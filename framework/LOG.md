@@ -7,30 +7,30 @@
 
 ## Added
 
-- Added an authored native dedicated server entry. The headless Godot server boots from its scene without a GDScript bootstrap and shares the demo player and world. [Dedicated server](../server/AGENTS.md) `Pending push`
+- Added an authored native dedicated server entry. The headless Godot server boots from its scene without a GDScript bootstrap and shares the demo player and world. [Dedicated server](../server/AGENTS.md) `f83da634214894e38ca02b52fad5f450f035bf6c`
 
-- Added reusable Input Action and Input Map resources, an FPS preset, separate Mouse X, Mouse Y, and Mouse XY binding sources, and ordered Invert, Scale, Normalize, and Response Curve modifiers. [Input guide](src/modules/input/README.md) `Pending push`
+- Added reusable Input Action and Input Map resources, an FPS preset, separate Mouse X, Mouse Y, and Mouse XY binding sources, and ordered Invert, Scale, Normalize, and Response Curve modifiers. [Input guide](src/modules/input/README.md) `f83da634214894e38ca02b52fad5f450f035bf6c`
 
-- Added four player controller styles on the Mover component and profile, with independent camera aim and body facing in fixed-world multiplayer. Added a target selection call for Lock-On and wrapped Inspector tooltips for the style options and Mover values. [Player controls](docs/PLAYER_CONTROLS.md) `Pending push`
+- Added four player controller styles on the Mover component and profile, with independent camera aim and body facing in fixed-world multiplayer. Added a target selection call for Lock-On and wrapped Inspector tooltips for the style options and Mover values. [Player controls](docs/PLAYER_CONTROLS.md) `f83da634214894e38ca02b52fad5f450f035bf6c`
 
-- Added a local third-person camera preview to show the demo character's facing during solo and multiplayer movement tests. The Lock-On preview uses the north doorway as a test target. [Demo guide](project/demo/README.md) `Pending push`
+- Added a local third-person camera preview to show the demo character's facing during solo and multiplayer movement tests. The Lock-On preview uses the north doorway as a test target. [Demo guide](project/demo/README.md) `f83da634214894e38ca02b52fad5f450f035bf6c`
 
-- Exposed grounded acceleration, deceleration, friction, gravity, air control, and jump speed on the player Mover component. Live physics and multiplayer prediction share the tuning calculation. [Mover guide](src/modules/mover/README.md#configure-movement-on-a-player-scene) `Pending push`
+- Exposed grounded acceleration, deceleration, friction, gravity, air control, and jump speed on the player Mover component. Live physics and multiplayer prediction share the tuning calculation. [Mover guide](src/modules/mover/README.md#configure-movement-on-a-player-scene) `f83da634214894e38ca02b52fad5f450f035bf6c`
 
-- Added a default grounded jump on Space in the demo and Input Layout preset. The server validates takeoff and owning clients predict and replay the same jump command. [Player controls](docs/PLAYER_CONTROLS.md) `Pending push`
+- Added a default grounded jump on Space in the demo and Input Layout preset. The server validates takeoff and owning clients predict and replay the same jump command. [Player controls](docs/PLAYER_CONTROLS.md) `f83da634214894e38ca02b52fad5f450f035bf6c`
 
-- Added a bounded typed binary codec and game-scoped custom codec registry. Fixed-world movement uses the native codec for input and pose records. [Network](src/modules/network/README.md#typed-binary-messages) `Pending push`
+- Added a bounded typed binary codec and game-scoped custom codec registry. Fixed-world movement uses the native codec for input and pose records. [Network](src/modules/network/README.md#typed-binary-messages) `f83da634214894e38ca02b52fad5f450f035bf6c`
 
-- Added directional bandwidth throttling, named simulator profiles, temporary latency spikes, and timed network scenarios to the demo debugger. The same simulator runs headless JSON plans and reports machine-readable diagnostics. Added focused and concurrent network regression suites. [Network debugger](project/demo/README.md#network-debugger) `Pending push`
+- Added directional bandwidth throttling, named simulator profiles, temporary latency spikes, and timed network scenarios to the demo debugger. The same simulator runs headless JSON plans and reports machine-readable diagnostics. Added focused and concurrent network regression suites. [Network debugger](project/demo/README.md#network-debugger) `f83da634214894e38ca02b52fad5f450f035bf6c`
 
-- Added fixed-tick prediction and authoritative reconciliation for grounded movement against static collision. The demo opts in through its shared player profile. [Movement networking](docs/MOVEMENT_NETWORKING.md) `Pending push`
+- Added fixed-tick prediction and authoritative reconciliation for grounded movement against static collision. The demo opts in through its shared player profile. [Movement networking](docs/MOVEMENT_NETWORKING.md) `f83da634214894e38ca02b52fad5f450f035bf6c`
 
-- Added a demo network debugger with typed game diagnostics, loopback ENet delay and loss, and disconnect and reconnect controls. Playable windows display their assigned player slot and role. [Demo network debugger](project/demo/README.md#network-debugger) `Pending push`
+- Added a demo network debugger with typed game diagnostics, loopback ENet delay and loss, and disconnect and reconnect controls. Playable windows display their assigned player slot and role. [Demo network debugger](project/demo/README.md#network-debugger) `f83da634214894e38ca02b52fad5f450f035bf6c`
 
-- Added native Mover, scoped input and rebinding, and a local Player Control profile. Single Player uses default movement and look and can rebind Move Forward from GameUI. [Player controls](docs/PLAYER_CONTROLS.md) `Pending push`
-- Added authority-driven movement and look for the immediate-world profile, including guest pose updates and late join. [Movement networking](docs/MOVEMENT_NETWORKING.md) `Pending push`
+- Added native Mover, scoped input and rebinding, and a local Player Control profile. Single Player uses default movement and look and can rebind Move Forward from GameUI. [Player controls](docs/PLAYER_CONTROLS.md) `f83da634214894e38ca02b52fad5f450f035bf6c`
+- Added authority-driven movement and look for the immediate-world profile, including guest pose updates and late join. [Movement networking](docs/MOVEMENT_NETWORKING.md) `f83da634214894e38ca02b52fad5f450f035bf6c`
 
-- Implemented code-first Game boot, scoped typed service overrides, direct game actions, standalone Inventory grids, coordinated pickups, and the Steamworks facade. Migrated the demo and dedicated entry point to code and hid legacy setup classes from Add Node. [Quickstart](docs/CODE_FIRST.md) `Pending push`
+- Implemented code-first Game boot, scoped typed service overrides, direct game actions, standalone Inventory grids, coordinated pickups, and the Steamworks facade. Migrated the demo and dedicated entry point to code and hid legacy setup classes from Add Node. [Quickstart](docs/CODE_FIRST.md) `f83da634214894e38ca02b52fad5f450f035bf6c`
 
 - Added typed dedicated Steam stats and achievements for the exact admitted peer, Wallet buyer information, Cloud write-batch hints, Workshop subscriptions and legal agreement actions, and Steam notification session launch hints. Verified that an anonymous Spacewar dedicated server loaded the signed-in guest's Steam stats and retired the cache handle when the guest left. `e5c51b338dafe38b5693dca206909e0aa2657699`
 
@@ -90,26 +90,26 @@
 
 ## Changed
 
-- Isolated framework, gameplay, and Steam behavior tests from editable demo assets. Tests supply their own scenes, input mappings, and settings. The module suite boots without the demo, and live demo startup is a separate check. [Test guidance](AGENTS.md#verification) `Pending push`
+- Isolated framework, gameplay, and Steam behavior tests from editable demo assets. Tests supply their own scenes, input mappings, and settings. The module suite boots without the demo, and live demo startup is a separate check. [Test guidance](AGENTS.md#verification) `f83da634214894e38ca02b52fad5f450f035bf6c`
 
-- Grouped player speed and direction under Ground Movement and prediction under Network. Forward Direction explains the view, character, and world choices. `Pending push`
+- Grouped player speed and direction under Ground Movement and prediction under Network. Forward Direction explains the view, character, and world choices. `f83da634214894e38ca02b52fad5f450f035bf6c`
 
-- Made the player Mover component's inline fields its sole source of grounded tuning and removed its Rule Override. `MotionRule` remains available for standalone Mover and explicit player profiles. `Pending push`
+- Made the player Mover component's inline fields its sole source of grounded tuning and removed its Rule Override. `MotionRule` remains available for standalone Mover and explicit player profiles. `f83da634214894e38ca02b52fad5f450f035bf6c`
 
-- Checked Unreal Engine 5.8.4 Mover's default character setup, jump input and impulse, and optional modes against the installed source. `Pending push`
+- Checked Unreal Engine 5.8.4 Mover's default character setup, jump input and impulse, and optional modes against the installed source. `f83da634214894e38ca02b52fad5f450f035bf6c`
 
-- Renamed the native modules to `network` and `scene_manager`, moved rebinding under Input and removed the empty logging directory. [Module map](README.md#modules) `Pending push`
+- Renamed the native modules to `network` and `scene_manager`, moved rebinding under Input and removed the empty logging directory. [Module map](README.md#modules) `f83da634214894e38ca02b52fad5f450f035bf6c`
 
-- Moved demo movement and input tuning to Mover and Controls components on the player scene. LAN and dedicated sessions read the same authored movement settings. [Player controls](docs/PLAYER_CONTROLS.md) `Pending push`
-- Replaced the demo's network overlay with a developer window with live monitoring, configurable packet simulation, timed outages, and a session event log. [Network debugger](project/demo/README.md#network-debugger) `Pending push`
-- Removed blanket authoring requirements from the workspace and documentation agent guides. `Pending push`
-- The Windows LAN launcher tiles its host and guest windows in the primary display's work area. [Demo launchers](project/demo/README.md#start-from-the-command-line) `Pending push`
+- Moved demo movement and input tuning to Mover and Controls components on the player scene. LAN and dedicated sessions read the same authored movement settings. [Player controls](docs/PLAYER_CONTROLS.md) `f83da634214894e38ca02b52fad5f450f035bf6c`
+- Replaced the demo's network overlay with a developer window with live monitoring, configurable packet simulation, timed outages, and a session event log. [Network debugger](project/demo/README.md#network-debugger) `f83da634214894e38ca02b52fad5f450f035bf6c`
+- Removed blanket authoring requirements from the workspace and documentation agent guides. `f83da634214894e38ca02b52fad5f450f035bf6c`
+- The Windows LAN launcher tiles its host and guest windows in the primary display's work area. [Demo launchers](project/demo/README.md#start-from-the-command-line) `f83da634214894e38ca02b52fad5f450f035bf6c`
 
-- Reviewed the Input and Mover API drafts with the demo-menu chat and proposed scoped facades for pointer capture, action reads, modal suspension, rebinding, and adapter replacement. `Pending push`
+- Reviewed the Input and Mover API drafts with the demo-menu chat and proposed scoped facades for pointer capture, action reads, modal suspension, rebinding, and adapter replacement. `f83da634214894e38ca02b52fad5f450f035bf6c`
 
-- Reviewed the installed Unreal Engine 5.8.4 Mover source and reported how Crimson could extract a native kinematic movement component from a Transfer Hall controller, with a staged path to multiplayer prediction. `Pending push`
+- Reviewed the installed Unreal Engine 5.8.4 Mover source and reported how Crimson could extract a native kinematic movement component from a Transfer Hall controller, with a staged path to multiplayer prediction. `f83da634214894e38ca02b52fad5f450f035bf6c`
 
-- Audited Laravel 13.x and Cashier Stripe and revised the [API simplification proposal](docs/API_SIMPLIFICATION_PROPOSAL.md) around code-first Game, Inventory, and Steamworks, with scoped services, complete actions, and a migration for authored framework nodes. `Pending push`
+- Audited Laravel 13.x and Cashier Stripe and revised the [API simplification proposal](docs/API_SIMPLIFICATION_PROPOSAL.md) around code-first Game, Inventory, and Steamworks, with scoped services, complete actions, and a migration for authored framework nodes. `f83da634214894e38ca02b52fad5f450f035bf6c`
 
 - Captured the Steam API design lessons in the framework-wide guidelines, including Godot autocomplete, typed results, asynchronous success and partial effects, and optional service fallbacks. `36d0a7892d7979e825504fdbbfa4bcec0a129d7d`
 
@@ -148,27 +148,27 @@
 
 ## Fixed
 
-- Restored visible remote player models and made the network spike check wait for the application probe separately from relay forwarding. `Pending push`
+- Restored visible remote player models and made the network spike check wait for the application probe separately from relay forwarding. `f83da634214894e38ca02b52fad5f450f035bf6c`
 
-- Fixed broken unit labels in the Mover Inspector. Both Windows native builds check first-party C++ text to prevent the same encoding error in other strings. `Pending push`
+- Fixed broken unit labels in the Mover Inspector. Both Windows native builds check first-party C++ text to prevent the same encoding error in other strings. `f83da634214894e38ca02b52fad5f450f035bf6c`
 
-- Serialized guest startup in the Windows LAN launcher and capped frame rate and worker threads in its staged multi-window project. The launcher stops opening windows after a process crashes and preserves per-process logs. [Demo guide](project/demo/README.md#start-from-the-command-line) `Pending push`
+- Serialized guest startup in the Windows LAN launcher and capped frame rate and worker threads in its staged multi-window project. The launcher stops opening windows after a process crashes and preserves per-process logs. [Demo guide](project/demo/README.md#start-from-the-command-line) `f83da634214894e38ca02b52fad5f450f035bf6c`
 
-- Kept the multiplayer test harness waiting when Windows briefly locks the movement conditioner's readiness marker during publication. [Test harness](scripts/Test-Multiplayer.ps1) `Pending push`
+- Kept the multiplayer test harness waiting when Windows briefly locks the movement conditioner's readiness marker during publication. [Test harness](scripts/Test-Multiplayer.ps1) `f83da634214894e38ca02b52fad5f450f035bf6c`
 
-- Added Mover Inspector value-control help generated from the same property documentation as Godot's built-in Help. `Pending push`
+- Added Mover Inspector value-control help generated from the same property documentation as Godot's built-in Help. `f83da634214894e38ca02b52fad5f450f035bf6c`
 
-- Removed GDScript shadowed-name warnings and added an agent rule requiring distinct names across scopes, inherited members, and Godot globals. `Pending push`
+- Removed GDScript shadowed-name warnings and added an agent rule requiring distinct names across scopes, inherited members, and Godot globals. `f83da634214894e38ca02b52fad5f450f035bf6c`
 
-- Audited public Godot properties and enum values across the addon, demo, and server. Filled missing Inspector and class Help descriptions and clarified the choices offered by editable enum fields. `Pending push`
+- Audited public Godot properties and enum values across the addon, demo, and server. Filled missing Inspector and class Help descriptions and clarified the choices offered by editable enum fields. `f83da634214894e38ca02b52fad5f450f035bf6c`
 
-- Fixed movement RPC registration so the reliable authority roster keeps its own configuration when the code configures replaceable snapshots and input uploads. Added a 32-guest ENet regression for admission and motion convergence. [Movement networking](docs/MOVEMENT_NETWORKING.md#prediction-and-reconciliation) `Pending push`
+- Fixed movement RPC registration so the reliable authority roster keeps its own configuration when the code configures replaceable snapshots and input uploads. Added a 32-guest ENet regression for admission and motion convergence. [Movement networking](docs/MOVEMENT_NETWORKING.md#prediction-and-reconciliation) `f83da634214894e38ca02b52fad5f450f035bf6c`
 
-- Routed the stock demo's ENet guests through the authority to avoid Godot peer-relay notices to peers retiring in the same network poll. The concurrent harness verifies that every guest still sees the full player roster. [Network debugger](project/demo/README.md#network-debugger) `Pending push`
+- Routed the stock demo's ENet guests through the authority to avoid Godot peer-relay notices to peers retiring in the same network poll. The concurrent harness verifies that every guest still sees the full player roster. [Network debugger](project/demo/README.md#network-debugger) `f83da634214894e38ca02b52fad5f450f035bf6c`
 
-- Local Windows launchers select an available UDP port when the implicit default is unavailable, and explain an unavailable explicit port. [Demo launchers](project/demo/README.md#start-from-the-command-line) `Pending push`
+- Local Windows launchers select an available UDP port when the implicit default is unavailable, and explain an unavailable explicit port. [Demo launchers](project/demo/README.md#start-from-the-command-line) `f83da634214894e38ca02b52fad5f450f035bf6c`
 
-- Preserved actionable failure details across game startup, world travel, checkpoints, inventory operations, multiplayer sessions, and Steam services. Framework diagnostics use Godot's built-in output with a `[Crimson]` prefix. `Pending push`
+- Preserved actionable failure details across game startup, world travel, checkpoints, inventory operations, multiplayer sessions, and Steam services. Framework diagnostics use Godot's built-in output with a `[Crimson]` prefix. `f83da634214894e38ca02b52fad5f450f035bf6c`
 
 - Isolated Steam publisher fixtures from the demo's editor import so their trusted native types resolve in the publisher test project. `e5c51b338dafe38b5693dca206909e0aa2657699`
 
