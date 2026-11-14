@@ -2,7 +2,7 @@
 
 extends SceneTree
 
-const DEFINITION := preload("res://demo/session/transfer_hall.tres")
+const Fixture := preload("res://tests/fixtures/network_fixture.gd")
 const APP_ID := 480
 ## Private-app opt-in for the only fixture that mutates Steam progression.
 const PROGRESSION_WRITE := "CRIMSON_STEAM_SERVER_STATS_TEST_WRITE"
@@ -45,7 +45,7 @@ class UnprovisionedCoordinator extends SteamRelayCoordinator:
 func _initialize() -> void:
 	_run.call_deferred()
 
-## Exercise the normal demo world with a separate, playerless SteamGameServer authority.
+## Exercise the test-owned world with a separate, playerless SteamGameServer authority.
 func _run() -> void:
 	var args := OS.get_cmdline_user_args()
 	var role := args[0] if not args.is_empty() else "missing"
@@ -117,7 +117,7 @@ func _run() -> void:
 			return
 		configuration = configuration.with_relay_coordinator(coordinator)
 		options = options.via_sdr(StringName(args[4]))
-	var game := DEFINITION.with_provider(configuration.dedicated(options)).boot(root)
+	var game := Fixture.definition().with_provider(configuration.dedicated(options)).boot(root)
 	if game == null or SteamServices.server_for(game) == null or SteamServices.for_game(game) != null:
 		_fail("The dedicated Game did not expose a distinct native server scope.")
 		return
@@ -143,7 +143,7 @@ func _run() -> void:
 	var started: Dictionary = await game.start_dedicated_online(selected_address).wait()
 	var status := server.status()
 	if not started.get("ok", false) or not status.ready or not status.secure or status.listed != advertise \
-			or status.authenticated_players != 0 or status.world_id != DEFINITION.starting_world \
+			or status.authenticated_players != 0 or status.world_id != Fixture.WORLD_ID \
 			or game.get_world() == null or game.get_local_player() != null or game.get_player(1) != null \
 			or not session.is_accepting_connections():
 		_fail("The certified dedicated Game did not reach its expected playerless readiness. " + String(started.get("code", "")))
@@ -185,7 +185,7 @@ func _run() -> void:
 
 ## Confirm the guest verifies the exact dedicated Steam certificate before mounting and spawning.
 func _guest(provider: SteamProvider, listing: String, role: String) -> void:
-	var game := DEFINITION.with_provider(provider).boot(root)
+	var game := Fixture.definition().with_provider(provider).boot(root)
 	if game == null:
 		_fail("The Steam guest could not boot.")
 		return
@@ -322,7 +322,7 @@ func _load_coordinator(path: String) -> SteamRelayCoordinator:
 ## Read back the advertised server and validate a native inspection before choosing its listing.
 func _find_advertised(browser: SteamServerBrowser, expected: String) -> SteamListing:
 	for attempt in range(3):
-		var found: SteamListingsResult = await browser.query().on_map(DEFINITION.starting_world).fetch(10000)
+		var found: SteamListingsResult = await browser.query().on_map(Fixture.WORLD_ID).fetch(10000)
 		if found.ok:
 			for listing in found.value:
 				if listing.id == expected:

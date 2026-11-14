@@ -103,7 +103,10 @@ class FixtureProvider extends GameServiceProvider:
 		return session
 
 
+const Fixture := preload("res://tests/fixtures/network_fixture.gd")
+
 var _game: GameRuntime
+var _actions: Game
 var _session: GameSession
 var _provider := FixtureProvider.new()
 var _folder: String
@@ -130,15 +133,16 @@ func _run() -> void:
 		return
 	_provider.identity.deny_local = args[0] == "denied"
 	_provider.directory.listing_path = _folder.path_join("listing")
-	var main := load(String(ProjectSettings.get_setting("application/run/main_scene"))) as PackedScene
-	var demo := main.instantiate()
-	_game = demo.get_node(^"Game") as GameRuntime
-	_provider.directory.game = _game
-	var definition := _game.definition
+	var owner := Node.new()
+	owner.name = &"OnlineFixture"
+	root.add_child(owner)
+	var definition := Fixture.definition()
 	# The guests intentionally author another port. Their directory route must win.
 	var local_port := _port if args[0] == "host" else (_port % 65535) + 1
-	_game.definition = definition.with_provider(_provider).with_multiplayer(definition.multiplayer_rules.on_port(local_port))
-	root.add_child(demo)
+	_actions = GameConfig.from_definition(
+		definition.with_provider(_provider).with_multiplayer(definition.multiplayer_rules.on_port(local_port))).boot(owner)
+	_game = owner.get_node(^"Game") as GameRuntime
+	_provider.directory.game = _game
 	_session = _game.get_node(^"Session") as GameSession
 	var passed := false
 	match args[0]:
@@ -182,7 +186,7 @@ func _run_host() -> bool:
 		return false
 
 	directory.publication_mode = "normal"
-	var started: Dictionary = await _game.host_online(ADDRESS, ADDRESS).wait()
+	var started: GameResult = await _actions.host(ADDRESS, ADDRESS)
 	if not _check(started.ok and started.listing_id == LISTING and _game.get_online_listing() == LISTING
 			and directory.published_while_closed and _session.is_accepting_connections(),
 			"Publish only after the scene mounts, then open authority admission."):

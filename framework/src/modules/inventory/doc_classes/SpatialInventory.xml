@@ -6,9 +6,17 @@
 	</brief_description>
 	<description>
 		Stores rectangular footprints, their zero-based top-left cells, and rotation. The game owns the item records and provides a stable, nonempty [StringName] instance ID for each placement. A rotated footprint swaps width and height.
-		Call [method configure] or [method import_snapshot] before placing items. Use the grid from the main thread.
+		Use [method Inventory.grid] to create a configured grid, or call [method configure] or [method import_snapshot] on a detached grid. Use the grid from the main thread.
 	</description>
 	<methods>
+		<method name="add">
+			<return type="int" enum="Error" />
+			<param index="0" name="id" type="StringName" />
+			<param index="1" name="footprint" type="Vector2i" />
+			<description>
+				Place an unused instance ID in the first legal position in row-major order. The footprint is unrotated. Returns [code]OK[/code] on commit, [code]ERR_CANT_CREATE[/code] if there is no fit, [code]ERR_ALREADY_EXISTS[/code] for a duplicate ID, [code]ERR_UNCONFIGURED[/code] on a fresh unconfigured grid, or [code]ERR_INVALID_PARAMETER[/code] for an empty ID or nonpositive footprint.
+			</description>
+		</method>
 		<method name="apply_placement_changes" qualifiers="static">
 			<return type="int" enum="Error" />
 			<param index="0" name="changes" type="Array" />
@@ -104,6 +112,15 @@
 			<description>
 				Validates a snapshot from [method export_snapshot] and replaces the current grid on success. An invalid snapshot preserves the current grid.
 			</description>
+		</method>
+		<method name="item_at" qualifiers="const">
+			<return type="InventoryItemView" />
+			<param index="0" name="cell" type="Vector2i" />
+			<description>Return a detached typed placement snapshot of the item occupying the zero-based [param cell], or [code]null[/code] if it is empty or outside the grid.</description>
+		</method>
+		<method name="items" qualifiers="const">
+			<return type="InventoryItemView[]" />
+			<description>Return a detached array of typed placement snapshots. Iteration order is unspecified. An empty grid returns an empty array.</description>
 		</method>
 		<method name="remove">
 			<return type="int" enum="Error" />

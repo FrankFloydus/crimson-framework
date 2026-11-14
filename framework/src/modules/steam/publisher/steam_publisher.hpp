@@ -249,7 +249,7 @@ public:
     godot::String get_acquired_at() const;
     // Return Steam's expiry text, including its permanent-license sentinel when supplied.
     godot::String get_expires_at() const;
-    // Return whether the license is from Steam's PC Café program.
+    // Return whether the license is from Steam's PC Cafe program.
     bool get_site_license() const;
     // Return whether Steam marks the license as self-cancelled by the user.
     bool get_user_canceled() const;
@@ -273,7 +273,7 @@ private:
     godot::String acquired_at;
     // License expiry text supplied by Steam.
     godot::String expires_at;
-    // PC Café access flag.
+    // PC Cafe access flag.
     bool site_license = false;
     // User-cancelled license flag.
     bool user_canceled = false;

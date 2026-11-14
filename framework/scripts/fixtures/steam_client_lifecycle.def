@@ -17,4 +17,7 @@ EXPORTS
     SteamAPI_ISteamUser_BLoggedOn
     SteamAPI_ISteamUtils_GetAppID
     SteamAPI_ISteamUserStats_GetStatInt32
+    SteamAPI_ISteamUserStats_GetAchievementAndUnlockTime
+    SteamAPI_ISteamUserStats_SetAchievement
+    SteamAPI_ISteamUserStats_StoreStats
     SteamAPI_ISteamApps_GetLaunchQueryParam

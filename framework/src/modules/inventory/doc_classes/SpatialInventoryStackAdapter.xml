@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="SpatialInventoryStackAdapter" inherits="RefCounted">
+	<brief_description>Connects grid stack operations to item records owned by the game.</brief_description>
+	<description>Set both callbacks to support merges and splits while keeping placement and quantity changes consistent.</description>
+	<members>
+		<member name="describe_stack" type="Callable" setter="set_describe_stack" getter="get_describe_stack">Callback that receives a placed item ID and returns a Dictionary with [code]key[/code], [code]quantity[/code], and [code]max_quantity[/code]. Return an empty Dictionary when the item has no stack record. Defaults to an empty callable.</member>
+		<member name="apply_changes" type="Callable" setter="set_apply_changes" getter="get_apply_changes">Callback that receives the proposed stack edits and an optional placement commit callable. Check the expected stack values and stage the edits. If the commit is valid, invoke it once on the same thread and roll back the staged edits if it fails. Return a Godot Error. Defaults to an empty callable.</member>
+	</members>
+</class>

@@ -1,0 +1,11 @@
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="GameBindings" inherits="RefCounted">
+	<brief_description>Typed replacements for a single boot.</brief_description>
+	<methods>
+		<method name="session_transport">
+			<return type="int" />
+			<param index="0" name="factory" type="Callable" />
+			<description>Register a main-thread factory returning SessionTransport. Return OK, ERR_INVALID_PARAMETER for an invalid callable, or ERR_BUSY after the draft is sealed.</description>
+		</method>
+	</methods>
+</class>

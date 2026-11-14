@@ -26,5 +26,9 @@
 			<param index="0" name="invite" type="SteamInvite" />
 			<description>Emitted for a Steam request to join while this game attachment is active, including Steam URL launches with a supported lobby argument. Duplicate notifications for the same lobby within two seconds are coalesced.</description>
 		</signal>
+		<signal name="changed">
+			<param index="0" name="invite" type="SteamInvite" />
+			<description>Emitted when the exact pending offer changes. A null offer clears the current prompt after acceptance, dismissal, or attachment retirement.</description>
+		</signal>
 	</signals>
 </class>

@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="ControlsComponent" inherits="Node" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+    <brief_description>Inspector settings for a local player's input and look.</brief_description>
+    <description>
+        Add one ControlsComponent directly under a [CharacterBody3D]. Choose Edit Input Actions in the Inspector to open the layout editor. Player Setup contains action assignments, look rates, and pointer capture for this character. Boot the component once the body is mounted and assigned to this local player. This lets the game activate local input at the same point it selects the player's view. Use a [MoverComponent] on the same body to author movement settings.
+    </description>
+    <methods>
+        <method name="boot" qualifiers="const">
+            <return type="PlayerControl" />
+            <param index="0" name="view" type="Node3D" />
+            <param index="1" name="controls" type="Controls" default="null" />
+            <description>
+                Attaches local input and look to the parent character and its descendant [param view]. Pass live [Controls] from the same Input Layout and scene tree to preserve bindings across body replacements. With [code]null[/code], uses body-scoped controls. Returns [code]null[/code] when the character body has no unique ControlsComponent. If attachment fails after the component is resolved, the returned handle reports the error and message.
+            </description>
+        </method>
+        <method name="for_body" qualifiers="static">
+            <return type="ControlsComponent" />
+            <param index="0" name="body" type="Node3D" />
+            <description>Finds the unique direct ControlsComponent under [param body], regardless of the component's node name. Returns [code]null[/code] for a missing or non-character body, or when no unique component exists.</description>
+        </method>
+    </methods>
+    <members>
+        <member name="capture_pointer_on_boot" type="bool" setter="set_capture_pointer_on_boot" getter="get_capture_pointer_on_boot" default="false">
+            Attempt desktop pointer capture after local control attaches. Capture depends on focus and pointer availability.
+        </member>
+        <member name="input_layout" type="InputLayout" setter="set_input_layout" getter="get_input_layout">
+            Edit actions and their default keyboard, mouse, and controller bindings here. The selected movement and look actions must exist in this layout. A shared saved resource lets an existing local [Controls] scope retain rebindings across character instances.
+        </member>
+        <member name="jump_action" type="StringName" setter="set_jump_action" getter="get_jump_action" default="&amp;&quot;jump&quot;">
+            Button action whose press requests grounded takeoff. The default uses the layout's jump action when available. Choose None to disable built-in jump input.
+        </member>
+        <member name="mouse_look_action" type="StringName" setter="set_mouse_look_action" getter="get_mouse_look_action" default="&amp;&quot;mouse_aim&quot;">
+            Relative mouse motion action for rotating the view. Choose None to turn off mouse look.
+        </member>
+        <member name="mouse_sensitivity" type="float" setter="set_mouse_sensitivity" getter="get_mouse_sensitivity" default="0.002">
+            View rotation in radians per unscaled pixel of mouse movement.
+        </member>
+        <member name="move_action" type="StringName" setter="set_move_action" getter="get_move_action" default="&amp;&quot;move&quot;">
+            Vector2 action that supplies steering. Negative Y moves forward and positive X moves right.
+        </member>
+        <member name="stick_look_action" type="StringName" setter="set_stick_look_action" getter="get_stick_look_action" default="&amp;&quot;stick_aim&quot;">
+            Vector2 action that controls the view's rotation rate. Choose None to turn off stick look.
+        </member>
+        <member name="stick_look_speed" type="float" setter="set_stick_look_speed" getter="get_stick_look_speed" default="2.5">
+            View rotation in radians per second at full stick deflection.
+        </member>
+    </members>
+</class>

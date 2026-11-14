@@ -15,46 +15,45 @@ Crimson ships Steamworks support in the same native GDExtension as its standalon
 | Steam dedicated server | Own a separate `SteamGameServer` runtime, login, callback pipe, authentication, and publication lifecycle. Adapt its transport to the native headless Crimson server and keep direct ENet available. |
 | Publisher backend and tools | Perform operations that require trusted publisher credentials, including Web API authentication, payments, notifications, and bans. Run these in explicitly configured server-side tools. SteamPipe wrapping and depot verification belong in the export and release process. |
 
-The client runtime owns SDK initialization and shutdown. A standalone client node or a provider holds a lease. A stopped node invalidates its service handles before any cancellation callback can use them, even if another consumer still holds the SDK. Call the client and its services on Godot's main thread. A direct graphical launch can opt into early Steam initialization with the documented overlay argument. SDK-off builds register the same public classes and report unavailable on startup.
+The client runtime owns SDK initialization and shutdown. The internal client owner or a game provider holds a lease. An ended attachment invalidates its service handles before any cancellation callback can use them, even if another consumer still holds the SDK. Call the facade and its services on Godot's main thread. A direct graphical launch can opt into early Steam initialization with the documented overlay argument. SDK-off builds register the same public classes and report unavailable on startup.
 
 Keep each Steam capability in its own service with typed Godot methods. Map Steam identifiers and opaque handles to values that preserve their full range. SDK handles stay native, and operations that own them release them on completion, failure, cancellation, and scope teardown. For future callbacks with borrowed pointers, copy the payload into bounded, owned storage before releasing the SDK event. Keep process-owned Steam services outside replaceable worlds.
 
 ## Start the client
 
-Boot Steam once from a persistent node's `_ready()` and pass the client or a typed service to the code that needs it. Crimson takes the AppID from the Steam launch context. Pass an expected AppID when you need to verify it.
+Boot Steamworks once from an existing persistent scene-tree owner. Pass the returned facade or a typed service to the code that needs it. Crimson takes the AppID from the Steam launch context. Pass `SteamConfig.spacewar("my-test-group")` when you want to verify a Spacewar launch.
 
 ```gdscript
-var steam := SteamClient.boot(self)
-if steam == null:
-    return
-if not steam.is_ready():
-    push_error(steam.get_initialization_error())
+var steam := Steamworks.boot(self)
+var startup := steam.boot_result()
+if not startup.ok:
+    push_error(startup.message)
     return
 
 print(steam.apps().current_language())
 steam.friends().set_rich_presence("mode", "co-op")
 ```
 
-`boot(owner)` requires an owner in the scene tree. It returns `null` if it cannot attach the node. If Steam fails to initialize, the attached client retains the diagnostic. Removing the client or its owner from the tree ends the scope and invalidates its services. A scene can also contain a `SteamClient` node and call `start()` explicitly after attachment.
+`boot(owner)` returns a typed facade with one startup result, including the SDK's reason on failure. The existing owner controls the internal callback client's lifetime. Removing the owner from the tree retires the scope and its services. Direct actions such as `open_achievements()` report startup or availability failures themselves. Inspect `boot_result()` when you need to bind advanced typed services during setup. The original `SteamClient` API remains available for existing scripts.
 
-`is_ready()` reports whether the local Steam client API initialized for the expected AppID and account. `is_online()` reports whether that client currently has a live connection to Valve. Offline Mode can still provide cached progression. A temporary loss of network connectivity preserves the client scope. Fatal Steam IPC failure invalidates all services sharing the failed pipe and retires active Steam game connections through the Game lifecycle. A standalone owner can respond to `runtime_lost` by deferring `start()` until the failure callback returns. A Game can boot a fresh Steam attachment after retirement. Resolve new service handles after recovery. [Valve connectivity](https://partner.steamgames.com/doc/api/ISteamUser#BLoggedOn) · [Valve IPC recovery](https://partner.steamgames.com/doc/api/ISteamUser#IPCFailure_t)
+`is_ready()` reports whether the facade still owns its original active Steam client generation. `is_online()` reports whether that client currently has a live connection to Valve. Offline Mode can still provide cached progression. A temporary loss of network connectivity preserves the client scope. Fatal Steam IPC failure invalidates all services sharing the failed pipe and retires active Steam game connections through the Game lifecycle. A standalone owner can respond to `runtime_lost` by deferring a fresh `Steamworks.boot(self)` until the failure callback returns. Resolve new service handles after recovery. [Valve connectivity](https://partner.steamgames.com/doc/api/ISteamUser#BLoggedOn) · [Valve IPC recovery](https://partner.steamgames.com/doc/api/ISteamUser#IPCFailure_t)
 
 An unwrapped shipping client can opt into Valve's relaunch check from its common entry point for Steam launches and direct executable launches. Call it before any Steam initialization, including attaching a Steam provider or using the early overlay bootstrap.
 
 ```gdscript
-var launch := SteamClient.restart_through_steam_if_needed(app_id)
+var launch := Steamworks.restart_through_steam_if_needed(app_id)
 if launch == ERR_SKIP:
     get_tree().quit()
     return
 if launch != OK:
     push_error("Could not check Steam launch context.")
     return
-var steam := SteamClient.boot(self, app_id)
+var steam := Steamworks.boot(self)
 ```
 
 Use a shipping AppID and the packaged Steam runtime in a rendered export. Steam relaunches the installed Library copy when needed. The DRM wrapper already performs this check for the wrapped executable. Leave development `steam_appid.txt` files out of shipped depots. [Valve launch check](https://partner.steamgames.com/doc/sdk/api#SteamAPI_RestartAppIfNecessary)
 
-For a game with `SteamProvider`, use `SteamServices.for_game(game)` after `GameDefinition.boot(owner)`. The Game creates and starts its Steam client under the persistent Session. The same scope supplies lobbies and typed app services. A detached scope expires even if the Game later reenters the tree and starts a fresh scope.
+For a game configured with `.steam()`, use `game.steam()`. The game creates and starts its Steam client under the persistent Session. The same attachment supplies lobbies and typed app services, so the game needs no separate client boot. A detached scope expires even if the owner later enters the tree again. Legacy integrations can use `SteamServices.for_game(game_runtime)`.
 
 The Apps service reads current language, available languages, active beta branch, local subscription through `is_subscribed_to_app(app_id)`, and installed DLC. An empty beta branch denotes the default branch or unavailable data. Use verified tickets for ownership checks that grant access on a server. The Friends service updates a specific presence key and can clear it without touching other keys. Steam's displayed rich presence requires an app-configured localization token.
 
@@ -170,7 +169,7 @@ The read-only browser fixture checks a bounded empty search, cancellation, and s
 
 ## HTTP and diagnostics
 
-Use `fetch()` for a GET with the default limits. The result carries transport status. A complete response remains available as `value` when the server returns 4xx or 5xx. Check `value.is_successful()` when the call needs a 2xx status.
+Use `fetch()` for a GET with the default limits. The result carries transport status. A complete response remains available as `value` when the server returns 4xx or 5xx. Check `value.is_successful()` when the call needs a 2xx status. Read `result.message` for the rejected setting or the reason transport, response validation, or cancellation ended the request.
 
 ```gdscript
 var response: SteamHttpResponseResult = await steam.http().fetch(version_url)
@@ -217,7 +216,7 @@ Drain from the main thread on a developer console refresh or after the operation
 
 ## Progression and Cloud
 
-Use `edit()` to submit the stat and achievement changes from one game event together.
+Use `steam.achievements().unlock("first_win")` for a single published achievement. Use `edit()` to submit the stat and achievement changes from one game event together. Both calls use the same cache validation and storage submission.
 
 ```gdscript
 var submitted := steam.stats().edit() \
@@ -322,14 +321,15 @@ The controlled process test covered both wrap modes, paths with spaces, failure 
 
 ## Steam Overlay
 
-Get the overlay from the client you started at boot. A pause menu can issue the default request from its Achievements button.
+A pause menu can issue the default request from its Achievements button. The facade handles initialization and overlay readiness for this action.
 
 ```gdscript
-var overlay := steam.overlay()
-var error := overlay.open_achievements()
+var opened := steam.open_achievements()
+if not opened.ok:
+    status_label.text = opened.message
 ```
 
-Use `open_store()` for the running game's Steam Store page or `open_store(other_app_id)` to choose another product. `open_profile(steam_id)` accepts an individual decimal SteamID64. `open_web(url)` accepts an absolute HTTP or HTTPS URL without embedded credentials, up to 2048 UTF-8 bytes. `open_trade(partner_steam_id)` opens the trading pane after a trusted backend starts the authorized trade. [Steam Overlay](https://partner.steamgames.com/doc/features/overlay) · [Valve's pane actions](https://partner.steamgames.com/doc/api/ISteamFriends#ActivateGameOverlay)
+Get `steam.overlay()` for advanced pane targets or activation events. Use `open_store()` for the running game's Steam Store page or `open_store(other_app_id)` to choose another product. `open_profile(steam_id)` accepts an individual decimal SteamID64. `open_web(url)` accepts an absolute HTTP or HTTPS URL without embedded credentials, up to 2048 UTF-8 bytes. `open_trade(partner_steam_id)` opens the trading pane after a trusted backend starts the authorized trade. [Steam Overlay](https://partner.steamgames.com/doc/features/overlay) · [Valve's pane actions](https://partner.steamgames.com/doc/api/ISteamFriends#ActivateGameOverlay)
 
 Check `is_ready()` before enabling Overlay controls. `ERR_BUSY` means a live Steam overlay is not accessible yet or the call came from another thread. `ERR_UNAVAILABLE` covers detached handles and unavailable SDK interfaces. Invalid targets on a live handle return `ERR_INVALID_PARAMETER`. `OK` means Steam received a pane request. Observe the rendered pane to confirm what opened. [Valve's readiness query](https://partner.steamgames.com/doc/api/ISteamUtils#IsOverlayEnabled)
 

@@ -1,0 +1,104 @@
+; Copyright Francesco Di Blasi 2026 - All Rights Reserved
+
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://demo/ui/control_settings.gd" id="1_settings"]
+[ext_resource type="Theme" path="res://demo/ui/menu_theme.tres" id="2_theme"]
+[ext_resource type="FontFile" path="res://demo/ui/fonts/BarlowCondensed-Black.ttf" id="3_title"]
+
+[sub_resource type="StyleBoxFlat" id="Panel"]
+content_margin_left = 28.0
+content_margin_top = 22.0
+content_margin_right = 28.0
+content_margin_bottom = 22.0
+bg_color = Color(0.048, 0.061, 0.06, 0.98)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.273, 0.288, 0.267, 1)
+anti_aliasing = false
+
+[node name="ControlSettings" type="Control"]
+visible = false
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme = ExtResource("2_theme")
+script = ExtResource("1_settings")
+
+[node name="Shade" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0.023, 0.031, 0.031, 0.72)
+
+[node name="SafeArea" type="MarginContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_override_constants/margin_left = 32
+theme_override_constants/margin_top = 24
+theme_override_constants/margin_right = 32
+theme_override_constants/margin_bottom = 24
+
+[node name="Center" type="CenterContainer" parent="SafeArea"]
+layout_mode = 2
+mouse_filter = 2
+
+[node name="Panel" type="PanelContainer" parent="SafeArea/Center"]
+custom_minimum_size = Vector2(420, 0)
+layout_mode = 2
+theme_override_styles/panel = SubResource("Panel")
+
+[node name="Content" type="VBoxContainer" parent="SafeArea/Center/Panel"]
+layout_mode = 2
+theme_override_constants/separation = 15
+
+[node name="Title" type="Label" parent="SafeArea/Center/Panel/Content"]
+layout_mode = 2
+theme_override_fonts/font = ExtResource("3_title")
+theme_override_font_sizes/font_size = 42
+text = "Controls"
+
+[node name="ForwardLabel" type="Label" parent="SafeArea/Center/Panel/Content"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Move Forward"
+
+[node name="ChangeBinding" type="Button" parent="SafeArea/Center/Panel/Content"]
+unique_name_in_owner = true
+layout_mode = 2
+focus_neighbor_top = NodePath("../Resume")
+focus_neighbor_bottom = NodePath("../Resume")
+focus_next = NodePath("../Resume")
+focus_previous = NodePath("../Resume")
+tooltip_text = "Choose a new key or mouse button for Move Forward."
+text = "Unassigned"
+
+[node name="Status" type="Label" parent="SafeArea/Center/Panel/Content"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 56)
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+autowrap_mode = 3
+
+[node name="Resume" type="Button" parent="SafeArea/Center/Panel/Content"]
+unique_name_in_owner = true
+layout_mode = 2
+focus_neighbor_top = NodePath("../ChangeBinding")
+focus_neighbor_bottom = NodePath("../ChangeBinding")
+focus_next = NodePath("../ChangeBinding")
+focus_previous = NodePath("../ChangeBinding")
+text = "Resume"

@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="InputDeadZone" inherits="InputModifier">
+	<brief_description>Filters small analog values and calibrates the full range.</brief_description>
+	<description>Use on an Axis or Vector binding. Values at or below the lower threshold output zero. Values at or above the upper threshold output full strength. Intermediate values are remapped linearly. Both thresholds are normalized and must satisfy [code]0 &lt;= lower &lt; upper &lt;= 1[/code]. A layout with invalid thresholds cannot boot.</description>
+	<members>
+		<member name="lower_threshold" type="float" setter="set_lower_threshold" getter="get_lower_threshold" default="0.15">Normalized magnitude at which output leaves zero. Increase this to suppress stick drift.</member>
+		<member name="mode" type="int" setter="set_mode" getter="get_mode" enum="InputDeadZone.Mode" default="0">Choose a circular threshold based on vector length or threshold each component independently.</member>
+		<member name="upper_threshold" type="float" setter="set_upper_threshold" getter="get_upper_threshold" default="1.0">Normalized magnitude at which output reaches full strength. Lower this when a physical control cannot reliably reach its maximum.</member>
+	</members>
+	<constants>
+		<constant name="RADIAL" value="0" enum="Mode">Measure vector length and preserve its direction.</constant>
+		<constant name="AXIAL" value="1" enum="Mode">Remap the absolute value of each component separately and preserve each sign.</constant>
+	</constants>
+</class>

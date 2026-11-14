@@ -7,6 +7,7 @@
 #include <godot_cpp/classes/os.hpp>
 #include <godot_cpp/core/class_db.hpp>
 #include <godot_cpp/core/memory.hpp>
+#include <godot_cpp/variant/utility_functions.hpp>
 
 namespace crimson::integration {
 
@@ -137,8 +138,12 @@ GameRuntime *GameDefinition::create() const {
 
 GameRuntime *GameDefinition::boot(Node *owner) const {
     const OS *os = OS::get_singleton();
-    if (!os || os->get_thread_caller_id() != os->get_main_thread_id() || !owner ||
-            !owner->is_inside_tree() || owner->is_queued_for_deletion()) {
+    if (!os || os->get_thread_caller_id() != os->get_main_thread_id()) {
+        UtilityFunctions::printerr("[Crimson] Could not boot GameRuntime. Call GameDefinition.boot() on the main thread.");
+        return nullptr;
+    }
+    if (!owner || !owner->is_inside_tree() || owner->is_queued_for_deletion()) {
+        UtilityFunctions::printerr("[Crimson] Could not boot GameRuntime. Pass an owner that is active in the scene tree.");
         return nullptr;
     }
 
@@ -149,15 +154,21 @@ GameRuntime *GameDefinition::boot(Node *owner) const {
     // Tree notifications can retire or move the child before add_child returns.
     game = Object::cast_to<GameRuntime>(ObjectDB::get_instance(game_id));
     if (!game) {
+        UtilityFunctions::printerr("[Crimson] Could not boot GameRuntime. The game was freed during scene attachment.");
         return nullptr;
     }
     Node *parent = game->get_parent();
     if (!parent) {
         memdelete(game);
+        UtilityFunctions::printerr("[Crimson] Could not boot GameRuntime. The game did not attach to the supplied owner.");
         return nullptr;
     }
-    if (parent->get_instance_id() != owner_id || parent->is_queued_for_deletion() ||
-            !game->is_inside_tree() || game->is_queued_for_deletion()) {
+    if (parent->get_instance_id() != owner_id) {
+        UtilityFunctions::printerr("[Crimson] Could not boot GameRuntime. A scene callback moved the game to another owner.");
+        return nullptr;
+    }
+    if (parent->is_queued_for_deletion() || !game->is_inside_tree() || game->is_queued_for_deletion()) {
+        UtilityFunctions::printerr("[Crimson] Could not boot GameRuntime. The owner or game was retired during scene attachment.");
         return nullptr;
     }
     return game;

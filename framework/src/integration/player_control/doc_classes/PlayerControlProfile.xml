@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="PlayerControlProfile" inherits="Resource" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+    <brief_description>Reusable movement and look settings for a local player.</brief_description>
+    <description>
+        Set up input and default character movement on an existing body and its view. The profile starts a private driver that reads input before the mover advances physics. Settings UI can use the same [Controls] instance as the player.
+    </description>
+    <methods>
+        <method name="boot" qualifiers="const">
+            <return type="PlayerControl" />
+            <param index="0" name="body" type="Node3D" />
+            <param index="1" name="view" type="Node3D" />
+            <param index="2" name="controls" type="Controls" default="null" />
+            <description>Attaches local control to a mounted [CharacterBody3D] and a descendant used for aim and view-relative movement. Standalone bodies with a [MoverComponent] use its movement settings. Fixed-world sessions use the settings captured by [method GameConfig.player_controls]. Supply existing live controls for the same input layout and tree to retain bindings across bodies. With no handle supplied, boots body-scoped controls. Returns a handle with an error and message if validation fails. Optional desktop capture is attempted after attachment and depends on window focus and pointer availability.</description>
+        </method>
+        <method name="configure" qualifiers="static">
+            <return type="PlayerControlProfile" />
+            <param index="0" name="layout" type="InputLayout" />
+            <description>Creates an editable profile with the supplied layout and standard movement and look defaults. Edit its typed properties before boot.</description>
+        </method>
+    </methods>
+    <members>
+        <member name="capture_pointer_on_boot" type="bool" setter="set_capture_pointer_on_boot" getter="get_capture_pointer_on_boot" default="false">
+            Attempt desktop pointer capture after local control attaches.
+        </member>
+        <member name="controller_style" type="int" setter="set_controller_style" getter="get_controller_style" enum="MoverComponent.ControllerStyle" default="0">
+            Choose how movement input turns and moves the body. Hover a choice to see what pressing Left does. Third-person and Lock-On styles require a Y-up body. Author the camera rig in the player scene. Applies when this profile supplies movement settings at boot.
+        </member>
+        <member name="input_layout" type="InputLayout" setter="set_input_layout" getter="get_input_layout">
+            Defines actions and default bindings. Move and any enabled look actions must exist with the expected value type.
+        </member>
+        <member name="jump_action" type="StringName" setter="set_jump_action" getter="get_jump_action" default="&amp;&quot;jump&quot;">
+            Button action whose press requests grounded takeoff. The default uses the layout's jump action when available. Choose None in the Inspector or set an empty ID in code to disable built-in jump input.
+        </member>
+        <member name="mouse_look_action" type="StringName" setter="set_mouse_look_action" getter="get_mouse_look_action" default="&amp;&quot;mouse_aim&quot;">
+            Relative mouse motion action for rotating the view. Choose None in the Inspector or set an empty ID in code to turn off built-in mouse look.
+        </member>
+        <member name="mouse_sensitivity" type="float" setter="set_mouse_sensitivity" getter="get_mouse_sensitivity" default="0.002">
+            View rotation in radians per unscaled pixel of mouse movement.
+        </member>
+        <member name="move_action" type="StringName" setter="set_move_action" getter="get_move_action" default="&amp;&quot;move&quot;">
+            Vector2 action from the input layout that supplies horizontal steering. Negative Y moves forward and positive X moves right.
+        </member>
+        <member name="forward_direction" type="int" setter="set_move_relative_to" getter="get_move_relative_to" enum="PlayerControlProfile.MoveReference" default="0">
+            Sets forward for FPS / Shoulder Aim. View Heading uses the camera. Character Heading uses the body, or its spawn heading in Game sessions. World Axes uses negative Z.
+        </member>
+        <member name="move_relative_to" type="int" setter="set_move_relative_to" getter="get_move_relative_to" enum="PlayerControlProfile.MoveReference" default="0">
+            Compatibility alias for [member forward_direction]. New resources store Forward Direction.
+        </member>
+        <member name="move_speed" type="float" setter="set_move_speed" getter="get_move_speed" default="6.0">
+            Requested movement speed in metres per second at full input.
+        </member>
+        <member name="movement_rule" type="MotionRule" setter="set_movement_rule" getter="get_movement_rule">
+            Rule that resolves steering, gravity, and jump speed. Leave empty for standard grounded movement with a 5 m/s takeoff.
+        </member>
+        <member name="predict_movement" type="bool" setter="set_predict_movement_enabled" getter="is_predict_movement_enabled" default="false">
+            Use immediate local movement and server reconciliation for compatible fixed-world games with an upright capsule and immutable static collision. Enable on the authority and guest profiles before boot. Leave it off on the authority for live collision with other players, moving platforms, or dynamic bodies. A guest can follow server snapshots by leaving its own setting off. This setting applies through [method GameConfig.player_controls].
+        </member>
+        <member name="stick_look_action" type="StringName" setter="set_stick_look_action" getter="get_stick_look_action" default="&amp;&quot;stick_aim&quot;">
+            Vector2 action that controls the view's rotation rate. Choose None in the Inspector or set an empty ID in code to turn off built-in stick look.
+        </member>
+        <member name="stick_look_speed" type="float" setter="set_stick_look_speed" getter="get_stick_look_speed" default="2.5">
+            View rotation in radians per second at full stick deflection.
+        </member>
+    </members>
+    <constants>
+        <constant name="VIEW" value="0" enum="MoveReference">View Heading. Forward follows the camera or view pivot's heading.</constant>
+        <constant name="CHARACTER" value="1" enum="MoveReference">Character Heading. Forward follows the body's current heading in standalone Player Control and its spawn heading in Game sessions.</constant>
+        <constant name="WORLD" value="2" enum="MoveReference">World Axes. Forward always follows the world's negative Z direction.</constant>
+    </constants>
+</class>

@@ -10,6 +10,7 @@
 #include <godot_cpp/classes/time.hpp>
 #include <godot_cpp/core/class_db.hpp>
 #include <godot_cpp/variant/callable_method_pointer.hpp>
+#include <godot_cpp/variant/utility_functions.hpp>
 
 #include <limits>
 #include <utility>
@@ -121,12 +122,15 @@ void GameRuntime::_bind_methods() {
 }
 
 void GameRuntime::_enter_tree() {
-    if (session_node || service_setup_failed) {
+    if (session_node || !service_setup_error.is_empty()) {
         request_ready();
     }
 }
 
 void GameRuntime::_ready() {
+    if (code_first_retired) {
+        return;
+    }
     if (session_node) {
         GameServiceContainer::open(*this);
         online_directory = GameServiceContainer::make_online_directory(*this, *session_node);
@@ -135,12 +139,18 @@ void GameRuntime::_ready() {
         return;
     }
     cleaning = false;
-    service_setup_failed = false;
+    service_setup_error = String();
     GameServiceContainer::open(*this);
     session_node = GameServiceContainer::make_session(*this);
     loader = GameServiceContainer::make_scene_loader(*this);
     if (!session_node || !loader) {
-        service_setup_failed = true;
+        if (!session_node && !loader) {
+            service_setup_error = "The game service provider must return a fresh detached GameSession and SceneLoadManager.";
+        } else if (!session_node) {
+            service_setup_error = "The game service provider must return a fresh detached GameSession.";
+        } else {
+            service_setup_error = "The game service provider must return a fresh detached SceneLoadManager.";
+        }
         if (session_node) {
             memdelete(session_node);
             session_node = nullptr;
@@ -150,6 +160,9 @@ void GameRuntime::_ready() {
             loader = nullptr;
         }
         GameServiceContainer::close(*this);
+        if (!code_first_owned) {
+            UtilityFunctions::printerr("[Crimson] Game services could not initialize. ", service_setup_error);
+        }
         return;
     }
     world_container = add_service<Node>(*this, "WorldContainer");
@@ -202,6 +215,7 @@ GameVoice *GameRuntime::voice() const {
 }
 
 void GameRuntime::_exit_tree() {
+    code_first_retired = code_first_owned;
     cleaning = true;
     republish_after_cleanup = false;
     GameServiceContainer::close(*this);
@@ -214,6 +228,7 @@ void GameRuntime::_exit_tree() {
         transition = {};
         operation->finish(outcome(false, "Cancelled", "The game left the scene tree."));
     }
+    report_remote_travel(false, "Cancelled", "The game left the scene tree before world travel completed.");
     if (immediate_start.is_valid()) {
         const auto operation = std::exchange(immediate_start, {});
         operation->finish(outcome(false, "Cancelled", "The game left the scene tree."));
@@ -251,7 +266,11 @@ void GameRuntime::_process(double) {
             session_node->get_state() == session::GameSession::HOSTING) {
         const int64_t revision = transactions->get_revision();
         if (revision > replication_node->get_revision()) {
-            replication_node->publish_changes(revision);
+            const int64_t publishing_epoch = world_epoch;
+            const Error error = replication_node->publish_changes(revision);
+            if (error != OK && phase == RUNNING && world_epoch == publishing_epoch && !cleaning && is_authority()) {
+                recover_replication("Could not publish committed state: " + UtilityFunctions::error_string(error) + String("."));
+            }
         }
     }
 }
@@ -349,6 +368,9 @@ void GameRuntime::reset_match() {
     local_sequence = 0;
     remote_epoch = 0;
     remote_target = {};
+    remote_outcome_reported = false;
+    remote_preparation_error = String();
+    rejected_remote_epoch = 0;
     match_id = String();
     checkpoint_adapter->set_context(transactions, String());
 }
@@ -380,11 +402,20 @@ Ref<GameOperation> GameRuntime::completed(bool ok, const String &code, const Str
 Error GameRuntime::open_offline() {
     const Error error = configure_game();
     if (error != OK) {
+        if (service_setup_error.is_empty()) {
+            UtilityFunctions::printerr("[Crimson] Could not configure the offline lobby (",
+                    UtilityFunctions::error_string(error), "). Check the game definition and current lifecycle phase.");
+        }
         return error;
     }
     const Error start = session_node->start_offline();
     if (start == OK && bindings->get_player(1).is_empty()) {
-        return bind_player(1, "local");
+        const Error binding = bind_player(1, "local");
+        if (binding != OK) {
+            UtilityFunctions::printerr("[Crimson] Could not establish the offline player's binding (",
+                    UtilityFunctions::error_string(binding), ").");
+        }
+        return binding;
     }
     return start;
 }
@@ -392,7 +423,10 @@ Error GameRuntime::open_offline() {
 Ref<GameOperation> GameRuntime::start_offline() {
     const Error error = open_offline();
     if (error != OK) {
-        return completed(false, "OfflineStartRejected", "Could not open the offline lobby.");
+        return completed(false, "OfflineStartRejected",
+                service_setup_error.is_empty() ?
+                        "Could not open the offline lobby: " + UtilityFunctions::error_string(error) + String(".") :
+                        service_setup_error);
     }
     return start_match();
 }
@@ -415,8 +449,8 @@ Ref<GameOperation> GameRuntime::join_game(const String &address) {
 
 Ref<GameOperation> GameRuntime::start_immediate(ImmediateMode mode, const String &address,
         const Ref<session::SessionEndpoint> &endpoint, bool online) {
-    if (service_setup_failed) {
-        return completed(false, "ServiceInitializationFailed", "Could not initialize the game session and scene loader.");
+    if (!service_setup_error.is_empty()) {
+        return completed(false, "ServiceInitializationFailed", service_setup_error);
     }
     if (!session_node || !is_inside_tree() || definition.is_null()) {
         return completed(false, "Unconfigured", "Assign a game definition before starting.");
@@ -473,6 +507,7 @@ Ref<GameOperation> GameRuntime::start_immediate(ImmediateMode mode, const String
     immediate->configure_immediate(world, player, target, mode == ImmediateMode::Solo ? 1 : rules->get_max_players(),
             mode == ImmediateMode::Solo ? WorldSessionDefinition::DEFAULT_PORT : rules->get_port(),
             mode == ImmediateMode::Join ? 0 : ++next_epoch);
+    immediate->configure_movement(player_movement);
     Ref<GameOperation> operation;
     operation.instantiate();
     immediate_start = operation;
@@ -497,8 +532,10 @@ Ref<GameOperation> GameRuntime::start_immediate(ImmediateMode mode, const String
         immediate_world_id = StringName();
         immediate_active = false;
         const bool invalid_scene = error == ERR_INVALID_DATA || error == ERR_UNCONFIGURED;
-        Dictionary result = outcome(false, invalid_scene ? "InvalidSpawnSetup" : "StartRejected",
-                invalid_scene ? "Check the world spawn points and player scene." : "Could not start the game session.");
+        const String message = invalid_scene ?
+                "Check the world spawn points and player scene (" + UtilityFunctions::error_string(error) + String(").") :
+                "Could not start the game session (" + UtilityFunctions::error_string(error) + String(").");
+        Dictionary result = outcome(false, invalid_scene ? "InvalidSpawnSetup" : "StartRejected", message);
         result["error"] = int64_t(error);
         operation->finish(result);
     }
@@ -568,6 +605,13 @@ void GameRuntime::on_immediate_ended(const StringName &reason) {
             code = "SceneLoadFailed";
             message = "The starting world could not be loaded.";
         }
+        const String detail = immediate->get_last_end_detail();
+        if (!detail.is_empty()) {
+            message += String(" ") + detail;
+            if (immediate_mode != ImmediateMode::Dedicated) {
+                UtilityFunctions::printerr("[Crimson] ", message);
+            }
+        }
         result = outcome(false, code, message);
         result["reason"] = String(reason);
     }
@@ -621,75 +665,113 @@ Error GameRuntime::leave() {
 }
 
 Ref<GameOperation> GameRuntime::start_match(const StringName &world) {
+    const StringName target = world.is_empty() ? starting_world : world;
     if (phase != LOBBY || !is_authority()) {
-        return completed(false, "NotInAuthorityLobby", "Start the match from the authority lobby.");
+        const auto operation = GameOperation::for_travel(target);
+        operation->finish(outcome(false, "NotInAuthorityLobby", "Start the match from the authority lobby."));
+        return operation;
     }
-    return travel_to(world.is_empty() ? starting_world : world);
+    return travel_to(target);
 }
 
 Ref<GameOperation> GameRuntime::travel_to(const StringName &world) {
+    const auto operation = GameOperation::for_travel(world);
     if (immediate_active) {
-        return completed(false, "CoordinatedGameRequired", "Use the coordinated game flow for world travel.");
+        operation->finish(outcome(false, "CoordinatedGameRequired", "Use the coordinated game flow for world travel."));
+        return operation;
     }
     if (worlds.find(world) == worlds.end()) {
-        return completed(false, "UnknownWorld", "The requested world is absent from the game definition.");
+        const String target(world);
+        operation->finish(outcome(false, "UnknownWorld", valid_world_key(target) ?
+                "World '" + target + "' is absent from the game definition." :
+                String("The requested world ID is invalid. Use a world ID from the game definition.")));
+        return operation;
     }
-    Ref<GameOperation> operation;
-    operation.instantiate();
-    const Error error = begin_transition(operation);
-    if (error != OK) {
-        operation->finish(outcome(false, "TransitionRejected", "The authority must be idle in its lobby or world with all peers bound."));
-    } else {
+    const String rejection = begin_transition(operation);
+    if (!rejection.is_empty()) {
+        operation->finish(outcome(false, "TransitionRejected", rejection));
+    } else if (!cleaning && transition.operation == operation) {
         stage_scene(world);
     }
     return operation;
 }
 
-Error GameRuntime::begin_transition(const Ref<GameOperation> &operation) {
+String GameRuntime::begin_transition(const Ref<GameOperation> &operation) {
     if (immediate_active) {
-        return ERR_UNAVAILABLE;
+        return "Use the coordinated game flow for world travel and checkpoint restore.";
     }
-    if (!is_authority() || publishing || cleaning || (phase != LOBBY && phase != RUNNING) ||
-            transition.operation.is_valid() || !peers_are_bound() || next_epoch == std::numeric_limits<int64_t>::max()) {
-        return ERR_BUSY;
+    if (!is_authority()) {
+        return "Start the transition from the game authority.";
     }
-    if (router->set_accepting_commands(false) != OK) {
-        return ERR_BUSY;
+    if (publishing || cleaning || transition.operation.is_valid()) {
+        return "A world transition or session cleanup is in progress. Wait for it to finish before retrying.";
     }
-    capture_saves();
+    if (phase != LOBBY && phase != RUNNING) {
+        return phase == RECOVERING ? "The session is recovering. Reopen the session before starting another transition." :
+                                    "Open an authority lobby or wait for the current world to become ready.";
+    }
+    if (!peers_are_bound()) {
+        return "Bind every admitted participant to a trusted player ID before starting a transition.";
+    }
+    if (next_epoch == std::numeric_limits<int64_t>::max()) {
+        return "This game instance has exhausted its world epochs. Start a new game instance.";
+    }
+    const Error command_gate = router->set_accepting_commands(false);
+    if (command_gate != OK) {
+        return "Could not close gameplay command admission: " + UtilityFunctions::error_string(command_gate) + ".";
+    }
     transition.operation = operation;
     transition.previous = phase;
     transition.epoch = ++next_epoch;
+    capture_saves();
+    // Checkpoint capture can call game code that retires the session.
+    if (cleaning || transition.operation != operation) {
+        return {};
+    }
     if (session_node->get_state() == session::GameSession::HOSTING) {
         transition.reopen_lobby = session_node->is_accepting_connections();
-        if (session_node->set_accepting_connections(false) != OK) {
+        const Error admission_gate = session_node->set_accepting_connections(false);
+        if (cleaning || transition.operation != operation) {
+            return {};
+        }
+        if (admission_gate != OK) {
             transition = {};
             router->set_accepting_commands(phase == RUNNING);
-            return ERR_CONNECTION_ERROR;
+            return "Could not close multiplayer connection admission: " + UtilityFunctions::error_string(admission_gate) + ".";
         }
     }
     set_phase(TRANSITIONING);
-    return OK;
+    return {};
 }
 
 void GameRuntime::stage_scene(const StringName &target) {
     if (cleaning || transition.operation.is_null()) {
         return;
     }
-    if (worlds.find(target) == worlds.end()) {
-        finish_transition(false, "UnknownWorld", "The checkpoint references a world absent from the game definition.");
+    const auto destination = worlds.find(target);
+    if (destination == worlds.end()) {
+        const String key(target);
+        finish_transition(false, "UnknownWorld", valid_world_key(key) ?
+                "The checkpoint references world '" + key + "', which is absent from the game definition." :
+                String("The checkpoint does not identify a valid world in the game definition."));
         return;
     }
+    const auto operation = transition.operation;
     transition.target = target;
     const Error announce_error = network->announce_world(target, transition.epoch);
     transition.announced = true;
     if (announce_error != OK) {
-        finish_transition(false, "WorldAnnouncementFailed", "Could not announce the destination to the session.");
+        finish_transition(false, "WorldAnnouncementFailed",
+                "Could not announce the destination to the session: " + UtilityFunctions::error_string(announce_error) + ".");
         return;
     }
-    const Error error = loader->request_coordinated_load(worlds.at(target), callable_mp(this, &GameRuntime::publish_world));
-    if (error != OK && transition.operation.is_valid()) {
-        finish_transition(false, "SceneRejected", "The scene loader rejected the transition.");
+    String diagnostic;
+    const Error error = loader->request_coordinated_load(destination->second,
+            callable_mp(this, &GameRuntime::publish_world), diagnostic);
+    if (error != OK && transition.operation == operation) {
+        finish_transition(false, "SceneRejected", diagnostic.is_empty() ?
+                "The scene loader rejected the transition: " + UtilityFunctions::error_string(error) + String(".") :
+                diagnostic);
     }
 }
 
@@ -697,8 +779,18 @@ int64_t GameRuntime::publish_world() {
     if (cleaning || transition.operation.is_null() || !is_authority()) {
         return ERR_UNAUTHORIZED;
     }
-    if (transition.save_ticket != 0 && !saves->activate_prepared_load(transition.save_ticket)) {
-        return ERR_INVALID_DATA;
+    if (transition.save_ticket != 0) {
+        const auto operation = transition.operation;
+        String failure;
+        const bool activated = saves->activate_prepared_load(transition.save_ticket, failure);
+        if (cleaning || transition.operation != operation) {
+            return ERR_UNAVAILABLE;
+        }
+        if (!activated) {
+            transition.restore_activation_error = failure;
+            return ERR_INVALID_DATA;
+        }
+        transition.restore_warning = failure;
     }
     transition.published = true;
     world_epoch = transition.epoch;
@@ -719,21 +811,55 @@ void GameRuntime::finish_transition(bool ok, const String &code, const String &m
     if (!finished.published && finished.save_ticket != 0) {
         saves->cancel(finished.save_ticket);
     }
-    if (finished.announced && is_authority() && network->finish_world(finished.epoch, ok, recovery) != OK &&
-            finished.published) {
-        ok = false;
-        recovery = true;
+    const Error confirmation = finished.announced && is_authority() ?
+            network->finish_world(finished.epoch, ok, recovery) : OK;
+    String result_code = code;
+    String result_message = message;
+    if (confirmation != OK) {
+        if (ok && finished.published) {
+            result_code = "WorldConfirmationFailed";
+            result_message = "Multiplayer confirmation failed after the world was published: " +
+                    UtilityFunctions::error_string(confirmation) + ".";
+        } else {
+            if (result_message.is_empty()) {
+                result_message = "The destination world did not become ready.";
+            }
+            result_message += " The multiplayer transition outcome could not be sent: " +
+                    UtilityFunctions::error_string(confirmation) + ".";
+        }
+        if (finished.published) {
+            ok = false;
+            recovery = true;
+        }
     }
     if (!recovery && !ok && finished.reopen_lobby && is_authority()) {
-        session_node->set_accepting_connections(true);
+        const Error reopen = session_node->set_accepting_connections(true);
+        if (reopen != OK) {
+            result_message += " The lobby could not reopen connection admission: " +
+                    UtilityFunctions::error_string(reopen) + ".";
+        }
     }
     const Phase next = recovery ? RECOVERING : ok ? RUNNING : finished.previous;
     if (is_authority()) {
         router->set_accepting_commands(next == RUNNING);
     }
-    Dictionary result = outcome(ok, recovery && code == "OK" ? String("WorldConfirmationFailed") : code, message);
+    if (ok) {
+        result_message = "World '" + String(finished.target) + "' is ready.";
+    } else {
+        if (result_message.is_empty()) {
+            result_message = finished.save_ticket != 0 ? "The checkpoint could not be restored." :
+                                                         "The destination world could not be prepared.";
+        }
+        if (recovery) {
+            result_message += " The session entered recovery and gameplay commands are paused.";
+        }
+    }
+    Dictionary result = outcome(ok, result_code, result_message);
     if (ok && !finished.generation.is_empty()) {
         result["value"] = finished.generation;
+    }
+    if (ok && !finished.restore_warning.is_empty()) {
+        result["warning"] = finished.restore_warning;
     }
     const int64_t ready_epoch = world_epoch;
     set_phase(next);
@@ -752,16 +878,28 @@ Ref<SaveSlot> GameRuntime::save_slot(const String &profile, const String &slot) 
 
 Ref<GameOperation> GameRuntime::save(const String &profile, const String &slot,
         const Dictionary &metadata, bool autosave) {
-    if (immediate_active || !is_authority() || phase != RUNNING || cleaning) {
-        return completed(false, "SaveNotReady", "A world must be running on the authority to capture a save.");
+    const auto operation = GameOperation::for_checkpoint(false, profile, slot);
+    String rejection;
+    if (immediate_active) {
+        rejection = "Use the coordinated game flow to capture a checkpoint.";
+    } else if (!is_authority()) {
+        rejection = "Capture checkpoints from the game authority.";
+    } else if (cleaning || transition.operation.is_valid()) {
+        rejection = "A world transition or session cleanup is in progress. Wait for a ready world before saving.";
+    } else if (phase != RUNNING) {
+        rejection = "Wait for a ready world on the authority before saving.";
+    }
+    if (!rejection.is_empty()) {
+        operation->finish(outcome(false, "SaveNotReady", rejection));
+        return operation;
     }
     const int64_t ticket = autosave ? saves->request_autosave(profile, slot, metadata) :
             saves->request_save(profile, slot, metadata);
     if (ticket == 0) {
-        return completed(false, saves->get_last_admission_error(), "The checkpoint coordinator rejected the save.");
+        const String code = saves->get_last_admission_error();
+        operation->finish(outcome(false, code, saves->get_last_admission_message()));
+        return operation;
     }
-    Ref<GameOperation> operation;
-    operation.instantiate();
     save_operations.emplace(ticket, operation);
     ++pending_captures;
     return operation;
@@ -769,10 +907,10 @@ Ref<GameOperation> GameRuntime::save(const String &profile, const String &slot,
 
 Ref<GameOperation> GameRuntime::restore(const String &profile, const String &slot,
         const String &sequence, const String &generation_id) {
-    Ref<GameOperation> operation;
-    operation.instantiate();
-    if (begin_transition(operation) != OK) {
-        operation->finish(outcome(false, "RestoreRejected", "Restore requires an authority lobby or ready world."));
+    const auto operation = GameOperation::for_checkpoint(true, profile, slot);
+    const String rejection = begin_transition(operation);
+    if (!rejection.is_empty()) {
+        operation->finish(outcome(false, "RestoreRejected", rejection));
         return operation;
     }
     if (cleaning || transition.operation != operation) {
@@ -780,7 +918,8 @@ Ref<GameOperation> GameRuntime::restore(const String &profile, const String &slo
     }
     transition.save_ticket = saves->request_prepare_load(profile, slot, sequence, generation_id);
     if (transition.save_ticket == 0) {
-        finish_transition(false, saves->get_last_admission_error(), "The checkpoint coordinator rejected the restore.");
+        const String code = saves->get_last_admission_error();
+        finish_transition(false, code, saves->get_last_admission_message());
     }
     return operation;
 }
@@ -792,7 +931,9 @@ Ref<GameOperation> GameRuntime::save_history(const String &profile, const String
     }
     const int64_t ticket = saves->request_list(profile, slot, before_sequence, before_id, limit);
     if (ticket == 0) {
-        return completed(false, saves->get_last_admission_error(), "The checkpoint coordinator rejected the read.");
+        const String detail = saves->get_last_admission_message();
+        return completed(false, saves->get_last_admission_error(),
+                detail.is_empty() ? String("The checkpoint coordinator rejected the read.") : detail);
     }
     Ref<GameOperation> operation;
     operation.instantiate();
@@ -828,8 +969,12 @@ void GameRuntime::cancel_save_operations() {
     pending_captures = 0;
     auto pending = std::exchange(save_operations, {});
     for (const auto &[ticket, operation] : pending) {
-        saves->cancel(ticket);
-        operation->finish(outcome(false, "SessionEnded", "The game stopped waiting for this storage operation."));
+        const String cancellation = saves->cancel(ticket);
+        String message = "The game stopped waiting for this storage operation.";
+        if (operation->is_checkpoint_save() && cancellation != "Cancelled") {
+            message += " The checkpoint write may have completed. Inspect the slot history before retrying.";
+        }
+        operation->finish(outcome(false, "SessionEnded", message));
     }
 }
 
@@ -837,25 +982,39 @@ void GameRuntime::on_session_started(int64_t role, int64_t local_peer) {
     if (immediate_active) {
         return;
     }
-    if (network->bind_transport() != OK) {
+    const Error transport_error = network->bind_transport();
+    if (transport_error != OK) {
+        UtilityFunctions::printerr("[Crimson] Could not attach match networking to the session (",
+                UtilityFunctions::error_string(transport_error), "). Closing the session.");
         session_node->leave();
         return;
     }
     if (role != session::GameSession::CLIENT) {
         match_id = String("match.") + String::num_uint64(Time::get_singleton()->get_ticks_usec());
-        if (router->configure(match_id, 1, possession) != OK) {
+        const Error router_error = router->configure(match_id, 1, possession);
+        if (router_error != OK) {
+            UtilityFunctions::printerr("[Crimson] Could not configure the authority command router (",
+                    UtilityFunctions::error_string(router_error), "). Closing the session.");
             session_node->leave();
             return;
         }
         for (const auto &[name, command] : commands) {
-            if (command.handler.is_valid() &&
-                    router->register_handler(name, command.handler, command.requires_primary) != OK) {
-                session_node->leave();
-                return;
+            if (command.handler.is_valid()) {
+                const Error registration = router->register_handler(name, command.handler, command.requires_primary);
+                if (registration != OK) {
+                    UtilityFunctions::printerr("[Crimson] Could not register command '", name, "' (",
+                            UtilityFunctions::error_string(registration), "). Closing the session.");
+                    session_node->leave();
+                    return;
+                }
             }
         }
         if (role == session::GameSession::OFFLINE) {
-            bindings->bind_peer(local_peer, "local");
+            if (bindings->bind_peer(local_peer, "local") == 0) {
+                UtilityFunctions::printerr("[Crimson] Could not bind the offline player to the local peer. Closing the session.");
+                session_node->leave();
+                return;
+            }
         }
     }
     set_phase(LOBBY);
@@ -883,6 +1042,7 @@ void GameRuntime::cleanup_session() {
         transition = {};
         operation->finish(outcome(false, "SessionEnded", "The session ended during the transition."));
     }
+    report_remote_travel(false, "SessionEnded", "The session ended before world travel completed.");
     publishing = false;
     checkpoint_adapter->discard_publication();
     reset_match();
@@ -955,14 +1115,44 @@ bool GameRuntime::peers_are_bound() const {
 
 void GameRuntime::on_world_announced(const StringName &target, int64_t epoch) {
     if (cleaning || session_node->get_state() != session::GameSession::CLIENT ||
-            worlds.find(target) == worlds.end() || epoch <= world_epoch || remote_epoch != 0 ||
+            epoch <= world_epoch || remote_epoch != 0 ||
             (phase != LOBBY && phase != RUNNING)) {
+        return;
+    }
+    if (worlds.find(target) == worlds.end()) {
+        if (epoch > rejected_remote_epoch) {
+            rejected_remote_epoch = epoch;
+            const String key(target);
+            if (valid_world_key(key)) {
+                UtilityFunctions::printerr("[Crimson] World travel (UnknownWorld): The authority announced world '",
+                        key, "', which is absent from this client's definition. Check that both builds use the same world catalog.");
+            } else {
+                UtilityFunctions::printerr("[Crimson] World travel (UnknownWorld): The authority announced an invalid world ID.");
+            }
+        }
         return;
     }
     remote_epoch = epoch;
     remote_target = target;
     remote_previous = phase;
+    remote_outcome_reported = false;
+    remote_preparation_error = String();
     set_phase(TRANSITIONING);
+}
+
+void GameRuntime::report_remote_travel(bool ok, const char *code, const String &message) {
+    if (remote_epoch == 0 || remote_outcome_reported) {
+        return;
+    }
+    remote_outcome_reported = true;
+    if (ok) {
+        return;
+    }
+    if (String(code) == "Cancelled" || String(code) == "SessionEnded") {
+        UtilityFunctions::print("[Crimson] World travel (world '", remote_target, "', ", code, "): ", message);
+    } else {
+        UtilityFunctions::printerr("[Crimson] World travel (world '", remote_target, "', ", code, "): ", message);
+    }
 }
 
 void GameRuntime::on_world_finished(int64_t epoch, bool ok, bool recovery) {
@@ -970,27 +1160,40 @@ void GameRuntime::on_world_finished(int64_t epoch, bool ok, bool recovery) {
         return;
     }
     if (epoch != remote_epoch || remote_epoch == 0) {
-        if (!ok && recovery && epoch == world_epoch) {
+        if (!ok && recovery && epoch == world_epoch && phase != RECOVERING) {
+            UtilityFunctions::printerr("[Crimson] World synchronization was lost on the authority. The client entered recovery.");
             set_phase(RECOVERING);
         }
         return;
     }
-    const StringName target = std::exchange(remote_target, StringName());
-    remote_epoch = 0;
+    const StringName target = remote_target;
+    Phase next = RECOVERING;
+    bool ready = false;
     if (!ok) {
-        set_phase(recovery ? RECOVERING : remote_previous);
-        return;
-    }
-    if (!replication_node->is_client_ready() || replication_node->get_world_epoch() != epoch ||
+        const String reason = recovery ? "The session entered recovery." : "The previous game phase was restored.";
+        const String message = remote_preparation_error.is_empty() ?
+                String("The authority could not complete the world transition. ") + reason :
+                remote_preparation_error + String(" ") + reason;
+        report_remote_travel(false, recovery ? "WorldRecoveryRequired" : "WorldTransitionAborted",
+                message);
+        next = recovery ? RECOVERING : remote_previous;
+    } else if (!replication_node->is_client_ready() || replication_node->get_world_epoch() != epoch ||
             loader->is_loading() || !loader->get_current_scene() || loader->get_current_scene_id() != worlds.at(target)) {
-        set_phase(RECOVERING);
-        return;
+        report_remote_travel(false, "WorldReadinessMismatch",
+                "The authority confirmed a world whose local scene or state baseline is unavailable. The session entered recovery.");
+    } else {
+        world_id = target;
+        world_epoch = epoch;
+        local_sequence = 0;
+        ready = true;
+        next = RUNNING;
+        report_remote_travel(true, "OK", "The destination scene and its state baseline are ready.");
     }
-    world_id = target;
-    world_epoch = epoch;
-    local_sequence = 0;
-    set_phase(RUNNING);
-    if (phase == RUNNING && !cleaning) {
+    remote_target = {};
+    remote_epoch = 0;
+    remote_preparation_error = String();
+    set_phase(next);
+    if (ready && phase == RUNNING && !cleaning) {
         emit_signal("projection_updated", replication_node->get_revision(), true);
         emit_signal("world_ready", world_id, world_epoch);
     }
@@ -1003,10 +1206,18 @@ void GameRuntime::on_scene_completed(const StringName &) {
     if (!is_authority() || cleaning || transition.operation.is_null()) {
         return;
     }
-    const bool restored = transition.save_ticket != 0;
-    if ((restored && checkpoint_adapter->notify_publication() != OK) ||
-            router->advance_world(world_epoch) != OK) {
-        finish_transition(false, "WorldPublicationFailed", "Could not finalize the committed state.", true);
+    if (transition.save_ticket != 0) {
+        const Error notification = checkpoint_adapter->notify_publication();
+        if (notification != OK) {
+            finish_transition(false, "WorldPublicationFailed",
+                    "Could not notify checkpoint observers: " + UtilityFunctions::error_string(notification) + String("."), true);
+            return;
+        }
+    }
+    const Error command_world = router->advance_world(world_epoch);
+    if (command_world != OK) {
+        finish_transition(false, "WorldPublicationFailed",
+                "Could not advance gameplay commands to the new world: " + UtilityFunctions::error_string(command_world) + String("."), true);
         return;
     }
     publishing = false;
@@ -1015,8 +1226,10 @@ void GameRuntime::on_scene_completed(const StringName &) {
         return;
     }
     const int64_t revision = transactions->get_revision();
-    if (replication_node->advance_world(world_epoch, revision) != OK) {
-        finish_transition(false, "ReplicationFailed", "Could not prepare the new replication stream.", true);
+    const Error replication_world = replication_node->advance_world(world_epoch, revision);
+    if (replication_world != OK) {
+        finish_transition(false, "ReplicationFailed",
+                "Could not prepare the new replication stream: " + UtilityFunctions::error_string(replication_world) + String("."), true);
         return;
     }
     const PackedInt32Array peers = session_node->get_connected_peer_ids();
@@ -1029,16 +1242,24 @@ void GameRuntime::on_scene_completed(const StringName &) {
     }
     transition.deadline = Time::get_singleton()->get_ticks_msec() + loader->get_load_timeout_msec();
     for (const int32_t peer : peers) {
-        if (replication_node->send_baseline(peer) != OK) {
-            finish_transition(false, "BaselineFailed", "Could not send a participant's baseline.", true);
+        const Error baseline = replication_node->send_baseline(peer);
+        if (baseline != OK) {
+            finish_transition(false, "BaselineFailed",
+                    "Could not send a participant's baseline: " + UtilityFunctions::error_string(baseline) + String("."), true);
             return;
         }
     }
 }
 
 void GameRuntime::on_scene_failed(const StringName &, int64_t, const String &message) {
-    if (!cleaning && transition.operation.is_valid()) {
-        finish_transition(false, "ScenePreparationFailed", message);
+    if (cleaning) {
+        return;
+    }
+    if (transition.operation.is_valid()) {
+        finish_transition(false, "ScenePreparationFailed", transition.restore_activation_error.is_empty() ? message :
+                "Could not activate the prepared checkpoint. " + transition.restore_activation_error);
+    } else if (remote_epoch != 0 && !remote_outcome_reported) {
+        remote_preparation_error = message;
     }
 }
 
@@ -1047,8 +1268,11 @@ void GameRuntime::on_scene_sync_failed(const StringName &, int64_t, const String
         return;
     }
     if (transition.operation.is_valid()) {
-        finish_transition(false, "SceneSynchronizationFailed", message, true);
+        finish_transition(false, "SceneSynchronizationFailed", transition.restore_activation_error.is_empty() ? message :
+                "Could not activate the prepared checkpoint. " + transition.restore_activation_error, true);
     } else if (phase == TRANSITIONING) {
+        report_remote_travel(false, "SceneSynchronizationFailed",
+                message + String(" The session entered recovery and gameplay commands are paused."));
         set_phase(RECOVERING);
     }
 }
@@ -1061,17 +1285,32 @@ void GameRuntime::on_peer_ready(int64_t peer, int64_t epoch, int64_t generation)
     }
 }
 
-void GameRuntime::on_peer_sync_failed(int64_t peer, int64_t epoch, int64_t) {
+void GameRuntime::on_peer_sync_failed(int64_t peer, int64_t epoch, int64_t error) {
     if (cleaning || epoch != world_epoch) {
         return;
     }
     if (transition.waiting.count(peer) != 0) {
-        finish_transition(false, "BaselineFailed", "A required participant could not synchronize state.", true);
+        finish_transition(false, "BaselineFailed",
+                "A required participant could not synchronize state: " + UtilityFunctions::error_string(error) + String("."), true);
     } else if (phase == RUNNING && is_authority()) {
-        router->set_accepting_commands(false);
-        network->finish_world(world_epoch, false, true);
-        set_phase(RECOVERING);
+        recover_replication("A required participant lost synchronization with the active world: " +
+                UtilityFunctions::error_string(error) + String("."));
     }
+}
+
+void GameRuntime::recover_replication(const String &message) {
+    const Error command_gate = router->set_accepting_commands(false);
+    const Error notification = network->finish_world(world_epoch, false, true);
+    UtilityFunctions::printerr("[Crimson] ", message, " The session entered recovery. Gameplay commands are paused.");
+    if (command_gate != OK) {
+        UtilityFunctions::printerr("[Crimson] The command router rejected the recovery gate (",
+                UtilityFunctions::error_string(command_gate), "). The GameRuntime phase still rejects new commands.");
+    }
+    if (notification != OK) {
+        UtilityFunctions::printerr("[Crimson] Could not notify clients about recovery (",
+                UtilityFunctions::error_string(notification), ").");
+    }
+    set_phase(RECOVERING);
 }
 
 void GameRuntime::on_projection_updated(int64_t epoch, int64_t revision, bool baseline) {
@@ -1121,7 +1360,7 @@ Error GameRuntime::set_shared_stores(const PackedStringArray &store_ids) {
         return ERR_BUSY;
     }
     for (const String &store : store_ids) {
-        if (store.is_empty() || store == context_record) {
+        if (store.is_empty() || store == context_record || store == "crimson.inventory") {
             return ERR_INVALID_PARAMETER;
         }
     }
@@ -1142,18 +1381,24 @@ Dictionary GameRuntime::project(int64_t peer, const String &player, int64_t epoc
     if (project_view.is_valid()) {
         const Variant projected = project_view.call(peer, player, epoch, revision);
         if (projected.get_type() != Variant::DICTIONARY) {
-            return outcome(false, "InvalidProjection");
+            return outcome(false, "InvalidProjection", "The game projector must return a Dictionary.");
         }
         const Dictionary reply = projected;
         const Variant records = reply.get("view", Variant());
-        if (!bool(reply.get("ok", false)) || records.get_type() != Variant::DICTIONARY) {
-            return outcome(false, "InvalidProjection");
+        if (!bool(reply.get("ok", false))) {
+            const Variant detail = reply.get("message", "");
+            const String message = detail.get_type() == Variant::STRING ? String(detail) : String();
+            return outcome(false, "InvalidProjection", message.strip_edges().is_empty() ?
+                    String("The game projector rejected the recipient's committed view.") : message);
+        }
+        if (records.get_type() != Variant::DICTIONARY) {
+            return outcome(false, "InvalidProjection", "The game projector must return the view as a Dictionary.");
         }
         view = Dictionary(records).duplicate();
     } else {
         for (const String &store : shared_stores) {
             if (transactions->get_store_revision(store) < 0) {
-                return outcome(false, "UnknownStore", store);
+                return outcome(false, "UnknownStore", "The projection references unregistered store '" + store + String("'."));
             }
             view[store] = transactions->read_store(store);
         }

@@ -5,6 +5,7 @@
 #include "modules/steam/client/steam_client.hpp"
 #include "modules/steam/client/steam_diagnostics_service.hpp"
 #include "modules/steam/client/steam_result.hpp"
+#include "modules/steam/client/steamworks.hpp"
 #include "modules/steam/lobbies/steam_lobbies.hpp"
 #include "modules/steam/server/steam_server.hpp"
 #include "modules/steam/server/steam_server_browser.hpp"
@@ -248,9 +249,12 @@ void register_types(godot::ModuleInitializationLevel level) {
         GDREGISTER_CLASS(SteamServerDetailsOperation);
         GDREGISTER_CLASS(SteamServerQuery);
         GDREGISTER_CLASS(SteamServerBrowser);
-        GDREGISTER_CLASS(SteamClient);
+        GDREGISTER_VIRTUAL_CLASS(SteamClient);
+        GDREGISTER_CLASS(SteamConfig);
+        GDREGISTER_CLASS(SteamAchievements);
+        GDREGISTER_CLASS(Steamworks);
 #ifdef CRIMSON_WITH_STEAM_PUBLISHER
-        GDREGISTER_CLASS(SteamPublisherHost);
+        GDREGISTER_VIRTUAL_CLASS(SteamPublisherHost);
         GDREGISTER_CLASS(SteamPublisherSettings);
         GDREGISTER_CLASS(SteamIdentity);
         GDREGISTER_CLASS(SteamIdentityResult);

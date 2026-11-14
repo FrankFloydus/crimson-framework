@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="Inventory" inherits="RefCounted">
+	<brief_description>Code-first factories for standalone inventories.</brief_description>
+	<methods>
+		<method name="grid" qualifiers="static">
+			<return type="SpatialInventory" />
+			<param index="0" name="size" type="Vector2i" />
+			<description>Returns an empty grid of [param size] cells. Returns [code]null[/code] if a dimension is nonpositive or the grid exceeds 1,048,576 cells.</description>
+		</method>
+	</methods>
+</class>

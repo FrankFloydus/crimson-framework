@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="SpatialInventoryContainers" inherits="RefCounted">
+	<brief_description>Tracks which inventory grid owns each placed item and nested container.</brief_description>
+	<description>Associate container items with their contents grids to enforce unique item IDs and prevent a container from moving into its own contents or descendants.</description>
+	<members>
+		<member name="host_placement_policy" type="Callable" setter="set_host_placement_policy" getter="get_host_placement_policy">Optional game rule called with the placement context after the container ownership checks pass. Return an empty String to allow the placement or a reason to deny it. The default empty callable adds no game-specific restriction.</member>
+	</members>
+</class>

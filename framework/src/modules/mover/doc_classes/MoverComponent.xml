@@ -1,0 +1,35 @@
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="MoverComponent" inherits="Node">
+	<brief_description>Editable movement settings on a character scene.</brief_description>
+	<description>
+		Add one MoverComponent directly under the player scene's [CharacterBody3D]. Edit Ground Movement, Air Movement, and Jumping in the Inspector before boot. Fixed-world [Game] sessions and standalone [PlayerControlProfile] controllers copy the effective settings when configuring movement. The component does not start a physics driver by itself. An attached runtime [Mover] can be read using [method mover].
+	</description>
+	<methods>
+		<method name="mover" qualifiers="const">
+			<return type="Mover" />
+			<description>Returns the existing [Mover] attached to the parent [CharacterBody3D], or [code]null[/code] when none is attached. Network guests use the session's movement path and have no local Mover handle.</description>
+		</method>
+	</methods>
+	<members>
+		<member name="acceleration" type="float" setter="set_acceleration" getter="get_acceleration" default="40.0">How quickly steering adds speed or changes direction on the ground, in metres per second squared. Accepts 0 to 1000. Zero removes steering acceleration. Air Control scales this value in the air.</member>
+		<member name="air_control" type="float" setter="set_air_control" getter="get_air_control" default="0.4">Fraction of steering acceleration available while airborne, including on takeoff. Zero keeps existing momentum until collision. One uses full acceleration. Releasing input in the air preserves horizontal momentum.</member>
+		<member name="controller_style" type="int" setter="set_controller_style" getter="get_controller_style" enum="MoverComponent.ControllerStyle" default="0">Choose how movement input turns and moves the body. Hover a choice to see what pressing Left does. Third-person and Lock-On styles require a Y-up body. Author the camera rig in the player scene. Changes apply when movement is set up again.</member>
+		<member name="deceleration" type="float" setter="set_deceleration" getter="get_deceleration" default="40.0">Base ground braking rate in metres per second squared when input requests a lower speed or stops. Accepts 0 to 1000. Zero leaves only friction to brake on the ground.</member>
+		<member name="gravity_scale" type="float" setter="set_gravity_scale" getter="get_gravity_scale" default="1.0">Multiplier on gravity along the body's up axis. Accepts finite nonnegative values. Zero disables gravity.</member>
+		<member name="ground_friction" type="float" setter="set_ground_friction" getter="get_ground_friction" default="8.0">Ground turning and braking coefficient in inverse seconds, from 0 to 100. Higher values turn existing momentum toward steering faster and add more speed-dependent braking. Zero leaves acceleration and deceleration in charge.</member>
+		<member name="jump_speed" type="float" setter="set_jump_speed" getter="get_jump_speed" default="5.0">Upward speed at takeoff in metres per second, from 0 to 1000. Gravity also affects how high the player jumps. Zero disables jumping. The input binding is configured on Controls.</member>
+		<member name="forward_direction" type="int" setter="set_move_relative_to" getter="get_move_relative_to" enum="MoverComponent.MoveReference" default="0">Sets forward for FPS / Shoulder Aim. View Heading uses the camera. Character Heading uses the body, or its spawn heading in Game sessions. World Axes uses negative Z.</member>
+		<member name="move_relative_to" type="int" setter="set_move_relative_to" getter="get_move_relative_to" enum="MoverComponent.MoveReference" default="0">Compatibility alias for [member forward_direction]. New scenes store Forward Direction.</member>
+		<member name="move_speed" type="float" setter="set_move_speed" getter="get_move_speed" default="6.0">Requested speed at full movement input, in metres per second. Use a finite value from 0 to 1000. Zero stops directional input from producing movement.</member>
+		<member name="predict_movement" type="bool" setter="set_predict_movement_enabled" getter="is_predict_movement_enabled" default="false">Use client prediction and server reconciliation in fixed-world sessions with matching upright capsules and static level collision. Enable on the shared player scene before boot. Leave off when movement needs live collision with dynamic bodies or moving platforms.</member>
+	</members>
+	<constants>
+		<constant name="VIEW" value="0" enum="MoveReference">View Heading. Forward follows the camera or view pivot's horizontal heading.</constant>
+		<constant name="CHARACTER" value="1" enum="MoveReference">Character Heading. Forward follows the body's current heading in standalone Player Control and its spawn heading in Game sessions.</constant>
+		<constant name="WORLD" value="2" enum="MoveReference">World Axes. Forward always follows the world's negative Z direction.</constant>
+		<constant name="FPS_AIM" value="0" enum="ControllerStyle">FPS / Shoulder Aim. With View Heading, the body turns with the camera even while standing still. Press Left to strafe without turning. Standalone Character Heading leaves body rotation to the game.</constant>
+		<constant name="FREE_ORBIT" value="1" enum="ControllerStyle">Free-Orbit Third Person. Looking around while idle leaves the body facing the same way. Press Left to move toward the camera's left while the body turns toward that direction. Turns at up to 540 degrees per second.</constant>
+		<constant name="FORWARD_ONLY" value="2" enum="ControllerStyle">Forward-Only Third Person. Press Left to turn the body toward the camera's left and walk forward into the turn instead of strafing. Steering asks for less speed while the body lines up. Turns at up to 540 degrees per second.</constant>
+		<constant name="LOCK_ON" value="3" enum="ControllerStyle">Lock-On. The body faces a target selected with [method PlayerControl.lock_on]. Press Left to move sideways relative to the target and Back to move away. With no target, the body and movement follow the view.</constant>
+	</constants>
+</class>

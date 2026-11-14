@@ -3,6 +3,7 @@
 ## Checks standalone Steam Parties reads and explicitly selected two-account beacons.
 extends SceneTree
 
+const GameFixture := preload("res://tests/online/steam_game_fixture.gd")
 ## Valve's shared Steamworks development AppID.
 const SPACEWAR := 480
 ## Bound the live account handoff and reservation join observation.
@@ -67,19 +68,17 @@ func _read_only(mode: String) -> bool:
 	return passed
 
 
-## Use the current demo's normal Steam provider and scene-loading path.
+## Boot the ordinary Steam provider in the fixture-owned world.
 func _live(mode: String, selected_id: String, game_namespace: String) -> bool:
-	var scene := load("res://demo/main.tscn") as PackedScene
 	var provider := SteamProvider.configure().for_app(SPACEWAR).with_lobby_namespace(game_namespace)
-	if scene == null or provider == null:
+	if provider == null:
 		return false
-	var demo := scene.instantiate()
-	var game := demo.get_node(^"Game") as GameRuntime
-	game.definition = game.definition.with_provider(provider.friends_only())
-	root.add_child(demo)
+	var game := GameFixture.boot(root, provider.friends_only())
+	if game == null:
+		return false
 	var steam := SteamServices.for_game(game)
 	if steam == null or not steam.is_ready() or steam.parties() == null:
-		demo.free()
+		game.free()
 		return false
 	var passed := false
 	if mode == "host":
@@ -87,7 +86,7 @@ func _live(mode: String, selected_id: String, game_namespace: String) -> bool:
 	else:
 		passed = await _guest(game, steam.parties(), selected_id)
 	game.leave()
-	demo.free()
+	game.free()
 	return passed
 
 

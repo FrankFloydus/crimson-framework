@@ -1,0 +1,39 @@
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="GameOperation" inherits="RefCounted">
+	<brief_description>Retained operation for legacy and typed callers.</brief_description>
+	<methods>
+		<method name="is_finished">
+			<return type="bool" />
+			<description>Return whether the operation has settled.</description>
+		</method>
+		<method name="get_result">
+			<return type="Dictionary" />
+			<description>Return the detached legacy result or an empty dictionary while pending.</description>
+		</method>
+		<method name="wait">
+			<return type="Variant" />
+			<description>Return the legacy result or an awaitable completion signal.</description>
+		</method>
+		<method name="wait_result">
+			<return type="Variant" />
+			<description>Return the typed GameResult or an awaitable completion signal.</description>
+		</method>
+		<method name="get_typed_result">
+			<return type="GameResult" />
+			<description>Return the typed outcome or null before completion.</description>
+		</method>
+	</methods>
+	<members>
+		<member name="result" type="Dictionary" setter="" getter="get_result">Detached legacy result after settlement.</member>
+	</members>
+	<signals>
+		<signal name="completed">
+			<param index="0" name="result" type="Dictionary" />
+			<description>Emitted once with the legacy outcome.</description>
+		</signal>
+		<signal name="completed_typed">
+			<param index="0" name="result" type="GameResult" />
+			<description>Emitted once with the typed outcome of the same operation.</description>
+		</signal>
+	</signals>
+</class>

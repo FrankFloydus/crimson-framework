@@ -6,6 +6,7 @@
 
 #include <godot_cpp/core/class_db.hpp>
 #include <godot_cpp/variant/callable_method_pointer.hpp>
+#include <godot_cpp/variant/utility_functions.hpp>
 
 #include <limits>
 
@@ -143,19 +144,29 @@ Dictionary rejected(const String &message) {
 
 // Stages an entire operation batch in a detached inventory and returns the resulting store snapshot.
 Dictionary prepare_inventory(const Dictionary &current, const Array &operations, const Dictionary &) {
+    const Dictionary snapshot = decode_snapshot(current);
+    if (snapshot.is_empty()) {
+        return rejected("The inventory store snapshot has malformed portable fields.");
+    }
     Ref<SpatialInventory> candidate;
     candidate.instantiate();
-    if (candidate->import_snapshot(decode_snapshot(current)) != OK) {
-        return rejected("The inventory store could not be loaded.");
+    const Error imported = candidate->import_snapshot(snapshot);
+    if (imported != OK) {
+        return rejected("The inventory store snapshot could not be loaded. Godot reported " +
+                UtilityFunctions::error_string(imported) + ".");
     }
     for (int64_t index = 0; index < operations.size(); ++index) {
+        const String number = String::num_int64(index + 1);
         if (operations[index].get_type() != Variant::DICTIONARY) {
-            return rejected("An inventory operation is invalid.");
+            return rejected("Inventory operation " + number + " must be a dictionary.");
         }
-        const Error result = apply_operation(*candidate.ptr(), operations[index]);
+        const Dictionary operation = operations[index];
+        const Error result = apply_operation(*candidate.ptr(), operation);
         if (result != OK) {
-            return rejected("Inventory operation " + String::num_int64(index + 1) +
-                    " failed with Godot error " + String::num_int64(result) + ".");
+            const Variant kind = operation.get("kind", Variant());
+            const String action = kind.get_type() == Variant::STRING ? String(kind) : String("unknown action");
+            return rejected("Inventory operation " + number + " (" + action +
+                    ") failed. Godot reported " + UtilityFunctions::error_string(result) + ".");
         }
     }
     Dictionary result;
@@ -186,6 +197,20 @@ void InventoryTransactionAdapter::_bind_methods() {
             &InventoryTransactionAdapter::queue_move, DEFVAL(false));
     ClassDB::bind_method(D_METHOD("queue_remove", "transaction", "item_id"),
             &InventoryTransactionAdapter::queue_remove);
+}
+
+Dictionary InventoryTransactionAdapter::pack_snapshot(const Dictionary &snapshot) {
+    return encode_snapshot(snapshot);
+}
+
+Ref<SpatialInventory> InventoryTransactionAdapter::unpack_grid(const Dictionary &snapshot) {
+    const Dictionary decoded = decode_snapshot(snapshot);
+    if (decoded.is_empty()) {
+        return {};
+    }
+    Ref<SpatialInventory> grid;
+    grid.instantiate();
+    return grid->import_snapshot(decoded) == OK ? grid : Ref<SpatialInventory>();
 }
 
 Error InventoryTransactionAdapter::configure(const Ref<match_runtime::TransactionCoordinator> &p_coordinator,

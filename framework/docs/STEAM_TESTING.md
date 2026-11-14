@@ -25,6 +25,8 @@ Use `-Mode sdk-off -BinaryDirectory $sdkOffBin` against a build with Steam disab
 
 ## Verify Steam client startup and recovery
 
+The `client` fixture checks that code-first startup uses a hidden callback owner and preserves the exact startup failure on direct actions. Its live modes also check that two scoped facades can share the process AppID and that retiring one owner invalidates only its own retained services.
+
 First run the signed Spacewar `client` and `stats` fixtures to cache app and progression data. Put Steam into Offline Mode yourself, then run the offline fixture. It expects a local Steam scope, no live Valve connection, and cached `ACH_WIN_ONE_GAME` data. Restore Steam to online operation before running signed fixtures again. [Valve offline progression](https://partner.steamgames.com/doc/features/achievements#offline_mode)
 
 ```powershell
@@ -50,7 +52,7 @@ try {
 & $test -GodotExe $godot -Case client -Mode runtime-mock -BinaryDirectory $mockBin
 ```
 
-This fixture checks cached reads while offline, cold and warm typed Game Notifications IDs, rejection of malformed IDs, and retirement of two shared client scopes after the borrowed IPC buffer is freed. It verifies that old service handles stay inactive after a fresh local pipe starts. [Valve IPC recovery](https://partner.steamgames.com/doc/api/ISteamUser#IPCFailure_t)
+This fixture checks cached reads while offline, cold and warm typed Game Notifications IDs, rejection of malformed IDs, and retirement of shared client scopes after the borrowed IPC buffer is freed. It verifies that startup reports conflicting AppIDs and the SDK's reason for an injected initialization failure, that a later retry succeeds, and that old service handles stay inactive after a fresh local pipe starts. A synthetic achievement exercises one store submission per action and a rejected submission that leaves the cache edit intact. [Valve IPC recovery](https://partner.steamgames.com/doc/api/ISteamUser#IPCFailure_t)
 
 For the shipping relaunch check, use an unwrapped rendered build for an authorized Steam AppID. Install it through Steam and omit the development `steam_appid.txt`. Verify that Steam starts the installed copy when the executable is opened directly, and that a launch from the Steam Library proceeds through the same entry point. Spacewar is rejected before the relaunch call. [Shipping startup example](STEAMWORKS.md#start-the-client) · [Valve launch check](https://partner.steamgames.com/doc/sdk/api#SteamAPI_RestartAppIfNecessary)
 
@@ -114,7 +116,7 @@ Use the same staged engine and imported `$project`. Run hosts and guests in sepa
 
 | Capability | Fixture script and user arguments after `--` |
 | --- | --- |
-| Listen lobby, discovery and invites | `res://demo/tests/steam_smoke.gd -- host <namespace>`, then `guest <lobby ID> <namespace>`. For discoverable lobbies add `--visibility=friends` or `--visibility=public` to the host and use `guest-discover <namespace>` on the guest. For the graphical invite flow add `--invite --crimson-steam-overlay=480` to the host, start the second account with `guest-invite <namespace>`, and accept the invitation in Steam. |
+| Listen lobby, discovery and invites | `res://demo/tests/steam_smoke.gd -- host <namespace>` hosts through `Game.host()`. The `guest <lobby ID> <namespace>` role verifies direct locator compatibility. For discovery add `--visibility=public` to the host and run `guest-discover <namespace>` to exercise `Game.find_and_join()`. For the graphical invite flow add `--invite --crimson-steam-overlay=480` to the host, run `guest-invite <namespace>` on the second account, and accept the invitation in Steam. The guest passes the exact offer to `Game.accept_invite()` and waits for a playable world. |
 | Join Game controls and listen relay preference | `res://demo/tests/steam_smoke.gd -- listen <namespace> --visibility=friends --prefer-relay` exercises local route publication, suppression, and restoration. For a path observation, add `--prefer-relay` to the two-account host role and check both logs for `CRIMSON_STEAM_LISTEN_ROUTE` and its `direct`, `relay`, or `unknown` value after joining. Steam may still select direct routing. |
 | Steam server browser | `res://demo/tests/steam_dedicated.gd -- internet-host <namespace> <game UDP port> <query UDP port> <reachable IPv4>` and `browse-guest <namespace> <s1 locator>` using an eligible app and a separate client network. Watch for the exact server row, inspection, and verified join. |
 | Dedicated server progression | `res://demo/tests/steam_dedicated.gd -- progression-host <namespace> <game UDP port> <query UDP port> 127.0.0.1` and `progression-guest <namespace> <s1 locator>` exercise the exact admitted stats scope. Spacewar requests a native cache load without writing. `server_progression` in `missing` or `sdk-off` mode checks detached behavior. |
@@ -125,6 +127,8 @@ Use the same staged engine and imported `$project`. Run hosts and guests in sepa
 | Voice | `res://tests/online/steam_voice.gd -- capture` with `CRIMSON_STEAM_VOICE_ALLOW_MICROPHONE=1` checks one microphone. Use `steam_voice_session.gd -- voice host <namespace>` and `voice guest <namespace> <lobby ID>` under `res://tests/online/` for two-account relay. Use `voice-policy` in place of `voice` for recipient checks without microphone access. |
 
 To verify Steam's native Join Game launch path, enable **Use launch command line** in the app's Steamworks settings. From a second account, accept a join from a fully stopped client and verify that the pending invite reaches the game menu. Repeat with the game already running to exercise the Steam URL callback. Check that accepting the candidate uses the normal authenticated Game join. The direct-development fixture checks that a valid argument queues an invite with the Game still idle, and that duplicate or missing arguments queue nothing. [Valve launch arguments](https://partner.steamgames.com/doc/api/ISteamApps#GetLaunchCommandLine)
+
+For a single signed-in client, run `steam_smoke.gd -- lobby-query <unique-empty-namespace>` to check the shared search lane, overlapping quick join rejection, cancellation without mounting, and the empty-search result after Steam drains. The `scope-unavailable` role on a missing-runtime or SDK-off build checks that hosting reports the attached Steam startup failure and keeps the transport idle.
 
 ```powershell
 & $engine --headless --path $project --script res://demo/tests/steam_smoke.gd -- launch-check 109775241006713287 +connect_lobby 109775241006713287

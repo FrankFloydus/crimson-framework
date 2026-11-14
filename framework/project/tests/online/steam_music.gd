@@ -77,7 +77,7 @@ func _check_controls(args: PackedStringArray) -> void:
 	music.playback_changed.connect(func() -> void: playback_events.append(true))
 	music.volume_changed.connect(func(level: float) -> void: volume_events.append(level))
 	var volume := 0.35 if before.value.volume > 0.5 else 0.65
-	var paused := music.pause() == OK and await _wait_for_playback(music, SteamMusicStatus.PAUSED)
+	var pause_confirmed := music.pause() == OK and await _wait_for_playback(music, SteamMusicStatus.PAUSED)
 	var playing := music.play() == OK and await _wait_for_playback(music, SteamMusicStatus.PLAYING)
 	var adjusted := music.set_volume(volume) == OK and await _wait_for_volume(music, volume)
 	var next_track := music.next() == OK
@@ -86,7 +86,7 @@ func _check_controls(args: PackedStringArray) -> void:
 	var restored_volume := music.set_volume(before.value.volume) == OK and await _wait_for_volume(music, before.value.volume)
 	var restored_playback := music.play() if before.value.playback == SteamMusicStatus.PLAYING else music.pause()
 	var restored := restored_playback == OK and await _wait_for_playback(music, before.value.playback)
-	var passed := paused and playing and adjusted and next_track and previous_track and restored_volume and restored and \
+	var passed := pause_confirmed and playing and adjusted and next_track and previous_track and restored_volume and restored and \
 		not playback_events.is_empty() and not volume_events.is_empty()
 	steam.free()
 	if passed:

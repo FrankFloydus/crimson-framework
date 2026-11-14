@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="InputNormalize" inherits="InputModifier">
+	<brief_description>Gives a nonzero vector binding full magnitude.</brief_description>
+	<description>Use on a Vector binding. Keeps the direction of the incoming vector and makes its length one. A zero vector stays zero. Put [InputDeadZone] before this modifier when small stick drift should remain neutral.</description>
+</class>

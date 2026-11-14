@@ -56,14 +56,25 @@ template <typename Commit> Callable once(const std::shared_ptr<CommitGate> &gate
     });
 }
 
-// Closes a one-shot commit gate and returns its outcome.
-Error finish_commit(CommitGate &gate, const Variant &result) {
+// Close the one-shot gate and diagnose disagreements with the host's callback result.
+Error finish_commit(CommitGate &gate, const Variant &result, const String &callback) {
     gate.open = false;
+    const bool valid = result.get_type() == Variant::INT && int64_t(result) >= OK && int64_t(result) <= ERR_PRINTER_ON_FIRE;
     if (gate.called) {
+        if (!valid || (int64_t(result) == OK) != (gate.error == OK)) {
+            UtilityFunctions::printerr(String("[Crimson] Inventory trade ") + callback +
+                    " disagreed with the exchange commit result. Check host records before retrying.");
+        }
         return gate.error;
     }
-    if (result.get_type() == Variant::INT && int64_t(result) != OK) {
+    if (valid && int64_t(result) != OK) {
         return static_cast<Error>(int64_t(result));
+    }
+    if (valid) {
+        UtilityFunctions::printerr(String("[Crimson] Inventory trade ") + callback +
+                " returned OK without calling the exchange commit. Check host records before retrying.");
+    } else {
+        UtilityFunctions::printerr(String("[Crimson] Inventory trade ") + callback + " must return a Godot Error.");
     }
     return ERR_INVALID_DATA;
 }
@@ -1785,8 +1796,11 @@ bool SpatialInventoryTrade::can_edit_quantities() {
 }
 
 Variant SpatialInventoryTrade::read_stack(StringName id) {
-    if (!describe_stack_.is_valid()) {
+    if (describe_stack_.is_null()) {
         return Dictionary();
+    }
+    if (!describe_stack_.is_valid()) {
+        return Variant();
     }
     bool was_busy = busy_;
     busy_ = true;
@@ -1816,6 +1830,9 @@ Variant SpatialInventoryTrade::normalize_stack(Variant raw) {
 }
 
 StringName SpatialInventoryTrade::new_stack_id(StringName source_id) {
+    if (!allocate_stack_id_.is_valid()) {
+        return {};
+    }
     bool was_busy = busy_;
     busy_ = true;
     Variant raw = allocate_stack_id_.call(source_id);
@@ -2040,7 +2057,7 @@ Error SpatialInventoryTrade::apply_wallet_checked(TypedArray<Dictionary> changes
     const auto gate = std::make_shared<CommitGate>();
     const auto commit =
         once(gate, [this, &changes, &stack_changes]() { return apply_checked(changes, stack_changes); });
-    return finish_commit(*gate, wallet_->call("apply_balance_changes", currency_changes, commit));
+    return finish_commit(*gate, wallet_->call("apply_balance_changes", currency_changes, commit), "wallet apply_balance_changes");
 }
 
 Error SpatialInventoryTrade::apply_checked(TypedArray<Dictionary> changes, TypedArray<Dictionary> stack_changes) {
@@ -2052,7 +2069,7 @@ Error SpatialInventoryTrade::apply_checked(TypedArray<Dictionary> changes, Typed
     }
     const auto gate = std::make_shared<CommitGate>();
     const auto commit = once(gate, [&changes]() { return SpatialInventory::apply_placement_changes(changes); });
-    return finish_commit(*gate, apply_stack_changes_.call(stack_changes, commit));
+    return finish_commit(*gate, apply_stack_changes_.call(stack_changes, commit), "apply_stack_changes");
 }
 
 } // namespace crimson::inventory

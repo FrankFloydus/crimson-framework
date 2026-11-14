@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="InventoryPickup" inherits="RefCounted">
+	<brief_description>An eligible world item and its source edit, resolved by trusted game code.</brief_description>
+	<methods>
+		<method name="take" qualifiers="static">
+			<return type="InventoryPickup" />
+			<param index="0" name="item_id" type="StringName" />
+			<param index="1" name="footprint" type="Vector2i" />
+			<param index="2" name="source_store" type="String" />
+			<param index="3" name="source_edit" type="Dictionary" />
+			<description>Describe the item instance, positive unrotated footprint in cells, and operation that consumes the item in a registered game-owned store. The edit must contain bounded plain data. Returns [code]null[/code] for an invalid description.</description>
+		</method>
+	</methods>
+</class>

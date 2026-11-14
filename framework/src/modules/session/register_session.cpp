@@ -18,7 +18,7 @@ void register_types(godot::ModuleInitializationLevel level) {
         GDREGISTER_CLASS(SessionIdentity);
         GDREGISTER_CLASS(SessionAuthRequest);
         GDREGISTER_CLASS(SessionAuthenticator);
-        GDREGISTER_CLASS(GameSession);
+        GDREGISTER_VIRTUAL_CLASS(GameSession);
         GDREGISTER_CLASS(OnlineListing);
     }
 }

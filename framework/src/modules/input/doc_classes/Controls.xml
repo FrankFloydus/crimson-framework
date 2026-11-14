@@ -1,0 +1,140 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="Controls" inherits="RefCounted">
+	<brief_description>Local action values and pointer controls attached from code.</brief_description>
+	<description>Call [method boot] on an existing scene owner. The framework admits gameplay presses after Godot UI and publishes action values before gameplay physics callbacks. Each owner retains independent bindings and input state.</description>
+	<methods>
+		<method name="axis" qualifiers="const">
+			<return type="float" />
+			<param index="0" name="id" type="StringName" />
+			<description>Returns this physics tick's scalar level in the range [-1, 1]. An unavailable, neutral, or differently typed action returns zero.</description>
+		</method>
+		<method name="boot" qualifiers="static">
+			<return type="Controls" />
+			<param index="0" name="owner" type="Node" />
+			<param index="1" name="layout" type="InputLayout" default="null" />
+			<param index="2" name="joypad" type="int" default="-1" />
+			<param index="3" name="keyboard_and_mouse" type="bool" default="true" />
+			<description>Attaches controls to an owner already inside the scene tree. Without a layout, imports button actions from Godot's Input Map. The default keyboard and mouse player can also use the first available gamepad. Use an explicit nonnegative gamepad ID for a gamepad-only scope. Equivalent calls on the same owner return the same handle. Use [method get_error] to inspect a failed attachment.</description>
+		</method>
+		<method name="capture_pointer">
+			<return type="int" enum="Error" />
+			<description>Captures the focused desktop pointer immediately. Returns [constant ERR_UNAVAILABLE] when capture is unavailable, suspended, or disabled and [constant ERR_ALREADY_IN_USE] when another scope owns it.</description>
+		</method>
+		<method name="close">
+			<return type="void" />
+			<description>Retires this attachment, restores the visible pointer if owned, and releases its input device assignment. Owner exit also retires the attachment.</description>
+		</method>
+		<method name="for_node" qualifiers="static">
+			<return type="Controls" />
+			<param index="0" name="node" type="Node" />
+			<description>Returns the nearest live controls attached to this node or an ancestor, or [code]null[/code] when there is none.</description>
+		</method>
+		<method name="get_error" qualifiers="const">
+			<return type="int" enum="Error" />
+			<description>Returns the attachment's original error code. Check [method is_ready] to observe later retirement.</description>
+		</method>
+		<method name="get_layout" qualifiers="const">
+			<return type="InputLayout" />
+			<description>Returns the original layout resource, or [code]null[/code] for a project Input Map scope or retired handle. Editing the resource affects later boots.</description>
+		</method>
+		<method name="get_owner" qualifiers="const">
+			<return type="Node" />
+			<description>Returns the live scene owner, or [code]null[/code] after retirement or failed boot.</description>
+		</method>
+		<method name="has_action_kind" qualifiers="const">
+			<return type="bool" />
+			<param index="0" name="id" type="StringName" />
+			<param index="1" name="kind" type="int" enum="InputAction.ValueKind" />
+			<description>Reports whether this local scope has the requested action and type.</description>
+		</method>
+		<method name="held" qualifiers="const">
+			<return type="bool" />
+			<param index="0" name="id" type="StringName" />
+			<description>Reports this physics tick's held state for a button. Unavailable and differently typed actions read as [code]false[/code].</description>
+		</method>
+		<method name="is_ready" qualifiers="const">
+			<return type="bool" />
+			<description>Reports whether this exact attachment is live.</description>
+		</method>
+		<method name="is_map_enabled" qualifiers="const">
+			<return type="bool" />
+			<param index="0" name="map" type="StringName" />
+			<description>Returns [code]true[/code] if the named action map is enabled for this player. Returns [code]false[/code] for unknown maps or a retired scope. UI suspension does not change this setting.</description>
+		</method>
+		<method name="is_suspended" qualifiers="const">
+			<return type="bool" />
+			<description>Reports whether a watched menu, exclusive rebinding capture, loss of focus, or retirement has neutralized these controls.</description>
+		</method>
+		<method name="motion" qualifiers="const">
+			<return type="Vector2" />
+			<param index="0" name="id" type="StringName" />
+			<description>Returns the sum of admitted relative pointer motion for the current physics tick, in unscaled screen pixels. Reading the value leaves it available to other readers. Unavailable and differently typed actions read as zero.</description>
+		</method>
+		<method name="off_press">
+			<return type="int" enum="Error" />
+			<param index="0" name="id" type="StringName" />
+			<param index="1" name="callback" type="Callable" />
+			<description>Disconnects the exact callback from this action. An unknown action returns [constant ERR_DOES_NOT_EXIST].</description>
+		</method>
+		<method name="on_press">
+			<return type="int" enum="Error" />
+			<param index="0" name="id" type="StringName" />
+			<param index="1" name="callback" type="Callable" />
+			<description>Registers a no-argument callback once for this button. Dispatch occurs before gameplay physics callbacks. An invalid callback or nonbutton action returns [constant ERR_INVALID_PARAMETER].</description>
+		</method>
+		<method name="pointer_captured" qualifiers="const">
+			<return type="bool" />
+			<description>Reports whether this local scope owns the captured desktop pointer.</description>
+		</method>
+		<method name="pressed" qualifiers="const">
+			<return type="bool" />
+			<param index="0" name="id" type="StringName" />
+			<description>Reports whether an admitted button press occurred for the current physics tick. A quick tap may set both press and release.</description>
+		</method>
+		<method name="release_pointer">
+			<return type="int" enum="Error" />
+			<description>Immediately makes the pointer visible if owned by this scope. Pending button edges and relative motion are cleared. Releasing twice is safe.</description>
+		</method>
+		<method name="released" qualifiers="const">
+			<return type="bool" />
+			<param index="0" name="id" type="StringName" />
+			<description>Reports whether the logical button became released for the current physics tick.</description>
+		</method>
+		<method name="set_pointer_available">
+			<return type="void" />
+			<param index="0" name="available" type="bool" />
+			<description>Enables or disables pointer capture permission for this scope. Disabling immediately releases a held pointer and clears pending input. Enabling allows a later capture request.</description>
+		</method>
+		<method name="set_map_enabled">
+			<return type="int" enum="Error" />
+			<param index="0" name="map" type="StringName" />
+			<param index="1" name="enabled" type="bool" />
+			<description>Enables or disables a named action group for this local player. Gameplay is enabled at boot, including when empty. Other [InputActionMap] resources start disabled. All enabled maps receive their bindings. If the same control appears in two enabled maps, both can respond. Changing state immediately clears that map's values and queued edges without emitting a release. Held controls must return to neutral before contributing again. Bindings and callbacks remain registered. Returns [constant OK] on success, [constant ERR_DOES_NOT_EXIST] for an unknown map, or [constant ERR_UNCONFIGURED] for an inactive scope.</description>
+		</method>
+		<method name="stop_suspending_while_visible">
+			<return type="int" enum="Error" />
+			<param index="0" name="menu" type="Control" />
+			<description>Stops watching this menu and recomputes suspension immediately.</description>
+		</method>
+		<method name="suspend_while_visible">
+			<return type="int" enum="Error" />
+			<param index="0" name="menu" type="Control" />
+			<description>Neutralizes gameplay input and releases capture while this Control is visible in the tree. Watches compose. Hiding or removing the final active menu can restore the prior pointer lease when focus still permits it. The menu must be in the same viewport.</description>
+		</method>
+		<method name="vector" qualifiers="const">
+			<return type="Vector2" />
+			<param index="0" name="id" type="StringName" />
+			<description>Returns this physics tick's normalized two-dimensional level, limited to magnitude one. Unavailable and differently typed actions read as zero.</description>
+		</method>
+	</methods>
+	<signals>
+		<signal name="retired">
+			<description>Emitted once when the attachment retires and the handle stops routing input.</description>
+		</signal>
+		<signal name="suspension_changed">
+			<param index="0" name="suspended" type="bool" />
+			<description>Emitted after the effective suspension state changes and pending input has been cleared.</description>
+		</signal>
+	</signals>
+</class>

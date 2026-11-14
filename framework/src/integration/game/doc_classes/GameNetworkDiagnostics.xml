@@ -1,0 +1,39 @@
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="GameNetworkDiagnostics" inherits="RefCounted">
+	<brief_description>A local snapshot of a game's connection and movement.</brief_description>
+	<description>
+		Read a snapshot through [method Game.network_diagnostics] for a developer panel or test. The properties describe the session at the time of the call. They do not control the transport or movement simulation. Only ENet provides a round-trip estimate in this snapshot.
+	</description>
+	<members>
+		<member name="role" type="int" setter="" getter="get_role" enum="GameNetworkDiagnostics.Role">The local session role when sampled.</member>
+		<member name="phase" type="int" setter="" getter="get_phase" enum="Game.Phase">The game's readiness when sampled.</member>
+		<member name="transport" type="StringName" setter="" getter="get_transport">[code]enet[/code] for ENet, [code]custom[/code] for other multiplayer peers, or empty when idle or offline.</member>
+		<member name="peer_id" type="int" setter="" getter="get_peer_id">The local session peer ID, or zero before admission.</member>
+		<member name="player_number" type="int" setter="" getter="get_player_number">The local actor's one-based fixed-world spawn slot. Returns zero while no local actor is mounted, including on a dedicated server. This is a session placement, separate from the transport's peer ID.</member>
+		<member name="connected_peers" type="int" setter="" getter="get_connected_peers">The number of admitted remote peers visible to the local game session.</member>
+		<member name="round_trip_ms" type="float" setter="" getter="get_round_trip_ms">The ENet round-trip estimate in milliseconds. A guest reports the server link. A server reports the highest guest estimate. A value of -1 means that an ENet measurement is unavailable.</member>
+		<member name="movement_mode" type="int" setter="" getter="get_movement_mode" enum="GameNetworkDiagnostics.MovementMode">The local fixed-world movement pipeline.</member>
+		<member name="simulation_tick" type="int" setter="" getter="get_simulation_tick">The last known completed server physics tick, or zero when unavailable.</member>
+		<member name="acknowledged_input" type="int" setter="" getter="get_acknowledged_input">The last local guest input sequence accounted for by server state, or zero when unavailable.</member>
+		<member name="pending_inputs" type="int" setter="" getter="get_pending_inputs">The number of local guest commands awaiting confirmation.</member>
+		<member name="corrections" type="int" setter="" getter="get_corrections">The number of owner corrections above the simulation's visible-error threshold during the current session.</member>
+		<member name="correction_distance" type="float" setter="" getter="get_correction_distance">The most recent owner correction in metres, or zero before a correction.</member>
+		<member name="authority_position" type="Vector3" setter="" getter="get_authority_position">The latest authoritative local actor position. If there is no local actor, the origin vector is returned.</member>
+		<member name="predicted_position" type="Vector3" setter="" getter="get_predicted_position">The current predicted local actor position when [member movement_mode] is [constant GUEST_PREDICTED].</member>
+		<member name="state_age_ms" type="int" setter="" getter="get_state_age_ms">Local elapsed milliseconds since the most recent authoritative guest state arrived, or -1 when unavailable.</member>
+		<member name="replayed_inputs" type="int" setter="" getter="get_replayed_inputs">The number of inputs replayed during the most recent owner reconciliation.</member>
+	</members>
+	<constants>
+		<constant name="IDLE" value="0" enum="Role">The game owns no active connection.</constant>
+		<constant name="OFFLINE" value="1" enum="Role">The local player runs an offline session.</constant>
+		<constant name="HOST" value="2" enum="Role">The game is running as a listen authority or coordinated server.</constant>
+		<constant name="CONNECTING" value="3" enum="Role">A guest connection is awaiting admission.</constant>
+		<constant name="GUEST" value="4" enum="Role">The local client has been admitted by the authority.</constant>
+		<constant name="DEDICATED" value="5" enum="Role">The fixed-world game is running as a dedicated server.</constant>
+		<constant name="MOVEMENT_DISABLED" value="0" enum="MovementMode">No fixed-world movement diagnostics are available.</constant>
+		<constant name="AUTHORITY_LIVE" value="1" enum="MovementMode">The authority uses the live Godot movement driver.</constant>
+		<constant name="AUTHORITY_PREDICTIVE" value="2" enum="MovementMode">The authority uses the grounded driver shared by prediction.</constant>
+		<constant name="GUEST_INTERPOLATED" value="3" enum="MovementMode">The owning guest follows authoritative position updates.</constant>
+		<constant name="GUEST_PREDICTED" value="4" enum="MovementMode">The owning guest predicts and reconciles local movement.</constant>
+	</constants>
+</class>

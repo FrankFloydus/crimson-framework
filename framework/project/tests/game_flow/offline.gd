@@ -17,6 +17,8 @@ class FixtureProvider extends GameServiceProvider:
 const CORRUPT_SLOT := "corrupt_fixture"
 # Restore commit observations recorded only while the selected generation is activating.
 var _restore_observations: Array[Dictionary] = []
+# Inject a game-owned validation failure without changing the persisted checkpoint.
+var _reject_restore := false
 
 
 # Defer setup until the scene tree accepts persistent fixture nodes.
@@ -29,19 +31,22 @@ func _run() -> void:
 	_start_watchdog()
 	var passed := await _run_offline()
 	if is_instance_valid(_game):
-		var scenes := GameServices.scenes()
-		_game.leave()
+		if _game.is_inside_tree():
+			_game.leave()
+			await process_frame
+			_shell.remove_child(_game)
 		await process_frame
-		_shell.remove_child(_game)
-		if passed:
-			var expired: Dictionary = await scenes.load(AMBER).wait()
-			passed = _expect(GameServices.scenes() == null and scenes.get_world() == null
-					and expired.get("code") == "Unavailable",
-					"A retained scene facade expires when the game leaves its scope.")
 		_game.free()
 	if passed:
 		print("CRIMSON_GAME_FLOW_OFFLINE_PASSED")
 	quit(0 if passed else 1)
+
+
+# Return a recognizable cause for the fixture's intentionally rejected restore.
+func _validate_fixture_restore(_candidate: Dictionary, _context: Dictionary) -> Dictionary:
+	if _reject_restore:
+		return {"ok": false, "message": "Fixture score is blocked for restore."}
+	return {"ok": true}
 
 
 # Save a world, change the active mount and state, and verify atomic restore and failure paths.
@@ -59,11 +64,15 @@ func _run_offline() -> bool:
 		return false
 	await process_frame
 	var provider := FixtureProvider.new()
-	if not _configure_game(true, provider) or not _register_authority_store():
+	if not _configure_game(true, provider) or not _register_authority_store(_validate_fixture_restore):
 		return false
 	if not _expect(GameServices.game() == _game and GameServices.for_node(provider.loader) == _game
 			and _game.get_node("SceneLoader") == provider.loader,
 			"The global facade resolves the game and uses the injected loader."):
+		return false
+	var unavailable_save: Dictionary = await _game.save(PROFILE, SLOT).wait()
+	if not _expect(unavailable_save.get("code") == "SaveNotReady" and "authority" in unavailable_save.message,
+			"A save before entering the world identifies its readiness requirement: %s" % unavailable_save):
 		return false
 	var start := _game.start_offline()
 	if not _expect(not start.is_finished(), "Start returns a pending operation while the scene prepares."):
@@ -86,8 +95,30 @@ func _run_offline() -> bool:
 		return false
 	var slot := _game.save_slot(PROFILE, SLOT)
 	var request := slot.save().named("Amber checkpoint").with_context({"region": "Amber"})
+	var unknown_world: Dictionary = await _game.travel_to(&"campaign.unregistered").wait()
+	if not _expect(unknown_world.get("code") == "UnknownWorld" and "campaign.unregistered" in unknown_world.message,
+			"An unknown world result identifies the requested world: %s" % unknown_world):
+		return false
+	var invalid_metadata: Dictionary = await _game.save(PROFILE, SLOT, {"invalid": self}).wait()
+	if not _expect(invalid_metadata.get("code") == "InvalidData" and "JSON-compatible" in invalid_metadata.message,
+			"The save result retains the coordinator's metadata failure: %s" % invalid_metadata):
+		return false
+	var invalid_profile: Dictionary = await _game.restore("Bad Profile", SLOT, "1", "invalid").wait()
+	var invalid_generation: Dictionary = await _game.restore(PROFILE, SLOT, "1", "").wait()
+	if not _expect(invalid_profile.get("code") == "InvalidArgument" and "Profile and slot" in invalid_profile.message
+			and invalid_generation.get("code") == "InvalidArgument" and "sequence and ID" in invalid_generation.message,
+			"Restore rejects invalid routing and generation selection with distinct messages: %s, %s" % [invalid_profile, invalid_generation]):
+		return false
 	var saved: Dictionary = await request.submit().wait()
-	if not _expect(saved.get("ok", false), "Commit the Amber checkpoint: %s" % saved):
+	if not _expect(saved.get("ok", false) and not String(saved.get("message", "")).is_empty(),
+			"Commit the Amber checkpoint with a success message: %s" % saved):
+		return false
+	var superseded := _game.save(PROFILE, "autosave", {}, true)
+	var replacement := _game.save(PROFILE, "autosave", {}, true)
+	var replaced: Dictionary = await superseded.wait()
+	var autosaved: Dictionary = await replacement.wait()
+	if not _expect(replaced.get("code") == "Superseded" and "replaced" in replaced.message and autosaved.get("ok", false),
+			"A newer autosave supersedes the pending intent with an explicit result: %s, %s" % [replaced, autosaved]):
 		return false
 	var list := slot.history()
 	var listed: Dictionary = await list.wait()
@@ -95,6 +126,9 @@ func _run_offline() -> bool:
 	var generations: Array = listed.get("value", [])
 	if not _expect(listed.get("ok", false) and generations.size() == 1 and settled_list == listed,
 		"Read the same generation listing from the pending operation and its retained result: %s" % listed):
+		return false
+	var newer: Dictionary = await request.submit().wait()
+	if not _expect(newer.get("ok", false), "Create a newer generation so the original can be restored as a backup."):
 		return false
 	var corrupt: Dictionary = await _game.save(PROFILE, CORRUPT_SLOT).wait()
 	if not _expect(corrupt.get("ok", false), "Commit an independent generation for the corruption case: %s" % corrupt) \
@@ -118,11 +152,13 @@ func _run_offline() -> bool:
 	var cobalt_revision := coordinator.get_revision()
 
 	var missing: Dictionary = await _game.restore(PROFILE, "empty_fixture").wait()
-	if not _expect(not missing.get("ok", true) and _cobalt_unchanged(cobalt_world, cobalt_epoch, cobalt_revision),
+	if not _expect(missing.get("code") == "NotFound" and "no committed checkpoint" in missing.message
+			and _cobalt_unchanged(cobalt_world, cobalt_epoch, cobalt_revision),
 		"A missing slot preserves Cobalt, state, epoch, and revision: %s" % missing):
 		return false
 	var malformed: Dictionary = await _game.restore(PROFILE, CORRUPT_SLOT).wait()
-	if not _expect(not malformed.get("ok", true) and _cobalt_unchanged(cobalt_world, cobalt_epoch, cobalt_revision),
+	if not _expect(malformed.get("code") == "Corrupt" and not String(malformed.get("message", "")).is_empty()
+			and _cobalt_unchanged(cobalt_world, cobalt_epoch, cobalt_revision),
 		"A malformed generation preserves Cobalt, state, epoch, and revision: %s" % malformed):
 		return false
 	var missing_scene: Dictionary = await _game.travel_to(MISSING_SCENE).wait()
@@ -130,11 +166,25 @@ func _run_offline() -> bool:
 		"A missing destination scene fails before changing the live mount: %s" % missing_scene):
 		return false
 
+	var generation: Dictionary = generations[0]
+	_reject_restore = true
+	var rejected_restore: Dictionary = await slot.restore(generation.sequence, generation.id).wait()
+	_reject_restore = false
+	if not _expect(rejected_restore.get("code") == "RestoreFailed"
+			and "Fixture score is blocked for restore." in String(rejected_restore.get("message", ""))
+			and _cobalt_unchanged(cobalt_world, cobalt_epoch, cobalt_revision),
+			"A rejected restore keeps the validator's reason and leaves the mounted world unchanged: %s" % rejected_restore):
+		return false
 	coordinator.committed.connect(_record_restore_commit)
-	var restored: Dictionary = await slot.restore_latest().wait()
+	var restored: Dictionary = await slot.restore(generation.sequence, generation.id).wait()
 	if not _expect(restored.get("ok", false) and _mounted_world(AMBER, "amber") and _authority_score() == 17
-			and _game.get_world_epoch() > cobalt_epoch and coordinator.get_revision() > cobalt_revision,
+			and _game.get_world_epoch() > cobalt_epoch and coordinator.get_revision() > cobalt_revision
+			and "different slot" in String(restored.get("warning", "")),
 		"Restore Amber from Cobalt at a new epoch and revision: %s" % restored):
+		return false
+	var recovery_save: Dictionary = await request.submit().wait()
+	if not _expect(recovery_save.get("code") == "RecoveryRequiresNewSlot" and "different slot" in recovery_save.message,
+			"A backup restore directs a subsequent save into a different slot: %s" % recovery_save):
 		return false
 	var incoming := _game.get_world()
 	if not _expect(incoming.get_meta("world_at_mount", &"") == AMBER and incoming.get_meta("score_at_mount", -1) == 17,
@@ -153,8 +203,26 @@ func _run_offline() -> bool:
 			or not _expect(_game.open_offline() == OK, "Reopen an empty offline lobby."):
 		return false
 	var continued: Dictionary = await slot.restore_latest().wait()
-	return _expect(continued.get("ok", false) and _mounted_world(AMBER, "amber") and _authority_score() == 17,
-		"Continue the saved game in a fresh authority scope: %s" % continued)
+	if not _expect(continued.get("ok", false) and _mounted_world(AMBER, "amber") and _authority_score() == 17,
+			"Continue the saved game in a fresh authority scope: %s" % continued):
+		return false
+
+	# Detach during admission, before the asynchronous scene loader starts.
+	_game.phase_changed.connect(func(value: int) -> void:
+		if value == GameRuntime.TRANSITIONING:
+			_shell.remove_child(_game),
+		CONNECT_ONE_SHOT)
+	var canceled: Dictionary = await _game.travel_to(COBALT).wait()
+	var expired_scene: Dictionary = await scenes.load(AMBER).wait()
+	var expired_save: Dictionary = await request.submit().wait()
+	var expired_restore: Dictionary = await slot.restore_latest().wait()
+	if not _expect(canceled.get("code") == "Cancelled" and "scene tree" in canceled.message,
+			"Travel settles when a phase observer detaches the game: %s" % canceled):
+		return false
+	return _expect(GameServices.scenes() == null and scenes.get_world() == null
+			and expired_scene.get("code") == "Unavailable" and expired_save.get("code") == "Unavailable"
+			and expired_restore.get("code") == "Unavailable",
+			"Retained scene and checkpoint handles expire with their owning game.")
 
 
 # Confirm that a rejected transition leaves the live scene and committed state intact.

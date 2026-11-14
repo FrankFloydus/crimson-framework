@@ -1,0 +1,31 @@
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="NetworkCodecs" inherits="RefCounted">
+	<brief_description>Register and run versioned codecs for game-defined message types.</brief_description>
+	<description>Use [method Game.codecs] for a catalog tied to a game attachment or create an independent catalog with [code]NetworkCodecs.new()[/code]. Register the same game codec in each participant and select its identifier and version explicitly. The catalog neither sends packets nor adds a schema header to the payload. Encode and decode on the scene thread. When a game scope retires, its catalog releases the callbacks and further operations return [constant ERR_UNAVAILABLE].</description>
+	<methods>
+		<method name="register_codec">
+			<return type="int" />
+			<param index="0" name="id" type="StringName" />
+			<param index="1" name="version" type="int" />
+			<param index="2" name="encode" type="Callable" />
+			<param index="3" name="decode" type="Callable" />
+			<description>Register one codec with synchronous callbacks. The identifier accepts 1 to 64 ASCII letters, digits, dots, hyphens, and underscores. The version is from 1 through 65,535. The encoder accepts a [NetworkWriter] and one game value and returns a Godot error. The decoder accepts a [NetworkReader] and returns a game value. An invalid registration returns [constant ERR_INVALID_PARAMETER]. A repeated identifier and version returns [constant ERR_ALREADY_EXISTS]. A registry supports 256 registrations.</description>
+		</method>
+		<method name="encode">
+			<return type="NetworkEncodeResult" />
+			<param index="0" name="id" type="StringName" />
+			<param index="1" name="version" type="int" />
+			<param index="2" name="value" type="Variant" />
+			<param index="3" name="max_bytes" type="int" default="1200" />
+			<description>Run the selected encoder with a new [NetworkWriter]. The result contains the complete payload only when the callback returns [constant OK] and all writes succeed. An unknown registration returns [constant ERR_DOES_NOT_EXIST]. A callback invocation error or invalid return type returns [constant ERR_INVALID_DECLARATION].</description>
+		</method>
+		<method name="decode">
+			<return type="NetworkDecodeResult" />
+			<param index="0" name="id" type="StringName" />
+			<param index="1" name="version" type="int" />
+			<param index="2" name="bytes" type="PackedByteArray" />
+			<param index="3" name="max_bytes" type="int" default="1200" />
+			<description>Run the selected decoder with a new [NetworkReader]. The result contains its value only when the reader consumes the whole payload and records no error. A schema may reject data with [method NetworkReader.fail]. A successful decoder can return null. An unknown registration returns [constant ERR_DOES_NOT_EXIST]. A callback invocation error returns [constant ERR_INVALID_DECLARATION].</description>
+		</method>
+	</methods>
+</class>

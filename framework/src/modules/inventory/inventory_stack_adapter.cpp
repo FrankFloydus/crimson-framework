@@ -6,6 +6,7 @@
 
 #include <godot_cpp/core/class_db.hpp>
 #include <godot_cpp/variant/typed_array.hpp>
+#include <godot_cpp/variant/utility_functions.hpp>
 
 #include <algorithm>
 #include <limits>
@@ -23,16 +24,23 @@ Dictionary status(Error error) {
     return result;
 }
 
-// Converts a host callback result to a Godot error code.
+// Checks the error range before converting an integer result to a Godot error.
+bool is_error_code(const Variant &result) {
+    return result.get_type() == Variant::INT && int64_t(result) >= OK && int64_t(result) <= ERR_PRINTER_ON_FIRE;
+}
+
+// Converts a stack result to a Godot error code.
 Error error_from(const Variant &result) {
-    if (result.get_type() != Variant::INT) {
+    return is_error_code(result) ? static_cast<Error>(int64_t(result)) : ERR_INVALID_DATA;
+}
+
+// Report a contract failure when a commit callback returned an unusable value.
+Error commit_error_from(const Variant &result) {
+    if (!is_error_code(result)) {
+        UtilityFunctions::printerr("[Crimson] Inventory stack apply_changes must return a Godot Error.");
         return ERR_INVALID_DATA;
     }
-    const int64_t value = result;
-    if (value < OK || value > ERR_PRINTER_ON_FIRE) {
-        return ERR_INVALID_DATA;
-    }
-    return static_cast<Error>(value);
+    return static_cast<Error>(int64_t(result));
 }
 
 // Checks the shape and current revision of a stack operation plan.
@@ -358,19 +366,28 @@ Error SpatialInventoryStackAdapter::apply_plan(const Dictionary &expected, const
     if (current != expected) {
         return ERR_BUSY;
     }
-    if (!placement.is_valid()) {
-        const Error result = error_from(apply.call(current["changes"], Callable()));
+    if (placement.is_null()) {
+        const Error result = commit_error_from(apply.call(current["changes"], Callable()));
         invalidate_stack_records();
         return result;
+    }
+    if (!placement.is_valid()) {
+        UtilityFunctions::printerr("[Crimson] Inventory stack placement commit is unavailable. No stack edits were submitted.");
+        return ERR_INVALID_PARAMETER;
     }
 
     // A host may retain the Callable. Expire it when the transaction returns.
     auto commit = std::make_shared<PlacementCommit>();
     commit->placement = placement;
     const Callable guarded = inventory_callback([commit] { return commit->run(); });
-    const Error result = error_from(apply.call(current["changes"], guarded));
+    const Error result = commit_error_from(apply.call(current["changes"], guarded));
     commit->placement = Callable();
     invalidate_stack_records();
+    if (result == OK && !commit->called) {
+        UtilityFunctions::printerr("[Crimson] Inventory stack apply_changes returned OK without calling the placement commit. Check host stack records before retrying.");
+    } else if (commit->called && (result == OK) != (commit->result == OK)) {
+        UtilityFunctions::printerr("[Crimson] Inventory stack apply_changes disagreed with the placement commit result. Check host stack records and grid placement before retrying.");
+    }
     return result == OK ? commit->result : result;
 }
 

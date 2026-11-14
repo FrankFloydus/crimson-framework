@@ -2,7 +2,9 @@
 
 # Crimson public API
 
-Use `GameRuntime` to start local play, host a listen game, or join a host. The same entry point also supports coordinated matches with registered worlds, travel, and checkpoints. Configure it in the Inspector or through a fluent definition. Framework services and orchestration run in the native Godot 4.7 GDExtension.
+Use the [code-first quickstart](CODE_FIRST.md) for new projects. `Game.configure(level, player).boot(self)` attaches the game and its private services to an existing scene owner. `Game`, `Inventory`, and `Steamworks` expose the direct workflows. The detailed sections below also document legacy bindings and lower-level extension points.
+
+The native Godot 4.7 GDExtension owns solo and multiplayer startup, coordinated travel, and checkpoints.
 
 Existing projects can use the [Godot class-name migration guide](API_NAME_MIGRATION.md) to update their scripts, scenes, and resources to the neutral API names.
 
@@ -23,7 +25,15 @@ For example, `steam.stats().achievements()` returns `Array[SteamAchievement]`, s
 
 ## Start a game
 
+For local movement, look, and key rebinding, see [Default player controls](PLAYER_CONTROLS.md). Author movement on the player scene's `MoverComponent` and local input on its `ControlsComponent`. Use [Controller Style](PLAYER_CONTROLS.md#choose-how-the-body-turns) to choose how movement turns the character. `PlayerControl.lock_on(target)` sets the target for the Lock-On style, and `clear_lock_on()` clears it. Call `GameConfig.player_controls()` to use the scene's movement settings for [networked movement](MOVEMENT_NETWORKING.md). Supplying a `PlayerControlProfile` explicitly uses its movement settings. Enable **Predict Movement** on a compatible grounded capsule to opt into prediction and reconciliation.
+
+For the current public setup and direct awaited actions, see [Start from code](CODE_FIRST.md).
+
+### Legacy GameRuntime
+
 Use `GameServices.game()` to get the active game when the process has one registered `GameRuntime`. A process with several games can select a primary with `GameServices.set_default_game(game)` or call `GameServices.for_node(node)` from within a game's subtree. These lookups do not extend a game's lifetime.
+
+Use `game.codecs()` to register custom types for explicit binary messages on the live game. Use `NetworkWriter` and `NetworkReader` directly for a small fixed layout. [Typed binary message contract](../src/modules/network/README.md#typed-binary-messages)
 
 `GameServices.scenes().get_world()` reads the primary game's current mount. In a coordinated game, `await GameServices.scenes().load(world_id).wait()` travels through the same authority checks and Scene Loader as `game.travel_to(world_id)`. A scene service handle expires when its owning game scope leaves the tree.
 
@@ -45,7 +55,7 @@ func _create_session() -> GameSession:
 
 `MyTransport` extends `SessionTransport`. Its server and client factories return a typed `SessionTransportResult` carrying either an initialized peer or the opening error. The default is `ENetSessionTransport`. See the [Session transport contract](../src/modules/session/README.md) and the [demo's scripted ENet adapter](../project/demo/tests/session_smoke.gd) for a provider that exercises real host and join through the public game actions.
 
-Add `GameRuntime` to a persistent main scene. In its **Definition**, set **Starting World**, **Starting World Scene**, and **Player Scene**. Place at least one `PlayerSpawnPoint` in the world. For listen co-op, add **Multiplayer Rules**. The [demo boot scene](../project/demo/main.tscn) uses this Inspector setup with the [Transfer Hall definition](../project/demo/session/transfer_hall.tres).
+An existing scene with a serialized `GameRuntime` can still load its **Definition**, starting world, player scene, and multiplayer rules. Legacy `PlayerSpawnPoint` placements also continue to resolve. The [current demo](../project/demo/main.gd) boots through `Game` and uses ordinary `Marker3D` placements.
 
 The same configuration in code uses a branchable definition. `boot(owner)` creates the configured node, attaches it to a live owner, and returns it. `create()` is available for callers who need to attach the node themselves. Both use an independent definition and the shared `Game` node name.
 
@@ -270,11 +280,11 @@ Before `create()`, add `.with_local_view(^"Camera3D", ^"Visuals")` to select the
 
 Observe `state_changed(state)` for readiness. `session_ended(reason)` arrives after teardown and permits the next start. Startup methods return immediate errors directly. Asynchronous end reasons include the [native session reasons](../src/modules/session/README.md#signals) and `spawn_timeout`, `invalid_roster`, or `spawn_failed`.
 
-Each participant keeps the same session node path relative to its MultiplayerAPI root. The authority assigns slots and publishes the roster to admitted peers. The session reserves a child named `World` under itself and a child named `Players` under the mounted world. Gameplay movement and state remain game-owned. Use the coordinated game flow below for registered destinations, travel, and checkpoints.
+Each participant keeps the same session node path relative to its MultiplayerAPI root. The authority assigns slots and publishes the roster to admitted peers. The session reserves a child named `World` under itself and a child named `Players` under the mounted world. Use `GameConfig.player_controls(profile)` on a fixed-world game to opt into the native movement and look stream. Use the coordinated game flow below for registered destinations, travel, and checkpoints. [Networked player movement](MOVEMENT_NETWORKING.md)
 
 ## Start a coordinated game
 
-Add `GameRuntime` to a persistent scene such as your main menu or application root. Keep HUD and other persistent UI outside the world mounted by Crimson. For ENet, place the node at the same path relative to the multiplayer root in the host and client builds and include all catalog scenes in the exported game.
+For new coordinated games use [`Game.campaign()`](CODE_FIRST.md#coordinated-worlds-and-inventory). Existing projects can use their serialized `GameRuntime` or create one from a legacy definition in code. Keep HUD and persistent UI outside the mounted world. Host and guest require matching RPC paths and all catalog scenes in their exported builds.
 
 This example assumes the main script has an exported reference to its `GameRuntime` node. The setup chain returns a `GameDefinition` with the same fields available in the Inspector. Run this setup once for a new node, then start and restore matches through that node.
 
@@ -317,6 +327,8 @@ Use a stable, game-owned world ID as the catalog key. Multiple worlds may refer 
 ## Game operations
 
 `GameOperation` exposes `is_finished()`, a read-only `result` property, and `completed(result)`. In GDScript, `await operation.wait()` returns the stored result for an operation that has already finished or awaits the result of pending work. Inspect `result.ok`, `result.code`, and any operation-specific fields. The coordinated `host()` and `join()` methods return a Godot `Error` immediately. Use `phase_changed` and `session_ended` to observe asynchronous join and disconnect.
+
+Coordinated world transitions and checkpoint saves and restores return a readable `message` with the operation code. Use the result for gameplay decisions. Diagnostic lines for failures and noteworthy outcomes appear in Godot's Output panel and the process console with the `[Crimson]` prefix.
 
 | `GameRuntime` method | Contract |
 | --- | --- |
@@ -424,7 +436,7 @@ For multiplayer, the server can bind a remote peer after verifying its game-spec
 
 - `set_shared_stores(store_ids)` publishes the complete contents of explicitly selected stores to every bound client. Use it only for state all participants may see. By default, the game contributes no shared store data.
 - `set_projector(callback)` gives the authority finer visibility control. The synchronous callback receives `(peer_id, player_id, world_epoch, committed_revision)` and returns `{ok, view}`, with `view` a dictionary of visible records keyed by stable strings. This projector takes precedence over the shared-store list. Crimson reserves `crimson.context` for its internal command context and removes it from the public view.
-- Replication accepts bounded plain DTOs and is intended for committed gameplay state. Its public [view and delivery contract](../src/modules/replication/README.md#view-and-delivery-bounds) gives size and depth limits. Games supply their own high-frequency movement, prediction, and transient presentation event transport.
+- Replication accepts bounded plain DTOs and is intended for committed gameplay state. Its public [view and delivery contract](../src/modules/network/README.md#view-and-delivery-bounds) gives size and depth limits. Coordinated games supply their own high-frequency movement and transient presentation streams. The fixed-world player profile uses the dedicated [movement stream](MOVEMENT_NETWORKING.md).
 - Integrated ENet admission happens in the lobby. Starting a world requires all connected remote peers to be bound. A world becomes ready after the scene and required peer baselines are confirmed. A failure before publication keeps the prior world available. A synchronization failure after the commit enters `RECOVERING` and closes commands. The current facade supports leaving and starting a new session from that state.
 
 ## Direct APIs and extension points
@@ -435,8 +447,8 @@ A project may use the modules directly or start with the game facade and use its
 | --- | --- |
 | Grid geometry, placement, stacks, equipment, containers, or trade | [Inventory API](../src/modules/inventory/README.md), including `SpatialInventory` and its [grid API](../src/modules/inventory/MODEL.md) |
 | Custom checkpoint participants, migrations, backend, and save presentation | [SaveCoordinator API](../src/modules/save/docs/API.md) and [SavePresentation](../src/modules/save/docs/PRESENTATION.md) |
-| Custom transport orchestration or a standalone managed scene | [Game Session](../src/modules/session/README.md) and [Scene Loader](../src/modules/scene_load/README.md) |
-| Custom replicated views or lower-level synchronization | [StateReplication](../src/modules/replication/README.md) |
+| Custom transport orchestration or a standalone managed scene | [Game Session](../src/modules/session/README.md) and [Scene Manager](../src/modules/scene_manager/README.md) |
+| Custom replicated views or lower-level synchronization | [StateReplication](../src/modules/network/README.md) |
 | Authority-owned state, custom transactions, and primary possession | `game.get_transactions()` and `game.get_possession()` when configuring or running the authority. Reacquire the handles for each new match. See [architecture](ARCHITECTURE.md#module-map-and-apis). |
 
 The public facade owns its composition. Its service children and RPC names are implementation details. The present integration points are the game definition, command handlers, game-owned stores and validators, trusted player binding, and projection policy. Direct module use exposes the lower-level capture and scene activation boundaries when a game needs to supply its own orchestration.

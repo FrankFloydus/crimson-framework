@@ -145,7 +145,7 @@
 			Game-specific identifier checked when joining a Steam lobby. Use the same value on host and guests. Use 1 to 64 ASCII letters, digits, underscores, or hyphens.
 		</member>
 		<member name="lobby_visibility" type="int" setter="set_lobby_visibility" getter="get_lobby_visibility" enum="SteamProvider.Visibility" default="0">
-			Who can discover and join the hosted Steam lobby. Private requires a Steam invitation.
+			Who can discover and join the hosted Steam lobby. Private requires an invitation. Friends Only permits Steam friends and invitees. Public appears in compatible lobby search. Invisible also appears in search and hides the lobby from friends visibility.
 		</member>
 	</members>
 	<signals>

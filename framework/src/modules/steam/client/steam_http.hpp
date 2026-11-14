@@ -95,8 +95,8 @@ private:
     // Completed response without a native SDK handle.
     godot::Ref<SteamHttpResponse> value;
 
-    // Publish status and the optional response before exposing the result to script.
-    void initialize(godot::Error error, const godot::Ref<SteamHttpResponse> &response);
+    // Publish status, diagnostics, and the optional response before exposing the result to script.
+    void initialize(godot::Error error, const godot::String &diagnostic, const godot::Ref<SteamHttpResponse> &response);
 };
 
 // Cancellable handle for one submitted Steam HTTP request.
@@ -129,10 +129,10 @@ private:
     godot::Ref<SteamHttpResponseResult> outcome;
 
     // Create an already-settled operation for preflight errors.
-    static godot::Ref<SteamHttpResponseOperation> resolved(godot::Error error);
+    static godot::Ref<SteamHttpResponseOperation> resolved(godot::Error error, const godot::String &diagnostic);
     // Publish one result after all SDK and routing resources have been retired.
-    void finish(godot::Error error, int32_t status = 0, const godot::PackedByteArray &body = {},
-            std::map<godot::String, godot::String> headers = {});
+    void finish(godot::Error error, const godot::String &diagnostic, int32_t status = 0,
+            const godot::PackedByteArray &body = {}, std::map<godot::String, godot::String> headers = {});
 };
 
 // Bounded value settings shared by immutable options branches and request drafts.
@@ -145,9 +145,11 @@ struct SteamHttpSettings {
     int64_t timeout_ms = 15000;
     // Maximum body bytes to copy across Steam's callback boundary.
     int64_t response_limit = 1024 * 1024;
-    // Invalid settings stay invalid when branched.
-    bool valid = true;
+    // First configuration error, inherited by further branches.
+    godot::String validation_error;
 
+    // Keep the first rejected setting so send can report the original cause.
+    void reject(const char *diagnostic);
     // Validate and set a case-insensitive request header on a private branch.
     void set_header(const godot::String &name, const godot::String &value);
     // Validate and set an absolute timeout on a private branch.
@@ -305,7 +307,7 @@ private:
     // Interpret the matching typed SDK call result and settle the request.
     void complete(uint64_t context, const void *data);
     // Remove routing, release the native request, and then publish the result.
-    void settle(uint64_t context, godot::Error error, int32_t status = 0,
+    void settle(uint64_t context, godot::Error error, const godot::String &diagnostic, int32_t status = 0,
             std::map<godot::String, godot::String> headers = {});
 };
 

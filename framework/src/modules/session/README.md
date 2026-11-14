@@ -6,6 +6,8 @@
 
 Use one active Crimson session per MultiplayerAPI. Starting a session claims an idle API and remembers its existing offline peer or null value. Ending the session restores that peer if Crimson still owns the slot. Removal from the tree closes the session silently. If another system replaces the API or peer, Crimson reports `transport_replaced` and leaves that replacement installed.
 
+Startup methods return the Godot error code and explain the failing step in the console with a `[Crimson]` prefix. Unexpected terminal events also print an explanation alongside the stable `session_ended` reason. These messages omit connection addresses, authentication proofs, and identity data.
+
 ## Methods
 
 | Method | Contract |

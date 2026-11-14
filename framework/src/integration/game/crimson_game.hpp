@@ -12,10 +12,11 @@
 #include "integration/world_session/world_session.hpp"
 #include "modules/match_runtime/command_router.hpp"
 #include "modules/match_runtime/player_bindings.hpp"
-#include "modules/replication/replication.hpp"
+#include "modules/network/replication.hpp"
 #include "modules/save/save_coordinator.hpp"
-#include "modules/scene_load/scene_load_manager.hpp"
+#include "modules/scene_manager/scene_load_manager.hpp"
 #include "modules/session/game_session.hpp"
+#include "modules/steam/lobbies/steam_lobbies.hpp"
 
 #include <map>
 #include <set>
@@ -29,6 +30,18 @@ class GameRuntime : public godot::Node {
     GDCLASS(GameRuntime, godot::Node)
 
     friend class GameVoice;
+    friend class Game;
+    friend class GameConfig;
+    friend class GameServiceContainer;
+
+    // Resolved code-first transport override captured by the service scope at boot.
+    godot::Ref<session::SessionTransport> code_first_transport;
+    // Detached authoritative motion settings shared by all immediate session roles.
+    WorldSession::MovementSettings player_movement;
+    // Whether the typed boot boundary owns configuration diagnostics.
+    bool code_first_owned = false;
+    // A code-first attachment cannot silently revive after leaving its owner tree.
+    bool code_first_retired = false;
 
 public:
     // Public readiness of the integrated game.
@@ -59,6 +72,10 @@ public:
     godot::Ref<GameOperation> join_online(const godot::String &listing_id);
     // Validate a provider-owned listing before using the normal online join lifecycle.
     godot::Ref<GameOperation> join_listing(const godot::Ref<OnlineListing> &listing);
+    // Find one compatible Steam lobby and join it through the existing admission path.
+    godot::Ref<GameOperation> find_and_join_online();
+    // Report whether this exact attached runtime has retired its previous session work.
+    bool can_start_session() const;
     // Return the invite gateway attached to this game when its provider supplies one.
     godot::Ref<GameInvites> invites() const;
     // Return this Game's voice service when its Steam capability is active.
@@ -153,6 +170,8 @@ private:
         godot::Ref<GameOperation> world_start;
         // Publish or resolve result owned by the provider until it completes.
         godot::Ref<OnlineDirectoryRequest> request;
+        // Bounded Steam search retained only until the first eligible listing is selected.
+        godot::Ref<steam::SteamListingsOperation> search;
         // Authenticator selected before directory work, checked again before opening the transport.
         godot::Ref<session::SessionAuthenticator> authenticator;
         // Direct advertised endpoint if the caller supplied one. A platform directory may build its own route.
@@ -192,6 +211,10 @@ private:
         bool announced = false;
         // Whether scene and state publication has crossed its commit boundary.
         bool published = false;
+        // Checkpoint activation rejection carried through the scene loader's failure signal.
+        godot::String restore_activation_error;
+        // Storage guidance from a successful restore that selected a backup generation.
+        godot::String restore_warning;
         // Whether admission should reopen if preparation fails.
         bool reopen_lobby = false;
     };
@@ -222,8 +245,8 @@ private:
     godot::String online_join;
     // Optional directory work belonging to the pending immediate session.
     OnlineStart online_start;
-    // Whether the service provider failed to construct the persistent native services.
-    bool service_setup_failed = false;
+    // Actionable explanation when the provider could not construct persistent services.
+    godot::String service_setup_error;
     // Scene-tree-owned standalone loader.
     scene_load::SceneLoadManager *loader = nullptr;
     // Scene-tree-owned standalone checkpoint coordinator.
@@ -274,6 +297,12 @@ private:
     int64_t remote_epoch = 0;
     // Client phase restored if the authority aborts before publication.
     Phase remote_previous = LOBBY;
+    // True after the accepted remote transition has already reported a terminal diagnostic.
+    bool remote_outcome_reported = false;
+    // Local preparation failure retained for the authority's terminal outcome.
+    godot::String remote_preparation_error;
+    // Highest rejected unknown-world announcement reported for this client attachment.
+    int64_t rejected_remote_epoch = 0;
     // Prevents reuse until the last session's deferred cleanup runs.
     bool cleaning = false;
     // Re-expose a retained game's scope only after its previous session retires.
@@ -295,6 +324,10 @@ private:
     // Start a world to publish only after its authority has mounted it.
     godot::Ref<GameOperation> begin_online_host(ImmediateMode mode, const godot::String &public_address,
             const godot::String &bind_address);
+    // Start directory resolution under the already reserved online operation.
+    void resolve_online_join(const godot::String &listing_id);
+    // Observe the exact discovery operation and select its first compatible listing.
+    void process_online_search();
     // Advance completed directory and world operations at the scene-thread boundary.
     void process_online_start();
     // Cancel provider work and remove the pending public handle from the game.
@@ -318,8 +351,8 @@ private:
             const godot::String &message = {}) const;
     // Build a result shared by lifecycle and command adapters.
     godot::Dictionary outcome(bool ok, const godot::String &code, const godot::String &message = {}) const;
-    // Close command and connection admission for an authority transition.
-    godot::Error begin_transition(const godot::Ref<GameOperation> &operation);
+    // Close admission and reserve an authority transition, or return the rejection message.
+    godot::String begin_transition(const godot::Ref<GameOperation> &operation);
     // Tell participants about the world and request coordinated scene staging.
     void stage_scene(const godot::StringName &target);
     // Publish detached state immediately before the scene loader mounts the new world.
@@ -339,6 +372,8 @@ private:
     void on_peer_joined(int64_t peer);
     // Close client input when the authority announces an upcoming world.
     void on_world_announced(const godot::StringName &target, int64_t epoch);
+    // Report an accepted remote transition once without forwarding peer payloads.
+    void report_remote_travel(bool ok, const char *code, const godot::String &message);
     // Publish the client world only after matching replication and scene readiness.
     void on_world_finished(int64_t epoch, bool ok, bool recovery);
     // Start replication after all peers attach their scenes.
@@ -355,6 +390,8 @@ private:
     void on_peer_ready(int64_t peer, int64_t epoch, int64_t generation);
     // Recover if a required peer cannot synchronize.
     void on_peer_sync_failed(int64_t peer, int64_t epoch, int64_t error);
+    // Close gameplay commands and notify clients when authority replication cannot continue.
+    void recover_replication(const godot::String &message);
     // Forward projection updates to game-owned client views.
     void on_projection_updated(int64_t epoch, int64_t revision, bool baseline);
     // Create the recipient's allowed view and its private command context.

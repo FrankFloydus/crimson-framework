@@ -1,0 +1,24 @@
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="NetworkEncodeResult" inherits="RefCounted">
+	<brief_description>Completed network encoding with a binary payload.</brief_description>
+	<description>Check [member ok] before using [member bytes]. A valid payload can be empty.</description>
+	<methods>
+		<method name="is_ok" qualifiers="const">
+			<return type="bool" />
+			<description>Return true when the operation completed successfully.</description>
+		</method>
+		<method name="get_error" qualifiers="const">
+			<return type="int" />
+			<description>Return the terminal Godot error, or [constant OK].</description>
+		</method>
+		<method name="get_bytes" qualifiers="const">
+			<return type="PackedByteArray" />
+			<description>Return the completed payload, or empty bytes on failure.</description>
+		</method>
+	</methods>
+	<members>
+		<member name="ok" type="bool" setter="" getter="is_ok">Whether the operation completed successfully.</member>
+		<member name="error" type="int" setter="" getter="get_error">Terminal Godot error for the operation.</member>
+		<member name="bytes" type="PackedByteArray" setter="" getter="get_bytes">Completed payload on success and empty bytes on failure.</member>
+	</members>
+</class>

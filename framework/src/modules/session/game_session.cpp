@@ -8,6 +8,7 @@
 #include <godot_cpp/core/class_db.hpp>
 #include <godot_cpp/variant/callable_method_pointer.hpp>
 #include <godot_cpp/variant/dictionary.hpp>
+#include <godot_cpp/variant/utility_functions.hpp>
 
 #include <cmath>
 #include <limits>
@@ -22,7 +23,8 @@ constexpr int64_t max_port = 65535;
 constexpr int64_t max_remote_clients = 4095;
 constexpr double max_join_timeout = 120.0;
 constexpr int32_t server_id = 1;
-constexpr int64_t session_protocol_version = 1;
+// Protocol 4 adds a separate body yaw to movement state and an optional lock heading to intent.
+constexpr int64_t session_protocol_version = 4;
 constexpr const char *admission_method = "_crimson_session_confirm_admission";
 
 constexpr std::array<const char *, 4> signal_names = {
@@ -37,6 +39,43 @@ std::unordered_set<uint64_t> owned_peers;
 // Validate a port before creating an ENet peer.
 bool valid_port(int64_t port) {
     return port >= 1 && port <= max_port;
+}
+
+// Print the local startup failure without exposing endpoint or authentication data.
+Error report_start_failure(GameSession::State role, Error error, const char *detail) {
+    const char *action = role == GameSession::HOSTING ? "Could not host the session" :
+            role == GameSession::CONNECTING ? "Could not join the session" : "Could not start the offline session";
+    UtilityFunctions::printerr("[Crimson] ", action, " (", UtilityFunctions::error_string(error), "). ", detail);
+    return error;
+}
+
+// Explain a terminal session reason while keeping its signal code stable.
+const char *describe_session_end(const StringName &reason) {
+    if (reason == StringName("transport_replaced")) {
+        return "The installed multiplayer API or transport was replaced. Start a new session on the current scope.";
+    }
+    if (reason == StringName("authentication_replaced")) {
+        return "The session's authentication callback was replaced. Restore the expected multiplayer authentication setup before reconnecting.";
+    }
+    if (reason == StringName("authentication_failed")) {
+        return "Authentication did not complete. Check the connection's authentication setup before retrying.";
+    }
+    if (reason == StringName("connection_timeout")) {
+        return "The host did not confirm admission before the connection deadline. Check host availability and retry.";
+    }
+    if (reason == StringName("protocol_mismatch")) {
+        return "The host uses an incompatible admission protocol. Use matching Crimson builds.";
+    }
+    if (reason == StringName("server_disconnected")) {
+        return "The host connection ended. Join a running host to continue.";
+    }
+    if (reason == StringName("transport_disconnected")) {
+        return "The session transport disconnected. Open a new session to continue.";
+    }
+    if (reason == StringName("connection_failed")) {
+        return "The connection ended before the host confirmed admission. Check host availability and admission settings.";
+    }
+    return "The session ended unexpectedly. Check the reported reason before retrying.";
 }
 
 } // namespace
@@ -80,34 +119,51 @@ void GameSession::_bind_methods() {
     BIND_ENUM_CONSTANT(CLIENT);
 }
 
-Error GameSession::get_available_api(Ref<MultiplayerAPI> &api, bool networked) const {
+Error GameSession::get_available_api(Ref<MultiplayerAPI> &api, bool networked, const char *&detail) const {
     if (!is_inside_tree()) {
+        detail = "Add the session node to the scene tree before opening it.";
         return ERR_UNCONFIGURED;
     }
     if (state != IDLE || ending || opening) {
+        detail = "Wait for the current session to finish or leave it before starting another.";
         return ERR_BUSY;
     }
     api = get_multiplayer();
     if (api.is_null()) {
+        detail = "Assign a MultiplayerAPI to the session's scene tree scope.";
         return ERR_UNCONFIGURED;
     }
     const Ref<MultiplayerPeer> existing = api->get_multiplayer_peer();
     if (owned_apis.count(api->get_instance_id()) ||
             (existing.is_valid() && Object::cast_to<OfflineMultiplayerPeer>(existing.ptr()) == nullptr)) {
+        detail = "Use an idle multiplayer scope without another active session or transport.";
         return ERR_ALREADY_IN_USE;
     }
     const Ref<SceneMultiplayer> scene_api = api;
     if (networked && scene_api.is_valid() && scene_api->is_object_decoding_allowed()) {
+        detail = "Disable multiplayer object decoding before opening a network session.";
         return ERR_UNAUTHORIZED;
     }
-    return networked ? check_auth_scope(api) : OK;
+    if (!networked) {
+        return OK;
+    }
+    const Error authentication = check_auth_scope(api);
+    if (authentication == ERR_UNAVAILABLE) {
+        detail = "The configured authenticator requires SceneMultiplayer.";
+    } else if (authentication == ERR_ALREADY_IN_USE) {
+        detail = "The multiplayer scope already has an authentication callback.";
+    } else if (authentication == ERR_INVALID_PARAMETER) {
+        detail = "Configure a finite, positive SceneMultiplayer authentication timeout within Crimson's limit.";
+    }
+    return authentication;
 }
 
 Error GameSession::start_offline() {
     Ref<MultiplayerAPI> api;
-    const Error available = get_available_api(api, false);
+    const char *detail = "The multiplayer scope is unavailable.";
+    const Error available = get_available_api(api, false, detail);
     if (available != OK) {
-        return available;
+        return report_start_failure(OFFLINE, available, detail);
     }
     Ref<OfflineMultiplayerPeer> peer;
     peer.instantiate();
@@ -120,22 +176,33 @@ Error GameSession::host(int64_t port, int64_t max_clients, const String &bind_ad
 
 Error GameSession::host_with_admission(int64_t port, int64_t max_clients, const String &bind_address,
         bool accepting) {
-    if (!valid_port(port) || max_clients < 1 || max_clients > max_remote_clients ||
-            (bind_address != "*" && !bind_address.is_valid_ip_address())) {
-        return ERR_INVALID_PARAMETER;
+    if (!valid_port(port)) {
+        return report_start_failure(HOSTING, ERR_INVALID_PARAMETER, "Use a port from 1 to 65535.");
+    }
+    if (max_clients < 1 || max_clients > max_remote_clients) {
+        return report_start_failure(HOSTING, ERR_INVALID_PARAMETER, "Use a remote player limit from 1 to 4095.");
+    }
+    if (bind_address != "*" && !bind_address.is_valid_ip_address()) {
+        return report_start_failure(HOSTING, ERR_INVALID_PARAMETER, "Use a local IP address or '*' as the bind address.");
     }
     return open_network_transport(HOSTING, 0, static_cast<size_t>(max_clients), accepting,
             [&](SessionTransport &adapter) { return adapter.open_server(port, max_clients, bind_address); });
 }
 
 Error GameSession::join(const String &address, int64_t port, double timeout_seconds) {
-    return join_endpoint(SessionEndpoint::direct(address, port), timeout_seconds);
+    const auto endpoint = SessionEndpoint::direct(address, port);
+    if (endpoint.is_null()) {
+        return report_start_failure(CONNECTING, ERR_INVALID_PARAMETER, "Provide a host address and a port from 1 to 65535.");
+    }
+    return join_endpoint(endpoint, timeout_seconds);
 }
 
 Error GameSession::join_endpoint(const Ref<SessionEndpoint> &endpoint, double timeout_seconds) {
-    if (endpoint.is_null() || !std::isfinite(timeout_seconds) || timeout_seconds <= 0.0 ||
-            timeout_seconds > max_join_timeout) {
-        return ERR_INVALID_PARAMETER;
+    if (endpoint.is_null()) {
+        return report_start_failure(CONNECTING, ERR_INVALID_PARAMETER, "Provide a valid session endpoint.");
+    }
+    if (!std::isfinite(timeout_seconds) || timeout_seconds <= 0.0 || timeout_seconds > max_join_timeout) {
+        return report_start_failure(CONNECTING, ERR_INVALID_PARAMETER, "Use a finite connection timeout greater than 0 and at most 120 seconds.");
     }
     const auto timeout_ms = static_cast<uint64_t>(std::ceil(timeout_seconds * 1000.0));
     return open_network_transport(CONNECTING, timeout_ms, 0, false,
@@ -153,15 +220,16 @@ Error GameSession::set_transport_adapter(const Ref<SessionTransport> &adapter) {
 Error GameSession::open_network_transport(State role, uint64_t timeout_ms, size_t max_remote, bool accepting,
         const std::function<Ref<SessionTransportResult>(SessionTransport &)> &factory) {
     Ref<MultiplayerAPI> api;
-    const Error available = get_available_api(api, true);
+    const char *detail = "The multiplayer scope is unavailable.";
+    const Error available = get_available_api(api, true, detail);
     if (available != OK) {
-        return available;
+        return report_start_failure(role, available, detail);
     }
 
     const Ref<MultiplayerPeer> prior = api->get_multiplayer_peer();
     const uint64_t api_id = api->get_instance_id();
     if (!owned_apis.insert(api_id).second) {
-        return ERR_ALREADY_IN_USE;
+        return report_start_failure(role, ERR_ALREADY_IN_USE, "Another session owns this multiplayer scope.");
     }
     opening = true;
     const uint64_t opening_generation = generation;
@@ -174,23 +242,29 @@ Error GameSession::open_network_transport(State role, uint64_t timeout_ms, size_
     const Ref<SessionTransportResult> result = factory(**adapter);
     const Ref<MultiplayerPeer> peer = result.is_valid() ? result->get_peer() : Ref<MultiplayerPeer>();
     Error error = result.is_valid() ? result->get_error() : ERR_CANT_CREATE;
+    detail = result.is_valid() ? "The transport adapter could not open the requested peer." :
+                                 "The transport adapter did not return an opening result.";
     const bool fresh = peer.is_valid() && peer != prior && peer != api->get_multiplayer_peer() &&
             !owned_peers.count(peer->get_instance_id());
     if (error == OK) {
         if (!fresh) {
             error = ERR_ALREADY_IN_USE;
+            detail = "The transport adapter must return a fresh peer that no multiplayer scope owns.";
         } else if (Object::cast_to<OfflineMultiplayerPeer>(peer.ptr()) != nullptr ||
                 peer->get_connection_status() == MultiplayerPeer::CONNECTION_DISCONNECTED) {
             error = ERR_INVALID_DATA;
+            detail = "The transport adapter returned an offline or disconnected peer for a network session.";
         } else if (role == HOSTING) {
             peer->set_refuse_new_connections(!accepting);
             if (peer->get_connection_status() != MultiplayerPeer::CONNECTION_CONNECTED ||
                     peer->get_unique_id() != server_id || peer->is_refusing_new_connections() != !accepting) {
                 error = ERR_INVALID_DATA;
+                detail = "The transport adapter must return a connected authority peer with the requested admission setting.";
             }
         } else if (peer->get_connection_status() == MultiplayerPeer::CONNECTION_CONNECTED &&
                 peer->get_unique_id() <= server_id) {
             error = ERR_INVALID_DATA;
+            detail = "The transport adapter returned an invalid client peer identity.";
         }
     }
 
@@ -198,8 +272,10 @@ Error GameSession::open_network_transport(State role, uint64_t timeout_ms, size_
     if (generation != opening_generation || !is_inside_tree() || get_multiplayer() != api ||
             api->get_multiplayer_peer() != prior) {
         error = ERR_BUSY;
+        detail = "The multiplayer scope or session changed while the transport adapter was opening.";
     } else if (scene_api.is_valid() && scene_api->is_object_decoding_allowed()) {
         error = ERR_UNAUTHORIZED;
+        detail = "Multiplayer object decoding became enabled while the transport adapter was opening.";
     }
     if (error != OK && fresh && peer != api->get_multiplayer_peer() && !owned_peers.count(peer->get_instance_id())) {
         peer->close();
@@ -207,7 +283,7 @@ Error GameSession::open_network_transport(State role, uint64_t timeout_ms, size_
     owned_apis.erase(api_id);
     opening = false;
     if (error != OK) {
-        return error;
+        return report_start_failure(role, error, detail);
     }
     const uint64_t deadline = timeout_ms > 0 ? Time::get_singleton()->get_ticks_msec() + timeout_ms : 0;
     return activate_transport(api, peer, role, deadline, adapter, max_remote);
@@ -221,7 +297,7 @@ Error GameSession::activate_transport(const Ref<MultiplayerAPI> &api,
         if (new_state != OFFLINE) {
             peer->close();
         }
-        return ERR_ALREADY_IN_USE;
+        return report_start_failure(new_state, ERR_ALREADY_IN_USE, "Another session claimed the multiplayer scope before activation.");
     }
     session_api = api;
     previous_transport = api->get_multiplayer_peer();
@@ -236,19 +312,19 @@ Error GameSession::activate_transport(const Ref<MultiplayerAPI> &api,
     const Error connected = connect_api_signals();
     if (connected != OK) {
         end_session("connection_failed", false);
-        return connected;
+        return report_start_failure(new_state, connected, "The session could not subscribe to multiplayer lifecycle signals.");
     }
     if (new_state != OFFLINE) {
         const Error authentication = connect_auth(api);
         if (authentication != OK) {
             end_session("authentication_failed", false);
-            return authentication;
+            return report_start_failure(new_state, authentication, "The session could not install its authentication callbacks.");
         }
     }
     api->set_multiplayer_peer(peer);
     if (!owns_current_transport()) {
         end_session("transport_replaced", false);
-        return ERR_CANT_CREATE;
+        return report_start_failure(new_state, ERR_CANT_CREATE, "The multiplayer scope did not retain the newly installed peer.");
     }
     set_process(true);
     notify_state_started(new_state);
@@ -444,6 +520,9 @@ void GameSession::end_session(const StringName &reason, bool notify) {
     previous_transport.unref();
     session_api.unref();
 
+    if (notify && reason != StringName("left")) {
+        UtilityFunctions::printerr("[Crimson] Session ended (", reason, "). ", describe_session_end(reason));
+    }
     if (notify) {
         emit_signal("state_changed", IDLE);
     }
@@ -530,12 +609,16 @@ void GameSession::on_peer_connected(int64_t id) {
         // ENet can report CONNECT on the client even when the server refuses its admission.
         const Ref<MultiplayerPeer> peer = transport;
         const uint64_t active_generation = generation;
-        const bool accepted = !peer->is_refusing_new_connections() && connected_peers.size() < remote_limit &&
-                rpc_id(id, admission_method, session_protocol_version) == OK;
+        const bool eligible = !peer->is_refusing_new_connections() && connected_peers.size() < remote_limit;
+        const Error confirmation = eligible ? rpc_id(id, admission_method, session_protocol_version) : OK;
         if (generation != active_generation || !owns_current_transport()) {
             return;
         }
-        if (!accepted) {
+        if (!eligible || confirmation != OK) {
+            if (confirmation != OK) {
+                UtilityFunctions::printerr("[Crimson] Could not confirm multiplayer admission (",
+                        UtilityFunctions::error_string(confirmation), "). The peer was disconnected.");
+            }
             identities.erase(peer_id);
             peer->disconnect_peer(peer_id);
             return;

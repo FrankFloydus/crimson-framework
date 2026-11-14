@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="RebindResult" inherits="RefCounted">
+	<brief_description>The outcome of a binding edit.</brief_description>
+	<description>Read [member ok] for success and [member code] for a stable programmatic reason. [member message] is a short English status suitable for a settings screen.</description>
+	<members>
+		<member name="code" type="StringName" getter="get_code">One of [code]Ok[/code], [code]Cancelled[/code], [code]Timeout[/code], [code]Busy[/code], [code]Unavailable[/code], [code]InvalidSlot[/code], [code]Conflict[/code], or [code]InvalidBinding[/code].</member>
+		<member name="message" type="String" getter="get_message">A readable explanation of the outcome.</member>
+		<member name="ok" type="bool" getter="is_ok">True when the change was accepted.</member>
+		<member name="slot" type="BindingSlot" getter="get_slot">A fresh snapshot after a successful single-slot edit. Null after bulk edits and failures.</member>
+	</members>
+</class>

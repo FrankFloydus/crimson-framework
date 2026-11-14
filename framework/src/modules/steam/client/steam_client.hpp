@@ -40,6 +40,8 @@
 
 namespace crimson::steam {
 
+class Steamworks;
+
 // Owns a standalone Steam client scope and pumps SDK callbacks on the main thread.
 class SteamClient : public godot::Node {
     GDCLASS(SteamClient, godot::Node)
@@ -139,10 +141,17 @@ protected:
     static void _bind_methods();
 
 private:
+    friend class Steamworks;
+
+    // Attach the callback owner and capture its exact startup outcome for the code-first facade.
+    static SteamClient *attach_and_start(godot::Node *owner, int64_t expected_app_id,
+            godot::Error &started, bool internal);
     // Shared lease on the signed-in process runtime.
     std::shared_ptr<SteamRuntime> runtime;
     // Shared liveness of this start's asynchronous services.
     std::shared_ptr<SteamClientScope> scope;
+    // Weak identity of the code-first facade associated with the current generation.
+    godot::ObjectID code_first_facade_id;
     // Apps facade for the current start, invalidated when the scope stops.
     godot::Ref<SteamApps> apps_service;
     // Friends facade for the current start, invalidated when the scope stops.

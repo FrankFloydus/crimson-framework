@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="InputActionMapping" inherits="Resource">
+	<brief_description>A named action and its bindings in one Input Action Map.</brief_description>
+	<description>Use the same [InputAction] definition in several mappings. Each mapping supplies its own logical ID and physical binding slots. Scripts read the mapping ID through [Controls].</description>
+	<methods>
+		<method name="add_binding">
+			<return type="InputActionMapping" />
+			<param index="0" name="binding" type="InputBinding" />
+			<description>Appends a binding in authoring order and returns this mapping. Call [method validate] to check the draft.</description>
+		</method>
+		<method name="validate" qualifiers="const">
+			<return type="int" enum="Error" />
+			<description>Returns [constant OK] if the ID, action and bindings are valid. Invalid values return [constant ERR_INVALID_PARAMETER]. A duplicate binding ID returns [constant ERR_ALREADY_EXISTS].</description>
+		</method>
+	</methods>
+	<members>
+		<member name="action" type="InputAction" setter="set_action" getter="get_action">Reusable definition of the value produced by this mapping and whether it requires pointer capture.</member>
+		<member name="bindings" type="InputBinding[]" setter="set_bindings" getter="get_bindings" default="[]">Physical sources in authoring order. An empty array leaves this action available at its neutral value.</member>
+		<member name="id" type="StringName" setter="set_id" getter="get_id" default="&amp;&quot;&quot;">Stable logical ID used by gameplay scripts and [Controls]. Use a nonempty ID unique across the whole layout.</member>
+	</members>
+</class>

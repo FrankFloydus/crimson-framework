@@ -3,6 +3,7 @@
 #include "modules/steam/client/steam_result.hpp"
 
 #include <godot_cpp/core/class_db.hpp>
+#include <godot_cpp/variant/utility_functions.hpp>
 
 namespace crimson::steam {
 using namespace godot;
@@ -38,7 +39,7 @@ String SteamResult::get_message() const {
 
 void SteamResult::set_outcome(Error status, const String &diagnostic) {
     error = status;
-    message = diagnostic;
+    message = status != OK && diagnostic.is_empty() ? UtilityFunctions::error_string(status) : diagnostic;
 }
 
 void SteamBoolResult::_bind_methods() {

@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="Rebinding" inherits="RefCounted">
+	<brief_description>Change the physical bindings of one local Controls scope.</brief_description>
+	<description>Open the editor from a settings screen, select an editable slot, and await one deliberate input. For example, [code]var result: RebindResult = await bindings.rebind(bindings.slot_by_id(&amp;"move/key_up"))[/code]. The shared Controls scope applies the new binding immediately. Other editors for the same scope report busy on capture, reset, save, and load while a capture is active.</description>
+	<methods>
+		<method name="cancel">
+			<return type="int" enum="Error" />
+			<description>End this editor's pending capture. Returns [constant OK] when it cancels a capture, or [constant ERR_DOES_NOT_EXIST] if the editor is already idle. The pending call settles as Cancelled.</description>
+		</method>
+		<method name="load">
+			<return type="int" enum="Error" />
+			<param index="0" name="path" type="String" />
+			<description>Apply a versioned profile from a [code]user://[/code] file. Unlisted editable slots revert to their authored defaults. Validation covers the complete file before any binding changes. Unknown slots, incompatible device families, malformed data, or an unavailable scope return an error. Successful loads emit [signal changed] with a null slot.</description>
+		</method>
+		<method name="open" qualifiers="static">
+			<return type="Rebinding" />
+			<param index="0" name="controls" type="Controls" />
+			<param index="1" name="owner" type="Node" default="null" />
+			<description>Open an editor for one local scope. The optional owner must be active in the same viewport. When omitted, capture follows the Controls owner. An editor whose owner or scope is unavailable returns an unavailable outcome when asked to capture.</description>
+		</method>
+		<method name="rebind">
+			<return type="Variant" />
+			<param index="0" name="slot" type="BindingSlot" />
+			<description>Use [code]await rebind(slot)[/code] to receive a [RebindResult]. Captures the next deliberate control in the slot's device family and suspends gameplay during capture. Escape, controller Back, window focus loss, and owner exit cancel it. An idle capture expires after 15 real seconds. An already-held axis must return to neutral first. Press and release a modifier to bind it alone, or press another key while holding it to bind a chord. A slot from another Controls scope is rejected.</description>
+		</method>
+		<method name="reset">
+			<return type="RebindResult" />
+			<param index="0" name="slot" type="BindingSlot" />
+			<description>Restore one slot to its authored default. Returns the updated slot on success, or Conflict when another slot has been assigned the default control. Rejects while this Controls scope is capturing.</description>
+		</method>
+		<method name="reset_all">
+			<return type="RebindResult" />
+			<description>Restore the scope's authored bindings. Rejects while this Controls scope is capturing. On success emits [signal changed] with a null slot.</description>
+		</method>
+		<method name="save" qualifiers="const">
+			<return type="int" enum="Error" />
+			<param index="0" name="path" type="String" />
+			<description>Write the editable overrides to a [code]user://[/code] file in an existing directory. Supported on Windows. A complete file replaces the previous profile on success. Limits are 256 overrides and 64 KiB per file.</description>
+		</method>
+		<method name="slot" qualifiers="const">
+			<return type="BindingSlot" />
+			<param index="0" name="action" type="StringName" />
+			<param index="1" name="device" type="int" enum="Rebinding.BindingDevice" />
+			<description>Returns the first editable slot for the action and device in authored order, or [code]null[/code]. Use [method slot_by_id] to select a particular direction or alternative.</description>
+		</method>
+		<method name="slot_by_id" qualifiers="const">
+			<return type="BindingSlot" />
+			<param index="0" name="id" type="StringName" />
+			<description>Returns a detached snapshot for the exact editable slot ID, or [code]null[/code].</description>
+		</method>
+		<method name="slots" qualifiers="const">
+			<return type="BindingSlot[]" />
+			<description>Returns the editable slots in authored order. A relative mouse-motion source is not an editable button or axis slot. An unavailable scope returns an empty array.</description>
+		</method>
+	</methods>
+	<signals>
+		<signal name="changed">
+			<param index="0" name="slot" type="BindingSlot" />
+			<description>Emitted after this editor applies an edit. A null slot requests a full refresh after loading a profile or restoring defaults.</description>
+		</signal>
+	</signals>
+	<constants>
+		<constant name="KEYBOARD_MOUSE" value="0" enum="BindingDevice">A keyboard key, chord, or mouse button.</constant>
+		<constant name="GAMEPAD" value="1" enum="BindingDevice">A controller button or one direction of a controller axis.</constant>
+	</constants>
+</class>

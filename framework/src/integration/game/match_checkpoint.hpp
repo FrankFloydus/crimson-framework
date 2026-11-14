@@ -51,12 +51,12 @@ public:
     godot::Dictionary save_capture() const;
     // Create an empty, bridge-owned candidate for this load.
     godot::Dictionary save_create_candidate() const;
-    // Validate the persisted match DTO and prepare the coordinator's detached restore.
-    bool save_stage(const godot::Variant &dto, const godot::Variant &candidate) const;
+    // Prepare the detached restore and return its diagnostic if staging fails.
+    godot::Variant save_stage(const godot::Variant &dto, const godot::Variant &candidate) const;
     // Return the staged world ID while the candidate is owned and ready to publish.
     godot::String get_candidate_world(const godot::Variant &candidate) const;
-    // Install the validated stores and defer notification until the world has mounted.
-    bool save_publish(const godot::Variant &candidate);
+    // Install the validated stores and defer notification, or describe why publication failed.
+    godot::Variant save_publish(const godot::Variant &candidate);
     // Notify store observers after mounting the corresponding world.
     godot::Error notify_publication();
     // Drop a pending notification when recovery retires the entire owning match.

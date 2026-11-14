@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="InputScale" inherits="InputModifier">
+	<brief_description>Multiplies a binding's components by independent gains.</brief_description>
+	<description>Use on Axis, Vector, and Motion bindings. A gain below one reduces the magnitude of that component. Zero removes it and a negative gain flips its sign. An Axis action uses X. The gains are dimensionless and must be finite.</description>
+	<members>
+		<member name="factor" type="Vector2" setter="set_factor" getter="get_factor" default="Vector2(1, 1)">Multipliers for the incoming X and Y values. Set both to one to preserve the original magnitude.</member>
+	</members>
+</class>

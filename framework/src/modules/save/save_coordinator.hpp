@@ -68,6 +68,8 @@ public:
     godot::Variant get_prepared_candidate(int64_t ticket) const;
     // Validate and publish the prepared candidate on the main thread.
     bool activate_prepared_load(int64_t ticket);
+    // Publish the prepared candidate and return failure detail or backup guidance to a native orchestrator.
+    bool activate_prepared_load(int64_t ticket, godot::String &diagnostic);
     // Validate and discard an exact slot head to permit a subsequent scope upgrade.
     bool validate_prepared_load_for_save(int64_t ticket);
     // Install available services from a trusted provider DLL before I/O starts.
@@ -78,6 +80,8 @@ public:
     godot::String cancel(int64_t ticket);
     // Return the error code from the most recent rejected request.
     godot::String get_last_admission_error() const;
+    // Return the available failure detail from the most recent rejected request on the caller thread.
+    godot::String get_last_admission_message() const;
     // Check whether requests and undelivered notifications are drained.
     bool is_idle() const;
     // Retire pending work from the current world when replacing it outside restore.

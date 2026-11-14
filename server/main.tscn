@@ -2,10 +2,15 @@
 
 [gd_scene format=3]
 
-[ext_resource type="GameDefinition" path="res://demo/session/transfer_hall.tres" id="game"]
+[ext_resource type="PackedScene" path="res://demo/hub/starting_hub.tscn" id="world"]
+[ext_resource type="PackedScene" path="res://demo/player/stationary_player.tscn" id="player"]
 
-[node name="CrimsonDemo" type="DedicatedServerBoot" node_paths=PackedStringArray("game")]
-game = NodePath("Game")
+[sub_resource type="MultiplayerRules" id="lan"]
+port = 24830
 
-[node name="Game" type="GameRuntime" parent="."]
-definition = ExtResource("game")
+[node name="CrimsonDemo" type="DedicatedServerEntry"]
+level_scene = ExtResource("world")
+player_scene = ExtResource("player")
+world_id = &"transfer_hall"
+rules = SubResource("lan")
+relay_between_guests = false

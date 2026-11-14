@@ -1,0 +1,126 @@
+[gd_resource type="Theme" format=3 uid="uid://com7naxfs0ec6"]
+
+[sub_resource type="StyleBoxFlat" id="Disabled"]
+content_margin_left = 8.0
+content_margin_top = 5.0
+content_margin_right = 8.0
+content_margin_bottom = 5.0
+bg_color = Color(0.137, 0.145, 0.165, 1)
+corner_radius_top_left = 2
+corner_radius_top_right = 2
+corner_radius_bottom_right = 2
+corner_radius_bottom_left = 2
+
+[sub_resource type="StyleBoxFlat" id="Focus"]
+draw_center = false
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.42, 0.68, 0.98, 1)
+
+[sub_resource type="StyleBoxFlat" id="Hover"]
+content_margin_left = 8.0
+content_margin_top = 5.0
+content_margin_right = 8.0
+content_margin_bottom = 5.0
+bg_color = Color(0.22, 0.37, 0.56, 1)
+corner_radius_top_left = 2
+corner_radius_top_right = 2
+corner_radius_bottom_right = 2
+corner_radius_bottom_left = 2
+
+[sub_resource type="StyleBoxFlat" id="Button"]
+content_margin_left = 8.0
+content_margin_top = 5.0
+content_margin_right = 8.0
+content_margin_bottom = 5.0
+bg_color = Color(0.16, 0.22, 0.31, 1)
+corner_radius_top_left = 2
+corner_radius_top_right = 2
+corner_radius_bottom_right = 2
+corner_radius_bottom_left = 2
+
+[sub_resource type="StyleBoxFlat" id="Pressed"]
+content_margin_left = 8.0
+content_margin_top = 5.0
+content_margin_right = 8.0
+content_margin_bottom = 5.0
+bg_color = Color(0.18, 0.38, 0.64, 1)
+corner_radius_top_left = 2
+corner_radius_top_right = 2
+corner_radius_bottom_right = 2
+corner_radius_bottom_left = 2
+
+[sub_resource type="StyleBoxFlat" id="Field"]
+content_margin_left = 7.0
+content_margin_top = 5.0
+content_margin_right = 6.0
+content_margin_bottom = 5.0
+bg_color = Color(0.075, 0.082, 0.096, 1)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.22, 0.25, 0.3, 1)
+
+[sub_resource type="StyleBoxFlat" id="Surface"]
+bg_color = Color(0.095, 0.098, 0.112, 1)
+
+[sub_resource type="StyleBoxFlat" id="Panel"]
+content_margin_left = 10.0
+content_margin_top = 8.0
+content_margin_right = 10.0
+content_margin_bottom = 8.0
+bg_color = Color(0.12, 0.128, 0.148, 1)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.205, 0.218, 0.243, 1)
+corner_radius_top_left = 2
+corner_radius_top_right = 2
+corner_radius_bottom_right = 2
+corner_radius_bottom_left = 2
+
+[resource]
+default_font_size = 14
+Button/colors/font_color = Color(0.9, 0.92, 0.96, 1)
+Button/colors/font_disabled_color = Color(0.55, 0.59, 0.66, 1)
+Button/colors/font_focus_color = Color(0.98, 0.98, 1, 1)
+Button/styles/disabled = SubResource("Disabled")
+Button/styles/focus = SubResource("Focus")
+Button/styles/hover = SubResource("Hover")
+Button/styles/normal = SubResource("Button")
+Button/styles/pressed = SubResource("Pressed")
+HBoxContainer/constants/separation = 7
+Label/colors/font_color = Color(0.9, 0.92, 0.96, 1)
+LineEdit/colors/font_color = Color(0.94, 0.95, 0.97, 1)
+LineEdit/colors/font_uneditable_color = Color(0.6, 0.64, 0.7, 1)
+LineEdit/styles/focus = SubResource("Focus")
+LineEdit/styles/normal = SubResource("Field")
+LineEdit/styles/read_only = SubResource("Disabled")
+OptionButton/colors/font_color = Color(0.9, 0.92, 0.96, 1)
+OptionButton/colors/font_disabled_color = Color(0.55, 0.59, 0.66, 1)
+OptionButton/styles/disabled = SubResource("Disabled")
+OptionButton/styles/focus = SubResource("Focus")
+OptionButton/styles/hover = SubResource("Hover")
+OptionButton/styles/normal = SubResource("Button")
+OptionButton/styles/pressed = SubResource("Pressed")
+Panel/styles/panel = SubResource("Surface")
+PanelContainer/styles/panel = SubResource("Panel")
+PopupMenu/styles/hover = SubResource("Hover")
+PopupMenu/styles/panel = SubResource("Panel")
+TabContainer/colors/font_selected_color = Color(0.96, 0.97, 1, 1)
+TabContainer/colors/font_unselected_color = Color(0.67, 0.72, 0.8, 1)
+TabContainer/styles/panel = SubResource("Panel")
+TabContainer/styles/tab_focus = SubResource("Focus")
+TabContainer/styles/tab_hovered = SubResource("Hover")
+TabContainer/styles/tab_selected = SubResource("Pressed")
+TabContainer/styles/tab_unselected = SubResource("Button")
+TextEdit/colors/font_color = Color(0.86, 0.89, 0.94, 1)
+TextEdit/colors/font_readonly_color = Color(0.86, 0.89, 0.94, 1)
+TextEdit/styles/focus = SubResource("Focus")
+TextEdit/styles/normal = SubResource("Field")
+TextEdit/styles/read_only = SubResource("Field")
+VBoxContainer/constants/separation = 7

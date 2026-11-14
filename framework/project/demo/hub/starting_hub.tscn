@@ -2984,14 +2984,14 @@ mesh = SubResource("UnitBox")
 
 [node name="SpawnPoints" type="Node3D" parent="." unique_id=883120751]
 
-[node name="Spawn1" type="PlayerSpawnPoint" parent="SpawnPoints" unique_id=1307024178]
+[node name="Spawn1" type="Marker3D" parent="SpawnPoints" unique_id=1307024178]
 transform = Transform3D(1, 0, 0, 0, 0.9989877, -0.044984818, 0, 0.044984818, 0.9989877, 0, 0.005, 7.65)
 
-[node name="Spawn2" type="PlayerSpawnPoint" parent="SpawnPoints" unique_id=201841964]
+[node name="Spawn2" type="Marker3D" parent="SpawnPoints" unique_id=201841964]
 transform = Transform3D(0.9950042, -0.0044909883, -0.099732354, 0, 0.9989877, -0.044984818, 0.09983342, 0.044760082, 0.9939969, -1.9, 0.005, 6.25)
 
-[node name="Spawn3" type="PlayerSpawnPoint" parent="SpawnPoints" unique_id=868847461]
+[node name="Spawn3" type="Marker3D" parent="SpawnPoints" unique_id=868847461]
 transform = Transform3D(0.9950042, 0.0044909883, 0.099732354, 0, 0.9989877, -0.044984818, -0.09983342, 0.044760082, 0.9939969, 1.9, 0.005, 6.25)
 
-[node name="Spawn4" type="PlayerSpawnPoint" parent="SpawnPoints" unique_id=1478584875]
+[node name="Spawn4" type="Marker3D" parent="SpawnPoints" unique_id=1478584875]
 transform = Transform3D(1, 0, 0, 0, 0.9989877, -0.044984818, 0, 0.044984818, 0.9989877, 0, 0.005, 4.85)

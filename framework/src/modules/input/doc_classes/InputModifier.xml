@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="InputModifier" inherits="Resource">
+	<brief_description>Transforms the value of one physical binding.</brief_description>
+	<description>Add a [InputDeadZone], [InputSwapAxis], [InputInvert], [InputScale], [InputNormalize], or [InputResponseCurve] resource to [member InputBinding.modifiers]. Controls applies the stack from first to last before combining the binding with other sources for the action. Each Controls scope copies the modifier settings when it boots.</description>
+</class>

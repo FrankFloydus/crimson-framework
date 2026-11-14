@@ -18,6 +18,7 @@ struct SteamPartyHostState;
 struct SteamMessageGamePeer;
 class SteamApps;
 class SteamClient;
+class Steamworks;
 class SteamCloud;
 class SteamDiagnostics;
 class SteamFriends;
@@ -95,6 +96,8 @@ public:
     godot::Error send(const godot::String &steam_id);
     // Return the latest invite received in this attachment.
     godot::Ref<SteamInvite> pending() const;
+    // Clear only the exact pending offer presented to the player.
+    bool discard(const godot::Ref<SteamInvite> &invite);
 
 protected:
     // Register invitation actions and the typed received signal.
@@ -107,6 +110,8 @@ private:
     godot::ObjectID directory_id;
     // Last valid invite, owned until this attachment retires.
     godot::Ref<SteamInvite> last_invite;
+    // Last observed locator, retained briefly even after acceptance or dismissal.
+    godot::String last_invite_listing;
     // Monotonic timestamp for short-lived duplicate notifications.
     uint64_t last_invite_msec = 0;
 
@@ -194,6 +199,7 @@ protected:
 
 private:
     friend class SteamOnlineDirectory;
+    friend godot::Ref<steam::Steamworks> steamworks_for_game(GameRuntime *game);
 
     // Liveness token retired on Game exit even when this facade is retained.
     std::shared_ptr<steam::SteamClientScope> attachment;

@@ -6,19 +6,19 @@
 	</brief_description>
 	<members>
 		<member name="local_camera_path" type="NodePath" setter="set_local_camera_path" getter="get_local_camera_path">
-			Optional path relative to the assigned player scene root. Set it to the Camera3D that becomes current for the local player.
+			Path from the root of the instantiated [member player_scene] to the [Camera3D] that becomes current for the local player. Leave empty to skip the camera override.
 		</member>
 		<member name="local_hidden_path" type="NodePath" setter="set_local_hidden_path" getter="get_local_hidden_path">
-			Optional path relative to the assigned player scene root. Set it to the visual subtree hidden on the local player instance.
+			Path from the root of the instantiated [member player_scene] to the visual subtree hidden on the local player instance. Leave empty to skip visual hiding.
 		</member>
 		<member name="player_scene" type="PackedScene" setter="set_player_scene" getter="get_player_scene">
 			Node3D scene instantiated for each occupied slot in a standalone World Session.
 		</member>
 		<member name="port" type="int" setter="set_port" getter="get_port" default="7000">
-			UDP port used to host or join the standalone session.
+			UDP port used to host or join the standalone session. Use a value from 1 to 65535 and configure the same port on the host and guests.
 		</member>
 		<member name="spawn_points_path" type="NodePath" setter="set_spawn_points_path" getter="get_spawn_points_path" default="NodePath(&quot;SpawnPoints&quot;)">
-			Path relative to the assigned world scene root. The container's ordered Marker3D children define the legacy spawn slots.
+			Path from the root of the instantiated [member world_scene] to the spawn container. The container's ordered [Marker3D] children define the standalone spawn slots.
 		</member>
 		<member name="world_scene" type="PackedScene" setter="set_world_scene" getter="get_world_scene">
 			The Node3D world mounted from the same local asset on each participant.

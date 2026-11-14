@@ -12,6 +12,8 @@ var _guest_peer := 0
 var _baselines := 0
 # Number of running delta events the client has observed.
 var _deltas := 0
+# Reject a committed view through the normal authority projector to exercise recovery.
+var _projection_rejected := false
 
 
 # Acknowledge assertions so the host can advance without relying on frame timing.
@@ -72,7 +74,8 @@ func _run() -> void:
 
 # Bind the trusted roster and verify authority dispatch, capture, travel, and restore.
 func _run_host(port: int) -> bool:
-	if not _register_authority_store() or not _expect(_game.host(port, 4, ADDRESS) == OK,
+	if not _register_authority_store() or not _expect(_game.set_projector(_project_fixture) == OK,
+		"Install the fixture's authority projector.") or not _expect(_game.host(port, 4, ADDRESS) == OK,
 		"Start the Game Flow authority on loopback UDP %d." % port):
 		return false
 	if not _expect(_game.is_authority() and _game.get_phase() == GameRuntime.LOBBY,
@@ -82,6 +85,11 @@ func _run_host(port: int) -> bool:
 	if not await _wait_for(func() -> bool: return _guest_peer > 1, "Game Flow client admission"):
 		return false
 	_probe.expected_peer = _guest_peer
+	var unbound: Dictionary = await _game.start_match().wait()
+	if not _expect(unbound.get("code") == "TransitionRejected" and "admitted participant" in unbound.message
+			and _game.get_phase() == GameRuntime.LOBBY,
+			"An unbound participant blocks travel and leaves the lobby active: %s" % unbound):
+		return false
 	if not _expect(_game.bind_player(1, "host") == OK and _game.bind_player(_guest_peer, "guest") == OK,
 		"Bind the admitted peer and listen host to trusted stable player IDs."):
 		return false
@@ -100,6 +108,12 @@ func _run_host(port: int) -> bool:
 		return false
 	var saved: Dictionary = await _game.save(PROFILE, SLOT).wait()
 	if not _expect(saved.get("ok", false), "Save the running authority's Amber world: %s" % saved):
+		return false
+	var aborted: Dictionary = await _game.travel_to(MISSING_SCENE).wait()
+	if not _expect(aborted.get("code") in ["SceneRejected", "ScenePreparationFailed"]
+			and not String(aborted.get("message", "")).is_empty() and _mounted_world(AMBER, "amber")
+			and _game.get_world_epoch() == amber_epoch,
+			"Aborting a destination preserves the active host world and epoch: %s" % aborted):
 		return false
 	var traveled: Dictionary = await _game.travel_to(COBALT).wait()
 	if not _expect(traveled.get("ok", false) and _mounted_world(COBALT, "cobalt") and _game.get_world_epoch() > amber_epoch,
@@ -123,6 +137,20 @@ func _run_host(port: int) -> bool:
 		return false
 	if not _expect(_probe.rpc_id(_guest_peer, &"confirm") == OK, "Acknowledge the client's final observation."):
 		return false
+	_projection_rejected = true
+	var committed: Dictionary = await _game.submit(COMMAND, {"score": 100}).wait()
+	if not _expect(committed.get("ok", false), "Commit state before the projector reports a delivery failure."):
+		return false
+	if not await _wait_for(func() -> bool: return _game.get_phase() == GameRuntime.RECOVERING, "authority recovery"):
+		return false
+	var blocked: Dictionary = await _game.submit(COMMAND, {"score": 101}).wait()
+	if not _expect(blocked.get("code") == "CommandsClosed" and _authority_score() == 100,
+			"Recovery rejects further gameplay commands without undoing the committed state."):
+		return false
+	if not await _wait_for(func() -> bool: return _probe.observed == 5, "client confirms recovery"):
+		return false
+	if not _expect(_probe.rpc_id(_guest_peer, &"confirm") == OK, "Acknowledge the client's recovery observation."):
+		return false
 	await create_timer(0.25).timeout
 	return true
 
@@ -135,6 +163,13 @@ func _run_client(port: int) -> bool:
 		return false
 	if not _expect(not _game.is_authority() and _game.get_transactions() == null and _visible_score() == 0,
 		"The ready client sees its initial projection and has no authority coordinator."):
+		return false
+	var denied_travel: Dictionary = await _game.travel_to(COBALT).wait()
+	var denied_restore: Dictionary = await _game.restore(PROFILE, SLOT).wait()
+	if not _expect(denied_travel.get("code") == "TransitionRejected" and "authority" in denied_travel.message
+			and denied_restore.get("code") == "RestoreRejected" and "authority" in denied_restore.message
+			and _mounted_world(AMBER, "amber"),
+			"Local client requests cannot start authority travel or restore: %s, %s" % [denied_travel, denied_restore]):
 		return false
 	var amber_epoch := _game.get_world_epoch()
 	var result: Dictionary = await _game.submit(COMMAND, {"score": 17, "player_id": "forged"}).wait()
@@ -159,7 +194,18 @@ func _run_client(port: int) -> bool:
 	if not _expect(_game.get_world_epoch() > cobalt_epoch and _visible_score() == 42 and _dispatch_players.is_empty(),
 		"Restore installs the previous world and saved projection at a new epoch.") or not _report(4):
 		return false
-	return await _wait_for(func() -> bool: return _probe.confirmed, "host confirms the final client observation")
+	if not await _wait_for(func() -> bool: return _probe.confirmed, "host confirms the final client observation"):
+		return false
+	if not await _wait_for(func() -> bool: return _game.get_phase() == GameRuntime.RECOVERING, "client recovery"):
+		return false
+	var blocked: Dictionary = await _game.submit(COMMAND, {"score": 101}).wait()
+	if not _expect(blocked.get("code") == "CommandsClosed" and _game.get_projection().is_empty(),
+			"The recovering client has no ready projection or command path."):
+		return false
+	_probe.confirmed = false
+	if not _report(5):
+		return false
+	return await _wait_for(func() -> bool: return _probe.confirmed, "host confirms the client entered recovery")
 
 
 # Send the next assertion milestone to the host without influencing the game logic.
@@ -184,3 +230,10 @@ func _on_projection_updated(_revision: int, baseline: bool) -> void:
 func _visible_score() -> int:
 	var projected: Dictionary = _game.get_projection().get(STORE, {})
 	return int(projected.get("score", -1))
+
+
+# Return the shared store normally and supply a specific cause when projection is rejected.
+func _project_fixture(_peer: int, _player: String, _epoch: int, _revision: int) -> Dictionary:
+	if _projection_rejected:
+		return {"ok": false, "message": "Fixture projector cannot produce the committed view."}
+	return {"ok": true, "view": {STORE: _game.get_transactions().read_store(STORE)}}

@@ -3,6 +3,7 @@
 ## Exercises Steam Messages authorization and opt-in two-account transport.
 extends SceneTree
 
+const GameFixture := preload("res://tests/online/steam_game_fixture.gd")
 ## Valve's shared development AppID.
 const SPACEWAR := 480
 ## Only app messages on these two fixture channels are allowed.
@@ -94,7 +95,7 @@ func _standalone(account: String) -> bool:
 	return passed
 
 
-## Bind Game messages through the current demo's verified Steam session.
+## Bind Game messages through the fixture's verified Steam session.
 func _game(arguments: PackedStringArray) -> bool:
 	var host := arguments[1] == "host"
 	if (not host and arguments[1] != "guest") or arguments.size() != (3 if host else 4):
@@ -103,15 +104,13 @@ func _game(arguments: PackedStringArray) -> bool:
 	var provider := SteamProvider.configure().for_app(SPACEWAR).with_lobby_namespace(arguments[2])
 	if provider == null:
 		return false
-	var scene := load("res://demo/main.tscn") as PackedScene
-	var demo := scene.instantiate()
-	var game := demo.get_node(^"Game") as GameRuntime
-	game.definition = game.definition.with_provider(provider.friends_only().with_message_channels(channels))
-	root.add_child(demo)
+	var game := GameFixture.boot(root, provider.friends_only().with_message_channels(channels))
+	if game == null:
+		return false
 	var operation := game.host_online() if host else game.join_online(arguments[3])
 	var started: Dictionary = await operation.wait()
 	if not started.get("ok", false):
-		demo.free()
+		game.free()
 		return false
 	if host:
 		print("CRIMSON_STEAM_MESSAGES_LOBBY=%s" % game.get_online_listing())
@@ -133,7 +132,7 @@ func _game(arguments: PackedStringArray) -> bool:
 	await process_frame
 	if peer != null:
 		passed = passed and peer.send(RELIABLE_CHANNEL, RELIABLE_DATA.to_utf8_buffer()) == ERR_UNAVAILABLE
-	demo.free()
+	game.free()
 	return passed
 
 

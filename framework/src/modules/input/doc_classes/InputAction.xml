@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="InputAction" inherits="Resource">
+	<brief_description>Reusable definition of the value produced by an input action.</brief_description>
+	<description>Author a button, one-dimensional axis, two-dimensional vector, or relative mouse motion. An [InputActionMapping] assigns the action a logical ID and physical bindings. Several mappings may reference the same definition.</description>
+	<methods>
+		<method name="create" qualifiers="static">
+			<return type="InputAction" />
+			<param index="0" name="kind" type="int" enum="InputAction.ValueKind" />
+			<description>Returns an independent action definition of the requested value kind. Assign it to a map with [method InputActionMap.add_action].</description>
+		</method>
+	</methods>
+	<members>
+		<member name="bindings" type="InputBinding[]" setter="set_bindings" getter="get_bindings" default="[]">Physical sources for legacy inline layouts. Author physical sources on [member InputActionMapping.bindings] when using a standalone map.</member>
+		<member name="deadzone" type="float" setter="set_deadzone" getter="get_deadzone" default="0.0">Neutral threshold in normalized units from 0 inclusive to 1 exclusive. Scalar and vector levels outside the threshold are remapped to their full range. Analog sources must exceed this threshold to hold a button.</member>
+		<member name="display_name" type="String" setter="set_display_name" getter="get_display_name" default="&quot;&quot;">Optional human-readable action label for a binding screen.</member>
+		<member name="id" type="StringName" setter="set_id" getter="get_id" default="&amp;&quot;&quot;">Identifier for legacy inline layouts. Standalone map assets use [member InputActionMapping.id].</member>
+		<member name="kind" type="int" setter="set_kind" getter="get_kind" enum="InputAction.ValueKind" default="0">Button tracks press, hold, and release. Axis reports one value from -1 to 1. Vector reports a two-dimensional direction with a maximum length of 1. Motion reports relative mouse movement in pixels per physics tick.</member>
+		<member name="map" type="StringName" setter="set_map" getter="get_map" default="&amp;&quot;Gameplay&quot;">Map ID for legacy inline layouts. Standalone map assets use [member InputActionMap.id].</member>
+		<member name="requires_pointer" type="bool" setter="set_requires_pointer" getter="get_requires_pointer" default="false">If [code]true[/code], input is neutral unless these controls own desktop pointer capture. Enable for actions that should be unavailable while the cursor is free.</member>
+	</members>
+	<constants>
+		<constant name="BUTTON" value="0" enum="ValueKind">Digital value with held, pressed, and released state.</constant>
+		<constant name="AXIS" value="1" enum="ValueKind">Continuous scalar level between -1 and 1.</constant>
+		<constant name="VECTOR" value="2" enum="ValueKind">Continuous two-dimensional level with magnitude at most one.</constant>
+		<constant name="MOTION" value="3" enum="ValueKind">Accumulated relative mouse motion in unscaled screen pixels per physics tick.</constant>
+	</constants>
+</class>

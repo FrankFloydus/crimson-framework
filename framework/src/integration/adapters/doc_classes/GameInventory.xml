@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="GameInventory" inherits="RefCounted">
+	<brief_description>Resolves match-scoped inventory handles for an attached game.</brief_description>
+	<methods>
+		<method name="backpack">
+			<return type="MatchInventory" />
+			<description>Return the current local player's backpack after coordinated gameplay becomes ready. Returns [code]null[/code] for an unavailable scope or a server with no local player. A retained backpack expires when the match retires.</description>
+		</method>
+	</methods>
+</class>

@@ -1,10 +1,14 @@
 # Copyright Francesco Di Blasi 2026 - All Rights Reserved
 
 import os
+import subprocess
+import sys
 
 from methods import print_error
 
 root = Dir("#").abspath
+if subprocess.call([sys.executable, os.path.join(root, "scripts", "check_native_text.py")]) != 0:
+    Exit(1)
 if not os.path.isfile(os.path.join(root, "godot-cpp", "SConstruct")):
     print_error("Initialize godot-cpp with git submodule update --init.")
     Exit(1)
@@ -51,13 +55,15 @@ if steam_sdk.lower() != "off" and (steam_override or os.path.isdir(steam_sdk)):
         env.Append(CPPPATH=[sdr_include, os.path.join(sdr_include, "steam")],
                    CPPDEFINES=["CRIMSON_WITH_STEAM_SDR"])
 sources = Glob("src/*.cpp")
-for module in ("inventory", "save", "session", "scene_load", "match_runtime", "replication",
+for module in ("inventory", "save", "session", "scene_manager", "match_runtime", "network",
+               "input", "input/rebinding", "mover",
                "steam", "steam/client", "steam/client/workshop", "steam/commerce", "steam/lobbies", "steam/runtime",
                "steam/server"):
     sources += Glob(f"src/modules/{module}/*.cpp")
 sources += ["src/integration/register_integration.cpp"]
-doc_xml = (Glob("src/modules/inventory/doc_classes/*.xml") + Glob("src/modules/session/doc_classes/*.xml")
-           + Glob("src/modules/steam/doc_classes/*.xml"))
+doc_xml = []
+for module in ("inventory", "session", "save", "steam", "input", "input/rebinding", "mover", "network"):
+    doc_xml += Glob(f"src/modules/{module}/doc_classes/*.xml")
 steam_publisher = ARGUMENTS.get("steam_publisher", "no")
 steam_publisher_tests = ARGUMENTS.get("steam_publisher_tests", "no")
 if steam_publisher not in ("yes", "no") or steam_publisher_tests not in ("yes", "no"):
@@ -72,11 +78,16 @@ if steam_publisher == "yes":
     env.Append(CPPDEFINES=["CRIMSON_WITH_STEAM_PUBLISHER"])
 if steam_publisher_tests == "yes":
     env.Append(CPPDEFINES=["CRIMSON_WITH_STEAM_PUBLISHER_TESTS"])
-for area in ("game", "world_session", "adapters", "online", "online/steam"):
+for area in ("game", "world_session", "adapters", "online", "online/steam", "player_control"):
     sources += Glob(f"src/integration/{area}/*.cpp")
     doc_xml += Glob(f"src/integration/{area}/doc_classes/*.xml")
 if env["target"] == "template_debug" and doc_xml:
     sources.append(env.GodotCPPDocData("src/gen/doc_data.gen.cpp", source=doc_xml))
+    mover_help_script = File("scripts/generate_mover_property_help.py")
+    mover_help_xml = File("src/modules/mover/doc_classes/MoverComponent.xml")
+    sources += env.Command("src/gen/mover_property_help.gen.cpp", [mover_help_script, mover_help_xml],
+                           '"$MOVER_HELP_PYTHON" "${SOURCES[0]}" "$TARGET" "${SOURCES[1]}"',
+                           MOVER_HELP_PYTHON=sys.executable)
 output = "bin/publisher/windows" if steam_publisher == "yes" else "bin/windows"
 install = output if steam_publisher == "yes" else "project/addons/crimson-framework/bin"
 suffix = env["suffix"].replace(".dev", "")

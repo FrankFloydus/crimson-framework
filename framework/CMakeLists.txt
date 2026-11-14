@@ -36,9 +36,12 @@ file(GLOB module_sources CONFIGURE_DEPENDS
     "src/modules/inventory/*.cpp"
     "src/modules/save/*.cpp"
     "src/modules/session/*.cpp"
-    "src/modules/scene_load/*.cpp"
+    "src/modules/scene_manager/*.cpp"
     "src/modules/match_runtime/*.cpp"
-    "src/modules/replication/*.cpp"
+    "src/modules/network/*.cpp"
+    "src/modules/input/*.cpp"
+    "src/modules/input/rebinding/*.cpp"
+    "src/modules/mover/*.cpp"
     "src/modules/steam/*.cpp"
     "src/modules/steam/client/*.cpp"
     "src/modules/steam/client/workshop/*.cpp"
@@ -50,16 +53,27 @@ file(GLOB module_sources CONFIGURE_DEPENDS
 set(integration_sources src/integration/register_integration.cpp)
 file(GLOB module_docs CONFIGURE_DEPENDS
     "src/modules/inventory/doc_classes/*.xml"
+    "src/modules/save/doc_classes/*.xml"
     "src/modules/session/doc_classes/*.xml"
     "src/modules/steam/doc_classes/*.xml"
+    "src/modules/input/doc_classes/*.xml"
+    "src/modules/input/rebinding/doc_classes/*.xml"
+    "src/modules/mover/doc_classes/*.xml"
+    "src/modules/network/doc_classes/*.xml"
 )
-foreach(area IN ITEMS game world_session adapters online online/steam)
+foreach(area IN ITEMS game world_session adapters online online/steam player_control)
     file(GLOB area_sources CONFIGURE_DEPENDS "src/integration/${area}/*.cpp")
     file(GLOB area_docs CONFIGURE_DEPENDS "src/integration/${area}/doc_classes/*.xml")
     list(APPEND integration_sources ${area_sources})
     list(APPEND module_docs ${area_docs})
 endforeach()
 add_library(crimson_framework SHARED src/register_types.cpp ${module_sources} ${integration_sources})
+find_package(Python3 REQUIRED COMPONENTS Interpreter)
+add_custom_target(crimson_check_native_text
+    COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/scripts/check_native_text.py"
+    VERBATIM
+)
+add_dependencies(crimson_framework crimson_check_native_text)
 if(CRIMSON_STEAM_PUBLISHER)
     file(GLOB publisher_sources CONFIGURE_DEPENDS "src/modules/steam/publisher/*.cpp")
     file(GLOB publisher_docs CONFIGURE_DEPENDS "src/modules/steam/publisher/doc_classes/*.xml")
@@ -71,7 +85,6 @@ if(CRIMSON_STEAM_PUBLISHER_TESTS)
     target_compile_definitions(crimson_framework PRIVATE CRIMSON_WITH_STEAM_PUBLISHER_TESTS)
 endif()
 if(GODOTCPP_TARGET STREQUAL "template_debug" AND module_docs)
-    find_package(Python3 REQUIRED COMPONENTS Interpreter)
     set(doc_source "${CMAKE_CURRENT_BINARY_DIR}/gen/doc_source.cpp")
     set(doc_manifest "${CMAKE_CURRENT_BINARY_DIR}/gen/doc_manifest.txt")
     set(doc_generator "${CMAKE_CURRENT_SOURCE_DIR}/godot-cpp/doc_source_generator.py")
@@ -85,6 +98,15 @@ if(GODOTCPP_TARGET STREQUAL "template_debug" AND module_docs)
         VERBATIM
     )
     target_sources(crimson_framework PRIVATE "${doc_source}")
+    set(mover_help_source "${CMAKE_CURRENT_BINARY_DIR}/gen/mover_property_help.gen.cpp")
+    set(mover_help_generator "${CMAKE_CURRENT_SOURCE_DIR}/scripts/generate_mover_property_help.py")
+    set(mover_help_xml "${CMAKE_CURRENT_SOURCE_DIR}/src/modules/mover/doc_classes/MoverComponent.xml")
+    add_custom_command(OUTPUT "${mover_help_source}"
+        COMMAND "${Python3_EXECUTABLE}" "${mover_help_generator}" "${mover_help_source}" "${mover_help_xml}"
+        DEPENDS "${mover_help_generator}" "${mover_help_xml}"
+        VERBATIM
+    )
+    target_sources(crimson_framework PRIVATE "${mover_help_source}")
 endif()
 target_compile_features(crimson_framework PRIVATE cxx_std_17)
 target_include_directories(crimson_framework PRIVATE src src/modules/save/third_party)

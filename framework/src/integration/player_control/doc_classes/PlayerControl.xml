@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="PlayerControl" inherits="RefCounted" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+    <brief_description>Local steering and look for one scene body.</brief_description>
+    <description>
+        Returned by [method PlayerControlProfile.boot]. The scene owns the controller. Keep its [Controls] handle on a persistent local owner if settings and bindings should survive body replacement.
+    </description>
+    <methods>
+        <method name="clear_lock_on">
+            <return type="void" />
+            <description>Clears the selected target. Lock-On steering follows the view again. Safe to call after the controller is detached.</description>
+        </method>
+        <method name="controls" qualifiers="const">
+            <return type="Controls" />
+            <description>Returns the exact local input handle used by the controller, or null if boot failed.</description>
+        </method>
+        <method name="get_error" qualifiers="const">
+            <return type="int" enum="Error" />
+            <description>Returns the original attachment status.</description>
+        </method>
+        <method name="get_message" qualifiers="const">
+            <return type="String" />
+            <description>Returns the initial attachment failure text, or an empty string after success.</description>
+        </method>
+        <method name="is_ready" qualifiers="const">
+            <return type="bool" />
+            <description>Returns true while the attached controller and its input owner are live.</description>
+        </method>
+        <method name="lock_on">
+            <return type="int" enum="Error" />
+            <param index="0" name="target" type="Node3D" />
+            <description>Uses the bearing to [param target] for the body's facing and movement axes. The view keeps its own aim. The game chooses the target and handles any camera tracking. Returns [constant OK] on success, [constant ERR_UNCONFIGURED] if the controller is inactive, [constant ERR_UNAVAILABLE] for other styles, or [constant ERR_INVALID_PARAMETER] for a null, unmounted, queued-for-deletion, same-character, or different-viewport target. Falls back to view heading if the target leaves the viewport or has no horizontal separation. Network owners send steering heading only.</description>
+        </method>
+        <method name="mover" qualifiers="const">
+            <return type="Mover" />
+            <description>Returns the body's movement handle on standalone or authority-side actors. Returns null on a network guest, which sends input intent to the authority, or if boot failed.</description>
+        </method>
+    </methods>
+</class>

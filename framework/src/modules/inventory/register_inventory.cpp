@@ -18,7 +18,9 @@ void register_types(godot::ModuleInitializationLevel level) {
     if (level != godot::MODULE_INITIALIZATION_LEVEL_SCENE) {
         return;
     }
+    GDREGISTER_ABSTRACT_CLASS(godot::InventoryItemView);
     GDREGISTER_CLASS(godot::SpatialInventory);
+    GDREGISTER_CLASS(godot::Inventory);
     GDREGISTER_CLASS(SpatialInventoryStackAdapter);
     GDREGISTER_CLASS(SpatialInventoryActions);
     GDREGISTER_CLASS(SpatialInventorySorter);

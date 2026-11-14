@@ -5,7 +5,7 @@
 		Terminal transport outcome for a Steam HTTP request.
 	</brief_description>
 	<description>
-		A successful result contains the complete response, including responses with 4xx or 5xx status codes. Failed or cancelled requests have no response value.
+		A successful result contains the complete response, including responses with 4xx or 5xx status codes. Failed or cancelled requests have no response value. Read [member SteamResult.message] for the rejected request setting, transport failure, response limit, or cancellation reason.
 	</description>
 	<methods>
 		<method name="get_value">

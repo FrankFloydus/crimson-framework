@@ -4,7 +4,7 @@
 
 Enable the trusted publisher module for a server or operator tool with `steam_publisher=yes` in SCons or `CRIMSON_STEAM_PUBLISHER=ON` in CMake. The trusted artifact lives in `bin/publisher/windows` for SCons or the selected CMake build directory. The default addon keeps its client build. The publisher can run in headless Godot without Steamworks client initialization.
 
-Attach a `SteamPublisherHost` under the backend's persistent scene root and override its secret resolver. Keep the actual key in the backend's secret store. `SteamPublisherSettings` carries its reference and takes a weak reference to the attached host.
+Define a scripted `SteamPublisherHost` subclass for the trusted backend and override its secret resolver. Attach the subclass from code under the existing persistent scene root. Keep the actual key in the backend's secret store. `SteamPublisherSettings` carries its reference and takes a weak reference to the attached host.
 
 ```gdscript
 class_name ProfilePublisherHost
@@ -17,9 +17,11 @@ func _resolve_secret(reference: StringName) -> String:
 ```
 
 ```gdscript
+var host := ProfilePublisherHost.new()
+add_child(host)
 var settings := SteamPublisherSettings.new()
 settings.app_id = configured_app_id
-settings.host = $ProfilePublisherHost
+settings.host = host
 settings.publisher_key_ref = &"TRANSFER_HALL_STEAM_PUBLISHER_KEY"
 var boot := SteamPublisher.boot(settings)
 if boot.ok:

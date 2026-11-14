@@ -1,6 +1,7 @@
 // Copyright Francesco Di Blasi 2026 - All Rights Reserved
 
 #include "modules/steam/client/steam_client.hpp"
+#include "modules/steam/client/steamworks.hpp"
 
 #include <godot_cpp/classes/os.hpp>
 #include <godot_cpp/core/class_db.hpp>
@@ -72,16 +73,26 @@ Error SteamClient::restart_through_steam_if_needed(int64_t app_id) {
 }
 
 SteamClient *SteamClient::boot(Node *owner, int64_t expected_app_id) {
+    Error started = ERR_UNCONFIGURED;
+    return attach_and_start(owner, expected_app_id, started, false);
+}
+
+SteamClient *SteamClient::attach_and_start(Node *owner, int64_t expected_app_id, Error &started, bool internal) {
     const OS *os = OS::get_singleton();
-    if (!os || os->get_thread_caller_id() != os->get_main_thread_id() || !owner ||
-            !owner->is_inside_tree() || owner->is_queued_for_deletion()) {
+    if (!os || os->get_thread_caller_id() != os->get_main_thread_id()) {
+        started = ERR_BUSY;
+        return nullptr;
+    }
+    if (!owner || !owner->is_inside_tree() || owner->is_queued_for_deletion()) {
+        started = ERR_INVALID_PARAMETER;
         return nullptr;
     }
 
+    started = ERR_CANT_CREATE;
     auto *client = memnew(SteamClient);
     const uint64_t client_id = client->get_instance_id();
     const uint64_t owner_id = owner->get_instance_id();
-    owner->add_child(client);
+    owner->add_child(client, false, internal ? Node::INTERNAL_MODE_BACK : Node::INTERNAL_MODE_DISABLED);
     // Scene-tree notifications may remove, reparent, or queue the client for deletion.
     client = Object::cast_to<SteamClient>(ObjectDB::get_instance(client_id));
     if (!client) {
@@ -94,9 +105,12 @@ SteamClient *SteamClient::boot(Node *owner, int64_t expected_app_id) {
     }
     if (parent->get_instance_id() != owner_id || parent->is_queued_for_deletion() ||
             !client->is_inside_tree() || client->is_queued_for_deletion()) {
+        if (internal && !client->is_queued_for_deletion()) {
+            client->queue_free();
+        }
         return nullptr;
     }
-    client->start(expected_app_id);
+    started = client->start(expected_app_id);
     return client;
 }
 
@@ -198,11 +212,16 @@ Error SteamClient::start(int64_t expected_app_id) {
         if (!client || !expected || client->scope != expected) {
             return;
         }
+        const Ref<Steamworks> facade(Object::cast_to<Steamworks>(
+                ObjectDB::get_instance(client->code_first_facade_id)));
         client->initialization_error = "Steam lost its local connection. Start a fresh client scope to reconnect.";
         client->stop();
         client = Object::cast_to<SteamClient>(ObjectDB::get_instance(node_id));
         if (client) {
             client->emit_signal("runtime_lost");
+        }
+        if (facade.is_valid() && facade->generation.lock() == expected) {
+            facade->on_runtime_lost();
         }
     });
     set_process_mode(PROCESS_MODE_ALWAYS);
@@ -222,6 +241,7 @@ void SteamClient::stop() {
     set_process(false);
     scope->active = false;
     scope.reset();
+    code_first_facade_id = ObjectID();
     const auto active = std::exchange(runtime, {});
     active->forget_client(get_instance_id());
     const auto old_http = std::exchange(http_service, {});

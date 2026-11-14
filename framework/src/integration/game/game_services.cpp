@@ -3,6 +3,7 @@
 #include "integration/game/game_services.hpp"
 
 #include "integration/game/crimson_game.hpp"
+#include "integration/game/game.hpp"
 
 #include <godot_cpp/classes/os.hpp>
 #include <godot_cpp/core/class_db.hpp>
@@ -21,6 +22,12 @@ struct GameScope {
     godot::Ref<SceneService> scene_service;
     // Exact online binding for this attachment, including a startup diagnostic.
     godot::Ref<OnlineDirectory> online_directory;
+    // Resolved code-first transport override for the exact attachment.
+    godot::Ref<session::SessionTransport> transport;
+    // Unique typed handle, whose runtime pointer is weak.
+    godot::Ref<Game> facade;
+    // A code-first runtime is visible to callers only after the facade commits.
+    bool private_boot = false;
     // Set after the game has attached its services and wired their dependencies.
     bool published = false;
 };
@@ -44,6 +51,16 @@ GameRuntime *live_game(godot::ObjectID id) {
     }
     auto *game = godot::Object::cast_to<GameRuntime>(godot::ObjectDB::get_instance(id));
     return game && game->is_inside_tree() && !game->is_queued_for_deletion() ? game : nullptr;
+}
+
+// Exclude a private runtime until code-first bootstrap has committed its handle.
+GameRuntime *published_game(godot::ObjectID id) {
+    auto *runtime = live_game(id);
+    if (!runtime) {
+        return nullptr;
+    }
+    const auto &scope = scopes.at(uint64_t(id));
+    return !scope.private_boot || scope.facade.is_valid() ? runtime : nullptr;
 }
 
 // Check the detached-node contract before transferring ownership to GameRuntime.
@@ -104,11 +121,10 @@ Ref<GameOperation> SceneService::load(const StringName &world_id) {
     Dictionary result;
     result["ok"] = false;
     result["code"] = "Unavailable";
-    result["message"] = "The originating GameRuntime scene service is no longer active.";
+    result["message"] = "The originating GameRuntime scene service must be active and accessed on the main thread.";
     result["world_id"] = String();
     result["world_epoch"] = int64_t(0);
-    Ref<GameOperation> operation;
-    operation.instantiate();
+    const auto operation = GameOperation::for_travel(world_id);
     operation->finish(result);
     return operation;
 }
@@ -121,6 +137,8 @@ Node *SceneService::get_world() const {
 void GameServiceContainer::open(GameRuntime &game) {
     const Ref<GameDefinition> definition = game.get_definition();
     GameScope scope;
+    scope.transport = game.code_first_transport;
+    scope.private_boot = game.code_first_owned;
     if (definition.is_valid()) {
         scope.provider = definition->get_service_provider();
     }
@@ -144,6 +162,9 @@ void GameServiceContainer::close(GameRuntime &game) {
     if (!retired.empty() && retired.mapped().online_directory.is_valid()) {
         retired.mapped().online_directory->retire_attachment();
     }
+    if (!retired.empty() && retired.mapped().facade.is_valid()) {
+        retired.mapped().facade->on_scope_closed();
+    }
 }
 
 session::GameSession *GameServiceContainer::make_session(GameRuntime &game) {
@@ -152,11 +173,16 @@ session::GameSession *GameServiceContainer::make_session(GameRuntime &game) {
         return nullptr;
     }
     const Ref<GameServiceProvider> provider = scope->second.provider;
-    if (provider.is_null()) {
-        return memnew(session::GameSession);
+    const auto transport = scope->second.transport;
+    session::GameSession *service = provider.is_null() ? memnew(session::GameSession) : provider->create_session_for(game);
+    if (!detached(service)) {
+        return nullptr;
     }
-    session::GameSession *service = provider->create_session_for(game);
-    return detached(service) ? service : nullptr;
+    if (transport.is_valid() && service->set_transport_adapter(transport) != OK) {
+        memdelete(service);
+        return nullptr;
+    }
+    return service;
 }
 
 scene_load::SceneLoadManager *GameServiceContainer::make_scene_loader(GameRuntime &game) {
@@ -205,7 +231,7 @@ Ref<OnlineDirectory> GameServiceContainer::unique_online_for(const GameServicePr
     }
     const GameScope *found = nullptr;
     for (const auto &[id, scope] : scopes) {
-        if (scope.provider.ptr() != &provider || !live_game(ObjectID(id))) {
+        if (scope.provider.ptr() != &provider || !published_game(ObjectID(id))) {
             continue;
         }
         if (found) {
@@ -221,12 +247,12 @@ GameRuntime *GameServiceContainer::default_game() {
     if (!on_main_thread()) {
         return nullptr;
     }
-    if (GameRuntime *selected = live_game(primary_game)) {
+    if (GameRuntime *selected = published_game(primary_game)) {
         return selected;
     }
     GameRuntime *only = nullptr;
     for (const auto &scope : scopes) {
-        if (GameRuntime *game = live_game(ObjectID(scope.first))) {
+        if (GameRuntime *game = published_game(ObjectID(scope.first))) {
             if (only) {
                 return nullptr;
             }
@@ -244,12 +270,36 @@ Ref<SceneService> GameServiceContainer::default_scenes() {
     return scopes.at(game->get_instance_id()).scene_service;
 }
 
+Ref<SceneService> GameServiceContainer::scenes_for(const GameRuntime *game) {
+    if (!on_main_thread() || !game) {
+        return {};
+    }
+    const ObjectID id(game->get_instance_id());
+    return live_game(id) == game ? scopes.at(uint64_t(id)).scene_service : Ref<SceneService>();
+}
+
+bool GameServiceContainer::bind_facade(GameRuntime &game, const Ref<Game> &facade) {
+    if (scenes_for(&game).is_null()) {
+        return false;
+    }
+    auto &scope = scopes.at(game.get_instance_id());
+    if (scope.facade.is_valid()) {
+        return false;
+    }
+    scope.facade = facade;
+    return true;
+}
+
+Ref<Game> GameServiceContainer::facade_for(const GameRuntime *game) {
+    return scenes_for(game).is_valid() ? scopes.at(game->get_instance_id()).facade : Ref<Game>();
+}
+
 Error GameServiceContainer::select_default(GameRuntime *game) {
     if (!on_main_thread()) {
         return ERR_UNAVAILABLE;
     }
     const ObjectID id = game ? ObjectID(game->get_instance_id()) : ObjectID();
-    if (game && live_game(id) != game) {
+    if (game && published_game(id) != game) {
         return ERR_INVALID_PARAMETER;
     }
     primary_game = id;
@@ -261,7 +311,7 @@ GameRuntime *GameServiceContainer::game_for(Node *node) {
         return nullptr;
     }
     for (Node *ancestor = node; ancestor; ancestor = ancestor->get_parent()) {
-        if (GameRuntime *game = live_game(ObjectID(ancestor->get_instance_id()))) {
+        if (GameRuntime *game = published_game(ObjectID(ancestor->get_instance_id()))) {
             return game;
         }
     }

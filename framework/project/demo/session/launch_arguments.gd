@@ -1,7 +1,7 @@
 # Copyright Francesco Di Blasi 2026 - All Rights Reserved
 
 extends RefCounted
-## Parses the demo's command-line launch options and applies its per-process port.
+## Parses the demo's command-line launch options before the game boots.
 
 
 ## Resolve an optional graphical listen or join request from the demo's arguments.
@@ -54,13 +54,3 @@ static func parse(arguments: PackedStringArray) -> Dictionary:
 			else:
 				options.port = port
 	return options
-
-
-## Branch the authored definition for an override. Return zero without multiplayer rules.
-static func configure_port(game: GameRuntime, override_port: int) -> int:
-	var definition := game.definition
-	if definition == null or definition.multiplayer_rules == null:
-		return 0
-	if override_port != 0:
-		game.definition = definition.with_multiplayer(definition.multiplayer_rules.on_port(override_port))
-	return game.definition.multiplayer_rules.port

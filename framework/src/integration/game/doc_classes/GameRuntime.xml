@@ -5,6 +5,47 @@
 		The persistent entry point for starting and coordinating a Crimson game.
 	</brief_description>
 	<methods>
+		<method name="start_offline">
+			<return type="GameOperation" />
+			<description>Opens the coordinated offline lobby and starts the configured world. The operation succeeds when the world is ready. Its result includes an outcome code and a message. Failures appear in the Godot console.</description>
+		</method>
+		<method name="start_match">
+			<return type="GameOperation" />
+			<param index="0" name="world" type="StringName" default="&amp;&quot;&quot;" />
+			<description>Starts a coordinated match from the authority lobby. An empty world uses the definition's starting world. The operation settles after the scene and required participant baselines are ready or an error prevents readiness.</description>
+		</method>
+		<method name="travel_to">
+			<return type="GameOperation" />
+			<param index="0" name="world" type="StringName" />
+			<description>Transitions the authority and admitted participants to a world ID registered in the definition. The terminal result reports an outcome code and message. Preparation failure preserves the current world, while a failure after publication can pause gameplay in recovery.</description>
+		</method>
+		<method name="save_slot">
+			<return type="SaveSlot" />
+			<param index="0" name="profile" type="String" />
+			<param index="1" name="slot" type="String" />
+			<description>Returns a handle scoped to this game for building a save request or selecting a checkpoint to restore. The handle expires when its originating game is unavailable.</description>
+		</method>
+		<method name="save">
+			<return type="GameOperation" />
+			<param index="0" name="profile" type="String" />
+			<param index="1" name="slot" type="String" />
+			<param index="2" name="metadata" type="Dictionary" default="{}" />
+			<param index="3" name="autosave" type="bool" default="false" />
+			<description>Captures a checkpoint from the running coordinated authority. An autosave can supersede an uncaptured autosave for the same slot. The operation reports the outcome code and message, the generation identity when available, and any storage warning.</description>
+		</method>
+		<method name="restore">
+			<return type="GameOperation" />
+			<param index="0" name="profile" type="String" />
+			<param index="1" name="slot" type="String" />
+			<param index="2" name="sequence" type="String" default="&quot;&quot;" />
+			<param index="3" name="generation_id" type="String" default="&quot;&quot;" />
+			<description>Prepares and publishes a checkpoint from the coordinated authority lobby or ready world. Pass both generation selectors for an exact restore or leave both empty to select the latest generation. The operation reports the outcome code and message and includes guidance after restoring a backup generation.</description>
+		</method>
+		<method name="set_projector">
+			<return type="int" enum="Error" />
+			<param index="0" name="projector" type="Callable" />
+			<description>Sets the authority's per-recipient view callback while the game is idle or in its lobby. The callback receives the peer ID, player ID, world epoch, and committed revision. Return a Dictionary with [code]ok[/code] set to [code]true[/code] and a [code]view[/code] Dictionary on success. A rejected projection can include a [code]message[/code] for the local console. Returns [constant ERR_BUSY] outside setup phases.</description>
+		</method>
 		<method name="voice" qualifiers="const">
 			<return type="GameVoice" />
 			<description>Returns the persistent voice service for this exact Steam game attachment. Returns null when no Steam client or dedicated Steam service is configured.</description>
@@ -21,13 +62,20 @@
 	</methods>
 	<members>
 		<member name="definition" type="GameDefinition" setter="set_definition" getter="get_definition">
-			Assign the world, player scene, and multiplayer rules used to start the game. Use the same definition and game node path in the host and guest builds.
+			Assign the world, player scene, and multiplayer rules before starting, hosting, or joining a session. Use matching definitions and game node paths in the host and guest builds.
 		</member>
 		<member name="possession" type="PlayerPossession" setter="" getter="get_possession">
-			Read-only possession service for the current coordinated match. Use it to inspect or change player control assignments through its public API.
+			Read-only reference to the coordinated authority's possession service for inspecting and changing player control assignments. Returns [code]null[/code] in immediate play and on guests.
 		</member>
 		<member name="transactions" type="TransactionCoordinator" setter="" getter="get_transactions">
-			Read-only authority transaction coordinator for registering game stores and committing coordinated match state.
+			Read-only reference to the coordinated authority's transaction coordinator for registering stores and committing match state. Returns [code]null[/code] in immediate play and on guests.
 		</member>
 	</members>
+	<constants>
+		<constant name="IDLE" value="0" enum="Phase">No gameplay session is active.</constant>
+		<constant name="LOBBY" value="1" enum="Phase">The coordinated session is open for admission and player binding before a match begins.</constant>
+		<constant name="TRANSITIONING" value="2" enum="Phase">A world is loading or synchronizing with the required participants.</constant>
+		<constant name="RUNNING" value="3" enum="Phase">The world is ready for gameplay.</constant>
+		<constant name="RECOVERING" value="4" enum="Phase">World synchronization failed after publication. Gameplay commands remain paused while the session recovers.</constant>
+	</constants>
 </class>

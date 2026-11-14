@@ -9,7 +9,7 @@
 	</description>
 	<members>
 		<member name="clip" type="int" setter="set_clip" getter="get_clip" default="1">
-			Clip suggestion policy. Uses [constant SteamTimeline.NONE], [constant SteamTimeline.STANDARD], or [constant SteamTimeline.FEATURED].
+			Choose None to omit a clip suggestion, Standard to let Steam suggest a clip, or Featured to let Steam highlight the suggestion.
 		</member>
 		<member name="description" type="String" setter="set_description" getter="get_description" default="&quot;&quot;">
 			Optional localized description of up to 1024 UTF-8 bytes. Defaults to empty.

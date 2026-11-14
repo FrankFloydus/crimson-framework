@@ -19,7 +19,7 @@ public:
     bool is_ok() const;
     // Return the Godot error describing the terminal outcome.
     godot::Error get_error() const;
-    // Return an optional diagnostic suitable for presentation or logs.
+    // Return the action's diagnostic or the terminal error description.
     godot::String get_message() const;
 
 protected:

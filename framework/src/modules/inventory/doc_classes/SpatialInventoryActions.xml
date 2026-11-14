@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="SpatialInventoryActions" inherits="RefCounted">
+	<brief_description>Moves, transfers, and splits placed items between inventory grids.</brief_description>
+	<description>Set callbacks to apply game rules when an item leaves or enters a grid. Attach a stack adapter when the game owns stack quantities separately from placements.</description>
+	<members>
+		<member name="stack_adapter" type="SpatialInventoryStackAdapter" setter="set_stack_adapter" getter="get_stack_adapter">Optional adapter that describes stack quantities and commits their changes together with grid placements. Defaults to [code]null[/code].</member>
+		<member name="pickup_policy" type="Callable" setter="set_pickup_policy" getter="get_pickup_policy">Optional callback that receives the item ID, unrotated footprint, rotation, origin, and source grid before a pickup. Return an empty String to allow it or a reason to deny it. The default empty callable allows pickups that pass the grid checks.</member>
+		<member name="drop_policy" type="Callable" setter="set_drop_policy" getter="get_drop_policy">Optional callback that receives the item and proposed destination placement, including the action and any swap target. Return an empty String to allow it or a reason to deny it. The default empty callable allows placements that pass the grid checks.</member>
+		<member name="destination_policy" type="Callable" setter="set_destination_policy" getter="get_destination_policy">Optional callback that checks each candidate grid during a quick transfer. It receives the transfer context. Return an empty String to consider the grid or a reason to skip it. The default empty callable considers every eligible grid.</member>
+		<member name="destination_provider" type="Callable" setter="set_destination_provider" getter="get_destination_provider">Optional callback used when a quick transfer receives an empty destination list. It receives the source item context and returns an Array of destination grids in priority order. The default empty callable supplies no destinations.</member>
+		<member name="operation_guard" type="Callable" setter="set_operation_guard" getter="get_operation_guard">Optional callback that receives the source grid and the destination grid, which can be [code]null[/code]. Return [code]true[/code] to allow the operation. The default empty callable applies no additional guard.</member>
+		<member name="allow_rotation" type="bool" setter="set_allow_rotation" getter="get_allow_rotation" default="true">Whether automatic placement may try a rotated footprint when looking for a fit.</member>
+	</members>
+</class>

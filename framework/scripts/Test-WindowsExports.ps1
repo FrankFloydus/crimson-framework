@@ -54,8 +54,9 @@ $project = Join-Path $area 'project'
 $addon = Join-Path $project 'addons/crimson-framework'
 New-Item -ItemType Directory -Path (Join-Path $addon 'bin') -Force | Out-Null
 Write-Host "Windows export evidence: $area"
-Copy-Item -LiteralPath (Join-Path $sourceAddon 'crimson-framework.gdextension') -Destination $addon
-Copy-Item -LiteralPath (Join-Path $sourceAddon 'images') -Destination $addon -Recurse
+$descriptor = Get-Content -Raw -LiteralPath (Join-Path $sourceAddon 'crimson-framework.gdextension')
+$descriptor = [regex]::Replace($descriptor, '(?ms)^\[icons\].*?(?=^\[|\z)', '')
+Set-Content -Encoding utf8NoBOM -LiteralPath (Join-Path $addon 'crimson-framework.gdextension') -Value $descriptor
 foreach ($file in @($crimson, $steam)) {
     $source = Join-Path $sourceAddon "bin/$file"
     if (!(Test-Path -LiteralPath $source -PathType Leaf)) { throw "Build the debug DLL with Steamworks first. Missing $source." }

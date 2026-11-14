@@ -4,6 +4,39 @@
 extends SceneTree
 
 
+## Supplies a policy that can disappear between setup and an inventory operation.
+class InventoryPolicy extends Object:
+	## Allows the requested placement while the policy owner is alive.
+	func allow(_context: Dictionary) -> String:
+		return ""
+
+## Supplies a committed source store to the code-first coordinated pickup fixture.
+class CodeFirstPickupSource extends InventoryPickupSource:
+	## Number of authority match stores registered by this source.
+	var setups := 0
+
+	## Sets up two eligible world items for the one-cell backpack.
+	func _register_stores(stores: TransactionCoordinator) -> Error:
+		setups += 1
+		return stores.register_store("pickup_fixture", {"sword": true, "potion": true}, _prepare_source)
+
+	## Resolves the exact eligible item and describes its transactional consumption.
+	func _resolve_pickup(player_id: String, pickup_id: StringName, stores: TransactionCoordinator) -> InventoryPickup:
+		var item := String(pickup_id)
+		if player_id != "local" or stores.read_store("pickup_fixture").get(item, false) != true:
+			return null
+		return InventoryPickup.take(pickup_id, Vector2i.ONE, "pickup_fixture", {"id": item})
+
+	## Rejects previously consumed sources and prepares removal from the committed world.
+	func _prepare_source(state: Dictionary, operations: Array, _context: Dictionary) -> Dictionary:
+		for operation: Dictionary in operations:
+			var item: String = operation.id
+			if not state.get(item, false):
+				return {"ok": false, "message": "The pickup was already consumed."}
+			state[item] = false
+		return {"ok": true, "state": state}
+
+
 ## Total assertions evaluated across the suite.
 var _checks := 0
 ## Assertions that reported errors and will cause a nonzero exit.
@@ -37,7 +70,11 @@ func _initialize() -> void:
 func _run() -> void:
 	_test_transactions()
 	_test_checkpoint_restore()
+	_test_invalid_transaction_callbacks()
 	_test_inventory_pickup()
+	_test_code_first_inventory_grid()
+	await _test_code_first_pickup()
+	_test_inventory_callback_failures()
 	_test_possession_and_commands()
 	_test_player_binding_generations()
 	print("Crimson Match Runtime: %d checks, %d failures." % [_checks, _failures])
@@ -235,6 +272,25 @@ func _check_checkpoint_order(prepared: Dictionary, _context: Dictionary) -> Dict
 	return {"ok": not prepared.has("a") or not prepared.has("b") or prepared["a"]["count"] < prepared["b"]["count"]}
 
 
+## Checks malformed restore and aggregate replies identify the failed callback and preserve state.
+func _test_invalid_transaction_callbacks() -> void:
+	var coordinator := TransactionCoordinator.new()
+	var bad_restore := func(_state: Dictionary, _context: Dictionary) -> int: return 0
+	var bad_validator := func(_state: Dictionary, _context: Dictionary) -> Dictionary: return {"ok": 1}
+	_expect(coordinator.register_store("count", {"count": 1}, _prepare_b, bad_restore) == OK
+		and coordinator.register_validator("bounds", PackedStringArray(["count"]), bad_validator) == OK,
+		"Register callback fixtures whose replies violate their contracts.")
+	var restore := coordinator.prepare_restore({"count": {"count": 3}})
+	_expect(restore.code == "restore_validation_failed" and "store count" in restore.message and "Dictionary" in restore.message,
+		"Identify an invalid restore callback reply and its store.")
+	var transaction := coordinator.begin()
+	_expect(transaction.add_change("count", {"add": 2}, 0) == OK, "Stage a change for the malformed validator.")
+	var commit := coordinator.commit(transaction)
+	_expect(commit.code == "validation_failed" and "Validator bounds" in commit.message and "boolean ok field" in commit.message
+		and coordinator.get_revision() == 0 and coordinator.read_store("count") == {"count": 1},
+		"Identify the validator's invalid field while preserving the live store and revision.")
+
+
 ## Checks atomic pickups using the native grid and a world pickup store.
 func _test_inventory_pickup() -> void:
 	var coordinator := TransactionCoordinator.new()
@@ -267,6 +323,136 @@ func _test_inventory_pickup() -> void:
 		_expect(observed[0]["revision"] == 1 and not observed[0]["world"]["sword"] and _inventory_has(observed[0]["bag"], "sword"),
 			"The pickup observer sees both changes at the same revision.")
 	coordinator.committed.disconnect(listener)
+
+
+## Checks code-first grid placement, rejection, and detached typed item reads.
+func _test_code_first_inventory_grid() -> void:
+	var bag := Inventory.grid(Vector2i(2, 1))
+	_expect(bag != null and bag.add(&"medkit", Vector2i.ONE) == OK,
+		"Create and add to a configured standalone bag in two calls.")
+	if bag == null:
+		return
+	var captured: Array[InventoryItemView] = bag.items()
+	_expect(captured.size() == 1 and captured[0].id == &"medkit"
+		and captured[0].origin == Vector2i.ZERO and captured[0].footprint == Vector2i.ONE,
+		"Read typed detached placement fields after the first-fit add.")
+	_expect(bag.try_move(&"medkit", Vector2i(1, 0), false) == OK
+		and bag.item_at(Vector2i.ZERO) == null and bag.item_at(Vector2i(1, 0)).id == &"medkit",
+		"Look up the current placement by occupied cell.")
+	_expect(captured.size() == 1 and captured[0].origin == Vector2i.ZERO,
+		"A typed placement snapshot remains detached after its item moves.")
+	_expect(bag.add(&"medkit", Vector2i.ONE) == ERR_ALREADY_EXISTS
+		and bag.add(&"potion", Vector2i.ONE) == OK and bag.add(&"sword", Vector2i.ONE) == ERR_CANT_CREATE,
+		"Reject duplicates and a full grid without replacing existing placements.")
+
+
+## Checks code-first pickup, rollback, and match-scoped backpack retirement.
+func _test_code_first_pickup() -> void:
+	var owner := Node.new()
+	root.add_child(owner)
+	var source := CodeFirstPickupSource.new()
+	var world := WorldDefinition.at(&"pickup", "res://tests/match_runtime/inventory_world.tscn")
+	var game := Game.campaign(world).inventory(InventoryConfig.backpack(Vector2i.ONE).pickups(source)).boot(owner)
+	_expect(game.boot_result().ok, "Boot a coordinated game with an opted-in pickup source.")
+	if not game.boot_result().ok:
+		owner.queue_free()
+		return
+	var started: GameResult = await game.play()
+	_expect(started.ok and source.setups == 1, "Register the authority pickup store once and start the world.")
+	if not started.ok:
+		owner.queue_free()
+		return
+	var bag := game.inventory().backpack()
+	_expect(bag != null, "Resolve the current local player's coordinated backpack.")
+	if bag == null:
+		owner.queue_free()
+		return
+	var taken: InventoryResult = await bag.pick_up(&"sword")
+	var blocked: InventoryResult = await bag.pick_up(&"potion")
+	var repeated: InventoryResult = await bag.pick_up(&"sword")
+	var stores := game.transactions()
+	_expect(taken.ok and taken.item_id == &"sword" and taken.origin == Vector2i.ZERO and taken.revision == 1,
+		"Commit the source and placement together with a typed receipt.")
+	_expect(not blocked.ok and blocked.code == "InventoryFull" and not repeated.ok
+		and stores.read_store("pickup_fixture") == {"sword": false, "potion": true} and stores.get_revision() == 1,
+		"A full bag preserves the source and a consumed pickup cannot commit twice.")
+	if taken.ok:
+		var snapshot: Dictionary = stores.capture_snapshot().stores
+		snapshot["crimson.inventory"]["local"]["grid_size"] = [2, 1]
+		var restore := stores.prepare_restore(snapshot)
+		_expect(not restore.ok and restore.code == "restore_validation_failed" and stores.get_revision() == 1,
+			"Reject a saved backpack with mismatched dimensions before publishing any state.")
+	var left: GameResult = await game.leave()
+	var restarted: GameResult = await game.play()
+	var expired: InventoryResult = await bag.pick_up(&"sword")
+	_expect(left.ok and restarted.ok and source.setups == 2 and not expired.ok
+		and game.transactions().read_store("pickup_fixture") == {"sword": true, "potion": true},
+		"Reset the source store and retire old backpack handles when starting a new match.")
+	owner.queue_free()
+
+
+## Checks expired inventory policies, unavailable placement commits, and wallet rollback.
+func _test_inventory_callback_failures() -> void:
+	var source := SpatialInventory.new()
+	var destination := SpatialInventory.new()
+	var tray := SpatialInventoryStaging.new()
+	_expect(source.configure(Vector2i(3, 1)) == OK and destination.configure(Vector2i(3, 1)) == OK
+		and tray.configure(Vector2i.ONE) == OK and source.try_place(&"item", Vector2i.ONE, Vector2i(2, 0)) == OK,
+		"Set up placements for expired inventory callback checks.")
+	var policy_owner := InventoryPolicy.new()
+	var policy := Callable(policy_owner, &"allow")
+	var sorter := SpatialInventorySorter.new()
+	var preview := sorter.preview(source, [], true, policy)
+	_expect(preview.error == OK and preview.get("changed_count") == 1, "Preview a sort while the policy owner is alive.")
+	policy_owner.free()
+	var actions := SpatialInventoryActions.new()
+	actions.pickup_policy = policy
+	var move := actions.move_item(source, &"item", destination, Vector2i.ZERO)
+	_expect(move.error == ERR_UNAUTHORIZED and "pickup policy is unavailable" in move.reason
+		and destination.get_placement(&"item").is_empty(), "An expired pickup policy cannot authorize a move.")
+	actions.pickup_policy = Callable()
+	actions.destination_provider = policy
+	var transfer := actions.quick_transfer(source, &"item")
+	_expect(transfer.error == ERR_INVALID_PARAMETER and "destination provider is unavailable" in transfer.reason,
+		"A vanished destination provider reports its own failure.")
+	var guard_calls: Array[int] = [0]
+	actions.operation_guard = func(_source: SpatialInventory, target: SpatialInventory) -> Variant:
+		guard_calls[0] += 1
+		return true if target == null else "invalid"
+	var guarded := actions.quick_transfer(source, &"item", [destination])
+	_expect(guarded.error == ERR_BUSY and "operation guard must return a bool" in guarded.reason and guard_calls[0] == 2,
+		"A malformed destination guard stops the transfer with a specific reason.")
+	_expect(sorter.apply_preview() == ERR_UNAUTHORIZED and source.get_placement(&"item").origin == Vector2i(2, 0),
+		"An expired sorter policy cannot publish the reviewed move.")
+	var sort_calls: Array[int] = [0]
+	var bad_sort_policy := func(_context: Dictionary) -> bool:
+		sort_calls[0] += 1
+		return false
+	_expect(sorter.preview(source, [], true, bad_sort_policy).error == ERR_CANT_CREATE and sort_calls[0] == 1,
+		"A malformed sort policy stops at the first invalid result without retrying candidates.")
+	_expect(SpatialInventoryActions.find_items(source, policy).is_empty(), "An expired item filter cannot match the entire grid.")
+	_expect(tray.stage_from(source, &"item", Vector2i.ZERO) == OK, "Stage the item for a checked return.")
+	tray.batch_policy = policy
+	_expect(tray.restore_all() == ERR_UNAUTHORIZED and "batch policy is unavailable" in tray.last_reason
+		and not tray.inventory.get_placement(&"item").is_empty() and source.get_placement(&"item").is_empty(),
+		"A missing batch policy leaves the staged item in place.")
+
+	var adapter := SpatialInventoryStackAdapter.new()
+	var edits_applied: Array[bool] = [false]
+	adapter.describe_stack = func(_id: StringName) -> Dictionary: return {"key": &"ore", "quantity": 1, "max_quantity": 2}
+	adapter.apply_changes = func(_rows: Array, _placement: Callable) -> Error:
+		edits_applied[0] = true
+		return OK
+	var merge := adapter.plan_merge(&"item", &"receiver")
+	_expect(merge.error == OK and adapter.commit_merge(merge, policy) == ERR_INVALID_PARAMETER and not edits_applied[0],
+		"An unavailable placement commit prevents paired host stack edits.")
+
+	var wallet := SpatialInventoryWallet.new()
+	_expect(wallet.set_balance(1, &"gold", 7) == OK, "Initialize a balance for rollback.")
+	var bad_commit := func() -> bool: return false
+	var rows := [{"actor": 1, "currency": &"gold", "before": 7, "after": 0}]
+	_expect(wallet.apply_balance_changes(rows, bad_commit) == ERR_INVALID_DATA and wallet.get_balance(1, &"gold") == 7,
+		"A malformed wallet commit result restores the original balance.")
 
 
 ## Stages removal of each requested pickup and rejects already consumed items.
@@ -338,13 +524,20 @@ func _test_possession_and_commands() -> void:
 	var current := _intent("move", 2, "summon", possession.get_revision("alice"))
 	_expect(_ok(_router.submit("alice", current)), "A stale pre-dispatch intent leaves its sequence available.")
 	var denied := _intent("move", 3, "summon", possession.get_revision("alice"), {"deny": true})
-	_expect(not _ok(_router.submit("alice", denied)) and _router.submit("alice", denied).get("code") == "Replay",
+	var denial := _router.submit("alice", denied)
+	_expect(denial.code == "Rejected" and "without a reason" in denial.message
+		and _router.submit("alice", denied).get("code") == "Replay",
 		"A dispatched command rejection still consumes the sequence.")
 	_expect(_router.advance_world(5) == OK and _router.set_accepting_commands(true) == OK, "Advance to a new world and reopen its command gate.")
 	_expect(_router.submit("alice", _intent("move", 4, "summon", possession.get_revision("alice"))).get("code") == "StaleWorld",
 		"Commands for the previous world are rejected after travel.")
 	_expect(_ok(_router.submit("alice", _intent("move", 4, "summon", possession.get_revision("alice"), {}, 5))),
 		"The current world accepts valid commands.")
+	var bad_reply := func(_player: String, _command: Dictionary) -> Dictionary: return {"ok": "yes"}
+	_expect(_router.register_handler("bad_reply", bad_reply) == OK, "Register a handler with an invalid result fixture.")
+	var malformed_reply := _router.submit("alice", _intent("bad_reply", 5, "", 0, {}, 5))
+	_expect(malformed_reply.code == "InvalidHandlerResult" and "bad_reply" in malformed_reply.message
+		and "boolean ok field" in malformed_reply.message, "Name the handler and its invalid field in a malformed reply.")
 	_expect(_commands.size() == 5, "Exactly the valid, dispatched commands reached gameplay.")
 	_router = null
 	_test_possessed_character_despawn(coordinator, possession)

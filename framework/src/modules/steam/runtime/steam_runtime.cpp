@@ -52,6 +52,18 @@ bool client_init_attempted = false;
 // Identifies the GDExtension module without consulting the process working directory.
 const char framework_module_anchor = 0;
 
+// Preserve Steam's bounded startup detail and keep it readable as one console line.
+String initialization_detail(SteamErrMsg &message) {
+    message[sizeof(message) - 1] = '\0';
+    for (char *character = message; *character; ++character) {
+        const auto byte = static_cast<unsigned char>(*character);
+        if (byte < ' ' || byte == 0x7f) {
+            *character = ' ';
+        }
+    }
+    return String::utf8(message).strip_edges();
+}
+
 } // namespace
 
 std::wstring SteamRuntime::packaged_library_path() {
@@ -86,7 +98,8 @@ std::shared_ptr<SteamRuntime> SteamRuntime::acquire(uint32_t expected_app_id, St
             return {};
         }
         if (expected_app_id != 0 && active->app_id != expected_app_id) {
-            error = "The active Steam client API uses a different AppID.";
+            error = "The active Steam client API uses AppID " + String::num_uint64(active->app_id) +
+                    String(". This scope requested AppID ") + String::num_uint64(expected_app_id) + String(".");
             return {};
         }
         error = String();
@@ -138,7 +151,7 @@ void SteamRuntime::prepare_overlay_from_launch() {
         const int64_t app_id = value.to_int();
         if (selected_app_id != 0 || value.length() > 10 || !value.is_valid_int() || value.begins_with("+") ||
                 app_id < 1 || app_id > (std::numeric_limits<uint32_t>::max)()) {
-            UtilityFunctions::printerr("Crimson Steam overlay startup requires one positive AppID.");
+            UtilityFunctions::printerr("[Crimson] Steam overlay startup requires one positive AppID.");
             return;
         }
         selected_app_id = static_cast<uint32_t>(app_id);
@@ -152,7 +165,7 @@ void SteamRuntime::prepare_overlay_from_launch() {
     if (overlay_runtime) {
         UtilityFunctions::print("CRIMSON_STEAM_OVERLAY_BOOTSTRAP_READY");
     } else {
-        UtilityFunctions::printerr("Crimson Steam overlay startup failed. ", error);
+        UtilityFunctions::printerr("[Crimson] Steam overlay startup failed. ", error);
     }
 }
 
@@ -202,6 +215,18 @@ void SteamRuntime::fail_ipc(const IPCFailure_t &failure) {
         if (const auto scope = client.scope.lock()) {
             scope->active = false;
         }
+    }
+    switch (failure.m_eFailureType) {
+        case IPCFailure_t::k_EFailureFlushedCallbackQueue:
+            UtilityFunctions::printerr("[Crimson] Steam flushed its callback queue. The failed client scope is closing.");
+            break;
+        case IPCFailure_t::k_EFailurePipeFail:
+            UtilityFunctions::printerr("[Crimson] Steam lost its local callback pipe. The failed client scope is closing.");
+            break;
+        default:
+            UtilityFunctions::printerr("[Crimson] Steam reported a fatal client IPC failure of type ",
+                    static_cast<int64_t>(failure.m_eFailureType), ". The failed client scope is closing.");
+            break;
     }
     // Game observers retire their native routes and tickets while their old pipe still exists.
     dispatch(IPCFailure_t::k_iCallback, &failure, sizeof(failure));
@@ -276,12 +301,16 @@ bool SteamRuntime::claim_html_paint(HHTMLBrowser handle) {
 
 bool SteamRuntime::initialize(uint32_t expected_app_id, String &error) {
     const std::wstring filename = packaged_library_path();
-    if (!filename.empty()) {
-        library = LoadLibraryExW(filename.c_str(), nullptr,
-                LOAD_LIBRARY_SEARCH_DLL_LOAD_DIR | LOAD_LIBRARY_SEARCH_DEFAULT_DIRS);
+    if (filename.empty()) {
+        error = "Crimson could not locate its extension DLL to resolve the packaged Steam runtime.";
+        return false;
     }
+    library = LoadLibraryExW(filename.c_str(), nullptr,
+            LOAD_LIBRARY_SEARCH_DLL_LOAD_DIR | LOAD_LIBRARY_SEARCH_DEFAULT_DIRS);
     if (!library) {
-        error = "Install the official Steam runtime beside the Crimson DLL.";
+        const DWORD load_error = GetLastError();
+        error = "Could not load steam_api64.dll beside the Crimson DLL (Windows error " +
+                String::num_uint64(load_error) + String("). Check the packaged Steam runtime and its dependencies.");
         return false;
     }
     const auto init = symbol<decltype(&SteamAPI_InitFlat)>("SteamAPI_InitFlat");
@@ -304,8 +333,19 @@ bool SteamRuntime::initialize(uint32_t expected_app_id, String &error) {
     }
     SteamErrMsg initialization_error{};
     client_init_attempted = true;
-    if (init(&initialization_error) != k_ESteamAPIInitResult_OK) {
-        error = "Steam could not initialize. Open a signed-in Steam client and check the game's AppID.";
+    const ESteamAPIInitResult status = init(&initialization_error);
+    if (status != k_ESteamAPIInitResult_OK) {
+        const String detail = initialization_detail(initialization_error);
+        if (!detail.is_empty()) {
+            error = "Steam could not initialize. " + detail;
+        } else if (status == k_ESteamAPIInitResult_NoSteamClient) {
+            error = "Steam could not connect to the local client. Open Steam and sign in.";
+        } else if (status == k_ESteamAPIInitResult_VersionMismatch) {
+            error = "The local Steam client is out of date. Update it and restart the game.";
+        } else {
+            error = "Steam could not initialize (Steam API status " + String::num_int64(status) +
+                    String("). Check the game's AppID and local Steam login.");
+        }
         return false;
     }
     initialized = true;
@@ -318,9 +358,17 @@ bool SteamRuntime::initialize(uint32_t expected_app_id, String &error) {
     user_id = get_user(user);
     app_id = get_app(utils);
     const CSteamID identity(user_id);
-    if (!identity.IsValid() || identity.GetEAccountType() != k_EAccountTypeIndividual || app_id == 0 ||
-            (expected_app_id != 0 && app_id != expected_app_id)) {
-        error = "Steam returned an unexpected AppID or account type.";
+    if (!identity.IsValid() || identity.GetEAccountType() != k_EAccountTypeIndividual) {
+        error = "Steam did not return a valid individual account. Sign in to a Steam account and retry.";
+        return false;
+    }
+    if (app_id == 0) {
+        error = "Steam did not identify the game's AppID. Check the Steam launch configuration.";
+        return false;
+    }
+    if (expected_app_id != 0 && app_id != expected_app_id) {
+        error = "Steam started with AppID " + String::num_uint64(app_id) +
+                String(". This scope requested AppID ") + String::num_uint64(expected_app_id) + String(".");
         return false;
     }
     pipe = get_pipe();

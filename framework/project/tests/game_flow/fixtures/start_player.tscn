@@ -1,0 +1,9 @@
+; Copyright Francesco Di Blasi 2026 - All Rights Reserved
+
+[gd_scene format=3]
+
+[node name="TestPlayer" type="Node3D"]
+
+[node name="Camera3D" type="Camera3D" parent="."]
+
+[node name="Visuals" type="Node3D" parent="." groups=["crimson_local_hidden"]]

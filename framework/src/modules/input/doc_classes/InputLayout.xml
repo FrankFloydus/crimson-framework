@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="InputLayout" inherits="Resource">
+	<brief_description>Editable action defaults for a local Controls scope.</brief_description>
+	<description>Save this resource or build one in code, then supply it to [method Controls.boot]. Runtime controls snapshot the defaults and apply local rebinding separately.</description>
+	<methods>
+		<method name="add_button">
+			<return type="InputLayout" />
+			<param index="0" name="id" type="StringName" />
+			<param index="1" name="key" type="int" enum="Key" />
+			<param index="2" name="button" type="int" enum="JoyButton" default="-1" />
+			<description>Appends a button with the specified physical keyboard location and optional gamepad button. Pass [constant KEY_NONE] to omit the key. Returns this layout.</description>
+		</method>
+		<method name="add_mouse_motion">
+			<return type="InputLayout" />
+			<param index="0" name="id" type="StringName" />
+			<description>Appends an action for captured relative mouse motion in unscaled screen pixels. Returns this layout.</description>
+		</method>
+		<method name="add_move">
+			<return type="InputLayout" />
+			<param index="0" name="id" type="StringName" />
+			<param index="1" name="deadzone" type="float" default="0.18" />
+			<description>Appends a normalized movement vector with physical WASD and left-stick bindings. Negative Y is forward. Stable keyboard slot suffixes are [code]/key_left[/code], [code]/key_right[/code], [code]/key_up[/code], and [code]/key_down[/code]. Returns this layout.</description>
+		</method>
+		<method name="add_right_stick">
+			<return type="InputLayout" />
+			<param index="0" name="id" type="StringName" />
+			<param index="1" name="deadzone" type="float" default="0.18" />
+			<description>Appends a normalized vector with four right-stick direction slots. Returns this layout.</description>
+		</method>
+		<method name="create" qualifiers="static">
+			<return type="InputLayout" />
+			<description>Returns an empty, independently editable draft.</description>
+		</method>
+		<method name="has_action_kind" qualifiers="const">
+			<return type="bool" />
+			<param index="0" name="id" type="StringName" />
+			<param index="1" name="kind" type="int" enum="InputAction.ValueKind" />
+			<description>Checks that the authored layout contains this action ID with the requested value type.</description>
+		</method>
+		<method name="resolved_actions" qualifiers="const">
+			<return type="InputAction[]" />
+			<description>Returns the inline compatibility actions followed by the actions declared through map assets. Map entries appear as resolved actions with their logical ID, map ID, and authored binding references. Edit the original map asset to change its declarations.</description>
+		</method>
+		<method name="validate" qualifiers="const">
+			<return type="int" enum="Error" />
+			<description>Returns [constant OK] when IDs, kinds, thresholds, events, and the optional release action are valid. Duplicate IDs return [constant ERR_ALREADY_EXISTS]. Invalid values return [constant ERR_INVALID_PARAMETER]. An unknown or nonbutton release action returns [constant ERR_DOES_NOT_EXIST].</description>
+		</method>
+		<method name="with_map">
+			<return type="InputLayout" />
+			<param index="0" name="map" type="InputActionMap" />
+			<description>Appends a standalone map asset and returns this layout. Call [method validate] to check the draft.</description>
+		</method>
+	</methods>
+	<members>
+		<member name="actions" type="InputAction[]" setter="set_actions" getter="get_actions" default="[]">Inline actions retained for earlier layouts and existing code-first helpers. Use [member maps] to compose independently editable action map assets.</member>
+		<member name="click_to_capture" type="bool" setter="set_click_to_capture" getter="get_click_to_capture" default="false">An unhandled fresh left click captures a released desktop pointer while the controls are active. The capture click and its release are consumed.</member>
+		<member name="maps" type="InputActionMap[]" setter="set_maps" getter="get_maps" default="[]">Standalone maps whose actions this layout supplies to a local Controls scope. Map IDs, logical action IDs, and binding slot IDs each have their own unique namespace.</member>
+		<member name="release_action" type="StringName" setter="set_release_action" getter="get_release_action" default="&amp;&quot;&quot;">Optional button action that immediately releases a captured pointer. Leave empty to let the game or a visible modal control pointer release.</member>
+	</members>
+</class>

@@ -19,12 +19,17 @@ bool valid_id(const String &id) {
 }
 
 // Build the result returned when a command cannot reach its handler.
-Dictionary rejected(const char *code, const char *message) {
+Dictionary rejected(const char *code, const String &message) {
     Dictionary result;
     result["ok"] = false;
     result["code"] = code;
     result["message"] = message;
     return result;
+}
+
+// Identify the handler and its violated callback contract without echoing the command payload.
+Dictionary invalid_handler_result(const String &command_type, const String &reason) {
+    return rejected("InvalidHandlerResult", String("The handler for '") + command_type + "' " + reason);
 }
 
 // Validated routing fields extracted from an incoming command.
@@ -238,7 +243,7 @@ Dictionary CommandRouter::submit(const String &player_id, const Dictionary &raw_
     }
     const Callable handler = entry["callback"];
     if (!handler.is_valid()) {
-        return rejected("HandlerUnavailable", "The registered handler is no longer available.");
+        return rejected("HandlerUnavailable", String("The registered handler for '") + intent.command_type + "' is no longer available.");
     }
 
     // Consume the sequence before running game code, including when the handler rejects the command.
@@ -247,16 +252,27 @@ Dictionary CommandRouter::submit(const String &player_id, const Dictionary &raw_
     player_sequences[player_id] = intent.sequence;
     const Variant raw_result = handler.call(player_id, dispatched_intent);
     Dictionary result;
-    if (raw_result.get_type() != Variant::DICTIONARY || !copy_runtime_dto(raw_result, result) ||
-            result.get("ok", Variant()).get_type() != Variant::BOOL ||
-            result.get("code", "").get_type() != Variant::STRING ||
-            result.get("message", "").get_type() != Variant::STRING) {
-        return rejected("InvalidHandlerResult", "The handler must return plain data with a boolean ok field.");
+    if (raw_result.get_type() != Variant::DICTIONARY) {
+        return invalid_handler_result(intent.command_type, "must return a Dictionary.");
     }
-    if (!result.has("code")) {
-        result["code"] = bool(result["ok"]) ? "Ok" : "Rejected";
+    if (!copy_runtime_dto(raw_result, result)) {
+        return invalid_handler_result(intent.command_type, "must return bounded plain data.");
     }
-    if (!result.has("message")) {
+    if (result.get("ok", Variant()).get_type() != Variant::BOOL) {
+        return invalid_handler_result(intent.command_type, "must return a boolean ok field.");
+    }
+    const Variant code = result.get("code", "");
+    const Variant message = result.get("message", "");
+    if (code.get_type() != Variant::STRING || message.get_type() != Variant::STRING) {
+        return invalid_handler_result(intent.command_type, "must return Strings for code and message when provided.");
+    }
+    const bool ok = result["ok"];
+    if (!result.has("code") || (!ok && String(code).strip_edges().is_empty())) {
+        result["code"] = ok ? "Ok" : "Rejected";
+    }
+    if (!ok && String(message).strip_edges().is_empty()) {
+        result["message"] = String("The handler for '") + intent.command_type + "' rejected the command without a reason.";
+    } else if (!result.has("message")) {
         result["message"] = "";
     }
     return result;

@@ -11,7 +11,7 @@ namespace crimson::save {
 
 void initialize(godot::ModuleInitializationLevel level) {
     if (level == godot::MODULE_INITIALIZATION_LEVEL_SCENE) {
-        godot::ClassDB::register_class<checkpoint::SaveCoordinator>();
+        godot::ClassDB::register_class<checkpoint::SaveCoordinator>(true);
         godot::ClassDB::register_class<SavePresentation>();
     }
 }

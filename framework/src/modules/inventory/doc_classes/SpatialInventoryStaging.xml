@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="SpatialInventoryStaging" inherits="RefCounted">
+	<brief_description>Holds items temporarily and remembers their original placements.</brief_description>
+	<description>A tray can return all its staged items as one checked operation. If the return fails, the tray retains the items.</description>
+	<members>
+		<member name="pickup_policy" type="Callable" setter="set_pickup_policy" getter="get_pickup_policy">Optional callback that receives the item and source placement before an item is picked up. Return an empty String to allow the pickup or a reason to deny it. Defaults to an empty callable.</member>
+		<member name="drop_policy" type="Callable" setter="set_drop_policy" getter="get_drop_policy">Optional callback that receives the item and proposed destination placement, including a placement in its original grid during restoration. Return an empty String to allow it or a reason to deny it. Defaults to an empty callable.</member>
+		<member name="batch_policy" type="Callable" setter="set_batch_policy" getter="get_batch_policy">Optional callback that receives all proposed placement changes before the tray restores its contents. Return an empty String to allow the batch or a reason to deny it. Defaults to an empty callable.</member>
+		<member name="inventory" type="SpatialInventory" getter="get_inventory">The tray's own grid. It exists before configuration. Use staging operations to move items so the tray can track their original placements.</member>
+		<member name="last_reason" type="String" getter="get_last_reason" default="&quot;&quot;">Reason reported by the most recent failed staging operation. An operation that succeeds clears the reason.</member>
+	</members>
+</class>

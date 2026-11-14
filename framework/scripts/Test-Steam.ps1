@@ -289,7 +289,6 @@ try {
         $addon = Join-Path $project 'addons/crimson-framework'
         $binary = "crimson_framework.windows.$variant.x86_64.dll"
         $bin = (New-Item -ItemType Directory -Path (Join-Path $addon 'bin') -Force).FullName
-        Copy-Item -LiteralPath (Join-Path $sourceAddon 'images') -Destination $addon -Recurse
         Copy-Item -LiteralPath (Join-Path $binarySource $binary) -Destination $bin
         if ($steamAppId) {
             Copy-Item -LiteralPath (Join-Path $binarySource 'steam_api64.dll') -Destination $bin
@@ -299,6 +298,7 @@ try {
         }
         $descriptor = Get-Content -LiteralPath (Join-Path $sourceAddon 'crimson-framework.gdextension') -Raw
         if ($variant -eq 'template_release') { $descriptor = $descriptor.Replace('.template_debug.', '.template_release.') }
+        $descriptor = [regex]::Replace($descriptor, '(?ms)^\[icons\].*?(?=^\[|\z)', '')
         Set-Content -LiteralPath (Join-Path $addon 'crimson-framework.gdextension') -Value $descriptor -Encoding utf8NoBOM
         @'
 config_version=5
@@ -306,9 +306,15 @@ config_version=5
 config/name="Crimson Steam Client Fixture"
 '@ | Set-Content -LiteralPath (Join-Path $project 'project.godot') -Encoding utf8NoBOM
         Copy-Item -LiteralPath (Join-Path $fixtureDirectory $fixture) -Destination $project
+        if ($Case -in @('parties', 'messages')) {
+            $onlineFixtures = (New-Item -ItemType Directory -Path (Join-Path $project 'tests/online')).FullName
+            Copy-Item -LiteralPath (Join-Path $fixtureDirectory 'steam_game_fixture.gd') -Destination $onlineFixtures
+        }
 
         Write-Host "Testing $variant ($Mode)"
-        Invoke-SteamFixture -Directory $directory -LogName 'import' -Arguments @('--editor', '--import', '--frame-delay', '1000')
+        $godotMetadata = Join-Path $project '.godot'
+        New-Item -ItemType Directory -Path $godotMetadata | Out-Null
+        Set-Content -LiteralPath (Join-Path $godotMetadata 'extension_list.cfg') -Encoding utf8NoBOM -Value 'res://addons/crimson-framework/crimson-framework.gdextension'
         $marker = 'CRIMSON_STEAM_{0}_PASSED {1}' -f $Case.ToUpperInvariant(), $Mode
         $arguments = @('--script', "res://$fixture", '--') + $fixtureArguments
         $rendered = $Case -eq 'achievement_preview' -or

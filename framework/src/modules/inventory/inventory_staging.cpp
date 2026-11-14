@@ -194,7 +194,10 @@ Error SpatialInventoryStaging::restore_checked() {
             return report(ERR_UNAUTHORIZED, denial);
         }
     }
-    if (batch_policy.is_valid()) {
+    if (!batch_policy.is_null()) {
+        if (!batch_policy.is_valid()) {
+            return report(ERR_UNAUTHORIZED, "The staging batch policy is unavailable.");
+        }
         const Variant decision = batch_policy.call(changes.duplicate(true));
         if (decision.get_type() != Variant::STRING) {
             return report(ERR_UNAUTHORIZED, "Batch policy must return a String.");
@@ -216,7 +219,10 @@ Error SpatialInventoryStaging::restore_checked() {
 }
 
 String SpatialInventoryStaging::restore_denial(const Dictionary &placement, const Dictionary &destination_row) const {
-    if (pickup_policy.is_valid()) {
+    if (!pickup_policy.is_null()) {
+        if (!pickup_policy.is_valid()) {
+            return "The pickup policy is unavailable.";
+        }
         const Variant pickup = pickup_policy.call(detail::make_model_dto(
                 "id", placement["id"], "footprint", placement["footprint"], "rotated", placement["rotated"],
                 "source", inventory, "origin", placement["origin"]));
@@ -227,7 +233,10 @@ String SpatialInventoryStaging::restore_denial(const Dictionary &placement, cons
             return pickup;
         }
     }
-    if (drop_policy.is_valid()) {
+    if (!drop_policy.is_null()) {
+        if (!drop_policy.is_valid()) {
+            return "The drop policy is unavailable.";
+        }
         const Dictionary original = destination_row["after"];
         const Variant drop = drop_policy.call(detail::make_model_dto(
                 "id", original["id"], "footprint", original["footprint"], "rotated", original["rotated"],

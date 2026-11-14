@@ -165,7 +165,7 @@ private:
     bool auth_failed = false;
 
     // Find the multiplayer scope and verify that the session can claim it.
-    godot::Error get_available_api(godot::Ref<godot::MultiplayerAPI> &api, bool networked) const;
+    godot::Error get_available_api(godot::Ref<godot::MultiplayerAPI> &api, bool networked, const char *&detail) const;
     // Invoke the selected factory and verify peer role and scope ownership before installation.
     godot::Error open_network_transport(State role, uint64_t timeout_ms, size_t max_remote, bool accepting,
             const std::function<godot::Ref<SessionTransportResult>(SessionTransport &)> &factory);

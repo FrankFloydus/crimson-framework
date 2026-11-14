@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="InventoryItemView" inherits="RefCounted">
+	<brief_description>Detached, read-only placement geometry for one item instance.</brief_description>
+	<methods>
+		<method name="get_id" qualifiers="const">
+			<return type="StringName" />
+			<description>Stable item instance ID supplied by the game.</description>
+		</method>
+		<method name="get_footprint" qualifiers="const">
+			<return type="Vector2i" />
+			<description>Unrotated width and height in cells.</description>
+		</method>
+		<method name="get_origin" qualifiers="const">
+			<return type="Vector2i" />
+			<description>Zero-based top-left cell in the captured grid.</description>
+		</method>
+		<method name="is_rotated" qualifiers="const">
+			<return type="bool" />
+			<description>Whether the placed footprint swaps its axes. Defaults to [code]false[/code].</description>
+		</method>
+	</methods>
+	<members>
+		<member name="id" type="StringName" getter="get_id">Stable item instance ID supplied by the game.</member>
+		<member name="footprint" type="Vector2i" getter="get_footprint">Unrotated width and height in cells.</member>
+		<member name="origin" type="Vector2i" getter="get_origin">Zero-based top-left cell in the captured grid.</member>
+		<member name="rotated" type="bool" getter="is_rotated">Whether the placed footprint swaps its axes. Defaults to [code]false[/code].</member>
+	</members>
+</class>

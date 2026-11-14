@@ -1,0 +1,34 @@
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="WorldDefinition" inherits="Resource">
+	<brief_description>Durable world identity with a deferred scene asset.</brief_description>
+	<methods>
+		<method name="at" qualifiers="static">
+			<return type="WorldDefinition" />
+			<param index="0" name="id" type="StringName" />
+			<param index="1" name="path" type="String" />
+			<description>Make a destination with an explicit stable ID and res:// path.</description>
+		</method>
+		<method name="get_id">
+			<return type="StringName" />
+			<description>Read the durable world ID.</description>
+		</method>
+		<method name="set_id">
+			<return type="void" />
+			<param index="0" name="id" type="StringName" />
+			<description>Set the ID for future game configurations.</description>
+		</method>
+		<method name="get_path">
+			<return type="String" />
+			<description>Read the scene locator.</description>
+		</method>
+		<method name="set_path">
+			<return type="void" />
+			<param index="0" name="path" type="String" />
+			<description>Set the scene locator for future configurations.</description>
+		</method>
+	</methods>
+	<members>
+		<member name="id" type="StringName" setter="set_id" getter="get_id">Stable world key used by travel and checkpoints. Supply a nonempty key before registering the world. Keep the key when moving the scene.</member>
+		<member name="path" type="String" setter="set_path" getter="get_path">Local [PackedScene] asset path under [code]res://[/code]. Select a [code].tscn[/code] or [code].scn[/code] file and include it in exported builds.</member>
+	</members>
+</class>

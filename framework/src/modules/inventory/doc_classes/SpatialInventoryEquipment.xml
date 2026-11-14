@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="SpatialInventoryEquipment" inherits="RefCounted">
+	<brief_description>Moves items between a backpack and named equipment slots.</brief_description>
+	<description>An item can occupy multiple slots while keeping one equipment record. Equipping and returning displaced items apply together.</description>
+	<members>
+		<member name="slot_requirements" type="Callable" setter="set_slot_requirements" getter="get_slot_requirements">Optional callback that receives an item ID and the requested slot. Return an Array of distinct configured slot names that includes the requested slot, or a String or StringName explaining why the item cannot be equipped. The default empty callable uses just the requested slot.</member>
+		<member name="move_policy" type="Callable" setter="set_move_policy" getter="get_move_policy">Optional callback that checks equips and returns to the backpack, including returns for displaced gear. It receives the action, item, slots, backpack, source and destination placements, and a displaced flag. Return an empty String or StringName to allow the move, or a reason to deny it. Defaults to an empty callable.</member>
+		<member name="revision" type="int" getter="get_revision" default="0">Current committed equipment revision. Use it to tell whether equipment changed since a preview.</member>
+		<member name="backpack" type="SpatialInventory" getter="get_backpack">Grid associated with this equipment set. It supplies items to equip and receives items returned from slots. It is [code]null[/code] until configured.</member>
+	</members>
+	<signals>
+		<signal name="changed">
+			<description>Emitted after the equipment configuration or committed equipment contents change.</description>
+		</signal>
+	</signals>
+</class>

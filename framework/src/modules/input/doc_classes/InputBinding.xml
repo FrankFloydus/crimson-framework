@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="InputBinding" inherits="Resource">
+	<brief_description>One stable and optionally rebindable physical input slot.</brief_description>
+	<description>Use a binding in [member InputActionMapping.bindings]. A key starts on the X component. To make it drive a vector action forward along negative Y, add [InputSwapAxis] and then [InputInvert] with Y enabled and X disabled. Each slot has a unique ID even when several contribute to the same action.</description>
+	<methods>
+		<method name="get_action" qualifiers="const">
+			<return type="StringName" />
+			<description>Returns the owning action ID on a detached runtime binding snapshot. Returns an empty name on an authored binding.</description>
+		</method>
+		<method name="set_mouse_motion">
+			<return type="void" />
+			<param index="0" name="axes" type="int" enum="InputBinding.MouseAxes" default="0" />
+			<description>Assigns relative mouse motion with the selected screen axes and an identity pixel scale. Use on a Motion action. This replaces the previous physical source and preserves the stable ID and modifier list.</description>
+		</method>
+	</methods>
+	<members>
+		<member name="contribution" type="Vector3" setter="set_contribution" getter="get_contribution" default="Vector3(1, 0, 0)">Compatibility gain or direction applied before modifiers. An individual key, button, or signed axis starts on X by default. Use [InputSwapAxis], [InputInvert], and [InputScale] to transform new bindings. Legacy mouse motion applies this gain to the selected raw screen axes. A whole stick supplies its signed X and Y directly.</member>
+		<member name="display_name" type="String" setter="set_display_name" getter="get_display_name" default="&quot;&quot;">Optional label for this slot in controls settings. Use a label such as Move Forward to distinguish directional slots.</member>
+		<member name="event" type="InputEvent" setter="set_event" getter="get_event">Physical control assigned to this slot. Keys, mouse buttons, gamepad buttons, and signed gamepad axis directions can drive level actions. Mouse motion drives relative motion actions. Assigning a nonempty event clears [member stick]. Use device -1 on a gamepad event to accept the local scope's assigned gamepad.</member>
+		<member name="id" type="StringName" setter="set_id" getter="get_id" default="&amp;&quot;&quot;">Stable, nonempty identifier unique across the layout. Preserve this value when changing the physical event so saved rebinding profiles still identify this slot.</member>
+		<member name="modifiers" type="InputModifier[]" setter="set_modifiers" getter="get_modifiers" default="[]">Transforms applied from first to last, after reading the raw source and applying any compatibility contribution. The action combines the result with its other bindings. Choose modifiers compatible with the action's value kind.</member>
+		<member name="mouse_axes" type="int" setter="set_mouse_axes" getter="get_mouse_axes" enum="InputBinding.MouseAxes" default="0">Screen axes read from an existing [InputEventMouseMotion] source. An axis retains its screen position, so Mouse Y gives [code]Vector2(0, dy)[/code]. Changing this field preserves the gain. Use [method set_mouse_motion] to create a new mouse source with identity gain.</member>
+		<member name="stick" type="int" setter="set_stick" getter="get_stick" enum="InputBinding.Stick" default="0">Paired X and Y axes on the assigned gamepad. Use a whole stick with a Vector action. Selecting a stick clears [member event]. Edit the binding resource to change a whole-stick source.</member>
+	</members>
+	<constants>
+		<constant name="NONE" value="0" enum="Stick">Use the single event slot.</constant>
+		<constant name="LEFT_STICK" value="1" enum="Stick">Use both axes of the assigned gamepad's left stick.</constant>
+		<constant name="RIGHT_STICK" value="2" enum="Stick">Use both axes of the assigned gamepad's right stick.</constant>
+		<constant name="MOUSE_XY" value="0" enum="MouseAxes">Read horizontal and vertical screen motion together.</constant>
+		<constant name="MOUSE_X" value="1" enum="MouseAxes">Read horizontal screen motion. The Y component starts at zero.</constant>
+		<constant name="MOUSE_Y" value="2" enum="MouseAxes">Read vertical screen motion. The X component starts at zero.</constant>
+	</constants>
+</class>

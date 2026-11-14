@@ -3,6 +3,7 @@
 ## Opt-in Spacewar smoke. Two-peer roles require separate signed-in Steam accounts.
 extends SceneTree
 
+const Fixture := preload("res://tests/fixtures/network_fixture.gd")
 const DEFAULT_NAMESPACE := "crimson-spacewar-smoke"
 const OVERLAY_STARTUP_OPTION := "--crimson-steam-overlay=480"
 const INVITE_TARGET_ENV := "CRIMSON_STEAM_INVITE_STEAM_ID"
@@ -33,6 +34,7 @@ class ReadyProof extends Node:
 
 var _provider: SteamProvider
 var _game: GameRuntime
+var _game_actions: Game
 var _session: GameSession
 var _proof: ReadyProof
 var _previous_peer: MultiplayerPeer
@@ -118,16 +120,15 @@ func _run() -> void:
 
 	Engine.max_fps = 120
 	create_timer(WAIT_SECONDS).timeout.connect(func() -> void: _fail("The Spacewar fixture timed out."))
-	var scene := load(String(ProjectSettings.get_setting("application/run/main_scene"))) as PackedScene
 	if role == "coexist":
-		if await _verify_coexistence(scene):
+		if await _verify_coexistence():
 			print("CRIMSON_STEAM_PASSED coexist")
 			quit(0)
 		return
-	if _attach_demo(scene, role != "scope-unavailable") == null:
+	if _attach_fixture(role != "scope-unavailable") == null:
 		return
 	if role == "scope-unavailable":
-		if _verify_unavailable_scope():
+		if await _verify_unavailable_scope():
 			print("CRIMSON_STEAM_PASSED scope-unavailable")
 			quit(0)
 		return
@@ -147,29 +148,34 @@ func _run() -> void:
 	var previous_connect := presence.rich_presence("connect")
 	match role:
 		"listen", "host":
-			if not await _start_host():
+			var hosted: GameResult = await _game_actions.host()
+			if not _confirm_host(hosted.ok, hosted.code):
 				return
 			if role == "listen" and not await _verify_join_presence(presence, previous_connect, visibility):
 				return
 			if role == "host" and not await _wait_for_guest(invite_overlay, invitee):
 				return
 		"guest", "guest-invite", "guest-discover":
-			var listing: Variant = arguments[1] if role == "guest" else null
+			var joined_ok := false
+			var joined_code := ""
 			if role == "guest-invite":
-				_game.invites().received.connect(_on_invite_received)
-				_invited = _game.invites().pending()
+				_game_actions.invite_changed.connect(_on_invite_received)
+				_invited = _game_actions.pending_invite()
 				print("CRIMSON_STEAM_WAITING_FOR_INVITE")
 				while _invited == null:
 					await process_frame
-				listing = _invited.listing
+				var joined: GameResult = await _game_actions.accept_invite(_invited)
+				joined_ok = joined.ok
+				joined_code = joined.code
 			elif role == "guest-discover":
-				var query := SteamServices.for_game(_game).lobbies().query().on_map(_game.definition.starting_world)
-				var discovered: SteamListingsResult = await query.fetch()
-				if not discovered.ok or discovered.value.size() != 1:
-					_fail("The controlled lobby namespace did not produce exactly one discoverable lobby.")
-					return
-				listing = discovered.value[0]
-			if not await _join_and_confirm(listing):
+				var joined: GameResult = await _game_actions.find_and_join()
+				joined_ok = joined.ok
+				joined_code = joined.code
+			else:
+				var joined: Dictionary = await _game.join_online(arguments[1]).wait()
+				joined_ok = joined.get("ok", false)
+				joined_code = joined.get("code", "Unknown")
+			if not await _confirm_guest(joined_ok, joined_code):
 				return
 		"lobby-query":
 			if not await _verify_lobby_query():
@@ -187,23 +193,24 @@ func _run() -> void:
 	quit(0)
 
 
-## Attach the real demo with this process's Spacewar provider.
-func _attach_demo(scene: PackedScene, require_steam := true) -> Node:
-	var demo := scene.instantiate()
-	_game = demo.get_node(^"Game") as GameRuntime
-	_game.definition = _game.definition.with_provider(_provider)
+## Attach the fixture's game with this process's Spacewar provider.
+func _attach_fixture(require_steam := true) -> Node:
+	var owner := Node.new()
+	owner.name = &"SteamListenFixture"
+	root.add_child(owner)
+	_game_actions = GameConfig.from_definition(Fixture.definition().with_provider(_provider)).boot(owner)
+	_game = owner.get_node(^"Game") as GameRuntime
 	_proof = ReadyProof.new()
 	_proof.name = "SteamSmokeProof"
 	_proof.game = _game
 	_game.add_child(_proof)
-	root.add_child(demo)
 	_session = _game.get_node_or_null(^"Session") as GameSession
 	if _session == null or (require_steam and (not _provider.is_ready() or _provider.get_local_steam_id().is_empty())):
 		_fail("Spacewar could not attach the native provider. Check the signed-in Steam client, AppID 480, and SDK DLL.")
 		return null
 	_proof.session = _session
 	_previous_peer = _session.get_multiplayer().multiplayer_peer
-	return demo
+	return owner
 
 
 ## Confirm an SDK-free or failed start still exposes exact typed diagnostics.
@@ -215,6 +222,13 @@ func _verify_unavailable_scope() -> bool:
 			or scope.apps() != null or scope.cloud() != null or scope.stats() != null \
 			or invites.send("invalid") != ERR_UNAVAILABLE:
 		_fail("The unavailable Steam attachment did not expose scoped diagnostics and disabled services.")
+		return false
+	var hosted: GameResult = await _game_actions.host()
+	var discovery: GameResult = await _game_actions.find_and_join()
+	if hosted.code != "OnlineUnavailable" or hosted.message != scope.get_initialization_error() \
+			or discovery.code != "OnlineUnavailable" or _game.get_phase() != GameRuntime.IDLE \
+			or _session.get_state() != GameSession.IDLE:
+		_fail("Code-first Steam startup lost the exact diagnostic or fell back to a direct session.")
 		return false
 	return true
 
@@ -241,19 +255,46 @@ func _verify_lobby_query() -> bool:
 			continue
 		var result: SteamListingsResult = await attempt.wait()
 		if result.ok and result.value.is_empty():
-			return true
+			return await _verify_quick_join_cancel()
 		break
 	_fail("The Steam search did not drain, or its unique test namespace returned another game's lobby.")
 	return false
 
 
+## Exercise the code-first operation gate and retire a search without opening any world.
+func _verify_quick_join_cancel() -> bool:
+	var pending: Variant = _game_actions.find_and_join()
+	var overlap: GameResult = await _game_actions.find_and_join()
+	if typeof(pending) != TYPE_SIGNAL or overlap.code != "GameBusy":
+		_fail("Quick join did not reserve the game's startup gate.")
+		return false
+	var settled: Array[GameResult] = []
+	pending.connect(func(result: GameResult) -> void: settled.append(result), CONNECT_ONE_SHOT)
+	var left: GameResult = await _game_actions.leave()
+	if not left.ok or settled.size() != 1 or settled[0].code != "Cancelled" \
+			or _game.get_phase() != GameRuntime.IDLE or _game.get_world() != null \
+			or _session.get_state() != GameSession.IDLE:
+		_fail("Leaving a quick join did not settle once and keep the game idle.")
+		return false
+	var deadline := Time.get_ticks_msec() + 25000
+	while Time.get_ticks_msec() < deadline:
+		var retried: GameResult = await _game_actions.find_and_join()
+		if retried.code != "DiscoveryBusy":
+			if retried.code == "NoMatches" and _game.get_phase() == GameRuntime.IDLE:
+				return true
+			break
+		await create_timer(0.05).timeout
+	_fail("The native Steam search did not drain, or quick join did not report an empty search.")
+	return false
+
+
 ## Share the Steam API with a standalone client and retire the exact integrated lease.
-func _verify_coexistence(scene: PackedScene) -> bool:
+func _verify_coexistence() -> bool:
 	var client := SteamClient.boot(root, 480)
 	if client == null or not client.is_ready():
 		_fail("Spacewar could not initialize the standalone Steam client.")
 		return false
-	var demo := _attach_demo(scene)
+	var demo := _attach_fixture()
 	if demo == null:
 		return false
 	if client.get_local_steam_id() != _provider.get_local_steam_id():
@@ -288,7 +329,7 @@ func _verify_coexistence(scene: PackedScene) -> bool:
 			or standalone_lobbies.create().result().error != ERR_BUSY:
 		_fail("The Game lobby did not retain its membership and admission ownership.")
 		return false
-	if not await _verify_shared_provider(scene):
+	if not await _verify_shared_provider():
 		return false
 	var world := _game.get_world()
 	var listing := _game.get_online_listing()
@@ -349,7 +390,7 @@ func _verify_coexistence(scene: PackedScene) -> bool:
 	if not client.is_ready() or not client.friends().is_available() or _provider.is_ready() or previous_authenticator == null:
 		_fail("Destroying the game did not retire only its lease while the authenticator was retained.")
 		return false
-	var replacement := _attach_demo(scene)
+	var replacement := _attach_fixture()
 	if replacement == null:
 		return false
 	if _session.get_authenticator() == previous_authenticator:
@@ -367,14 +408,15 @@ func _verify_coexistence(scene: PackedScene) -> bool:
 
 
 ## A second Game using the same Resource cannot replace the first attachment.
-func _verify_shared_provider(scene: PackedScene) -> bool:
+func _verify_shared_provider() -> bool:
 	var owner := SteamServices.for_game(_game)
 	var owner_invites := _game.invites()
 	var owner_listing := _game.get_online_listing()
-	var second := scene.instantiate()
-	var duplicate := second.get_node(^"Game") as GameRuntime
-	duplicate.definition = duplicate.definition.with_provider(_provider)
+	var second := Node.new()
+	second.name = &"SteamDuplicateFixture"
 	root.add_child(second)
+	GameConfig.from_definition(Fixture.definition().with_provider(_provider)).boot(second)
+	var duplicate := second.get_node(^"Game") as GameRuntime
 	var blocked := SteamServices.for_game(duplicate)
 	var stable := blocked != null and blocked != owner and not blocked.is_ready() \
 		and not blocked.get_initialization_error().is_empty() and blocked.cloud() == null \
@@ -391,12 +433,17 @@ func _verify_shared_provider(scene: PackedScene) -> bool:
 
 func _start_host() -> bool:
 	var started: Dictionary = await _game.host_online().wait()
-	if not started.get("ok", false):
-		_fail("Spacewar host failed with %s." % started.get("code", "Unknown"))
+	return _confirm_host(started.get("ok", false), started.get("code", "Unknown"))
+
+
+## Verify the exact lobby after either public startup path settles.
+func _confirm_host(ok: bool, code: String) -> bool:
+	if not ok:
+		_fail("Spacewar host failed with %s." % code)
 		return false
 	if not _has_world() or not _game.is_authority() or _session.get_local_peer_id() != 1 \
 			or not _session.is_accepting_connections() or not _valid_listing(_game.get_online_listing()):
-		_fail("The Spacewar host did not mount the demo world, spawn its actor, and publish an open lobby.")
+		_fail("The Spacewar host did not mount the fixture world, spawn its actor, and publish an open lobby.")
 		return false
 	var scope := SteamServices.for_game(_game)
 	var lobby := scope.lobbies().current() if scope != null else null
@@ -439,14 +486,26 @@ func _verify_join_presence(friends: SteamFriends, previous: String, visibility: 
 ## Read the startup invitation candidate without joining or mounting a world.
 func _verify_launch_invite(expected: String) -> void:
 	_provider = SteamProvider.configure().for_app(480)
-	var scene := load(String(ProjectSettings.get_setting("application/run/main_scene"))) as PackedScene
-	if _attach_demo(scene) == null:
+	if _attach_fixture() == null:
 		return
 	var invite := _game.invites().pending()
 	var matches := invite == null if expected == "none" else invite != null and invite.listing.id == expected
 	if not matches or _game.get_phase() != GameRuntime.IDLE or _game.get_world() != null:
 		_fail("Startup invite was dropped, misparsed, or started an automatic join.")
 		return
+	if invite != null:
+		var stale := _game_actions.dismiss_invite(SteamInvite.new())
+		var cleared: Array[SteamInvite] = []
+		_game_actions.invite_changed.connect(func(value: SteamInvite) -> void: cleared.append(value))
+		var dismissed := _game_actions.dismiss_invite(invite)
+		var remaining := _game_actions.pending_invite()
+		var repeated := _game_actions.dismiss_invite(invite)
+		if stale.code != "InviteChanged" or not dismissed.ok or remaining != null \
+				or cleared.size() != 1 or cleared[0] != null or repeated.code != "InviteChanged":
+			_fail("Dismissal expected one cleared invite, got %s, %s, %s, %d, %s." % [
+				stale.code, dismissed.code, remaining == null, cleared.size(), repeated.code,
+			])
+			return
 	print("CRIMSON_STEAM_PASSED launch-check")
 	quit(0)
 
@@ -499,11 +558,11 @@ func _wait_for_guest(invite_overlay: bool, invitee: String) -> bool:
 
 func _request_invite_overlay() -> bool:
 	var deadline := Time.get_ticks_msec() + OVERLAY_WAIT_MS
-	var result := _game.invites().open_overlay()
-	while result == ERR_BUSY and Time.get_ticks_msec() < deadline:
+	var result := _game_actions.invite_friends()
+	while result.code == "OverlayBusy" and Time.get_ticks_msec() < deadline:
 		await create_timer(0.125).timeout
-		result = _game.invites().open_overlay()
-	if result == OK:
+		result = _game_actions.invite_friends()
+	if result.ok:
 		print("CRIMSON_STEAM_OVERLAY_REQUESTED")
 		return true
 	print("CRIMSON_STEAM_OVERLAY_UNAVAILABLE")
@@ -511,16 +570,14 @@ func _request_invite_overlay() -> bool:
 	return false
 
 
-func _join_and_confirm(listing: Variant) -> bool:
-	var operation := _game.join_listing(listing) if listing is OnlineListing else _game.join_online(str(listing))
-	var joined: Dictionary = await operation.wait()
-	if not joined.get("ok", false):
-		_fail("Spacewar guest failed with %s. Check the private invite and matching namespace." % joined.get("code", "Unknown"))
+func _confirm_guest(ok: bool, code: String) -> bool:
+	if not ok:
+		_fail("Spacewar guest failed with %s. Check lobby availability and matching namespace." % code)
 		return false
 	var local_id := _session.get_local_peer_id()
 	if not _has_world() or _game.is_authority() or local_id <= 1 \
 			or _game.get_player(local_id) != _game.get_local_player() or not _verified_actor(1):
-		_fail("The Spacewar guest did not mount the demo world with a local actor and verified authority actor.")
+		_fail("The Spacewar guest did not mount the fixture world with a local actor and verified authority actor.")
 		return false
 	if _proof.rpc_id(1, &"guest_ready", _game.get_world_epoch()) != OK:
 		_fail("Spacewar could not report the guest's ready world to the host.")

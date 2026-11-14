@@ -1,16 +1,40 @@
-; Copyright Francesco Di Blasi 2026 - All Rights Reserved
+[gd_scene format=3 uid="uid://cmqk7dqevxcwg"]
 
-[gd_scene format=3]
-
-[ext_resource type="GameDefinition" path="res://demo/session/transfer_hall.tres" id="game"]
+[ext_resource type="Script" uid="uid://cibmjust04k8g" path="res://demo/main.gd" id="boot"]
 [ext_resource type="PackedScene" path="res://demo/ui/main_menu.tscn" id="menu"]
-[ext_resource type="Script" path="res://demo/main.gd" id="boot"]
+[ext_resource type="PackedScene" path="res://demo/ui/control_settings.tscn" id="settings"]
+[ext_resource type="PackedScene" path="res://demo/ui/network_debugger.tscn" id="network_debugger"]
+[ext_resource type="Script" path="res://demo/ui/local_player_identity.gd" id="player_identity"]
+[ext_resource type="Theme" path="res://demo/ui/menu_theme.tres" id="theme"]
 
-[node name="CrimsonDemo" type="Node"]
+[sub_resource type="StyleBoxFlat" id="IdentityPlate"]
+content_margin_left = 11.0
+content_margin_top = 5.0
+content_margin_right = 11.0
+content_margin_bottom = 5.0
+bg_color = Color(0.035, 0.05, 0.052, 0.91)
+
+[node name="CrimsonDemo" type="Node" unique_id=1242007498]
 script = ExtResource("boot")
 
-[node name="Game" type="GameRuntime" parent="."]
-definition = ExtResource("game")
+[node name="MainMenu" parent="." unique_id=1398600677 instance=ExtResource("menu")]
 
-[node name="MainMenu" parent="." node_paths=PackedStringArray("game") instance=ExtResource("menu")]
-game = NodePath("../Game")
+[node name="GameUI" type="CanvasLayer" parent="." unique_id=763506338]
+
+[node name="LocalPlayerIdentity" type="PanelContainer" parent="GameUI"]
+visible = false
+offset_left = 24.0
+offset_top = 22.0
+mouse_filter = 2
+theme = ExtResource("theme")
+theme_override_styles/panel = SubResource("IdentityPlate")
+script = ExtResource("player_identity")
+
+[node name="Label" type="Label" parent="GameUI/LocalPlayerIdentity"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_font_sizes/font_size = 20
+
+[node name="Settings" parent="GameUI" unique_id=1696067235 instance=ExtResource("settings")]
+
+[node name="NetworkDebugger" parent="GameUI" instance=ExtResource("network_debugger")]

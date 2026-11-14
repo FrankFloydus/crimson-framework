@@ -1,0 +1,110 @@
+[gd_resource type="InputActionMap" format=3]
+
+; Copyright Francesco Di Blasi 2026 - All Rights Reserved
+
+[ext_resource type="InputAction" path="res://addons/crimson-framework/input/actions/move.tres" id="move"]
+
+[ext_resource type="InputAction" path="res://addons/crimson-framework/input/actions/jump.tres" id="jump"]
+
+[ext_resource type="InputAction" path="res://addons/crimson-framework/input/actions/mouse_aim.tres" id="mouse_aim"]
+
+[ext_resource type="InputAction" path="res://addons/crimson-framework/input/actions/stick_aim.tres" id="stick_aim"]
+
+[sub_resource type="InputSwapAxis" id="InputSwapAxis_vertical"]
+
+[sub_resource type="InputInvert" id="InputInvert_negative_x"]
+
+[sub_resource type="InputInvert" id="InputInvert_negative_y"]
+x = false
+y = true
+
+[sub_resource type="InputEventKey" id="InputEventKey_bgklo"]
+physical_keycode = 65
+
+[sub_resource type="InputBinding" id="InputBinding_fapdd"]
+id = &"move/key_left"
+display_name = "Left"
+event = SubResource("InputEventKey_bgklo")
+modifiers = Array[InputModifier]([SubResource("InputInvert_negative_x")])
+
+[sub_resource type="InputEventKey" id="InputEventKey_r3y75"]
+physical_keycode = 68
+
+[sub_resource type="InputBinding" id="InputBinding_sskme"]
+id = &"move/key_right"
+display_name = "Right"
+event = SubResource("InputEventKey_r3y75")
+
+[sub_resource type="InputEventKey" id="InputEventKey_7rs76"]
+physical_keycode = 87
+
+[sub_resource type="InputBinding" id="InputBinding_dmq3r"]
+id = &"move/key_up"
+display_name = "Up"
+event = SubResource("InputEventKey_7rs76")
+modifiers = Array[InputModifier]([SubResource("InputSwapAxis_vertical"), SubResource("InputInvert_negative_y")])
+
+[sub_resource type="InputEventKey" id="InputEventKey_18vxm"]
+physical_keycode = 83
+
+[sub_resource type="InputBinding" id="InputBinding_7ladi"]
+id = &"move/key_down"
+display_name = "Down"
+event = SubResource("InputEventKey_18vxm")
+modifiers = Array[InputModifier]([SubResource("InputSwapAxis_vertical")])
+
+[sub_resource type="InputEventKey" id="InputEventKey_jump"]
+physical_keycode = 32
+
+[sub_resource type="InputBinding" id="InputBinding_jump"]
+id = &"jump/key"
+display_name = "Keyboard"
+event = SubResource("InputEventKey_jump")
+
+[sub_resource type="InputEventMouseMotion" id="InputEventMouseMotion_hxtdw"]
+
+[sub_resource type="InputBinding" id="InputBinding_m1qpq"]
+id = &"mouse_aim/mouse"
+display_name = "Mouse XY"
+event = SubResource("InputEventMouseMotion_hxtdw")
+contribution = Vector3(1, 1, 0)
+
+[sub_resource type="InputDeadZone" id="InputDeadZone_sticks"]
+lower_threshold = 0.18
+
+[sub_resource type="InputBinding" id="InputBinding_whole_left_stick"]
+id = &"move/left_stick"
+display_name = "Left Stick"
+stick = 1
+modifiers = Array[InputModifier]([SubResource("InputDeadZone_sticks")])
+
+[sub_resource type="InputBinding" id="InputBinding_whole_right_stick"]
+id = &"stick_aim/right_stick"
+display_name = "Right Stick"
+stick = 2
+modifiers = Array[InputModifier]([SubResource("InputDeadZone_sticks")])
+
+[sub_resource type="InputActionMapping" id="map_move"]
+id = &"move"
+action = ExtResource("move")
+bindings = Array[InputBinding]([SubResource("InputBinding_dmq3r"), SubResource("InputBinding_fapdd"), SubResource("InputBinding_7ladi"), SubResource("InputBinding_sskme"), SubResource("InputBinding_whole_left_stick")])
+
+[sub_resource type="InputActionMapping" id="map_jump"]
+id = &"jump"
+action = ExtResource("jump")
+bindings = Array[InputBinding]([SubResource("InputBinding_jump")])
+
+[sub_resource type="InputActionMapping" id="map_mouse_aim"]
+id = &"mouse_aim"
+action = ExtResource("mouse_aim")
+bindings = Array[InputBinding]([SubResource("InputBinding_m1qpq")])
+
+[sub_resource type="InputActionMapping" id="map_stick_aim"]
+id = &"stick_aim"
+action = ExtResource("stick_aim")
+bindings = Array[InputBinding]([SubResource("InputBinding_whole_right_stick")])
+
+[resource]
+id = &"Gameplay"
+display_name = "On Foot"
+mappings = Array[InputActionMapping]([SubResource("map_move"), SubResource("map_jump"), SubResource("map_mouse_aim"), SubResource("map_stick_aim")])

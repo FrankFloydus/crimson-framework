@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="InventoryPickupSource" inherits="RefCounted">
+	<brief_description>Game-owned authority policy for a world pickup.</brief_description>
+	<methods>
+		<method name="_register_stores" qualifiers="virtual">
+			<return type="int" enum="Error" />
+			<param index="0" name="stores" type="TransactionCoordinator" />
+			<description>Optionally register pickup source stores on the fresh authority coordinator. Called once for each prospective authority match. Return [code]OK[/code] when ready or a Godot [enum Error] on failure.</description>
+		</method>
+		<method name="_resolve_pickup" qualifiers="virtual">
+			<return type="InventoryPickup" />
+			<param index="0" name="player_id" type="String" />
+			<param index="1" name="pickup_id" type="StringName" />
+			<param index="2" name="stores" type="TransactionCoordinator" />
+			<description>Read committed authority state, check eligibility for the trusted player, and return an [InventoryPickup] that describes the item and the source edit. Return [code]null[/code] to reject. Do not publish changes during resolution.</description>
+		</method>
+	</methods>
+</class>

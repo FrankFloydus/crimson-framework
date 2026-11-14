@@ -92,8 +92,8 @@
 		<member name="app_id" type="int" setter="set_app_id" getter="get_app_id">
 			Positive Steamworks AppID verified by the backend and used for publisher writes.
 		</member>
-		<member name="environment" type="int" setter="set_environment" getter="get_environment" enum="SteamPublisherSettings.Environment">
-			Vendor environment for features with a separate sandbox. The default is [constant LIVE].
+		<member name="environment" type="int" setter="set_environment" getter="get_environment" enum="SteamPublisherSettings.Environment" default="0">
+			Choose Live for real Steam Wallet transactions or Sandbox for test transactions through Steam's microtransaction sandbox. Other capabilities use their regular endpoints with the configured AppID in both modes.
 		</member>
 		<member name="publisher_key_ref" type="StringName" setter="set_publisher_key_ref" getter="get_publisher_key_ref">
 			Name of a publisher credential in the host's secret store, such as a vault identifier. Required for Steam partner Web API calls.

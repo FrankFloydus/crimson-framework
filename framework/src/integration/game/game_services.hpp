@@ -4,7 +4,7 @@
 
 #include "integration/game/game_operation.hpp"
 #include "integration/online/online_directory.hpp"
-#include "modules/scene_load/scene_load_manager.hpp"
+#include "modules/scene_manager/scene_load_manager.hpp"
 #include "modules/session/game_session.hpp"
 
 #include <godot_cpp/classes/object.hpp>
@@ -15,6 +15,7 @@
 namespace crimson::integration {
 
 class GameRuntime;
+class Game;
 
 // Optional factories for the native services owned by one GameRuntime.
 class GameServiceProvider : public godot::Resource {
@@ -87,6 +88,12 @@ public:
     static GameRuntime *default_game();
     // Resolve the scene service belonging to the current primary game.
     static godot::Ref<SceneService> default_scenes();
+    // Resolve the exact scene-service identity of a published runtime.
+    static godot::Ref<SceneService> scenes_for(const GameRuntime *game);
+    // Publish the one typed code-first handle for this attachment.
+    static bool bind_facade(GameRuntime &game, const godot::Ref<Game> &facade);
+    // Return the existing typed handle for this exact attachment.
+    static godot::Ref<Game> facade_for(const GameRuntime *game);
     // Select an active game as the global default, or clear the selection with null.
     static godot::Error select_default(GameRuntime *game);
     // Resolve an active game from a node inside that game's subtree.

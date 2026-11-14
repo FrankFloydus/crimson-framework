@@ -1,0 +1,15 @@
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="GameScenes" inherits="RefCounted">
+	<brief_description>Authority-aware world actions for a single game.</brief_description>
+	<methods>
+		<method name="load">
+			<return type="Variant" />
+			<param index="0" name="world" type="WorldDefinition" />
+			<description>Await a GameResult for travel to a registered destination in a coordinated game.</description>
+		</method>
+		<method name="get_world">
+			<return type="Node" />
+			<description>Return the mounted scene while the originating game is live.</description>
+		</method>
+	</methods>
+</class>

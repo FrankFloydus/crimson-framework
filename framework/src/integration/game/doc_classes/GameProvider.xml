@@ -1,0 +1,11 @@
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="GameProvider" inherits="Resource">
+	<brief_description>Optional typed service override hook.</brief_description>
+	<methods>
+		<method name="_register" qualifiers="virtual">
+			<return type="void" />
+			<param index="0" name="services" type="GameBindings" />
+			<description>Register replacements on this attachment's draft before boot seals it.</description>
+		</method>
+	</methods>
+</class>

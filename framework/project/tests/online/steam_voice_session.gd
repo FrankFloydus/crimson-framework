@@ -3,13 +3,14 @@
 ## Exercises authority voice routing on two opted-in Steam test accounts.
 extends SceneTree
 
+const GameFixture := preload("res://tests/online/steam_game_fixture.gd")
 ## Time allowed for manual host and guest coordination.
 const LIVE_TIMEOUT_MS := 90000
 ## Local only synthetic payload. The policy fixture always denies playback.
 const VALIDATION_BYTE := 1
 
 
-## Run after Steam can attach to the current demo's persistent Game.
+## Run after the fixture can attach its game to the scene tree.
 func _initialize() -> void:
 	_run.call_deferred()
 
@@ -30,11 +31,10 @@ func _run() -> void:
 	if provider == null:
 		quit(2)
 		return
-	var scene := load("res://demo/main.tscn") as PackedScene
-	var demo := scene.instantiate()
-	var game := demo.get_node(^"Game") as GameRuntime
-	game.definition = game.definition.with_provider(provider.friends_only())
-	root.add_child(demo)
+	var game := GameFixture.boot(root, provider.friends_only())
+	if game == null:
+		quit(1)
+		return
 	var operation := game.host_online() if arguments[1] == "host" else game.join_online(arguments[3])
 	var started: Dictionary = await operation.wait()
 	var passed := false
@@ -46,7 +46,7 @@ func _run() -> void:
 		else:
 			passed = await _capture(game)
 	game.leave()
-	demo.free()
+	game.free()
 	if passed:
 		print("CRIMSON_STEAM_VOICE_SESSION_PASSED %s %s" % [arguments[0], arguments[1]])
 	else:

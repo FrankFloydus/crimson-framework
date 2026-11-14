@@ -6,6 +6,7 @@
 #include <godot_cpp/classes/json.hpp>
 #include <godot_cpp/core/class_db.hpp>
 #include <godot_cpp/variant/signal.hpp>
+#include <godot_cpp/variant/utility_functions.hpp>
 
 #include <cstring>
 #include <string_view>
@@ -107,6 +108,8 @@ bool accepts_body(int32_t method) {
 
 // Bound one facade's requests in addition to SteamRuntime's process-wide call cap.
 constexpr size_t maximum_requests = 8;
+// Report the local deadline consistently regardless of which observer notices it first.
+constexpr const char *request_deadline_reached = "The Steam HTTP request reached its deadline before a complete response arrived.";
 // The current Steam client preserves only the low 32 bits in streaming callbacks.
 // Use unique nonzero contexts across all facades and refuse further sends after wrap.
 uint32_t next_http_context = 1;
@@ -274,8 +277,8 @@ Ref<SteamHttpResponse> SteamHttpResponseResult::get_value() const {
     return value;
 }
 
-void SteamHttpResponseResult::initialize(Error error, const Ref<SteamHttpResponse> &response) {
-    set_outcome(error);
+void SteamHttpResponseResult::initialize(Error error, const String &diagnostic, const Ref<SteamHttpResponse> &response) {
+    set_outcome(error, diagnostic);
     value = response;
 }
 
@@ -317,14 +320,14 @@ Error SteamHttpResponseOperation::cancel() {
     return ERR_DOES_NOT_EXIST;
 }
 
-Ref<SteamHttpResponseOperation> SteamHttpResponseOperation::resolved(Error error) {
+Ref<SteamHttpResponseOperation> SteamHttpResponseOperation::resolved(Error error, const String &diagnostic) {
     Ref<SteamHttpResponseOperation> operation;
     operation.instantiate();
-    operation->finish(error);
+    operation->finish(error, diagnostic);
     return operation;
 }
 
-void SteamHttpResponseOperation::finish(Error error, int32_t status, const PackedByteArray &body,
+void SteamHttpResponseOperation::finish(Error error, const String &diagnostic, int32_t status, const PackedByteArray &body,
         std::map<String, String> headers) {
     if (outcome.is_valid()) {
         return;
@@ -340,15 +343,28 @@ void SteamHttpResponseOperation::finish(Error error, int32_t status, const Packe
         response->headers = std::move(headers);
     }
     outcome.instantiate();
-    outcome->initialize(error, response);
+    outcome->initialize(error, diagnostic, response);
     emit_signal("completed", outcome);
+}
+
+void SteamHttpSettings::reject(const char *diagnostic) {
+    if (validation_error.is_empty()) {
+        validation_error = diagnostic;
+    }
 }
 
 void SteamHttpSettings::set_header(const String &name, const String &value) {
     const String key = name.length() <= maximum_header_name ? name.to_lower() : String();
-    if (!valid_request_header(key) || !valid_header_value(value) ||
-            (headers.size() >= maximum_headers && headers.find(key) == headers.end())) {
-        valid = false;
+    if (!valid_request_header(key)) {
+        reject("The Steam HTTP request header name is malformed or reserved for framing and connection control.");
+        return;
+    }
+    if (!valid_header_value(value)) {
+        reject("Steam HTTP request header values must be at most 2,048 UTF-8 bytes without control characters.");
+        return;
+    }
+    if (headers.size() >= maximum_headers && headers.find(key) == headers.end()) {
+        reject("Steam HTTP accepts at most 24 request headers.");
         return;
     }
     headers[key] = value;
@@ -356,7 +372,7 @@ void SteamHttpSettings::set_header(const String &name, const String &value) {
 
 void SteamHttpSettings::set_timeout(int64_t milliseconds) {
     if (milliseconds < minimum_timeout || milliseconds > maximum_timeout) {
-        valid = false;
+        reject("The Steam HTTP timeout must be between 100 and 120,000 milliseconds.");
         return;
     }
     timeout_ms = milliseconds;
@@ -364,7 +380,7 @@ void SteamHttpSettings::set_timeout(int64_t milliseconds) {
 
 void SteamHttpSettings::set_response_limit(int64_t bytes) {
     if (bytes < 1 || bytes > maximum_response_body) {
-        valid = false;
+        reject("The Steam HTTP response limit must be between 1 byte and 4 MiB.");
         return;
     }
     response_limit = bytes;
@@ -376,14 +392,14 @@ void SteamHttpSettings::select_response_headers(const PackedStringArray &names) 
         const String &name = names[index];
         const String key = name.length() <= maximum_header_name ? name.to_lower() : String();
         if (!valid_header_name(key)) {
-            valid = false;
+            reject("A selected Steam HTTP response header name is malformed.");
             return;
         }
         if (key == "content-type" || selected.has(key)) {
             continue;
         }
         if (selected.size() >= maximum_response_headers) {
-            valid = false;
+            reject("Steam HTTP accepts at most 16 additional response headers.");
             return;
         }
         selected.push_back(key);
@@ -426,8 +442,16 @@ Ref<SteamHttpRequest> SteamHttpRequest::with_header(const String &name, const St
 Ref<SteamHttpRequest> SteamHttpRequest::with_body(
         const PackedByteArray &bytes, const String &type) const {
     auto copy = branch();
-    if (!accepts_body(method) || bytes.size() > maximum_request_body || type.is_empty() || !valid_header_value(type)) {
-        copy->settings.valid = false;
+    if (!accepts_body(method)) {
+        copy->settings.reject("A Steam HTTP request body requires POST, PUT, or PATCH.");
+        return copy;
+    }
+    if (bytes.size() > maximum_request_body) {
+        copy->settings.reject("The Steam HTTP request body exceeds 1 MiB.");
+        return copy;
+    }
+    if (type.is_empty() || !valid_header_value(type)) {
+        copy->settings.reject("The Steam HTTP request body needs a nonempty, valid content type.");
         return copy;
     }
     copy->body = bytes;
@@ -456,14 +480,16 @@ Ref<SteamHttpRequest> SteamHttpRequest::with_response_headers(const PackedString
 Ref<SteamHttpResponseOperation> SteamHttpRequest::send() const {
 #ifdef CRIMSON_WITH_STEAM
     if (!SteamRuntime::on_main_thread()) {
-        return SteamHttpResponseOperation::resolved(ERR_BUSY);
+        return SteamHttpResponseOperation::resolved(ERR_BUSY, "Submit Steam HTTP requests on Godot's main thread.");
     }
     const auto service = find_service(owner);
     if (service.is_valid()) {
         return service->send(*this);
     }
+    return SteamHttpResponseOperation::resolved(ERR_UNAVAILABLE, "The Steam HTTP request's client scope is unavailable.");
+#else
+    return SteamHttpResponseOperation::resolved(ERR_UNAVAILABLE, "This Crimson build has Steamworks disabled.");
 #endif
-    return SteamHttpResponseOperation::resolved(ERR_UNAVAILABLE);
 }
 
 void SteamHttpOptions::_bind_methods() {
@@ -555,12 +581,12 @@ Variant SteamHttpOptions::options(const String &url) const {
 
 Variant SteamHttpOptions::send_json(const String &url, Method method, const Dictionary &data) const {
     auto draft = request(url, method);
-    if (!draft->settings.valid) {
+    if (!draft->settings.validation_error.is_empty()) {
         return draft->send()->wait();
     }
     const String json = JSON::stringify(data, {}, false, true);
     if (json.length() > maximum_request_body) {
-        draft->settings.valid = false;
+        draft->settings.reject("The Steam HTTP JSON request body exceeds 1 MiB.");
         return draft->send()->wait();
     }
     return draft->with_body(json.to_utf8_buffer(), "application/json")->send()->wait();
@@ -572,8 +598,11 @@ Ref<SteamHttpRequest> SteamHttpOptions::request(const String &url, Method method
     config->owner = owner;
     config->method = method;
     config->settings = settings;
-    config->settings.valid = settings.valid && method >= METHOD_GET && method <= METHOD_PATCH && valid_url(url);
-    if (config->settings.valid) {
+    if (method < METHOD_GET || method > METHOD_PATCH) {
+        config->settings.reject("The requested method is not supported by Steam HTTP.");
+    } else if (!valid_url(url)) {
+        config->settings.reject("Steam HTTP needs an absolute HTTP or HTTPS URL without credentials or control characters.");
+    } else if (config->settings.validation_error.is_empty()) {
         config->url = url;
     }
     return config;
@@ -623,7 +652,7 @@ void SteamHttp::detach() {
         }
     }
     for (const auto &[context, request] : pending) {
-        request.operation->finish(ERR_SKIP);
+        request.operation->finish(ERR_SKIP, "The Steam client scope stopped before the HTTP response arrived.");
     }
 #endif
 }
@@ -642,7 +671,7 @@ void SteamHttp::poll() {
         }
     }
     for (size_t index = 0; index < count; ++index) {
-        settle(expired[index], ERR_TIMEOUT);
+        settle(expired[index], ERR_TIMEOUT, request_deadline_reached);
     }
 #endif
 }
@@ -652,42 +681,56 @@ Ref<SteamHttpResponseOperation> SteamHttp::send(const SteamHttpRequest &request)
     const auto runtime = native->runtime.lock();
     ISteamHTTP *api = native->api;
     if (!runtime || !api || !native->scope || !native->scope->active) {
-        return SteamHttpResponseOperation::resolved(ERR_UNAVAILABLE);
+        return SteamHttpResponseOperation::resolved(ERR_UNAVAILABLE,
+                "Steam HTTP needs an active client scope with the Steam HTTP interface.");
     }
-    if (!request.settings.valid) {
-        return SteamHttpResponseOperation::resolved(ERR_INVALID_PARAMETER);
+    if (!request.settings.validation_error.is_empty()) {
+        return SteamHttpResponseOperation::resolved(ERR_INVALID_PARAMETER, request.settings.validation_error);
     }
-    if (next_http_context == 0 || native->requests.size() >= maximum_requests || !runtime->can_track_call()) {
-        return SteamHttpResponseOperation::resolved(ERR_BUSY);
+    if (next_http_context == 0) {
+        return SteamHttpResponseOperation::resolved(ERR_BUSY,
+                "Steam HTTP exhausted its request identifiers. Restart the game before sending another request.");
+    }
+    if (native->requests.size() >= maximum_requests || !runtime->can_track_call()) {
+        return SteamHttpResponseOperation::resolved(ERR_BUSY,
+                "Steam has reached its pending call limit. Wait for an active call to finish and retry.");
     }
 
     const HTTPRequestHandle handle = api->CreateHTTPRequest(sdk_method(request.method), request.url.utf8().get_data());
     if (handle == INVALID_HTTPREQUEST_HANDLE) {
-        return SteamHttpResponseOperation::resolved(ERR_CANT_CREATE);
+        return SteamHttpResponseOperation::resolved(ERR_CANT_CREATE, "Steam could not create a native HTTP request.");
     }
     Ref<SteamHttpResponseOperation> operation;
     operation.instantiate();
     const uint32_t context = next_http_context++;
-    bool configured = api->SetHTTPRequestContextValue(handle, context) &&
-            api->SetHTTPRequestAbsoluteTimeoutMS(handle, static_cast<uint32_t>(request.settings.timeout_ms)) &&
-            (!request.url.begins_with("https://") || api->SetHTTPRequestRequiresVerifiedCertificate(handle, true));
+    const char *configuration_error = nullptr;
+    if (!api->SetHTTPRequestContextValue(handle, context)) {
+        configuration_error = "Steam rejected the HTTP request context.";
+    } else if (!api->SetHTTPRequestAbsoluteTimeoutMS(handle, static_cast<uint32_t>(request.settings.timeout_ms))) {
+        configuration_error = "Steam rejected the HTTP request timeout.";
+    } else if (request.url.begins_with("https://") && !api->SetHTTPRequestRequiresVerifiedCertificate(handle, true)) {
+        configuration_error = "Steam could not require certificate verification for the HTTPS request.";
+    }
     for (const auto &[name, value] : request.settings.headers) {
-        if (!configured) {
+        if (configuration_error) {
             break;
         }
-        if (name != "content-type" || request.content_type.is_empty()) {
-            configured = api->SetHTTPRequestHeaderValue(handle, name.utf8().get_data(), value.utf8().get_data());
+        if ((name != "content-type" || request.content_type.is_empty()) &&
+                !api->SetHTTPRequestHeaderValue(handle, name.utf8().get_data(), value.utf8().get_data())) {
+            configuration_error = "Steam rejected an HTTP request header.";
         }
     }
-    if (configured && !request.content_type.is_empty()) {
+    if (!configuration_error && !request.content_type.is_empty()) {
         PackedByteArray body = request.body;
         uint8_t empty = 0;
-        configured = api->SetHTTPRequestRawPostBody(handle, request.content_type.utf8().get_data(),
-                body.is_empty() ? &empty : body.ptrw(), static_cast<uint32_t>(body.size()));
+        if (!api->SetHTTPRequestRawPostBody(handle, request.content_type.utf8().get_data(),
+                    body.is_empty() ? &empty : body.ptrw(), static_cast<uint32_t>(body.size()))) {
+            configuration_error = "Steam rejected the HTTP request body.";
+        }
     }
-    if (!configured) {
+    if (configuration_error) {
         api->ReleaseHTTPRequest(handle);
-        operation->finish(ERR_INVALID_PARAMETER);
+        operation->finish(ERR_INVALID_PARAMETER, configuration_error);
         return operation;
     }
 
@@ -702,7 +745,7 @@ Ref<SteamHttpResponseOperation> SteamHttp::send(const SteamHttpRequest &request)
                 });
         if (native->data_subscription == 0) {
             api->ReleaseHTTPRequest(handle);
-            operation->finish(ERR_BUSY);
+            operation->finish(ERR_BUSY, "Steam could not reserve a callback to observe the HTTP response stream.");
             return operation;
         }
     }
@@ -715,28 +758,29 @@ Ref<SteamHttpResponseOperation> SteamHttp::send(const SteamHttpRequest &request)
     pending.response_limit = static_cast<uint32_t>(request.settings.response_limit);
     pending.response_headers = request.settings.response_headers;
     SteamAPICall_t call = k_uAPICallInvalid;
-    if (!api->SendHTTPRequestAndStreamResponse(handle, &call) ||
-            !runtime->watch_call(call, HTTPRequestCompleted_t::k_iCallback, sizeof(HTTPRequestCompleted_t),
-                    [self, context](const void *data) {
-                        const auto service = find_service(self);
-                        if (service.is_valid()) {
-                            service->complete(context, data);
-                        }
-                    })) {
-        settle(context, ERR_CANT_CONNECT);
+    if (!api->SendHTTPRequestAndStreamResponse(handle, &call)) {
+        settle(context, ERR_CANT_CONNECT, "Steam rejected submission of the HTTP request.");
+    } else if (!runtime->watch_call(call, HTTPRequestCompleted_t::k_iCallback, sizeof(HTTPRequestCompleted_t),
+                       [self, context](const void *data) {
+                           const auto service = find_service(self);
+                           if (service.is_valid()) {
+                               service->complete(context, data);
+                           }
+                       })) {
+        settle(context, ERR_CANT_CONNECT, "Steam submitted the HTTP request, but Crimson could not track its completion.");
     } else {
         pending.call = call;
     }
     return operation;
 #else
-    return SteamHttpResponseOperation::resolved(ERR_UNAVAILABLE);
+    return SteamHttpResponseOperation::resolved(ERR_UNAVAILABLE, "This Crimson build has Steamworks disabled.");
 #endif
 }
 
 Error SteamHttp::cancel(uint64_t context) {
 #ifdef CRIMSON_WITH_STEAM
     if (native->requests.find(context) != native->requests.end()) {
-        settle(context, ERR_SKIP);
+        settle(context, ERR_SKIP, "The Steam HTTP request was cancelled before completion.");
         return OK;
     }
 #endif
@@ -756,28 +800,28 @@ void SteamHttp::receive_data(const void *data, size_t size) {
     }
     auto &pending = found->second;
     if (Time::get_singleton()->get_ticks_msec() >= pending.deadline) {
-        settle(event.m_ulContextValue, ERR_TIMEOUT);
+        settle(event.m_ulContextValue, ERR_TIMEOUT, request_deadline_reached);
         return;
     }
     const auto assembled = static_cast<uint32_t>(pending.body.size());
     if (event.m_cOffset != assembled) {
-        settle(event.m_ulContextValue, ERR_INVALID_DATA);
+        settle(event.m_ulContextValue, ERR_INVALID_DATA, "Steam HTTP returned a response chunk out of order.");
         return;
     }
     if (event.m_cBytesReceived > pending.response_limit - assembled) {
-        settle(event.m_ulContextValue, ERR_PARAMETER_RANGE_ERROR);
+        settle(event.m_ulContextValue, ERR_PARAMETER_RANGE_ERROR, "The Steam HTTP response exceeded the configured byte limit.");
         return;
     }
     if (event.m_cBytesReceived == 0) {
         return;
     }
     if (pending.body.resize(assembled + event.m_cBytesReceived) != OK) {
-        settle(event.m_ulContextValue, ERR_OUT_OF_MEMORY);
+        settle(event.m_ulContextValue, ERR_OUT_OF_MEMORY, "Crimson could not allocate space for the Steam HTTP response.");
         return;
     }
     if (!native->api->GetHTTPStreamingResponseBodyData(
                 event.m_hRequest, assembled, pending.body.ptrw() + assembled, event.m_cBytesReceived)) {
-        settle(event.m_ulContextValue, ERR_INVALID_DATA);
+        settle(event.m_ulContextValue, ERR_INVALID_DATA, "Steam could not read the HTTP response chunk.");
     }
 #endif
 }
@@ -789,32 +833,40 @@ void SteamHttp::complete(uint64_t context, const void *data) {
         return;
     }
     if (Time::get_singleton()->get_ticks_msec() >= found->second.deadline) {
-        settle(context, ERR_TIMEOUT);
+        settle(context, ERR_TIMEOUT, request_deadline_reached);
         return;
     }
     HTTPRequestCompleted_t event{};
     if (data) {
         std::memcpy(&event, data, sizeof(event));
         if (event.m_ulContextValue != context || event.m_hRequest != found->second.handle) {
-            settle(context, ERR_INVALID_DATA);
+            settle(context, ERR_INVALID_DATA, "Steam HTTP returned a completion for a different request.");
             return;
         }
     }
     if (!data || !event.m_bRequestSuccessful) {
         bool timed_out = false;
-        native->api->GetHTTPRequestWasTimedOut(found->second.handle, &timed_out);
-        settle(context, timed_out ? ERR_TIMEOUT : ERR_CANT_CONNECT);
+        if (native->api->GetHTTPRequestWasTimedOut(found->second.handle, &timed_out) && timed_out) {
+            settle(context, ERR_TIMEOUT, "Steam reported that the HTTP request timed out.");
+        } else {
+            settle(context, ERR_CANT_CONNECT, data
+                            ? "Steam HTTP could not complete the request. Check the connection and HTTPS certificate."
+                            : "Steam did not provide an HTTP completion result.");
+        }
         return;
     }
     const int32_t status = event.m_eStatusCode;
     // Steam reports zero body size for streamed responses even when it sent data callbacks.
     if (event.m_unBodySize > found->second.response_limit) {
-        settle(context, ERR_PARAMETER_RANGE_ERROR);
+        settle(context, ERR_PARAMETER_RANGE_ERROR, "The Steam HTTP response exceeded the configured byte limit.");
         return;
     }
-    if (status < 100 || status > 599 ||
-            (event.m_unBodySize != 0 && event.m_unBodySize != found->second.body.size())) {
-        settle(context, ERR_INVALID_DATA);
+    if (status < 100 || status > 599) {
+        settle(context, ERR_INVALID_DATA, "Steam HTTP returned an invalid response status.");
+        return;
+    }
+    if (event.m_unBodySize != 0 && event.m_unBodySize != found->second.body.size()) {
+        settle(context, ERR_INVALID_DATA, "The Steam HTTP response completed before all expected bytes arrived.");
         return;
     }
     std::map<String, String> headers;
@@ -824,14 +876,16 @@ void SteamHttp::complete(uint64_t context, const void *data) {
         header_error = capture_header(*native->api, pending.handle, pending.response_headers[index], headers);
     }
     if (header_error != OK) {
-        settle(context, header_error);
+        settle(context, header_error, "Could not read the selected Steam HTTP response headers. " +
+                UtilityFunctions::error_string(header_error));
         return;
     }
-    settle(context, OK, status, std::move(headers));
+    settle(context, OK, {}, status, std::move(headers));
 #endif
 }
 
-void SteamHttp::settle(uint64_t context, Error error, int32_t status, std::map<String, String> headers) {
+void SteamHttp::settle(uint64_t context, Error error, const String &diagnostic, int32_t status,
+        std::map<String, String> headers) {
 #ifdef CRIMSON_WITH_STEAM
     const Ref<SteamHttp> keep_alive(this);
     auto request = native->requests.extract(context);
@@ -846,7 +900,7 @@ void SteamHttp::settle(uint64_t context, Error error, int32_t status, std::map<S
             runtime->unsubscribe(std::exchange(native->data_subscription, 0));
         }
     }
-    pending.operation->finish(error, status, pending.body, std::move(headers));
+    pending.operation->finish(error, diagnostic, status, pending.body, std::move(headers));
 #endif
 }
 

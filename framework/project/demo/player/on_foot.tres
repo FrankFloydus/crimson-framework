@@ -1,0 +1,264 @@
+[gd_resource type="InputActionMap" format=3 uid="uid://cg1nuar5ko4ar"]
+
+[ext_resource type="InputAction" path="res://demo/player/actions/jump.tres" id="jump"]
+[ext_resource type="InputAction" path="res://demo/player/actions/mouse_aim.tres" id="mouse_aim"]
+[ext_resource type="InputAction" path="res://demo/player/actions/move.tres" id="move"]
+[ext_resource type="InputAction" path="res://demo/player/actions/preview_camera.tres" id="preview_camera"]
+[ext_resource type="InputAction" path="res://demo/player/actions/preview_lock_on.tres" id="preview_lock_on"]
+[ext_resource type="InputAction" path="res://demo/player/actions/settings.tres" id="settings"]
+[ext_resource type="InputAction" path="res://demo/player/actions/stick_aim.tres" id="stick_aim"]
+
+[sub_resource type="InputEventKey" id="InputEventKey_k8msn"]
+physical_keycode = 65
+
+[sub_resource type="InputInvert" id="InputInvert_abhhb"]
+
+[sub_resource type="InputBinding" id="InputBinding_le8b3"]
+id = &"move/key_left"
+display_name = "Left"
+event = SubResource("InputEventKey_k8msn")
+modifiers = Array[InputModifier]([SubResource("InputInvert_abhhb")])
+
+[sub_resource type="InputEventJoypadMotion" id="InputEventJoypadMotion_p0g87"]
+device = -1
+axis_value = -1.0
+
+[sub_resource type="InputInvert" id="InputInvert_idu8u"]
+
+[sub_resource type="InputBinding" id="InputBinding_fkw8j"]
+id = &"move/stick_left"
+display_name = "Left"
+event = SubResource("InputEventJoypadMotion_p0g87")
+modifiers = Array[InputModifier]([SubResource("InputInvert_idu8u")])
+
+[sub_resource type="InputEventKey" id="InputEventKey_71icw"]
+physical_keycode = 68
+
+[sub_resource type="InputBinding" id="InputBinding_j4gvv"]
+id = &"move/key_right"
+display_name = "Right"
+event = SubResource("InputEventKey_71icw")
+
+[sub_resource type="InputEventJoypadMotion" id="InputEventJoypadMotion_gtulf"]
+device = -1
+axis_value = 1.0
+
+[sub_resource type="InputBinding" id="InputBinding_dsn7y"]
+id = &"move/stick_right"
+display_name = "Right"
+event = SubResource("InputEventJoypadMotion_gtulf")
+
+[sub_resource type="InputEventKey" id="InputEventKey_pr3wb"]
+physical_keycode = 87
+
+[sub_resource type="InputSwapAxis" id="InputSwapAxis_akism"]
+
+[sub_resource type="InputInvert" id="InputInvert_0cu6l"]
+x = false
+y = true
+
+[sub_resource type="InputBinding" id="InputBinding_8flgg"]
+id = &"move/key_up"
+display_name = "Up"
+event = SubResource("InputEventKey_pr3wb")
+modifiers = Array[InputModifier]([SubResource("InputSwapAxis_akism"), SubResource("InputInvert_0cu6l")])
+
+[sub_resource type="InputEventJoypadMotion" id="InputEventJoypadMotion_nyo1j"]
+device = -1
+axis = 1
+axis_value = -1.0
+
+[sub_resource type="InputSwapAxis" id="InputSwapAxis_di6c0"]
+
+[sub_resource type="InputInvert" id="InputInvert_krmwx"]
+x = false
+y = true
+
+[sub_resource type="InputBinding" id="InputBinding_yifnc"]
+id = &"move/stick_up"
+display_name = "Up"
+event = SubResource("InputEventJoypadMotion_nyo1j")
+modifiers = Array[InputModifier]([SubResource("InputSwapAxis_di6c0"), SubResource("InputInvert_krmwx")])
+
+[sub_resource type="InputEventKey" id="InputEventKey_e8uii"]
+physical_keycode = 83
+
+[sub_resource type="InputSwapAxis" id="InputSwapAxis_od2si"]
+
+[sub_resource type="InputBinding" id="InputBinding_xr75e"]
+id = &"move/key_down"
+display_name = "Down"
+event = SubResource("InputEventKey_e8uii")
+modifiers = Array[InputModifier]([SubResource("InputSwapAxis_od2si")])
+
+[sub_resource type="InputEventJoypadMotion" id="InputEventJoypadMotion_8lv7s"]
+device = -1
+axis = 1
+axis_value = 1.0
+
+[sub_resource type="InputSwapAxis" id="InputSwapAxis_ucf0v"]
+
+[sub_resource type="InputBinding" id="InputBinding_6u3bp"]
+id = &"move/stick_down"
+display_name = "Down"
+event = SubResource("InputEventJoypadMotion_8lv7s")
+modifiers = Array[InputModifier]([SubResource("InputSwapAxis_ucf0v")])
+
+[sub_resource type="InputActionMapping" id="InputActionMapping_ckgcc"]
+id = &"move"
+action = ExtResource("move")
+bindings = Array[InputBinding]([SubResource("InputBinding_le8b3"), SubResource("InputBinding_fkw8j"), SubResource("InputBinding_j4gvv"), SubResource("InputBinding_dsn7y"), SubResource("InputBinding_8flgg"), SubResource("InputBinding_yifnc"), SubResource("InputBinding_xr75e"), SubResource("InputBinding_6u3bp")])
+
+[sub_resource type="InputEventKey" id="InputEventKey_b0tb0"]
+physical_keycode = 32
+
+[sub_resource type="InputBinding" id="InputBinding_v774b"]
+id = &"jump/key"
+display_name = "Keyboard"
+event = SubResource("InputEventKey_b0tb0")
+
+[sub_resource type="InputActionMapping" id="InputActionMapping_1t0it"]
+id = &"jump"
+action = ExtResource("jump")
+bindings = Array[InputBinding]([SubResource("InputBinding_v774b")])
+
+[sub_resource type="InputEventMouseMotion" id="InputEventMouseMotion_talv8"]
+
+[sub_resource type="InputBinding" id="InputBinding_wp70l"]
+id = &"mouse_aim/mouse"
+display_name = "Mouse XY"
+event = SubResource("InputEventMouseMotion_talv8")
+contribution = Vector3(1, 1, 0)
+
+[sub_resource type="InputActionMapping" id="InputActionMapping_qh0m0"]
+id = &"mouse_aim"
+action = ExtResource("mouse_aim")
+bindings = Array[InputBinding]([SubResource("InputBinding_wp70l")])
+
+[sub_resource type="InputEventJoypadMotion" id="InputEventJoypadMotion_xmmqq"]
+device = -1
+axis = 2
+axis_value = -1.0
+
+[sub_resource type="InputInvert" id="InputInvert_37mmd"]
+
+[sub_resource type="InputBinding" id="InputBinding_vxt8g"]
+id = &"stick_aim/stick_left"
+display_name = "Left"
+event = SubResource("InputEventJoypadMotion_xmmqq")
+modifiers = Array[InputModifier]([SubResource("InputInvert_37mmd")])
+
+[sub_resource type="InputEventJoypadMotion" id="InputEventJoypadMotion_nhu54"]
+device = -1
+axis = 2
+axis_value = 1.0
+
+[sub_resource type="InputBinding" id="InputBinding_8gwce"]
+id = &"stick_aim/stick_right"
+display_name = "Right"
+event = SubResource("InputEventJoypadMotion_nhu54")
+
+[sub_resource type="InputEventJoypadMotion" id="InputEventJoypadMotion_jg2q6"]
+device = -1
+axis = 3
+axis_value = -1.0
+
+[sub_resource type="InputSwapAxis" id="InputSwapAxis_xw2lu"]
+
+[sub_resource type="InputInvert" id="InputInvert_hvtb3"]
+x = false
+y = true
+
+[sub_resource type="InputBinding" id="InputBinding_ovquv"]
+id = &"stick_aim/stick_up"
+display_name = "Up"
+event = SubResource("InputEventJoypadMotion_jg2q6")
+modifiers = Array[InputModifier]([SubResource("InputSwapAxis_xw2lu"), SubResource("InputInvert_hvtb3")])
+
+[sub_resource type="InputEventJoypadMotion" id="InputEventJoypadMotion_u3qf6"]
+device = -1
+axis = 3
+axis_value = 1.0
+
+[sub_resource type="InputSwapAxis" id="InputSwapAxis_s1uqy"]
+
+[sub_resource type="InputBinding" id="InputBinding_liyjd"]
+id = &"stick_aim/stick_down"
+display_name = "Down"
+event = SubResource("InputEventJoypadMotion_u3qf6")
+modifiers = Array[InputModifier]([SubResource("InputSwapAxis_s1uqy")])
+
+[sub_resource type="InputActionMapping" id="InputActionMapping_bqhtr"]
+id = &"stick_aim"
+action = ExtResource("stick_aim")
+bindings = Array[InputBinding]([SubResource("InputBinding_vxt8g"), SubResource("InputBinding_8gwce"), SubResource("InputBinding_ovquv"), SubResource("InputBinding_liyjd")])
+
+[sub_resource type="InputEventKey" id="InputEventKey_nnwm7"]
+physical_keycode = 4194305
+
+[sub_resource type="InputBinding" id="InputBinding_ajaok"]
+id = &"settings/key"
+display_name = "Keyboard"
+event = SubResource("InputEventKey_nnwm7")
+
+[sub_resource type="InputEventJoypadButton" id="InputEventJoypadButton_w4jby"]
+device = -1
+button_index = 6
+
+[sub_resource type="InputBinding" id="InputBinding_uvd46"]
+id = &"settings/pad"
+display_name = "Gamepad"
+event = SubResource("InputEventJoypadButton_w4jby")
+
+[sub_resource type="InputActionMapping" id="InputActionMapping_4gjr0"]
+id = &"settings"
+action = ExtResource("settings")
+bindings = Array[InputBinding]([SubResource("InputBinding_ajaok"), SubResource("InputBinding_uvd46")])
+
+[sub_resource type="InputEventKey" id="InputEventKey_ujh8u"]
+physical_keycode = 4194337
+
+[sub_resource type="InputBinding" id="InputBinding_04l1l"]
+id = &"preview_camera/key"
+display_name = "Keyboard"
+event = SubResource("InputEventKey_ujh8u")
+
+[sub_resource type="InputEventJoypadButton" id="InputEventJoypadButton_ibqwm"]
+device = -1
+button_index = 8
+
+[sub_resource type="InputBinding" id="InputBinding_q35jl"]
+id = &"preview_camera/pad"
+display_name = "Gamepad"
+event = SubResource("InputEventJoypadButton_ibqwm")
+
+[sub_resource type="InputActionMapping" id="InputActionMapping_hyqe3"]
+id = &"preview_camera"
+action = ExtResource("preview_camera")
+bindings = Array[InputBinding]([SubResource("InputBinding_04l1l"), SubResource("InputBinding_q35jl")])
+
+[sub_resource type="InputEventKey" id="InputEventKey_i7uf5"]
+physical_keycode = 76
+
+[sub_resource type="InputBinding" id="InputBinding_lxbfq"]
+id = &"preview_lock_on/key"
+display_name = "Keyboard"
+event = SubResource("InputEventKey_i7uf5")
+
+[sub_resource type="InputEventJoypadButton" id="InputEventJoypadButton_igc1m"]
+device = -1
+button_index = 7
+
+[sub_resource type="InputBinding" id="InputBinding_5ya4o"]
+id = &"preview_lock_on/pad"
+display_name = "Gamepad"
+event = SubResource("InputEventJoypadButton_igc1m")
+
+[sub_resource type="InputActionMapping" id="InputActionMapping_xeb03"]
+id = &"preview_lock_on"
+action = ExtResource("preview_lock_on")
+bindings = Array[InputBinding]([SubResource("InputBinding_lxbfq"), SubResource("InputBinding_5ya4o")])
+
+[resource]
+display_name = "On Foot"
+mappings = Array[InputActionMapping]([SubResource("InputActionMapping_ckgcc"), SubResource("InputActionMapping_1t0it"), SubResource("InputActionMapping_qh0m0"), SubResource("InputActionMapping_bqhtr"), SubResource("InputActionMapping_4gjr0"), SubResource("InputActionMapping_hyqe3"), SubResource("InputActionMapping_xeb03")])

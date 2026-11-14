@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="InventoryConfig" inherits="RefCounted">
+	<brief_description>Branchable configuration for coordinated backpacks.</brief_description>
+	<methods>
+		<method name="backpack" qualifiers="static">
+			<return type="InventoryConfig" />
+			<param index="0" name="size" type="Vector2i" />
+			<description>Configure the initial grid dimensions in cells for each player. Returns [code]null[/code] for invalid grid dimensions.</description>
+		</method>
+		<method name="pickups" qualifiers="const">
+			<return type="InventoryConfig" />
+			<param index="0" name="source" type="InventoryPickupSource" />
+			<description>Return an independent configuration with the supplied trusted pickup policy. A null source disables pickups.</description>
+		</method>
+	</methods>
+</class>

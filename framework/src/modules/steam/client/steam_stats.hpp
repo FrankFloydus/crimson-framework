@@ -143,6 +143,7 @@ protected:
 
 private:
     friend class SteamStatsEdit;
+    friend class SteamAchievements;
 
     // Construct a terminal result with counts and a local submission outcome.
     static godot::Ref<SteamStatsSubmissionResult> create(godot::Error error, int64_t applied = 0,

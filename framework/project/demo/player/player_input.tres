@@ -1,0 +1,9 @@
+[gd_resource type="InputLayout" format=3 uid="uid://susjx4j7g6v2"]
+
+; Copyright Francesco Di Blasi 2026 - All Rights Reserved
+
+[ext_resource type="InputActionMap" path="res://demo/player/on_foot.tres" id="1_on_foot"]
+
+[resource]
+maps = Array[InputActionMap]([ExtResource("1_on_foot")])
+click_to_capture = true

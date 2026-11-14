@@ -8,6 +8,7 @@
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <cstring>
+#include <string>
 
 namespace {
 
@@ -17,6 +18,10 @@ constexpr uint64_t test_account = 76561197960265729ULL;
 int interface_marker = 0;
 // Track whether native client initialization has an outstanding shutdown.
 bool initialized = false;
+// Current cached state of the mock achievement.
+bool achievement_unlocked = false;
+// Number of storage requests issued by synthetic achievement actions.
+unsigned int achievement_store_requests = 0;
 // Keep callback records valid through the matching manual FreeLastCallback call.
 IPCFailure_t failure{IPCFailure_t::k_EFailurePipeFail};
 NewUrlLaunchParameters_t query;
@@ -30,7 +35,14 @@ bool enabled(const char *name) {
 } // namespace
 
 // Begin one local client generation without making any network requests.
-ESteamAPIInitResult S_CALLTYPE SteamAPI_InitFlat(SteamErrMsg *) {
+ESteamAPIInitResult S_CALLTYPE SteamAPI_InitFlat(SteamErrMsg *message) {
+    if (enabled("CRIMSON_STEAM_TEST_INIT_FAIL")) {
+        constexpr char detail[] = "The fixture declined startup.\r\nCheck the fixture configuration.";
+        if (message) {
+            std::memcpy(*message, detail, sizeof(detail));
+        }
+        return k_ESteamAPIInitResult_FailedGeneric;
+    }
     if (initialized) {
         return k_ESteamAPIInitResult_FailedGeneric;
     }
@@ -104,6 +116,33 @@ bool SteamAPI_ISteamUserStats_GetStatInt32(ISteamUserStats *, const char *name, 
     }
     *value = 7;
     return true;
+}
+
+// Read the fixture's single synthetic achievement without calling Steam.
+bool SteamAPI_ISteamUserStats_GetAchievementAndUnlockTime(ISteamUserStats *, const char *name,
+        bool *unlocked, uint32 *time) {
+    if (std::strcmp(name, "CRIMSON_FIXTURE_ACH") != 0) {
+        return false;
+    }
+    *unlocked = achievement_unlocked;
+    *time = 0;
+    return true;
+}
+
+// Apply a cache edit independently of any store request.
+bool SteamAPI_ISteamUserStats_SetAchievement(ISteamUserStats *, const char *name) {
+    if (std::strcmp(name, "CRIMSON_FIXTURE_ACH") != 0) {
+        return false;
+    }
+    achievement_unlocked = true;
+    return true;
+}
+
+// Acknowledge or reject storage while keeping the local cache unchanged.
+bool SteamAPI_ISteamUserStats_StoreStats(ISteamUserStats *) {
+    const std::string requests = std::to_string(++achievement_store_requests);
+    SetEnvironmentVariableA("CRIMSON_STEAM_TEST_STORE_REQUESTS", requests.c_str());
+    return !enabled("CRIMSON_STEAM_TEST_STORE_REJECT");
 }
 
 // Supply either an exact uint64 session ID or an intentionally invalid query value.

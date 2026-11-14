@@ -3,6 +3,7 @@
 #include "inventory_wallet.hpp"
 
 #include <godot_cpp/core/class_db.hpp>
+#include <godot_cpp/variant/utility_functions.hpp>
 
 #include <vector>
 
@@ -24,8 +25,9 @@ struct BalanceChange {
 };
 
 // Validates and converts the wallet callback result to a Godot error code.
-Error read_callback_error(const Variant &result) {
+Error read_callback_error(const Variant &result, const char *callback) {
     if (result.get_type() != Variant::INT || int64_t(result) < OK || int64_t(result) > ERR_PRINTER_ON_FIRE) {
+        UtilityFunctions::printerr(String("[Crimson] Inventory wallet ") + callback + " must return a Godot Error.");
         return ERR_INVALID_DATA;
     }
     return static_cast<Error>(int64_t(result));
@@ -36,7 +38,10 @@ Error read_callback_error(const Variant &result) {
 int64_t SpatialInventoryWallet::get_balance(int64_t actor, const StringName &currency) const {
     if (GDVIRTUAL_IS_OVERRIDDEN(_get_balance)) {
         int64_t amount = 0;
-        GDVIRTUAL_CALL(_get_balance, actor, currency, amount);
+        if (!GDVIRTUAL_CALL(_get_balance, actor, currency, amount) || amount < 0) {
+            UtilityFunctions::printerr("[Crimson] Inventory wallet _get_balance could not provide a nonnegative balance.");
+            return -1;
+        }
         return amount;
     }
     const Dictionary currencies = balances.get(actor, Dictionary());
@@ -44,14 +49,18 @@ int64_t SpatialInventoryWallet::get_balance(int64_t actor, const StringName &cur
 }
 
 Error SpatialInventoryWallet::set_balance(int64_t actor, const StringName &currency, int64_t amount) {
+    const Variant current = call("get_balance", actor, currency);
+    if (current.get_type() != Variant::INT || int64_t(current) < 0) {
+        return ERR_INVALID_DATA;
+    }
     Dictionary change;
     change["actor"] = actor;
     change["currency"] = currency;
-    change["before"] = call("get_balance", actor, currency);
+    change["before"] = current;
     change["after"] = amount;
     TypedArray<Dictionary> changes;
     changes.push_back(change);
-    return read_callback_error(call("apply_balance_changes", changes, Callable()));
+    return read_callback_error(call("apply_balance_changes", changes, Callable()), "apply_balance_changes");
 }
 
 Error SpatialInventoryWallet::apply_balance_changes(const Array &changes, const Callable &commit) {
@@ -71,9 +80,13 @@ Error SpatialInventoryWallet::apply_balance_changes(const Array &changes, const 
         }
         busy = true;
         Error result = ERR_INVALID_DATA;
-        GDVIRTUAL_CALL(_apply_balance_changes, rows, commit, result);
+        const bool called = GDVIRTUAL_CALL(_apply_balance_changes, rows, commit, result);
         busy = false;
-        return result;
+        if (!called) {
+            UtilityFunctions::printerr("[Crimson] Inventory wallet _apply_balance_changes could not be called. Check the wallet script before retrying.");
+            return ERR_INVALID_DATA;
+        }
+        return read_callback_error(static_cast<int64_t>(result), "_apply_balance_changes");
     }
 
     Dictionary seen;
@@ -100,7 +113,11 @@ Error SpatialInventoryWallet::apply_balance_changes(const Array &changes, const 
         }
         currencies[currency] = true;
         seen[actor] = currencies;
-        if (get_balance(actor, currency) != int64_t(before)) {
+        const int64_t current = get_balance(actor, currency);
+        if (current < 0) {
+            return ERR_INVALID_DATA;
+        }
+        if (current != int64_t(before)) {
             return ERR_BUSY;
         }
         validated.push_back({actor, currency, before, after});
@@ -110,7 +127,7 @@ Error SpatialInventoryWallet::apply_balance_changes(const Array &changes, const 
     for (const BalanceChange &change : validated) {
         write_balance(change.actor, change.currency, change.after);
     }
-    const Error error = commit.is_valid() ? read_callback_error(commit.call()) : OK;
+    const Error error = commit.is_valid() ? read_callback_error(commit.call(), "commit callback") : OK;
     if (error != OK) {
         for (const BalanceChange &change : validated) {
             write_balance(change.actor, change.currency, change.before);

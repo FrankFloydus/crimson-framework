@@ -26,22 +26,26 @@ GameRuntime *resolve_game(ObjectID id) {
 }
 
 // Complete a facade operation with the same error fields as game operations.
-Ref<GameOperation> failed_operation(const String &code, const String &message, const GameRuntime *game = nullptr) {
+Ref<GameOperation> failed_operation(const String &code, const String &message, const GameRuntime *game = nullptr,
+        Ref<GameOperation> operation = {}) {
     Dictionary result;
     result["ok"] = false;
     result["code"] = code;
     result["message"] = message;
     result["world_id"] = game ? String(game->get_world_id()) : String();
     result["world_epoch"] = game ? game->get_world_epoch() : int64_t(0);
-    Ref<GameOperation> operation;
-    operation.instantiate();
+    if (operation.is_null()) {
+        operation.instantiate();
+    }
     operation->finish(result);
     return operation;
 }
 
 // Report a stale, detached, or otherwise inaccessible originating game.
-Ref<GameOperation> unavailable_operation() {
-    return failed_operation("Unavailable", "The originating GameRuntime must be active in the scene tree and accessed on the main thread.");
+Ref<GameOperation> unavailable_operation(const Ref<GameOperation> &operation = {}) {
+    return failed_operation("Unavailable",
+            "The originating GameRuntime must be active in the scene tree and accessed on the main thread.",
+            nullptr, operation);
 }
 
 } // namespace
@@ -99,7 +103,7 @@ Ref<SaveRequest> SaveRequest::as_autosave() const {
 Ref<GameOperation> SaveRequest::submit() const {
     GameRuntime *game = resolve_game(game_id);
     if (!game) {
-        return unavailable_operation();
+        return unavailable_operation(GameOperation::for_checkpoint(false, profile, slot));
     }
     const int64_t timestamp = static_cast<int64_t>(Time::get_singleton()->get_unix_time_from_system());
     const Dictionary metadata = save::SavePresentation::make_metadata(label, timestamp, context, preview);
@@ -132,16 +136,18 @@ Ref<SaveRequest> SaveSlot::save() const {
 
 Ref<GameOperation> SaveSlot::restore_latest() const {
     GameRuntime *game = resolve_game(game_id);
-    return game ? game->restore(String(profile), String(slot)) : unavailable_operation();
+    return game ? game->restore(String(profile), String(slot)) :
+            unavailable_operation(GameOperation::for_checkpoint(true, profile, slot));
 }
 
 Ref<GameOperation> SaveSlot::restore(const String &sequence, const String &id) const {
     GameRuntime *game = resolve_game(game_id);
     if (!game) {
-        return unavailable_operation();
+        return unavailable_operation(GameOperation::for_checkpoint(true, profile, slot));
     }
     if (sequence.is_empty() || id.is_empty()) {
-        return failed_operation("InvalidArgument", "Select a generation by both its sequence and ID.", game);
+        return failed_operation("InvalidArgument", "Select a generation by both its sequence and ID.", game,
+                GameOperation::for_checkpoint(true, profile, slot));
     }
     // Lifecycle signals can release the slot or its caller during restore admission.
     return game->restore(String(profile), String(slot), String(sequence), String(id));

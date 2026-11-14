@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="BindingSlot" inherits="RefCounted">
+	<brief_description>A detached snapshot of one editable physical control.</brief_description>
+	<description>Obtain a slot from [Rebinding]. A slot identifies its original [Controls] attachment. Read a fresh snapshot after editing. Mutating a returned event does not affect gameplay.</description>
+	<members>
+		<member name="action" type="StringName" getter="get_action">The logical action receiving input from this slot.</member>
+		<member name="device" type="int" getter="get_device">The [enum Rebinding.BindingDevice] value used for capture.</member>
+		<member name="display_name" type="String" getter="get_display_name">The optional game-authored slot label, such as Forward. Empty when none was authored.</member>
+		<member name="event" type="InputEvent" getter="get_event">A new detached copy of the assigned physical event, or [code]null[/code] when unbound.</member>
+		<member name="id" type="StringName" getter="get_id">The unique, stable slot identifier within the layout.</member>
+		<member name="label" type="String" getter="get_label">A human-readable description of the assigned control, or Unbound.</member>
+	</members>
+</class>

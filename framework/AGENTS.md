@@ -13,11 +13,12 @@ Paths in this guide are relative to `framework/`. Open the guide for each area y
 | Area | Scoped guide |
 | --- | --- |
 | Grid placement, item movement, and inventory models | [Inventory](src/modules/inventory/AGENTS.md) |
+| Local input layouts, movement, and binding capture | [Player Controls](docs/PLAYER_CONTROLS.md) and [Input rebinding](src/modules/input/rebinding/AGENTS.md) |
 | Checkpoint capture, storage, migrations, and staged restore | [Save](src/modules/save/AGENTS.md) |
 | Offline and ENet transport, admission, and peer lifecycle | [Session](src/modules/session/AGENTS.md) |
-| Scene catalog, threaded preparation, and world mounting | [Scene Loader](src/modules/scene_load/AGENTS.md) |
+| Scene catalog, threaded preparation, and world mounting | [Scene Manager](src/modules/scene_manager/AGENTS.md) |
 | Transactions, player bindings, possession, and command routing | [Match Runtime](src/modules/match_runtime/AGENTS.md) |
-| Recipient-specific baselines and state deltas | [Replication](src/modules/replication/AGENTS.md) |
+| Recipient-specific baselines, state deltas, and binary codecs | [Network](src/modules/network/AGENTS.md) |
 | `GameRuntime`, Game Flow, and module adapters | [Integration](src/integration/AGENTS.md) |
 | Fixed-world sessions, spawn placement, and local views | [World Session](src/integration/world_session/AGENTS.md) |
 | Online directories and Steam provider composition | [Online](src/integration/online/AGENTS.md) |
@@ -37,9 +38,12 @@ Update the [demo feature inventory](project/demo/AGENTS.md#implemented-features)
 ## Repository rules
 
 - Keep framework systems native C++. Exchange Godot-compatible DTOs at integration boundaries. Preserve documented Godot APIs and update the relevant public guide when behavior changes.
+- Preserve stable error codes and carry the specific cause through existing results or signals. When a failure needs an operator diagnostic, report it once at the owning boundary through Godot's built-in output with a `[Crimson]` prefix. Include the attempted action and a recovery step when one is available.
 - Document every first-party framework function and every class property or member field at its declaration. Document file-local functions at their definitions. Explain the purpose, contract, or invariant and update comments with behavior changes.
 - When adding or changing a native public Godot binding, update the owning class XML for its methods, properties, enum values, and signals. Describe arguments, return and failure behavior, defaults, units, and when signals fire. Include the XML in the editor documentation build so Godot's built-in Help shows it. [Godot GDExtension class documentation](https://docs.godotengine.org/en/4.7/tutorials/scripting/cpp/gdextension_docs_system.html)
 - Every first-party property exposed in the Godot Inspector must have an explanatory tooltip. Use class XML for native properties, a documentation comment for GDScript exports, or equivalent help for a custom editor control.
+- Keep first-party C++ source ASCII. Godot's narrow C++ string constructors and operators read Latin-1. For authored Unicode, use an explicit UTF-32 string such as `godot::String(U"\u2026")`. Decode incoming UTF-8 bytes with `godot::String::utf8` or `parse_utf8`. Keep Godot resources and documentation in UTF-8. Both native build systems run `python scripts/check_native_text.py`.
+- Never name a GDScript parameter, local, member, or constant so that it shadows a name in an enclosing scope, a current or inherited class member, or a Godot built-in or global identifier. Use a distinct name that describes its role. Fix `SHADOWED_VARIABLE`, `SHADOWED_VARIABLE_BASE_CLASS`, and `SHADOWED_GLOBAL_IDENTIFIER` warnings by renaming the declaration. Do not suppress these warnings.
 - Put the exact notice `Copyright Francesco Di Blasi 2026 - All Rights Reserved` at the top of each first-party framework file using its supported comment syntax or metadata. Preserve upstream and dependency notices. For generated files, apply the rule to the source inputs.
 - Keep agent instructions short and actionable. Put rules that apply across the repository here, put local invariants in the nearest scoped guide, and link to maintained contracts for detail.
 
@@ -73,6 +77,9 @@ Apply these roles to both the framework and the demo. Use the exact names in [Cr
 - Record each work commit in [DEVLOG.md](DEVLOG.md) with its version, full commit SHA, description, and ZIP links. Record the SHA after committing and verify the public ZIP link after publishing. Update both logs together in the post-push `docs:` commit. A follow-up limited to recording SHAs and verified release links is covered by the work commits it records.
 
 ## Verification
+
+- Automated tests own their assets, resources, settings, and input bindings. Generate them in the test or keep explicit fixtures beside it. Never depend on editable demo or project assets, authored scene contents, or UI settings such as labels, colors, dimensions, spacing, and theme values. Exercise UI through behavior and stable actions. Use visual captures separately to review appearance.
+- Keep demo smoke tests limited to observable startup and gameplay behavior. Run module regressions in an isolated project so edits to the demo cannot invalidate their fixtures.
 
 Use the [build commands](README.md#build) for `template_debug` and `template_release`. For native behavior or binding changes, verify both Windows x86-64 DLLs in an isolated project with Godot 4.7 stable. Run the harness from the workspace root in PowerShell 7. It copies the addon and fixtures into separate test projects and isolates save data. Use `-Target template_debug` for a faster iteration.
 

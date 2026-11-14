@@ -1,6 +1,7 @@
 # Copyright Francesco Di Blasi 2026 - All Rights Reserved
 extends SceneTree
 
+const Fixture := preload("res://tests/fixtures/network_fixture.gd")
 const ADDRESS := "127.0.0.1"
 const WAIT_MS := 15000
 
@@ -41,8 +42,9 @@ class LoopbackProvider extends GameServiceProvider:
 		return session
 
 
-var _demo: Node
+var _fixture_owner: Node
 var _game: GameRuntime
+var _actions: Game
 var _definition: GameDefinition
 var _markers: String
 var _ended_reason := &""
@@ -62,19 +64,19 @@ func _run() -> void:
 	Engine.max_fps = 120
 	var port := args[1].to_int()
 	_markers = args[2]
-	var main := load(String(ProjectSettings.get_setting("application/run/main_scene"))) as PackedScene
-	_demo = main.instantiate()
-	_game = _demo.get_node(^"Game") as GameRuntime
-	var authored := _game.definition
+	_fixture_owner = Node.new()
+	_fixture_owner.name = &"SessionFixture"
+	root.add_child(_fixture_owner)
+	var authored := Fixture.definition()
 	var authored_rules := authored.multiplayer_rules
 	_definition = authored.with_multiplayer(authored_rules.on_port(port).with_max_players(3))
 	if args[0] in ["host", "first"]:
 		_loopback = LoopbackProvider.new()
 		_definition = _definition.with_provider(_loopback)
-	_game.definition = _definition
-	root.add_child(_demo)
+	_actions = GameConfig.from_definition(_definition).boot(_fixture_owner)
+	_game = _fixture_owner.get_node(^"Game") as GameRuntime
 	_game.session_ended.connect(func(reason: StringName) -> void: _ended_reason = reason)
-	if not _check(authored_rules.port == 24830 and authored_rules.max_players == 4
+	if not _check(authored_rules.port == Fixture.PORT and authored_rules.max_players == Fixture.SPAWNS.size()
 			and _game.definition.multiplayer_rules.port == port and _game.definition.multiplayer_rules.max_players == 3,
 			"Fixture overrides port and capacity independently of the authored world and rules."):
 		quit(1)
@@ -122,7 +124,7 @@ func _run_solo() -> bool:
 	var solo: Dictionary = await _game.play_solo().wait()
 	if not _check(solo.ok and _players_match([0]) and _uses_scene_loader(_game)
 			and _game.get_player(1) == _game.get_local_player(),
-			"Spawn one solo actor from the actual Inspector configuration."):
+			"Spawn one solo actor from the fixture configuration."):
 		return false
 	var actor := _game.get_local_player()
 	var pose := actor.global_transform
@@ -149,10 +151,12 @@ func _exercise_builder() -> bool:
 	var built := ready.with_starting_world(&"missing_spawns", _make_world(0)).create()
 	var detached := built.get_parent() == null
 	built.name = &"FluentGame"
-	_demo.add_child(built)
+	_fixture_owner.add_child(built)
 	var invalid_result: Dictionary = await built.host_game(ADDRESS).wait()
 	var invalid: bool = (
 		invalid_result.code == "InvalidSpawnSetup" and built.get_phase() == GameRuntime.IDLE
+		and "scene" in String(invalid_result.message).to_lower()
+		and String(invalid_result.message) != "Check the world spawn points and player scene."
 		and built.get_world() == null and built.get_local_player() == null
 	)
 	built.definition = ready.with_multiplayer(null)
@@ -175,7 +179,7 @@ func _exercise_builder() -> bool:
 		var restarted_result: Dictionary = await restarted[0].wait()
 		reused = restarted_result.ok and _uses_scene_loader(built)
 	var ended := built.leave() == OK and built.get_world() == null and built.get_local_player() == null
-	_demo.remove_child(built)
+	_fixture_owner.remove_child(built)
 	built.queue_free()
 	return _check(detached and invalid and solo_only and started and reused and ended,
 			"Fluent create validates spawn setup, supports solo-only, and can restart at session_ended.")
@@ -189,11 +193,11 @@ func _exercise_legacy_world_session() -> bool:
 		.with_local_view(^"Camera3D", ^"Visuals")
 		.create()
 	)
-	_demo.add_child(legacy)
+	_fixture_owner.add_child(legacy)
 	var started := legacy.start_offline() == OK and legacy.get_state() == WorldSession.RUNNING \
 		and legacy.get_local_player() != null
 	var ended := legacy.leave() == OK and legacy.get_world() == null
-	_demo.remove_child(legacy)
+	_fixture_owner.remove_child(legacy)
 	legacy.queue_free()
 	return _check(started and ended, "Preserve the standalone World Session entry point and marker convention.")
 
@@ -221,19 +225,19 @@ func _exercise_shared_services() -> bool:
 func _exercise_reattach() -> bool:
 	var retained := _definition.create()
 	retained.name = &"RetainedGame"
-	_demo.add_child(retained)
+	_fixture_owner.add_child(retained)
 	var started: Dictionary = await retained.play_solo().wait()
 	if not _check(started.ok and GameServices.for_node(retained) == retained, "Publish the initialized Game scope."):
 		return false
 	var loader := retained.get_node(^"SceneLoader") as SceneLoadManager
 	var transport := retained.get_node(^"Session") as GameSession
 	var old_world_id := retained.get_world().get_instance_id()
-	_demo.remove_child(retained)
+	_fixture_owner.remove_child(retained)
 	if not _check(GameServices.for_node(retained) == null and transport.get_state() == GameSession.IDLE,
 			"Removing the retained Game closes its scope and transport."):
 		retained.free()
 		return false
-	_demo.add_child(retained)
+	_fixture_owner.add_child(retained)
 	if not await _wait_until(func() -> bool: return GameServices.for_node(retained) == retained, "retained Game republishes after cleanup"):
 		return false
 	if not _check(retained.get_node(^"SceneLoader") == loader and retained.get_node(^"Session") == transport
@@ -244,7 +248,7 @@ func _exercise_reattach() -> bool:
 	var replaced: bool = restarted.ok and restarted.world_epoch > started.world_epoch and _uses_scene_loader(retained) \
 		and retained.get_world().get_instance_id() != old_world_id
 	retained.leave()
-	_demo.remove_child(retained)
+	_fixture_owner.remove_child(retained)
 	retained.queue_free()
 	return _check(replaced, "A retained Game starts a new world and epoch after reattachment.")
 
@@ -376,7 +380,7 @@ func _run_overflow() -> bool:
 
 func _run_dedicated() -> bool:
 	_game.definition = _definition.with_multiplayer(_definition.multiplayer_rules.with_max_players(1))
-	var started: Dictionary = await _game.start_dedicated(ADDRESS).wait()
+	var started: GameResult = await _actions.serve(ADDRESS)
 	if not _check(started.ok and _uses_scene_loader(_game) and _game.get_local_player() == null
 			and _game.get_player(1) == null and root.get_camera_3d() == null and _dedicated_actor_count() == 0,
 			"Dedicated Scene Load is ready with no local actor, camera, or reserved host slot."):
@@ -399,8 +403,8 @@ func _run_dedicated() -> bool:
 				and _game.get_player(1) == null and root.get_camera_3d() == null
 				and _dedicated_actor_count() == 1, "Dedicated late join preserves the authority world."):
 		return false
-	_game.leave()
-	return _check(_is_idle(), "Dedicated shutdown retires its world.") \
+	var stopped: GameResult = await _actions.leave()
+	return _check(stopped.ok and _is_idle(), "Dedicated shutdown retires its world.") \
 		and await _wait_until(_marked.bind("dedicated-guest-ended"), "client observes dedicated shutdown")
 
 
@@ -409,7 +413,7 @@ func _run_dedicated_client() -> bool:
 	if not await _wait_until(_marked.bind("dedicated-ready"), "dedicated server completes Scene Load"):
 		return false
 	var epoch := FileAccess.get_file_as_string(_markers.path_join("dedicated-epoch")).strip_edges().to_int()
-	var joined: Dictionary = await _game.join_game(ADDRESS).wait()
+	var joined: GameResult = await _actions.join(ADDRESS)
 	if not _check(joined.ok and joined.world_epoch == epoch and _uses_scene_loader(_game)
 			and _game.get_player(1) == null and _players_match([0]), "Dedicated baseline uses the authority epoch and only a guest actor.") \
 			or not _mark("dedicated-guest-joined") \
@@ -418,7 +422,7 @@ func _run_dedicated_client() -> bool:
 	_game.leave()
 	if not await _wait_until(_marked.bind("dedicated-seat-cleared"), "dedicated authority releases the only seat"):
 		return false
-	var rejoined: Dictionary = await _game.join_game(ADDRESS).wait()
+	var rejoined: GameResult = await _actions.join(ADDRESS)
 	return _check(rejoined.ok and rejoined.world_epoch == epoch and _players_match([0]), "Reconnect to the same dedicated world.") \
 		and _mark("dedicated-guest-rejoined") and await _wait_until(_host_departed, "dedicated shutdown retires the guest scene") \
 		and _mark("dedicated-guest-ended")
@@ -430,7 +434,7 @@ func _dedicated_actor_count() -> int:
 
 
 func _start_host(description: String) -> bool:
-	var result: Dictionary = await _game.host_game(ADDRESS).wait()
+	var result: GameResult = await _actions.host(ADDRESS)
 	return _check(result.ok and _players_match([0]) and _uses_scene_loader(_game), description)
 
 
@@ -453,8 +457,8 @@ func _expect_join_denial(code: String, reason: StringName) -> bool:
 
 
 func _join(expected_slots: Array, local_slot: int) -> bool:
-	var result: Dictionary = await _game.join_game(ADDRESS).wait()
-	return _check(result.ok and result.world_id == String(_definition.starting_world),
+	var result: GameResult = await _actions.join(ADDRESS)
+	return _check(result.ok and result.world_id == _definition.starting_world,
 			"Join a running game and settle only after its local actor is ready.") \
 		and await _wait_until(_players_match.bind(expected_slots, local_slot), "verify the host's spawn assignments")
 

@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="DedicatedServerEntry" inherits="Node">
+	<brief_description>Boots a headless fixed-world LAN server from an authored scene.</brief_description>
+	<description>
+		Assign the same world, world ID, and player scene on the server and clients. Launch the server scene in a headless Godot process with [code]--crimson-role=server[/code] as a user argument. The scene boots a playerless authority and announces readiness after the world is loaded.
+	</description>
+	<members>
+		<member name="level_scene" type="PackedScene" setter="set_level_scene" getter="get_level_scene">
+			The gameplay scene the server loads before accepting players. Assign the same scene on clients.
+		</member>
+		<member name="player_scene" type="PackedScene" setter="set_player_scene" getter="get_player_scene">
+			The actor scene used for connected players. No local player is created on the server.
+		</member>
+		<member name="relay_between_guests" type="bool" setter="set_relay_between_guests" getter="get_relay_between_guests" default="true">
+			Leave enabled to keep the scene's default Godot relay policy. Disable when all gameplay messages must go through the authority and guests use the game's authoritative player roster.
+		</member>
+		<member name="rules" type="MultiplayerRules" setter="set_rules" getter="get_rules">
+			The LAN admission settings and default UDP port. A valid launch port override takes precedence.
+		</member>
+		<member name="world_id" type="StringName" setter="set_world_id" getter="get_world_id" default="&amp;&quot;start&quot;">
+			The nonempty ID that identifies the starting world to joining clients.
+		</member>
+	</members>
+</class>

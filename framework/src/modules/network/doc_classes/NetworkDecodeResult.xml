@@ -1,0 +1,24 @@
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="NetworkDecodeResult" inherits="RefCounted">
+	<brief_description>Completed network decoding with the decoded value.</brief_description>
+	<description>Check [member ok] before using [member value]. The value type is defined by the game codec and can be null on success.</description>
+	<methods>
+		<method name="is_ok" qualifiers="const">
+			<return type="bool" />
+			<description>Return true when the operation completed successfully.</description>
+		</method>
+		<method name="get_error" qualifiers="const">
+			<return type="int" />
+			<description>Return the terminal Godot error, or [constant OK].</description>
+		</method>
+		<method name="get_value" qualifiers="const">
+			<return type="Variant" />
+			<description>Return the decoded value, or null on failure. A successful codec may also return null.</description>
+		</method>
+	</methods>
+	<members>
+		<member name="ok" type="bool" setter="" getter="is_ok">Whether the operation completed successfully.</member>
+		<member name="error" type="int" setter="" getter="get_error">Terminal Godot error for the operation.</member>
+		<member name="value" type="Variant" setter="" getter="get_value">Decoded value on success. A null value may be a valid outcome, so check [member ok].</member>
+	</members>
+</class>

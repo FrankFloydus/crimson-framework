@@ -8,6 +8,7 @@
 #include <godot_cpp/classes/scene_multiplayer.hpp>
 #include <godot_cpp/classes/time.hpp>
 #include <godot_cpp/core/class_db.hpp>
+#include <godot_cpp/variant/utility_functions.hpp>
 
 #include <limits>
 #include <utility>
@@ -24,6 +25,9 @@ constexpr int32_t server_id = MultiplayerPeer::TARGET_PEER_SERVER;
 constexpr std::size_t max_pending_commands = 128;
 // Bound the wait for one command receipt without relying on scaled game time.
 constexpr uint64_t receipt_timeout_msec = 10000;
+// A receipt failure leaves command execution uncertain.
+constexpr const char *receipt_timeout_message =
+        "The authority's command receipt did not arrive before the deadline. Check game state before retrying.";
 // RPC names are identical on each peer and reserved for the match integration.
 constexpr const char *submit_method = "_crimson_match_submit";
 constexpr const char *receipt_method = "_crimson_match_receipt";
@@ -31,7 +35,7 @@ constexpr const char *announce_method = "_crimson_match_world_announced";
 constexpr const char *finish_method = "_crimson_match_world_finished";
 
 // Create a terminal operation result with a stable transport code.
-Dictionary failure(const char *code, const char *message) {
+Dictionary failure(const char *code, const String &message) {
     Dictionary result;
     result["ok"] = false;
     result["code"] = code;
@@ -133,9 +137,12 @@ Ref<GameOperation> MatchNetwork::submit_remote(const Dictionary &intent) {
         operation->finish(failure("Disconnected", "A connected client session is required."));
         return operation;
     }
-    if (pending.size() >= max_pending_commands ||
-            last_request_id == (std::numeric_limits<int64_t>::max)()) {
-        operation->finish(failure("Busy", "No command receipt slot is available."));
+    if (pending.size() >= max_pending_commands) {
+        operation->finish(failure("Busy", "The command receipt queue is full. Wait for an outstanding command to settle."));
+        return operation;
+    }
+    if (last_request_id == (std::numeric_limits<int64_t>::max)()) {
+        operation->finish(failure("Busy", "This game instance has exhausted its command request IDs. Start a new game instance."));
         return operation;
     }
 
@@ -146,9 +153,11 @@ Ref<GameOperation> MatchNetwork::submit_remote(const Dictionary &intent) {
     }
     const int64_t request_id = ++last_request_id;
     pending.emplace(request_id, PendingCommand{ operation, Time::get_singleton()->get_ticks_msec() + receipt_timeout_msec });
-    if (rpc_id(server_id, submit_method, request_id, detached) != OK) {
+    const Error sent = rpc_id(server_id, submit_method, request_id, detached);
+    if (sent != OK) {
         pending.erase(request_id);
-        operation->finish(failure("SendFailed", "The command could not be sent to the authority."));
+        operation->finish(failure("SendFailed", "The command could not be sent to the authority (" +
+                UtilityFunctions::error_string(sent) + String(").")));
     }
     return operation;
 }
@@ -160,7 +169,8 @@ void MatchNetwork::reset() {
     ++generation;
     set_process(false);
     for (const auto &entry : disconnected) {
-        entry.second.operation->finish(failure("Disconnected", "The session ended before the command receipt arrived."));
+        entry.second.operation->finish(failure("Disconnected",
+                "The session ended before the command receipt arrived. Check game state before retrying."));
     }
 }
 
@@ -200,7 +210,7 @@ void MatchNetwork::_process(double) {
         entry = pending.erase(entry);
     }
     for (const Ref<GameOperation> &operation : expired) {
-        operation->finish(failure("Timeout", "The authority's command receipt did not arrive before the deadline."));
+        operation->finish(failure("Timeout", receipt_timeout_message));
     }
 }
 
@@ -264,7 +274,7 @@ void MatchNetwork::rpc_receipt(int64_t request_id, const Dictionary &result) {
     pending.erase(entry);
     Dictionary detached;
     if (Time::get_singleton()->get_ticks_msec() >= deadline_msec) {
-        operation->finish(failure("Timeout", "The authority's command receipt did not arrive before the deadline."));
+        operation->finish(failure("Timeout", receipt_timeout_message));
     } else if (copy_result(result, detached)) {
         operation->finish(detached);
     } else {

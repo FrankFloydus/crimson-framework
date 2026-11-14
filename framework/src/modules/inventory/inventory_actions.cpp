@@ -260,8 +260,10 @@ Dictionary SpatialInventoryActions::transfer_one(const Grid &source, const Dicti
     const StringName id = placement["id"];
     Dictionary result = result_for(id, OK, "");
     Dictionary refreshes;
-    if (!matches_source(source, placement) || !matches_stack(adapter, id, key)) {
-        return end_transfer(result, source, ERR_BUSY, "The source item changed before transfer.", refreshes);
+    Status checked = check_source(source, placement);
+    if (checked.error != OK || !matches_stack(adapter, id, key)) {
+        return end_transfer(result, source, ERR_BUSY, checked.reason.is_empty() ?
+                String("The source item changed before transfer.") : checked.reason, refreshes);
     }
     String denial = pickup_denial(source, placement);
     if (!denial.is_empty()) {
@@ -274,8 +276,10 @@ Dictionary SpatialInventoryActions::transfer_one(const Grid &source, const Dicti
         return end_transfer(result, source, routing.error, routing.reason, refreshes);
     }
     denial = routing.reason;
-    if (!matches_source(source, placement)) {
-        return end_transfer(result, source, ERR_BUSY, "The source item changed before transfer.", refreshes);
+    checked = check_source(source, placement);
+    if (checked.error != OK) {
+        return end_transfer(result, source, ERR_BUSY, checked.reason.is_empty() ?
+                String("The source item changed before transfer.") : checked.reason, refreshes);
     }
 
     if (adapter.is_valid() && adapter->get_apply_changes().is_valid() && !key.is_empty()) {
@@ -304,8 +308,10 @@ Dictionary SpatialInventoryActions::transfer_one(const Grid &source, const Dicti
             }
             continue;
         }
-        if (!matches_source(source, placement, destination) || !matches_stack(adapter, id, key)) {
-            return end_transfer(result, source, ERR_BUSY, "The source or destination changed before transfer.", refreshes);
+        checked = check_source(source, placement, destination);
+        if (checked.error != OK || !matches_stack(adapter, id, key)) {
+            return end_transfer(result, source, ERR_BUSY, checked.reason.is_empty() ?
+                    String("The source or destination changed before transfer.") : checked.reason, refreshes);
         }
         const int64_t amount = placed_units(source, id);
         const uint64_t before_revision = destination->get_placement_revision();
@@ -330,8 +336,10 @@ Dictionary SpatialInventoryActions::transfer_one(const Grid &source, const Dicti
         return end_transfer(result, source, OK, "Item transferred.", refreshes);
     }
 
-    if (!matches_source(source, placement)) {
-        return end_transfer(result, source, ERR_BUSY, "The source item changed before transfer.", refreshes);
+    checked = check_source(source, placement);
+    if (checked.error != OK) {
+        return end_transfer(result, source, ERR_BUSY, checked.reason.is_empty() ?
+                String("The source item changed before transfer.") : checked.reason, refreshes);
     }
     if (!denial.is_empty()) {
         return end_transfer(result, source, ERR_UNAUTHORIZED, denial, refreshes);
@@ -344,7 +352,10 @@ Dictionary SpatialInventoryActions::transfer_one(const Grid &source, const Dicti
 SpatialInventoryActions::Status SpatialInventoryActions::transfer_destinations(const Grid &source,
         const Dictionary &placement, const Array &destinations, std::vector<Grid> &models) const {
     Array ordered = destinations;
-    if (destinations.is_empty() && destination_provider.is_valid()) {
+    if (destinations.is_empty() && !destination_provider.is_null()) {
+        if (!destination_provider.is_valid()) {
+            return {ERR_INVALID_PARAMETER, "The quick transfer destination provider is unavailable."};
+        }
         const Variant supplied = destination_provider.call(drop_context(placement, source, {},
                 placement["origin"], placement["rotated"], "transfer"));
         if (supplied.get_type() != Variant::ARRAY) {
@@ -362,15 +373,21 @@ SpatialInventoryActions::Status SpatialInventoryActions::transfer_destinations(c
             continue;
         }
         seen[destination] = true;
-        if (!guard_allows(source, destination)) {
+        const Status guard = check_guard(source, destination);
+        if (!guard.reason.is_empty()) {
+            return guard;
+        }
+        if (guard.error != OK) {
             continue;
         }
-        if (destination_policy.is_valid()) {
+        if (!destination_policy.is_null()) {
+            if (!destination_policy.is_valid()) {
+                return {ERR_UNAUTHORIZED, "The quick transfer destination policy is unavailable."};
+            }
             const Variant decision = destination_policy.call(drop_context(placement, source, destination,
                     placement["origin"], placement["rotated"], "transfer"));
             if (decision.get_type() != Variant::STRING) {
-                denial = "Destination policy must return a String.";
-                continue;
+                return {ERR_UNAUTHORIZED, "Destination policy must return a String."};
             }
             const String reason = decision;
             if (!reason.is_empty()) {
@@ -426,7 +443,7 @@ SpatialInventoryActions::Status SpatialInventoryActions::merge_receivers(const G
         if (StringName(before["key"]) != key) {
             return {ERR_BUSY, "The source or destination stack changed before transfer."};
         }
-        if (drop_policy.is_valid()) {
+        if (!drop_policy.is_null()) {
             Dictionary context = drop_context(placement, source, destination, target["origin"],
                     placement["rotated"], "merge");
             context["target_id"] = target_id;
@@ -439,10 +456,13 @@ SpatialInventoryActions::Status SpatialInventoryActions::merge_receivers(const G
         }
 
         const bool consumed = static_cast<int64_t>(plan["remaining"]) == 0;
-        const Error error = commit_placed_merge(adapter, plan, source, placement, destination, target);
-        if (error != OK) {
-            return {error, String("Could not transfer into the matching stack (") +
-                    UtilityFunctions::error_string(error) + ")."};
+        Status committed = commit_placed_merge(adapter, plan, source, placement, destination, target);
+        if (committed.error != OK) {
+            if (committed.reason.is_empty()) {
+                committed.reason = String("Could not transfer into the matching stack (") +
+                        UtilityFunctions::error_string(committed.error) + ").";
+            }
+            return committed;
         }
         result["moved"] = static_cast<int64_t>(result["moved"]) + static_cast<int64_t>(plan["moved"]);
         mark_refresh(refreshes, destination, target_id);
@@ -461,6 +481,9 @@ SpatialInventoryActions::Status SpatialInventoryActions::merge_receivers(const G
 
 SpatialInventoryActions::Position SpatialInventoryActions::find_position(const Grid &source,
         const Grid &destination, const Dictionary &placement) const {
+    if (!drop_policy.is_null() && !drop_policy.is_valid()) {
+        return {NO_FIT, false, "The drop policy is unavailable."};
+    }
     const Vector2i footprint = placement["footprint"];
     const bool initial_rotation = placement["rotated"];
     const int orientation_count = allow_rotation && (footprint.x != footprint.y || drop_policy.is_valid()) ? 2 : 1;
@@ -515,7 +538,7 @@ Dictionary SpatialInventoryActions::split_stack(const Grid &source, const String
         return result_for(id, plan_error, String("Could not split the stack: ") + UtilityFunctions::error_string(plan_error));
     }
 
-    if (drop_policy.is_valid()) {
+    if (!drop_policy.is_null()) {
         Dictionary context = drop_context(placement, source, destination, origin, rotated, "split");
         context["new_id"] = new_id;
         context["quantity"] = amount;
@@ -524,11 +547,17 @@ Dictionary SpatialInventoryActions::split_stack(const Grid &source, const String
             return result_for(id, ERR_UNAUTHORIZED, denial);
         }
     }
-    if (stack_adapter != adapter || !matches_source(source, placement, destination)) {
-        return result_for(id, ERR_BUSY, "The source or destination changed before splitting.");
+    Status checked = stack_adapter == adapter ? check_source(source, placement, destination) : Status{ERR_BUSY, {}};
+    if (checked.error != OK) {
+        return result_for(id, ERR_BUSY, checked.reason.is_empty() ?
+                String("The source or destination changed before splitting.") : checked.reason);
     }
     const Callable commit_placement = inventory_callback([&]() -> Error {
-        if (stack_adapter != adapter || !matches_source(source, placement, destination)) {
+        if (stack_adapter != adapter) {
+            return ERR_BUSY;
+        }
+        checked = check_source(source, placement, destination);
+        if (checked.error != OK) {
             return ERR_BUSY;
         }
         if (!source->get_placement(new_id).is_empty()) {
@@ -538,7 +567,8 @@ Dictionary SpatialInventoryActions::split_stack(const Grid &source, const String
     });
     const Error error = adapter->commit_detached_split(plan, commit_placement);
     if (error != OK) {
-        return result_for(id, error, String("Could not split the stack: ") + UtilityFunctions::error_string(error));
+        return result_for(id, error, checked.reason.is_empty() ?
+                String("Could not split the stack: ") + UtilityFunctions::error_string(error) : checked.reason);
     }
 
     Dictionary result = result_for(id, OK, String("Split off ") + String::num_int64(amount) + ".");
@@ -598,13 +628,18 @@ Dictionary SpatialInventoryActions::move_item(const Grid &source, const StringNa
         return result_for(id, ERR_UNAUTHORIZED, denial);
     }
     const int64_t units = placed_units(source, id);
-    if (!matches_source(source, before, destination)) {
-        return result_for(id, ERR_BUSY, placement_reason(ERR_BUSY));
+    const Status source_status = check_source(source, before, destination);
+    if (source_status.error != OK) {
+        return result_for(id, ERR_BUSY, source_status.reason.is_empty() ? placement_reason(ERR_BUSY) : source_status.reason);
     }
 
     if (blocker.is_empty()) {
         error = source->try_transfer(id, destination, origin, rotated);
-    } else if (matches_source(destination, blocker, source)) {
+    } else {
+        const Status swap_status = check_source(destination, blocker, source);
+        if (swap_status.error != OK) {
+            return result_for(id, ERR_BUSY, swap_status.reason.is_empty() ? placement_reason(ERR_BUSY) : swap_status.reason);
+        }
         Dictionary after = before.duplicate();
         after["origin"] = origin;
         after["rotated"] = rotated;
@@ -618,8 +653,6 @@ Dictionary SpatialInventoryActions::move_item(const Grid &source, const StringNa
                     edit_row(source, id, before, {}), edit_row(destination, id, {}, after),
                     edit_row(destination, swap_id, blocker, {}), edit_row(source, swap_id, {}, returned)));
         }
-    } else {
-        error = ERR_BUSY;
     }
     if (error != OK) {
         return result_for(id, error, placement_reason(error));
@@ -660,7 +693,7 @@ Dictionary SpatialInventoryActions::merge_stacks(const Grid &source, const Strin
     if (plan_error != OK) {
         return result_for(id, plan_error, String("Could not merge the stacks: ") + UtilityFunctions::error_string(plan_error) + ".");
     }
-    if (drop_policy.is_valid()) {
+    if (!drop_policy.is_null()) {
         Dictionary context = drop_context(placement, source, destination, target["origin"], placement["rotated"], "merge");
         context["target_id"] = target_id;
         context["quantity"] = plan["moved"];
@@ -669,9 +702,10 @@ Dictionary SpatialInventoryActions::merge_stacks(const Grid &source, const Strin
             return result_for(id, ERR_UNAUTHORIZED, denial);
         }
     }
-    const Error error = commit_placed_merge(adapter, plan, source, placement, destination, target);
-    if (error != OK) {
-        return result_for(id, error, String("Could not merge the stacks: ") + UtilityFunctions::error_string(error) + ".");
+    const Status committed = commit_placed_merge(adapter, plan, source, placement, destination, target);
+    if (committed.error != OK) {
+        return result_for(id, committed.error, committed.reason.is_empty() ?
+                String("Could not merge the stacks: ") + UtilityFunctions::error_string(committed.error) + "." : committed.reason);
     }
     const int64_t moved = plan["moved"];
     const bool completed = static_cast<int64_t>(plan["remaining"]) == 0;
@@ -688,13 +722,18 @@ Dictionary SpatialInventoryActions::merge_stacks(const Grid &source, const Strin
     return result;
 }
 
-Error SpatialInventoryActions::commit_placed_merge(const Adapter &adapter, const Dictionary &plan,
+SpatialInventoryActions::Status SpatialInventoryActions::commit_placed_merge(const Adapter &adapter, const Dictionary &plan,
         const Grid &source, const Dictionary &placement, const Grid &destination, const Dictionary &target) {
     const StringName id = placement["id"];
     const StringName target_id = target["id"];
     const bool consumed = static_cast<int64_t>(plan["remaining"]) == 0;
+    Status checked;
     const Callable commit_placement = inventory_callback([&]() -> Error {
-        if (stack_adapter != adapter || !matches_source(source, placement, destination) ||
+        if (stack_adapter != adapter) {
+            return ERR_BUSY;
+        }
+        checked = check_source(source, placement, destination);
+        if (checked.error != OK ||
                 destination->get_placement(target_id) != target ||
                 (source != destination && (!destination->get_placement(id).is_empty() ||
                         !source->get_placement(target_id).is_empty()))) {
@@ -702,7 +741,7 @@ Error SpatialInventoryActions::commit_placed_merge(const Adapter &adapter, const
         }
         return consumed ? source->remove(id) : OK;
     });
-    return adapter->commit_merge(plan, commit_placement);
+    return {adapter->commit_merge(plan, commit_placement), checked.reason};
 }
 
 TypedArray<StringName> SpatialInventoryActions::find_items(const Grid &inventory, const Callable &predicate) {
@@ -714,9 +753,17 @@ TypedArray<StringName> SpatialInventoryActions::find_items(const Grid &inventory
     std::vector<StringName> matched_ids;
     for (int64_t i = 0; i < placements.size(); ++i) {
         const Dictionary placement = placements[i];
-        if (predicate.is_valid()) {
+        if (!predicate.is_null()) {
+            if (!predicate.is_valid()) {
+                UtilityFunctions::printerr("[Crimson] Inventory item filter is unavailable.");
+                return {};
+            }
             const Variant matched = predicate.call(placement);
-            if (matched.get_type() != Variant::BOOL || !static_cast<bool>(matched)) {
+            if (matched.get_type() != Variant::BOOL) {
+                UtilityFunctions::printerr("[Crimson] Inventory item filter must return a bool.");
+                return {};
+            }
+            if (!static_cast<bool>(matched)) {
                 continue;
             }
         }
@@ -731,17 +778,27 @@ TypedArray<StringName> SpatialInventoryActions::find_items(const Grid &inventory
     return ids;
 }
 
-bool SpatialInventoryActions::matches_source(const Grid &source, const Dictionary &placement,
+SpatialInventoryActions::Status SpatialInventoryActions::check_source(const Grid &source, const Dictionary &placement,
         const Grid &destination) const {
-    return guard_allows(source, destination) && source->get_placement(placement["id"]) == placement;
+    const Status guard = check_guard(source, destination);
+    if (guard.error != OK) {
+        return guard;
+    }
+    return {source->get_placement(placement["id"]) == placement ? OK : ERR_BUSY, {}};
 }
 
-bool SpatialInventoryActions::guard_allows(const Grid &source, const Grid &destination) const {
+SpatialInventoryActions::Status SpatialInventoryActions::check_guard(const Grid &source, const Grid &destination) const {
+    if (operation_guard.is_null()) {
+        return {};
+    }
     if (!operation_guard.is_valid()) {
-        return true;
+        return {ERR_BUSY, "The inventory operation guard is unavailable."};
     }
     const Variant allowed = operation_guard.call(source, destination);
-    return allowed.get_type() == Variant::BOOL && static_cast<bool>(allowed);
+    if (allowed.get_type() != Variant::BOOL) {
+        return {ERR_BUSY, "The inventory operation guard must return a bool."};
+    }
+    return {static_cast<bool>(allowed) ? OK : ERR_BUSY, {}};
 }
 
 bool SpatialInventoryActions::matches_stack(const Adapter &adapter, const StringName &id, const StringName &key) const {
@@ -786,15 +843,18 @@ String SpatialInventoryActions::placement_denial(const Grid &source, const Dicti
         const Grid &destination, const Vector2i &origin, bool rotated, const StringName &action,
         const StringName &swap_id) const {
     const String denial = pickup_denial(source, placement);
-    if (!denial.is_empty() || !drop_policy.is_valid()) {
+    if (!denial.is_empty() || drop_policy.is_null()) {
         return denial;
     }
     return drop_denial(drop_context(placement, source, destination, origin, rotated, action, swap_id));
 }
 
 String SpatialInventoryActions::pickup_denial(const Grid &source, const Dictionary &placement) const {
-    if (!pickup_policy.is_valid()) {
+    if (pickup_policy.is_null()) {
         return {};
+    }
+    if (!pickup_policy.is_valid()) {
+        return "The pickup policy is unavailable.";
     }
     const Variant decision = pickup_policy.call(fields({{"id", placement["id"]}, {"footprint", placement["footprint"]},
             {"rotated", placement["rotated"]}, {"source", source}, {"origin", placement["origin"]}}));
@@ -802,8 +862,11 @@ String SpatialInventoryActions::pickup_denial(const Grid &source, const Dictiona
 }
 
 String SpatialInventoryActions::drop_denial(const Dictionary &context) const {
-    if (!drop_policy.is_valid()) {
+    if (drop_policy.is_null()) {
         return {};
+    }
+    if (!drop_policy.is_valid()) {
+        return "The drop policy is unavailable.";
     }
     const Variant decision = drop_policy.call(context);
     return decision.get_type() == Variant::STRING ? String(decision) : String("Drop policy must return a String.");

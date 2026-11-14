@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="SteamAchievements" inherits="RefCounted">
+	<brief_description>
+		Submits single achievement unlocks for the owning Steamworks attachment.
+	</brief_description>
+	<description>
+		Get this service from [method Steamworks.achievements]. Call it on the main thread. It shares the same stats service and validation as a [SteamStatsEdit] from this attachment.
+	</description>
+	<methods>
+		<method name="unlock" qualifiers="const">
+			<return type="SteamStatsSubmissionResult" />
+			<param index="0" name="name" type="String" />
+			<description>
+				Validates the published achievement API name, sets its cached state, and asks Steam to store the change. Success means Steam accepted the storage request. [signal SteamStats.stats_stored] reports Steam's later app-wide storage result. The submission result retains how many cache changes were applied even when Steam rejects the storage request. An expired scope returns [constant @GlobalScope.ERR_UNAVAILABLE].
+			</description>
+		</method>
+	</methods>
+</class>

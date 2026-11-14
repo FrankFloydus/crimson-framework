@@ -9,7 +9,7 @@
 			<return type="GameRuntime" />
 			<param index="0" name="owner" type="Node" />
 			<description>
-				Creates a configured GameRuntime and attaches it to a live owner. Returns null if attachment fails or the tree retires the owner or child during attachment.
+				Creates a configured GameRuntime and attaches it to a live owner on the main thread. Returns null and reports a [code][Crimson][/code] diagnostic if attachment fails or the tree retires the owner or child during attachment.
 			</description>
 		</method>
 	</methods>

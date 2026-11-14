@@ -189,7 +189,8 @@ godot::String godot_string(const std::string &value) {
     }
 
     // Godot's UTF-8 parser consumes a leading BOM. Here it is part of the string value.
-    if (value.compare(0, 3, "\xef\xbb\xbf") == 0) {
+    if (value.size() >= 3 && static_cast<unsigned char>(value[0]) == 0xef &&
+            static_cast<unsigned char>(value[1]) == 0xbb && static_cast<unsigned char>(value[2]) == 0xbf) {
         return godot::String::chr(0xfeff) + result;
     }
     return result;

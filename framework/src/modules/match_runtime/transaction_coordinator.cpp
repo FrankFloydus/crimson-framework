@@ -130,8 +130,11 @@ bool copy_dictionary(const Dictionary &value, Dictionary &output, DtoBudget &bud
 // Use a bounded callback message when available, with a framework diagnostic as fallback.
 String failure_message(const Dictionary &reply, const String &fallback) {
     const Variant message = reply.get("message", Variant());
-    if (message.get_type() == Variant::STRING && !String(message).is_empty()) {
-        return String(message).left(512);
+    if (message.get_type() == Variant::STRING) {
+        const String detail = String(message).left(512);
+        if (!detail.strip_edges().is_empty()) {
+            return detail;
+        }
     }
     return fallback;
 }
@@ -403,11 +406,14 @@ Dictionary TransactionCoordinator::prepare_restore(const Dictionary &snapshot, c
         const Variant raw = explicit_check ? check.call(candidate.duplicate(true), detached_context.duplicate(true)) :
                 check.call(candidate.duplicate(true), Array(), detached_context.duplicate(true));
         if (raw.get_type() != Variant::DICTIONARY) {
-            return result(false, "restore_validation_failed", fallback);
+            return result(false, "restore_validation_failed", String("The restore check for store ") + store_id + " must return a Dictionary.");
         }
         const Dictionary reply = raw;
         const Variant ok = reply.get("ok", Variant());
-        if (ok.get_type() != Variant::BOOL || !static_cast<bool>(ok)) {
+        if (ok.get_type() != Variant::BOOL) {
+            return result(false, "restore_validation_failed", String("The restore check for store ") + store_id + " must return a boolean ok field.");
+        }
+        if (!static_cast<bool>(ok)) {
             return result(false, "restore_validation_failed", failure_message(reply, fallback));
         }
         const Variant state = explicit_check ? Variant(candidate) : reply.get("state", Variant());
@@ -611,11 +617,14 @@ String TransactionCoordinator::validate_prepared_states(const Dictionary &prepar
         }
         const Variant raw = validator.validate.call(prepared.duplicate(true), context.duplicate(true));
         if (raw.get_type() != Variant::DICTIONARY) {
-            return fallback;
+            return String("Validator ") + validator_id + " must return a Dictionary.";
         }
         const Dictionary reply = raw;
         const Variant ok = reply.get("ok", Variant());
-        if (ok.get_type() != Variant::BOOL || !static_cast<bool>(ok)) {
+        if (ok.get_type() != Variant::BOOL) {
+            return String("Validator ") + validator_id + " must return a boolean ok field.";
+        }
+        if (!static_cast<bool>(ok)) {
             return failure_message(reply, fallback);
         }
     }

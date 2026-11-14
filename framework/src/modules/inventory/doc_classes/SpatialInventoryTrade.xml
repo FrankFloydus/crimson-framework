@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="SpatialInventoryTrade" inherits="RefCounted">
+	<brief_description>Manages offers and settlement for a two-participant inventory trade.</brief_description>
+	<description>Register the participants and their grids before requesting a trade. Once accepted, both participants can edit their offers until they lock them for settlement.</description>
+	<members>
+		<member name="phase" type="int" getter="get_phase" default="0">Current trade phase. Compare this value with the [enum Phase] constants.</member>
+		<member name="initiator" type="int" getter="get_initiator" default="0">Actor ID that requested the trade. A value of [code]0[/code] means there is no initiator.</member>
+		<member name="receiver" type="int" getter="get_receiver" default="0">Actor ID that received the trade request. A value of [code]0[/code] means there is no receiver.</member>
+		<member name="revision" type="int" getter="get_revision" default="0">Current trade revision. Read it to check whether trade state changed since it was displayed.</member>
+		<member name="describe_stack" type="Callable" setter="set_describe_stack" getter="get_describe_stack">Optional callback that receives an item ID and returns a Dictionary with [code]key[/code], [code]quantity[/code], and [code]max_quantity[/code]. An empty Dictionary identifies an item without a stack record. Defaults to an empty callable.</member>
+		<member name="allocate_stack_id" type="Callable" setter="set_allocate_stack_id" getter="get_allocate_stack_id">Callback that receives the source stack ID and supplies a new, unused item ID when an operation splits a stack. Defaults to an empty callable.</member>
+		<member name="apply_stack_changes" type="Callable" setter="set_apply_stack_changes" getter="get_apply_stack_changes">Callback that receives proposed stack edits and a placement commit callable. Stage the quantity changes, invoke the commit once, and roll back the stack edits if the placement commit fails. Return a Godot Error. Defaults to an empty callable.</member>
+		<member name="participant_eligibility" type="Callable" setter="set_participant_eligibility" getter="get_participant_eligibility">Optional callback that receives the trade stage and both actor IDs. Return an empty String or StringName to allow the stage, or a reason to deny it. Defaults to an empty callable.</member>
+		<member name="item_eligibility" type="Callable" setter="set_item_eligibility" getter="get_item_eligibility">Optional callback that receives the trade stage, both actor IDs, item ID, placement, stack data, and quantity. Return an empty String or StringName to allow the item, or a reason to deny it. Defaults to an empty callable.</member>
+		<member name="wallet" type="SpatialInventoryWallet" setter="set_wallet" getter="get_wallet">Optional wallet that supplies balances and commits currency transfers during settlement. Set it before participants make currency offers. Defaults to [code]null[/code].</member>
+	</members>
+	<constants>
+		<constant name="IDLE" value="0" enum="Phase">There is no open trade request or active trade.</constant>
+		<constant name="REQUESTED" value="1" enum="Phase">The initiator sent a request and the receiver can accept it.</constant>
+		<constant name="ACTIVE" value="2" enum="Phase">The request was accepted. Participants can manage and lock their offers.</constant>
+		<constant name="SNAPSHOT_VERSION" value="2">Version used when exporting a trade snapshot.</constant>
+		<constant name="MAX_BALANCE" value="9223372036854775807">Largest supported nonnegative balance, expressed in whole currency units.</constant>
+		<constant name="MAX_SNAPSHOT_REVISION" value="4611686018427387903">Exclusive upper bound for a revision restored from a trade snapshot.</constant>
+		<constant name="MAX_CURRENCIES_PER_OFFER" value="32">Maximum number of distinct currency IDs in one participant's offer.</constant>
+		<constant name="MAX_RETURN_SOURCES" value="64">Maximum number of source allocations tracked for returning an offered stack.</constant>
+	</constants>
+</class>

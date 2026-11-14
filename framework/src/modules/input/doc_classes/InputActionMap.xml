@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="InputActionMap" inherits="Resource">
+	<brief_description>An independently editable set of actions and bindings.</brief_description>
+	<description>Save an Input Action Map for each group of controls, such as on-foot or vehicle controls, then assign the maps to an [InputLayout]. The map named [code]Gameplay[/code] is active at boot. Enable other maps through [method Controls.set_map_enabled].</description>
+	<methods>
+		<method name="add_action">
+			<return type="InputActionMapping" />
+			<param index="0" name="id" type="StringName" />
+			<param index="1" name="action" type="InputAction" />
+			<description>Appends a mapping for the action definition and returns the new mapping so bindings can be added. Call [method validate] to check the draft.</description>
+		</method>
+		<method name="create" qualifiers="static">
+			<return type="InputActionMap" />
+			<param index="0" name="id" type="StringName" />
+			<description>Returns an empty map draft with the given activation ID.</description>
+		</method>
+		<method name="validate" qualifiers="const">
+			<return type="int" enum="Error" />
+			<description>Returns [constant OK] if the map and its mappings are valid. Duplicate action or binding IDs return [constant ERR_ALREADY_EXISTS]. Invalid values return [constant ERR_INVALID_PARAMETER]. [method InputLayout.validate] checks ID uniqueness across maps.</description>
+		</method>
+	</methods>
+	<members>
+		<member name="display_name" type="String" setter="set_display_name" getter="get_display_name" default="&quot;&quot;">Optional readable title for tools. A blank title uses the map ID.</member>
+		<member name="id" type="StringName" setter="set_id" getter="get_id" default="&amp;&quot;Gameplay&quot;">Case-sensitive activation ID passed to [method Controls.set_map_enabled]. Must be nonempty and unique within the layout.</member>
+		<member name="mappings" type="InputActionMapping[]" setter="set_mappings" getter="get_mappings" default="[]">Action definitions and their physical slots, in authoring order.</member>
+	</members>
+</class>

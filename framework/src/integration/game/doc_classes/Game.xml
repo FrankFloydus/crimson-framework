@@ -1,0 +1,206 @@
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="Game" inherits="RefCounted">
+	<brief_description>Code-first game actions and services owned by a live scene scope.</brief_description>
+	<methods>
+		<method name="configure" qualifiers="static">
+			<return type="GameConfig" />
+			<param index="0" name="level" type="PackedScene" />
+			<param index="1" name="player" type="PackedScene" />
+			<description>Create a solo-ready draft for a fixed world and player scene.</description>
+		</method>
+		<method name="campaign" qualifiers="static">
+			<return type="GameConfig" />
+			<param index="0" name="start" type="WorldDefinition" />
+			<description>Create a coordinated draft. Register game-owned state and permission rules before starting.</description>
+		</method>
+		<method name="current" qualifiers="static">
+			<return type="Game" />
+			<description>Return the explicitly selected or sole live game, or null when ambiguous.</description>
+		</method>
+		<method name="for_node" qualifiers="static">
+			<return type="Game" />
+			<param index="0" name="node" type="Node" />
+			<description>Resolve the nearest live game owning this scene branch.</description>
+		</method>
+		<method name="set_default" qualifiers="static">
+			<return type="int" />
+			<param index="0" name="game" type="Game" />
+			<description>Select a live code-first game for global access, or pass null to clear it.</description>
+		</method>
+		<method name="boot_result">
+			<return type="GameResult" />
+			<description>Return the original boot outcome. An action additionally requires a live attachment.</description>
+		</method>
+		<method name="play">
+			<return type="Variant" />
+			<description>Await the GameResult after solo startup makes the world playable.</description>
+		</method>
+		<method name="host">
+			<return type="Variant" />
+			<param index="0" name="bind_address" type="String" />
+			<param index="1" name="public_address" type="String" />
+			<description>Await a playable host and online publication when configured. The default bind is *. An optional public address advertises a direct route.</description>
+		</method>
+		<method name="join">
+			<return type="Variant" />
+			<param index="0" name="address" type="String" />
+			<description>Await a verified, playable direct join using the configured port.</description>
+		</method>
+		<method name="serve">
+			<return type="Variant" />
+			<param index="0" name="bind_address" type="String" />
+			<param index="1" name="public_address" type="String" />
+			<description>Await a playerless world with admission open. Bind defaults to *. The optional advertised address defaults to empty.</description>
+		</method>
+		<method name="find_and_join">
+			<return type="Variant" />
+			<description>Search the configured online game and await one verified playable join. Empty search, admission failure, and cancellation have distinct outcomes.</description>
+		</method>
+		<method name="join_listing">
+			<return type="Variant" />
+			<param index="0" name="listing" type="OnlineListing" />
+			<description>Await the result of joining the exact selected listing.</description>
+		</method>
+		<method name="open_lobby">
+			<return type="GameResult" />
+			<param index="0" name="bind_address" type="String" />
+			<description>Open a coordinated ENet lobby for identity binding. Bind defaults to *.</description>
+		</method>
+		<method name="join_lobby">
+			<return type="GameResult" />
+			<param index="0" name="address" type="String" />
+			<description>Begin joining a coordinated ENet lobby. Observe phase changes for admission and world readiness.</description>
+		</method>
+		<method name="bind_player">
+			<return type="int" />
+			<param index="0" name="peer_id" type="int" />
+			<param index="1" name="player_id" type="String" />
+			<description>Bind an identity verified by the game to an admitted peer in the authority lobby.</description>
+		</method>
+		<method name="start_match">
+			<return type="Variant" />
+			<param index="0" name="world" type="StringName" />
+			<description>Await a coordinated world start after the authority binds its players. The default is the configured starting world.</description>
+		</method>
+		<method name="invite_friends">
+			<return type="GameResult" />
+			<description>Request Steam’s invite picker for the current owned lobby. Success acknowledges the request.</description>
+		</method>
+		<method name="accept_invite">
+			<return type="Variant" />
+			<param index="0" name="invite" type="SteamInvite" />
+			<description>Await the result of accepting the exact pending offer. A replaced offer rejects and leaves its replacement pending.</description>
+		</method>
+		<method name="pending_invite">
+			<return type="SteamInvite" />
+			<description>Return the pending offer or null, including eligible launch-time offers.</description>
+		</method>
+		<method name="dismiss_invite">
+			<return type="GameResult" />
+			<param index="0" name="invite" type="SteamInvite" />
+			<description>Dismiss the exact pending offer without joining.</description>
+		</method>
+		<method name="leave">
+			<return type="Variant" />
+			<description>Await retirement of the pending start or active session. An idle game succeeds immediately.</description>
+		</method>
+		<method name="perform">
+			<return type="Variant" />
+			<param index="0" name="name" type="String" />
+			<param index="1" name="payload" type="Dictionary" />
+			<description>Await the authority result for a coordinated command. The default payload is an empty dictionary.</description>
+		</method>
+		<method name="register_command">
+			<return type="int" />
+			<param index="0" name="name" type="String" />
+			<param index="1" name="handler" type="Callable" />
+			<param index="2" name="requires_primary" type="bool" />
+			<description>Register a game-owned command before coordinated play. The authority runs its handler. Possession is optional by default.</description>
+		</method>
+		<method name="transactions">
+			<return type="TransactionCoordinator" />
+			<description>Return the authority coordinator for game-owned store setup, or null when unavailable.</description>
+		</method>
+		<method name="save_slot">
+			<return type="SaveSlot" />
+			<param index="0" name="profile" type="String" />
+			<param index="1" name="slot" type="String" />
+			<description>Select a checkpoint slot in the configured coordinated game.</description>
+		</method>
+		<method name="scenes">
+			<return type="GameScenes" />
+			<description>Return world actions tied to this attachment.</description>
+		</method>
+		<method name="inventory">
+			<return type="GameInventory" />
+			<description>Return the configured inventory service, or null when disabled.</description>
+		</method>
+		<method name="codecs" qualifiers="const">
+			<return type="NetworkCodecs" />
+			<description>Return the codec registry for this game attachment. The same registry survives session leave and restarts. An unsuccessful or retired game returns null. When the game owner leaves the tree, retained references to the registry reject further work with [constant ERR_UNAVAILABLE].</description>
+		</method>
+		<method name="steam">
+			<return type="Steamworks" />
+			<description>Return the Steamworks facade for this exact game, including an unavailable facade when Steam is absent.</description>
+		</method>
+		<method name="get_phase">
+			<return type="int" />
+			<description>Return the current Phase. Retired attachments report IDLE.</description>
+		</method>
+		<method name="get_port">
+			<return type="int" />
+			<description>Return the configured UDP port, or zero when unavailable.</description>
+		</method>
+		<method name="network_diagnostics" qualifiers="const">
+			<return type="GameNetworkDiagnostics" />
+			<description>Sample local connection and movement state for a debugger. Returns a detached snapshot without changing the session. A detached game reports [constant GameNetworkDiagnostics.IDLE]. Sample again for fresh values.</description>
+		</method>
+		<method name="get_world">
+			<return type="Node" />
+			<description>Return the mounted world until travel or teardown.</description>
+		</method>
+		<method name="is_player_controlled">
+			<return type="bool" />
+			<description>Returns true when this fixed-world game was configured with authority-driven player movement.</description>
+		</method>
+		<method name="get_local_player">
+			<return type="Node3D" />
+			<description>Return the fixed-world local actor or null.</description>
+		</method>
+		<method name="get_player">
+			<return type="Node3D" />
+			<param index="0" name="peer_id" type="int" />
+			<description>Return the fixed-world actor for the specified session peer or null.</description>
+		</method>
+	</methods>
+	<signals>
+		<signal name="phase_changed">
+			<param index="0" name="phase" type="int" />
+			<description>Emitted after the runtime publishes the new phase.</description>
+		</signal>
+		<signal name="peer_joined">
+			<param index="0" name="peer_id" type="int" />
+			<description>Emitted when a peer is admitted.</description>
+		</signal>
+		<signal name="session_ended">
+			<param index="0" name="reason" type="StringName" />
+			<description>Emitted after session retirement.</description>
+		</signal>
+		<signal name="world_ready">
+			<param index="0" name="world" type="StringName" />
+			<param index="1" name="epoch" type="int" />
+			<description>Emitted when the runtime publishes a playable world.</description>
+		</signal>
+		<signal name="invite_changed">
+			<param index="0" name="invite" type="SteamInvite" />
+			<description>Emitted when the pending offer changes. Null clears the offer.</description>
+		</signal>
+	</signals>
+	<constants>
+		<constant name="IDLE" value="0" enum="Phase">No active gameplay session.</constant>
+		<constant name="LOBBY" value="1" enum="Phase">Coordinated admission or identity binding.</constant>
+		<constant name="TRANSITIONING" value="2" enum="Phase">A world transition is pending.</constant>
+		<constant name="RUNNING" value="3" enum="Phase">The game world is ready.</constant>
+		<constant name="RECOVERING" value="4" enum="Phase">A post-commit synchronization failure needs recovery.</constant>
+	</constants>
+</class>

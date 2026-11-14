@@ -6,7 +6,12 @@
 	</brief_description>
 	<members>
 		<member name="definition" type="WorldSessionDefinition" setter="set_definition" getter="get_definition">
-			Standalone scene and spawn settings applied on the next start. For game definitions with explicit multiplayer rules and spawn components, use [GameRuntime].
+			Scene and spawn settings applied on the next standalone start. Assign the definition while the session is idle. For game definitions with explicit multiplayer rules and spawn components, use [GameRuntime].
 		</member>
 	</members>
+	<constants>
+		<constant name="IDLE" value="0" enum="State">No world or transport is active.</constant>
+		<constant name="STARTING" value="1" enum="State">The world or its initial player assignments are still being prepared.</constant>
+		<constant name="RUNNING" value="2" enum="State">The world and readiness requirements for the local role are satisfied.</constant>
+	</constants>
 </class>

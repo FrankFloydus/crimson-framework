@@ -2,7 +2,7 @@
 
 # Crimson Framework
 
-Crimson Framework is a Godot 4.7 C++ GDExtension for offline and multiplayer games. Configure [`GameRuntime`](docs/PUBLIC_API.md#start-a-game) with a starting world, player scene, and optional multiplayer rules to play solo or host or join a drop-in game. The same entry point supports [coordinated matches](docs/PUBLIC_API.md#start-a-coordinated-game) with travel, save, and restore. The underlying modules are also available directly. Open `project/project.godot` to try the configured demo.
+Crimson Framework is a Godot 4.7 C++ GDExtension for offline and multiplayer games. Use [`Game.configure(level, player).boot(self)`](docs/CODE_FIRST.md) to start solo or configure LAN and Steam. The framework also supports coordinated matches with travel, save, and restore. Inventory and Steamworks are available independently. Open `project/project.godot` to try the code-first demo.
 
 For existing projects, follow the [Godot class-name migration guide](docs/API_NAME_MIGRATION.md) before installing the renamed addon.
 
@@ -13,9 +13,11 @@ For existing projects, follow the [Godot class-name migration guide](docs/API_NA
 | Inventory | [Inventory module](src/modules/inventory/README.md) | Grid placement and snapshots, stack operations, containers, sorting, equipment, staging, wallet balances, and trade. |
 | Save | [Save module](src/modules/save/README.md) | SaveCoordinator, detached capture and restore, schema migration, generation storage, provider ABI, and save metadata and previews. |
 | Game session | [Game session module](src/modules/session/README.md) | Offline sessions, ENet host and join, peer lifecycle, connection admission, and server authority. |
-| Scene loading | [Scene load module](src/modules/scene_load/README.md) | Threaded scene preparation and server-coordinated world transitions over the current Godot multiplayer API. |
+| Scene Manager | [Scene Manager module](src/modules/scene_manager/README.md) | Threaded scene preparation and server-coordinated world transitions over the current Godot multiplayer API. |
 | Match runtime | [Runtime API](docs/ARCHITECTURE.md) | Public transactions, player bindings, possession, and authority-side command dispatch. |
-| Replication | [Replication API](src/modules/replication/README.md) | Recipient-specific world baselines and committed state deltas. |
+| Network | [Network module](src/modules/network/README.md) | Recipient-specific world baselines, committed state deltas, and typed binary messages. |
+| Input | [Input module](src/modules/input/README.md) | Local input layouts, device assignment, action routing, and rebinding. |
+| Mover | [Mover module](src/modules/mover/README.md) | Movement rules and simulation for bodies driven by local input, AI, or scripts. |
 | Immediate play | [Public API](docs/PUBLIC_API.md#start-a-game) | Inspector and fluent game setup, listen-session rules, and component-based player spawning. |
 | Game Flow integration | [Public API](docs/PUBLIC_API.md) | `GameRuntime` composes the modules and owns session, scene, and checkpoint coordination. |
 | Steamworks | [Steamworks guide](docs/STEAMWORKS.md) · [Run the Steam tests](docs/STEAM_TESTING.md) | Standalone typed Steam services, listen and dedicated multiplayer, and a separate trusted publisher build. |
@@ -38,6 +40,8 @@ scons platform=windows arch=x86_64 target=template_release
 Copy [the crimson-framework addon](project/addons/crimson-framework) into the destination game's `addons/` directory after building. Its descriptor uses relative paths to the two DLLs. Use one extension that registers the `SpatialInventory` and `SaveCoordinator` class names in a project. Remove the original standalone descriptors from the destination project when migrating to Crimson.
 
 For CMake with Visual Studio, use `framework/` as the source directory and configure an x64 build directory. Choose `template_debug` or `template_release` with `GODOTCPP_TARGET`. Both build systems place the DLL under `framework/project/addons/crimson-framework/bin` relative to the workspace root.
+
+Both builds check first-party C++ text for unsafe narrow literals before producing a DLL. Run `python scripts/check_native_text.py` from `framework/` to check it directly. See [the native text rule](AGENTS.md#repository-rules) when writing an editor label or adding a UTF-8 input.
 
 Use `steam_sdk=off` with SCons or `-DCRIMSON_STEAMWORKS_SDK=OFF` with CMake to compile without Steamworks. [Steamworks SDK setup](vendor/README.md)
 

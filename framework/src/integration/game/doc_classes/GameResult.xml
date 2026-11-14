@@ -1,0 +1,43 @@
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="GameResult" inherits="RefCounted">
+	<brief_description>Immutable outcome of a code-first game action.</brief_description>
+	<methods>
+		<method name="is_ok">
+			<return type="bool" />
+			<description>Whether the action succeeded.</description>
+		</method>
+		<method name="get_code">
+			<return type="String" />
+			<description>Stable machine-readable outcome code.</description>
+		</method>
+		<method name="get_message">
+			<return type="String" />
+			<description>Result detail for game presentation.</description>
+		</method>
+		<method name="get_reason">
+			<return type="StringName" />
+			<description>Transport or teardown reason when supplied.</description>
+		</method>
+		<method name="get_listing_id">
+			<return type="String" />
+			<description>Published lobby or server locator on successful online host.</description>
+		</method>
+		<method name="get_world_id">
+			<return type="StringName" />
+			<description>Activated world ID when supplied.</description>
+		</method>
+		<method name="get_world_epoch">
+			<return type="int" />
+			<description>Activated world epoch, or zero when unavailable.</description>
+		</method>
+	</methods>
+	<members>
+		<member name="ok" type="bool" setter="" getter="is_ok">Whether the action succeeded.</member>
+		<member name="code" type="String" setter="" getter="get_code">Stable machine-readable outcome code.</member>
+		<member name="message" type="String" setter="" getter="get_message">Result detail for game presentation.</member>
+		<member name="reason" type="StringName" setter="" getter="get_reason">Transport or teardown reason when supplied.</member>
+		<member name="listing_id" type="String" setter="" getter="get_listing_id">Published lobby or server locator on successful online host.</member>
+		<member name="world_id" type="StringName" setter="" getter="get_world_id">Activated world ID when supplied.</member>
+		<member name="world_epoch" type="int" setter="" getter="get_world_epoch">Activated world epoch, or zero when unavailable.</member>
+	</members>
+</class>

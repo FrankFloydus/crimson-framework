@@ -25,7 +25,9 @@ All origin and cell arguments are `Vector2i`, all ordinary item ID arguments are
 
 | Method | Contract |
 | --- | --- |
+| `Inventory.grid(size) -> SpatialInventory` | Create an empty grid with valid dimensions. Invalid dimensions return null. |
 | `configure(size) -> Error` | Set positive grid dimensions when empty. The current positive size returns `OK` without a change event. Changing the dimensions of a populated grid returns `ERR_BUSY`. |
+| `add(id, footprint) -> Error` | Find and commit the first legal unrotated fit for an unused ID. Return `ERR_CANT_CREATE` when there is no room. |
 | `get_grid_size() -> Vector2i` | Return dimensions or `Vector2i.ZERO` while unconfigured. |
 | `get_placement_revision() -> int` | Return the live grid's revision. Actual placement or dimension changes advance it before notifications. Compare revisions on the same grid. |
 | `check_placement(footprint, origin, rotated = false) -> Error` | Check whether a rectangle is in bounds and all its cells are free. This check takes geometry only. |
@@ -39,6 +41,7 @@ All origin and cell arguments are `Vector2i`, all ordinary item ID arguments are
 | `get_item_at(cell) -> StringName` | Return the instance ID at a cell or `&""` when free or out of bounds. |
 | `get_placement(id) -> Dictionary` | Return a detached dictionary with the four placement fields, or `{}` if absent. |
 | `get_placements() -> Array` | Return detached placement dictionaries for the whole grid. Treat their order as unspecified. |
+| `items() -> Array[InventoryItemView]`, `item_at(cell) -> InventoryItemView` | Return detached typed placement views. A free or out-of-bounds cell returns null from `item_at()`. Array order is unspecified. |
 | `find_first_fit(footprint, rotated = false, start = Vector2i.ZERO) -> Vector2i` | Scan origins left-to-right and top-to-bottom from the inclusive start. A start past the last possible origin in a row continues on the next row. Return `Vector2i(-1, -1)` for an invalid footprint, a negative start, or no fit. Call again with the other orientation to search it explicitly. |
 | `get_swap_target(footprint, origin, rotated = false) -> StringName` | Return the ID of the single distinct item intersecting the in-bounds candidate. Multiple covered cells from the same item count once. Free, invalid, and multiple-item candidates return `&""`. |
 | `try_swap_in(id, footprint, origin, rotated, expected_id) -> Dictionary` | Insert the held item in place of exactly the blocker named by `expected_id`. Return the displaced placement or `{}` on failure. Both removal and insertion finish before notification. |

@@ -1,0 +1,84 @@
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="NetworkWriter" inherits="RefCounted">
+	<brief_description>Build a bounded binary gameplay payload from typed fields.</brief_description>
+	<description>Create a writer with [method create], write fields in schema order, then seal the payload with [method finish]. Integers and floats use fixed widths and little-endian byte order. A string or byte array starts with an unsigned 32-bit byte length. The first error prevents later writes. This class writes payload bytes for a game-selected transport or storage path.</description>
+	<methods>
+		<method name="create" qualifiers="static">
+			<return type="NetworkWriter" />
+			<param index="0" name="max_bytes" type="int" default="1200" />
+			<description>Allocate a writer with a payload budget from 0 through 1,048,576 bytes. Inspect [method get_error] for an invalid budget or allocation failure.</description>
+		</method>
+		<method name="write_bool">
+			<return type="int" />
+			<param index="0" name="value" type="bool" />
+			<description>Write one byte, with 0 for false and 1 for true. Return [constant OK] or the first writer error. A sealed writer returns [constant ERR_LOCKED].</description>
+		</method>
+		<method name="write_u8">
+			<return type="int" />
+			<param index="0" name="value" type="int" />
+			<description>Write an unsigned 8-bit integer from 0 to 255. Return [constant OK] or the first writer error. A sealed writer returns [constant ERR_LOCKED].</description>
+		</method>
+		<method name="write_u16">
+			<return type="int" />
+			<param index="0" name="value" type="int" />
+			<description>Write an unsigned 16-bit integer from 0 to 65,535. Return [constant OK] or the first writer error. A sealed writer returns [constant ERR_LOCKED].</description>
+		</method>
+		<method name="write_u32">
+			<return type="int" />
+			<param index="0" name="value" type="int" />
+			<description>Write an unsigned 32-bit integer from 0 to 4,294,967,295. Return [constant OK] or the first writer error. A sealed writer returns [constant ERR_LOCKED].</description>
+		</method>
+		<method name="write_i8">
+			<return type="int" />
+			<param index="0" name="value" type="int" />
+			<description>Write a signed 8-bit integer from -128 to 127. Return [constant OK] or the first writer error. A sealed writer returns [constant ERR_LOCKED].</description>
+		</method>
+		<method name="write_i16">
+			<return type="int" />
+			<param index="0" name="value" type="int" />
+			<description>Write a signed 16-bit integer from -32,768 to 32,767. Return [constant OK] or the first writer error. A sealed writer returns [constant ERR_LOCKED].</description>
+		</method>
+		<method name="write_i32">
+			<return type="int" />
+			<param index="0" name="value" type="int" />
+			<description>Write a signed 32-bit integer from -2,147,483,648 to 2,147,483,647. Return [constant OK] or the first writer error. A sealed writer returns [constant ERR_LOCKED].</description>
+		</method>
+		<method name="write_i64">
+			<return type="int" />
+			<param index="0" name="value" type="int" />
+			<description>Write a signed 64-bit integer in the full Godot integer range. Return [constant OK] or the first writer error. A sealed writer returns [constant ERR_LOCKED].</description>
+		</method>
+		<method name="write_f32">
+			<return type="int" />
+			<param index="0" name="value" type="float" />
+			<description>Write a finite IEEE-754 binary32 float. The value rounds to binary32 precision. Return [constant OK] or the first writer error. A sealed writer returns [constant ERR_LOCKED].</description>
+		</method>
+		<method name="write_f64">
+			<return type="int" />
+			<param index="0" name="value" type="float" />
+			<description>Write a finite IEEE-754 binary64 float. Return [constant OK] or the first writer error. A sealed writer returns [constant ERR_LOCKED].</description>
+		</method>
+		<method name="write_string">
+			<return type="int" />
+			<param index="0" name="value" type="String" />
+			<description>Write a UTF-8 string preceded by its unsigned 32-bit byte length. The string may be empty. A leading byte-order mark and embedded zero codepoints are rejected. Return [constant OK] or the first writer error. A sealed writer returns [constant ERR_LOCKED].</description>
+		</method>
+		<method name="write_bytes">
+			<return type="int" />
+			<param index="0" name="value" type="PackedByteArray" />
+			<description>Write a byte array preceded by its unsigned 32-bit length. Return [constant OK] or the first writer error. A sealed writer returns [constant ERR_LOCKED].</description>
+		</method>
+		<method name="get_error" qualifiers="const">
+			<return type="int" />
+			<description>Return the first writer error, or [constant OK]. Exceeding the byte budget returns [constant ERR_OUT_OF_MEMORY]. An out-of-range numeric value returns [constant ERR_PARAMETER_RANGE_ERROR].</description>
+		</method>
+		<method name="get_size" qualifiers="const">
+			<return type="int" />
+			<description>Return the number of accepted payload bytes before sealing or failure.</description>
+		</method>
+		<method name="finish">
+			<return type="PackedByteArray" />
+			<description>Seal the writer and return its complete payload. On failure returns empty bytes. An empty message can succeed, so check [method get_error] to distinguish the two. Repeated calls return the same payload.</description>
+		</method>
+	</methods>
+</class>

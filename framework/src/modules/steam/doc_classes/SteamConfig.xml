@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="SteamConfig" inherits="Resource">
+	<brief_description>
+		Selects the Steam launch context and game lobby defaults.
+	</brief_description>
+	<description>
+		Pass this resource to [method Steamworks.boot] for standalone features, or to the game's code-first configuration for Steam multiplayer. Boot reads the settings before attaching the client. Lobby discovery settings apply to a game configured for Steam multiplayer.
+	</description>
+	<methods>
+		<method name="spacewar" qualifiers="static">
+			<return type="SteamConfig" />
+			<param index="0" name="group" type="String" />
+			<description>
+				Creates an invitation-only development profile for AppID 480. Supply the same 1 to 64 character group on both peers. Groups allow ASCII letters, digits, underscores, and hyphens. A group separates discovery and join for games sharing the development AppID. The process must already launch in the Spacewar context.
+			</description>
+		</method>
+		<method name="public_games" qualifiers="const">
+			<return type="SteamConfig" />
+			<description>
+				Returns an independent copy of this profile with public game discovery enabled. An existing attachment keeps its original settings.
+			</description>
+		</method>
+		<method name="is_valid" qualifiers="const">
+			<return type="bool" />
+			<description>
+				Returns true for an unsigned 32-bit AppID and a valid test group when the configured AppID is 480. Other AppIDs require an empty test group.
+			</description>
+		</method>
+	</methods>
+	<members>
+		<member name="app_id" type="int" setter="set_app_id" getter="get_app_id" default="0">
+			Expected unsigned 32-bit AppID. Zero accepts the Steam launch context. Select 480 with a test group for Spacewar development.
+		</member>
+		<member name="discoverable" type="bool" setter="set_public" getter="is_public" default="false">
+			When true, a Steam multiplayer host publishes a publicly discoverable game. The default is invitation-only. This has no effect on standalone Steam features.
+		</member>
+		<member name="test_group" type="String" setter="set_test_group" getter="get_test_group" default="&quot;&quot;">
+			Group shared by the host and guests in a Spacewar test. Set only with AppID 480 and use 1 to 64 ASCII letters, digits, underscores, or hyphens.
+		</member>
+	</members>
+</class>

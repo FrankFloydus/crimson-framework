@@ -5,7 +5,7 @@
 	<description>Snapshot of the optional Steam client music player.</description>
 	<members>
 		<member name="enabled" type="bool" setter="" getter="is_enabled">Whether the Steam client has enabled the music player.</member>
-		<member name="playback" type="int" enum="Playback" setter="" getter="get_playback">The current playback state, or [constant UNKNOWN] if the player is disabled or Steam did not recognize the state.</member>
+		<member name="playback" type="int" enum="SteamMusicStatus.Playback" setter="" getter="get_playback">The current playback state, or [constant UNKNOWN] if the player is disabled or Steam did not recognize the state.</member>
 		<member name="volume" type="float" setter="" getter="get_volume">Normalized Steam player volume from 0 through 1. Returns 0 when the player is disabled.</member>
 	</members>
 	<constants>

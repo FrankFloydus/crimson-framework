@@ -3,6 +3,7 @@
 #pragma once
 
 #include "modules/match_runtime/transaction_coordinator.hpp"
+#include "modules/inventory/spatial_inventory.h"
 
 #include <godot_cpp/classes/ref_counted.hpp>
 #include <godot_cpp/variant/dictionary.hpp>
@@ -28,6 +29,10 @@ protected:
     static void _bind_methods();
 
 public:
+    // Encode an exported native grid snapshot for the transaction store.
+    static godot::Dictionary pack_snapshot(const godot::Dictionary &snapshot);
+    // Validate portable store data and construct a detached grid.
+    static godot::Ref<godot::SpatialInventory> unpack_grid(const godot::Dictionary &snapshot);
     // Validates a native grid snapshot and registers its authoritative store.
     godot::Error configure(const godot::Ref<match_runtime::TransactionCoordinator> &p_coordinator,
             const godot::String &p_store_id, const godot::Dictionary &initial_snapshot);

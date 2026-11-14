@@ -4,9 +4,12 @@
 
 #include "integration/game/crimson_game.hpp"
 #include "integration/game/dedicated_boot.hpp"
+#include "integration/game/game.hpp"
+#include "integration/game/game_network_diagnostics.hpp"
 #include "integration/game/game_services.hpp"
 #include "integration/game/game_voice.hpp"
 #include "integration/adapters/inventory_transaction_adapter.hpp"
+#include "integration/adapters/game_inventory.hpp"
 #include "integration/world_session/local_view.hpp"
 #include "integration/game/multiplayer_rules.hpp"
 #include "integration/online/online_directory.hpp"
@@ -15,6 +18,8 @@
 #include "integration/online/steam/steam_online.hpp"
 #include "integration/online/steam/steam_relay_coordinator.hpp"
 #include "integration/online/steam/steam_transport.hpp"
+#include "integration/player_control/controls_component.hpp"
+#include "integration/player_control/player_control.hpp"
 #include "integration/world_session/world_session.hpp"
 #include "integration/world_session/world_session_definition.hpp"
 
@@ -29,23 +34,25 @@ namespace crimson::integration {
 void register_types(godot::ModuleInitializationLevel level) {
     if (level == godot::MODULE_INITIALIZATION_LEVEL_SCENE) {
         GDREGISTER_CLASS(MultiplayerRules);
-        GDREGISTER_CLASS(PlayerSpawnPoint);
-        GDREGISTER_CLASS(LocalPlayerView);
+        GDREGISTER_VIRTUAL_CLASS(PlayerSpawnPoint);
+        GDREGISTER_VIRTUAL_CLASS(LocalPlayerView);
         GDREGISTER_CLASS(OnlineDirectoryRequest);
         GDREGISTER_CLASS(OnlineDirectory);
         GDREGISTER_CLASS(GameServiceProvider);
         GDREGISTER_CLASS(GameDefinition);
+        GDREGISTER_CLASS(GameResult);
         GDREGISTER_CLASS(GameOperation);
         GDREGISTER_INTERNAL_CLASS(MatchCheckpointCandidate);
         GDREGISTER_INTERNAL_CLASS(MatchCheckpoint);
         GDREGISTER_INTERNAL_CLASS(MatchNetwork);
         GDREGISTER_CLASS(SaveRequest);
         GDREGISTER_CLASS(SaveSlot);
-        GDREGISTER_CLASS(GameVoice);
-        GDREGISTER_CLASS(GameRuntime);
+        GDREGISTER_VIRTUAL_CLASS(GameVoice);
+        GDREGISTER_VIRTUAL_CLASS(GameRuntime);
         GDREGISTER_CLASS(SceneService);
         GDREGISTER_CLASS(GameServices);
-        GDREGISTER_CLASS(DedicatedServerBoot);
+        GDREGISTER_INTERNAL_CLASS(DedicatedServerBoot);
+        GDREGISTER_CLASS(DedicatedServerEntry);
         GDREGISTER_INTERNAL_CLASS(SteamPeer);
         GDREGISTER_CLASS(SteamSessionTransport);
 #ifdef CRIMSON_WITH_STEAM
@@ -67,7 +74,19 @@ void register_types(godot::ModuleInitializationLevel level) {
         GDREGISTER_CLASS(SteamServices);
         GDREGISTER_CLASS(InventoryTransactionAdapter);
         GDREGISTER_CLASS(WorldSessionDefinition);
-        GDREGISTER_CLASS(WorldSession);
+        GDREGISTER_VIRTUAL_CLASS(WorldSession);
+        register_inventory_integration();
+        GDREGISTER_CLASS(WorldDefinition);
+        GDREGISTER_CLASS(GameBindings);
+        GDREGISTER_CLASS(GameProvider);
+        GDREGISTER_CLASS(GameConfig);
+        GDREGISTER_CLASS(GameScenes);
+        GDREGISTER_VIRTUAL_CLASS(GameNetworkDiagnostics);
+        GDREGISTER_CLASS(Game);
+        GDREGISTER_CLASS(PlayerControl);
+        GDREGISTER_CLASS(PlayerControlProfile);
+        GDREGISTER_CLASS(ControlsComponent);
+        GDREGISTER_INTERNAL_CLASS(PlayerControlDriver);
     }
 }
 

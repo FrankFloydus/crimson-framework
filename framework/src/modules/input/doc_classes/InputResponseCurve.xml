@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="InputResponseCurve" inherits="InputModifier">
+	<brief_description>Shapes the analog response of a binding.</brief_description>
+	<description>Use on Axis and Vector bindings. Each component's absolute value is limited to the range 0 to 1, raised to the configured power, and restored to its original sign. For example, an exponent of two makes a half-strength stick input produce a quarter-strength output.</description>
+	<members>
+		<member name="exponent" type="float" setter="set_exponent" getter="get_exponent" default="1.0">Response power from 0.01 to 16. One is linear inside the normalized range. Higher values reduce sensitivity around neutral. Lower values increase it.</member>
+	</members>
+</class>

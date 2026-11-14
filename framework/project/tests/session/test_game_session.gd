@@ -90,6 +90,7 @@ func _run() -> void:
 	_test_transport_factory()
 	await _test_external_transport()
 	await _test_loopback()
+	await _test_protocol_mismatch()
 	await _test_verified_admission()
 	await _test_timeout_and_cancel()
 	print("GameSession: %d checks, %d failures." % [_checks, _failures])
@@ -317,6 +318,32 @@ func _test_loopback() -> void:
 			"Clients distinguish server departure from a voluntary leave.")
 		_expect(first.session.get_local_peer_id() == 0 and first.session.get_connected_peer_ids().is_empty(),
 			"Disconnection clears local and remote peer IDs.")
+
+
+## Reject the previous movement protocol before exposing an admitted client.
+func _test_protocol_mismatch() -> void:
+	const PREVIOUS_MOVEMENT_PROTOCOL := 3
+	var host := _make_endpoint("OlderProtocolHost")
+	var guest := _make_endpoint("NewProtocolGuest")
+	var port := _get_unused_loopback_port()
+	if port == 0:
+		return
+	var peer := ENetMultiplayerPeer.new()
+	peer.set_bind_ip("127.0.0.1")
+	if not _expect(peer.create_server(port, 1) == OK, "Start a loopback host with the previous protocol."):
+		return
+	host.api.multiplayer_peer = peer
+	host.api.peer_connected.connect(func(guest_id: int) -> void:
+		var sent := host.session.rpc_id(guest_id, &"_crimson_session_confirm_admission", PREVIOUS_MOVEMENT_PROTOCOL)
+		_expect(sent == OK, "The fixture host sends its previous protocol over reliable admission.")
+	)
+	if _expect(guest.session.join("127.0.0.1", port) == OK, "Attempt to join the previous protocol host.") \
+			and await _wait_until(func() -> bool: return not guest.ended.is_empty(), "The incompatible join ends."):
+		_expect(guest.ended == [&"protocol_mismatch"] and guest.started_ids.is_empty()
+			and guest.session.get_state() == GameSession.State.IDLE,
+			"Protocol mismatch ends the join before the client enters the roster.")
+	host.api.multiplayer_peer = null
+	peer.close()
 
 
 ## Verifies that unanswered joins time out and pending joins can be canceled.

@@ -1,0 +1,6 @@
+[gd_resource type="InputAction" format=3]
+
+; Copyright Francesco Di Blasi 2026 - All Rights Reserved
+
+[resource]
+display_name = "Toggle Lock-On"

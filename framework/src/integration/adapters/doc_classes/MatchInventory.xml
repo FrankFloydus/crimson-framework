@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="MatchInventory" inherits="RefCounted">
+	<brief_description>A local player's backpack handle for one coordinated match.</brief_description>
+	<methods>
+		<method name="pick_up">
+			<return type="Variant" />
+			<param index="0" name="pickup_id" type="StringName" />
+			<description>Request pickup of the stable world item ID. Await the result to receive an [InventoryResult]. The authority checks eligibility, finds space, and commits placement and consumption together. A stale backpack or an unavailable source returns a failure result.</description>
+		</method>
+	</methods>
+</class>

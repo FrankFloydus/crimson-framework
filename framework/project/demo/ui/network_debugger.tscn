@@ -1,0 +1,856 @@
+; Copyright Francesco Di Blasi 2026 - All Rights Reserved
+
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://demo/ui/network_debugger.gd" id="debugger"]
+[ext_resource type="Script" path="res://demo/ui/network_tool_content.gd" id="content"]
+[ext_resource type="Script" path="res://demo/ui/network_latency_graph.gd" id="graph"]
+[ext_resource type="Theme" path="res://demo/ui/network_tool_theme.tres" id="theme"]
+[ext_resource type="Script" path="res://demo/ui/network_scenario_panel.gd" id="scenarios"]
+
+[node name="NetworkDebugger" type="Node"]
+script = ExtResource("debugger")
+
+[node name="InputGate" type="Control" parent="."]
+unique_name_in_owner = true
+visible = false
+mouse_filter = 2
+
+[node name="Tool" type="Window" parent="."]
+unique_name_in_owner = true
+visible = false
+title = "Network Debugger"
+initial_position = 2
+size = Vector2i(724, 612)
+min_size = Vector2i(526, 380)
+transient = true
+force_native = true
+theme = ExtResource("theme")
+
+[node name="Background" type="Panel" parent="Tool"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1
+anchor_bottom = 1
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="Margin" type="MarginContainer" parent="Tool"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1
+anchor_bottom = 1
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 10
+theme_override_constants/margin_top = 8
+theme_override_constants/margin_right = 10
+theme_override_constants/margin_bottom = 8
+
+[node name="Content" type="VBoxContainer" parent="Tool/Margin"]
+layout_mode = 2
+unique_name_in_owner = true
+script = ExtResource("content")
+
+[node name="Toolbar" type="HBoxContainer" parent="Tool/Margin/Content"]
+layout_mode = 2
+
+[node name="Session" type="Label" parent="Tool/Margin/Content/Toolbar"]
+layout_mode = 2
+unique_name_in_owner = true
+size_flags_horizontal = 3
+text_overrun_behavior = 3
+
+[node name="FocusGame" type="Button" parent="Tool/Margin/Content/Toolbar"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Focus game"
+tooltip_text = "Return input to the game. The debugger keeps recording while it is open."
+
+[node name="Tools" type="TabContainer" parent="Tool/Margin/Content"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="Monitor" type="ScrollContainer" parent="Tool/Margin/Content/Tools"]
+layout_mode = 2
+horizontal_scroll_mode = 0
+
+[node name="Body" type="VBoxContainer" parent="Tool/Margin/Content/Tools/Monitor"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="ChartToolbar" type="HBoxContainer" parent="Tool/Margin/Content/Tools/Monitor/Body"]
+layout_mode = 2
+
+[node name="History" type="Label" parent="Tool/Margin/Content/Tools/Monitor/Body/ChartToolbar"]
+layout_mode = 2
+text = "History · last 12 s"
+size_flags_horizontal = 3
+
+[node name="Pause" type="Button" parent="Tool/Margin/Content/Tools/Monitor/Body/ChartToolbar"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Pause charts"
+tooltip_text = "Freeze chart history while the numeric readings continue to update."
+
+[node name="ClearCharts" type="Button" parent="Tool/Margin/Content/Tools/Monitor/Body/ChartToolbar"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Clear"
+tooltip_text = "Clear the visible chart history."
+
+[node name="Charts" type="GridContainer" parent="Tool/Margin/Content/Tools/Monitor/Body"]
+layout_mode = 2
+columns = 2
+theme_override_constants/h_separation = 8
+theme_override_constants/v_separation = 8
+
+[node name="RTT" type="VBoxContainer" parent="Tool/Margin/Content/Tools/Monitor/Body/Charts"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="RTTValue" type="Label" parent="Tool/Margin/Content/Tools/Monitor/Body/Charts/RTT"]
+layout_mode = 2
+text = "RTT"
+unique_name_in_owner = true
+text_overrun_behavior = 3
+
+[node name="RTTGraph" type="Control" parent="Tool/Margin/Content/Tools/Monitor/Body/Charts/RTT"]
+unique_name_in_owner = true
+layout_mode = 2
+custom_minimum_size = Vector2(0, 39)
+mouse_filter = 2
+script = ExtResource("graph")
+trace_color = Color(0.33, 0.65, 1.0, 1.0)
+scale_step = 50
+
+[node name="Age" type="VBoxContainer" parent="Tool/Margin/Content/Tools/Monitor/Body/Charts"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="AgeValue" type="Label" parent="Tool/Margin/Content/Tools/Monitor/Body/Charts/Age"]
+layout_mode = 2
+text = "Snapshot age"
+unique_name_in_owner = true
+text_overrun_behavior = 3
+
+[node name="AgeGraph" type="Control" parent="Tool/Margin/Content/Tools/Monitor/Body/Charts/Age"]
+unique_name_in_owner = true
+layout_mode = 2
+custom_minimum_size = Vector2(0, 39)
+mouse_filter = 2
+script = ExtResource("graph")
+trace_color = Color(0.37, 0.79, 0.85, 1.0)
+scale_step = 50
+
+[node name="Pending" type="VBoxContainer" parent="Tool/Margin/Content/Tools/Monitor/Body/Charts"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="PendingValue" type="Label" parent="Tool/Margin/Content/Tools/Monitor/Body/Charts/Pending"]
+layout_mode = 2
+text = "Pending inputs"
+unique_name_in_owner = true
+text_overrun_behavior = 3
+
+[node name="PendingGraph" type="Control" parent="Tool/Margin/Content/Tools/Monitor/Body/Charts/Pending"]
+unique_name_in_owner = true
+layout_mode = 2
+custom_minimum_size = Vector2(0, 39)
+mouse_filter = 2
+script = ExtResource("graph")
+trace_color = Color(0.62, 0.74, 1.0, 1.0)
+scale_step = 10
+
+[node name="Correction" type="VBoxContainer" parent="Tool/Margin/Content/Tools/Monitor/Body/Charts"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="CorrectionValue" type="Label" parent="Tool/Margin/Content/Tools/Monitor/Body/Charts/Correction"]
+layout_mode = 2
+text = "Reconcile error"
+unique_name_in_owner = true
+text_overrun_behavior = 3
+tooltip_text = "Distance of the latest completed local reconciliation. The counter records corrections above the simulation threshold."
+
+[node name="CorrectionGraph" type="Control" parent="Tool/Margin/Content/Tools/Monitor/Body/Charts/Correction"]
+unique_name_in_owner = true
+layout_mode = 2
+custom_minimum_size = Vector2(0, 39)
+mouse_filter = 2
+script = ExtResource("graph")
+trace_color = Color(0.98, 0.62, 0.37, 1.0)
+scale_step = 0.1
+
+[node name="MonitorSeparator" type="HSeparator" parent="Tool/Margin/Content/Tools/Monitor/Body"]
+layout_mode = 2
+
+[node name="Details" type="HBoxContainer" parent="Tool/Margin/Content/Tools/Monitor/Body"]
+layout_mode = 2
+
+[node name="Connection" type="VBoxContainer" parent="Tool/Margin/Content/Tools/Monitor/Body/Details"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="ConnectionHeading" type="Label" parent="Tool/Margin/Content/Tools/Monitor/Body/Details/Connection"]
+layout_mode = 2
+text = "Connection"
+theme_override_colors/font_color = Color(0.68, 0.73, 0.80, 1)
+
+[node name="Connection" type="Label" parent="Tool/Margin/Content/Tools/Monitor/Body/Details/Connection"]
+layout_mode = 2
+unique_name_in_owner = true
+autowrap_mode = 3
+
+[node name="Replication" type="VBoxContainer" parent="Tool/Margin/Content/Tools/Monitor/Body/Details"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="ReplicationHeading" type="Label" parent="Tool/Margin/Content/Tools/Monitor/Body/Details/Replication"]
+layout_mode = 2
+text = "Replication"
+theme_override_colors/font_color = Color(0.68, 0.73, 0.80, 1)
+
+[node name="Movement" type="Label" parent="Tool/Margin/Content/Tools/Monitor/Body/Details/Replication"]
+layout_mode = 2
+unique_name_in_owner = true
+autowrap_mode = 3
+
+[node name="Positions" type="Label" parent="Tool/Margin/Content/Tools/Monitor/Body/Details/Replication"]
+layout_mode = 2
+unique_name_in_owner = true
+autowrap_mode = 3
+
+[node name="TrafficSeparator" type="HSeparator" parent="Tool/Margin/Content/Tools/Monitor/Body"]
+layout_mode = 2
+
+[node name="TrafficHeading" type="Label" parent="Tool/Margin/Content/Tools/Monitor/Body"]
+layout_mode = 2
+text = "Relay traffic"
+theme_override_colors/font_color = Color(0.68, 0.73, 0.80, 1)
+
+[node name="Traffic" type="GridContainer" parent="Tool/Margin/Content/Tools/Monitor/Body"]
+unique_name_in_owner = true
+layout_mode = 2
+columns = 6
+theme_override_constants/h_separation = 9
+
+[node name="Direction" type="Label" parent="Tool/Margin/Content/Tools/Monitor/Body/Traffic"]
+layout_mode = 2
+text = "Direction"
+theme_override_colors/font_color = Color(0.68, 0.73, 0.80, 1)
+size_flags_horizontal = 3
+
+[node name="Forwarded" type="Label" parent="Tool/Margin/Content/Tools/Monitor/Body/Traffic"]
+layout_mode = 2
+text = "Forwarded"
+theme_override_colors/font_color = Color(0.68, 0.73, 0.80, 1)
+size_flags_horizontal = 3
+
+[node name="Dropped" type="Label" parent="Tool/Margin/Content/Tools/Monitor/Body/Traffic"]
+layout_mode = 2
+text = "Dropped"
+tooltip_text = "Total dropped datagrams. The number in parentheses is the subset lost to queue or scheduling overflow."
+theme_override_colors/font_color = Color(0.68, 0.73, 0.80, 1)
+size_flags_horizontal = 3
+
+[node name="Queued" type="Label" parent="Tool/Margin/Content/Tools/Monitor/Body/Traffic"]
+layout_mode = 2
+text = "Queued"
+theme_override_colors/font_color = Color(0.68, 0.73, 0.80, 1)
+size_flags_horizontal = 3
+
+[node name="Data" type="Label" parent="Tool/Margin/Content/Tools/Monitor/Body/Traffic"]
+layout_mode = 2
+text = "Payload rate"
+tooltip_text = "Measured forwarded UDP payload rate between monitor samples. Hover a value for total payload."
+theme_override_colors/font_color = Color(0.68, 0.73, 0.80, 1)
+size_flags_horizontal = 3
+
+[node name="Limit" type="Label" parent="Tool/Margin/Content/Tools/Monitor/Body/Traffic"]
+layout_mode = 2
+text = "Limit"
+theme_override_colors/font_color = Color(0.68, 0.73, 0.80, 1)
+size_flags_horizontal = 3
+
+[node name="UpName" type="Label" parent="Tool/Margin/Content/Tools/Monitor/Body/Traffic"]
+layout_mode = 2
+text = "Uplink"
+size_flags_horizontal = 3
+
+[node name="UpSent" type="Label" parent="Tool/Margin/Content/Tools/Monitor/Body/Traffic"]
+layout_mode = 2
+text = "—"
+unique_name_in_owner = true
+size_flags_horizontal = 3
+horizontal_alignment = 0
+
+[node name="UpDrop" type="Label" parent="Tool/Margin/Content/Tools/Monitor/Body/Traffic"]
+layout_mode = 2
+text = "—"
+unique_name_in_owner = true
+size_flags_horizontal = 3
+horizontal_alignment = 0
+
+[node name="UpQueue" type="Label" parent="Tool/Margin/Content/Tools/Monitor/Body/Traffic"]
+layout_mode = 2
+text = "—"
+unique_name_in_owner = true
+size_flags_horizontal = 3
+horizontal_alignment = 0
+
+[node name="UpBytes" type="Label" parent="Tool/Margin/Content/Tools/Monitor/Body/Traffic"]
+layout_mode = 2
+text = "—"
+unique_name_in_owner = true
+size_flags_horizontal = 3
+horizontal_alignment = 0
+
+[node name="UpLimit" type="Label" parent="Tool/Margin/Content/Tools/Monitor/Body/Traffic"]
+layout_mode = 2
+text = "—"
+unique_name_in_owner = true
+size_flags_horizontal = 3
+
+[node name="DownName" type="Label" parent="Tool/Margin/Content/Tools/Monitor/Body/Traffic"]
+layout_mode = 2
+text = "Downlink"
+size_flags_horizontal = 3
+
+[node name="DownSent" type="Label" parent="Tool/Margin/Content/Tools/Monitor/Body/Traffic"]
+layout_mode = 2
+text = "—"
+unique_name_in_owner = true
+size_flags_horizontal = 3
+horizontal_alignment = 0
+
+[node name="DownDrop" type="Label" parent="Tool/Margin/Content/Tools/Monitor/Body/Traffic"]
+layout_mode = 2
+text = "—"
+unique_name_in_owner = true
+size_flags_horizontal = 3
+horizontal_alignment = 0
+
+[node name="DownQueue" type="Label" parent="Tool/Margin/Content/Tools/Monitor/Body/Traffic"]
+layout_mode = 2
+text = "—"
+unique_name_in_owner = true
+size_flags_horizontal = 3
+horizontal_alignment = 0
+
+[node name="DownBytes" type="Label" parent="Tool/Margin/Content/Tools/Monitor/Body/Traffic"]
+layout_mode = 2
+text = "—"
+unique_name_in_owner = true
+size_flags_horizontal = 3
+horizontal_alignment = 0
+
+[node name="DownLimit" type="Label" parent="Tool/Margin/Content/Tools/Monitor/Body/Traffic"]
+layout_mode = 2
+text = "—"
+unique_name_in_owner = true
+size_flags_horizontal = 3
+
+[node name="Simulator" type="ScrollContainer" parent="Tool/Margin/Content/Tools"]
+layout_mode = 2
+horizontal_scroll_mode = 0
+follow_focus = true
+
+[node name="Body" type="VBoxContainer" parent="Tool/Margin/Content/Tools/Simulator"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="Relay" type="Label" parent="Tool/Margin/Content/Tools/Simulator/Body"]
+layout_mode = 2
+unique_name_in_owner = true
+autowrap_mode = 3
+
+[node name="Profile" type="HBoxContainer" parent="Tool/Margin/Content/Tools/Simulator/Body"]
+layout_mode = 2
+
+[node name="ProfileLabel" type="Label" parent="Tool/Margin/Content/Tools/Simulator/Body/Profile"]
+layout_mode = 2
+text = "Profile"
+
+[node name="Presets" type="OptionButton" parent="Tool/Margin/Content/Tools/Simulator/Body/Profile"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+fit_to_longest_item = false
+text_overrun_behavior = 3
+tooltip_text = "Load a preset or saved profile into the draft. Apply changes the running link."
+
+[node name="Apply" type="Button" parent="Tool/Margin/Content/Tools/Simulator/Body/Profile"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Apply"
+tooltip_text = "Change the active guest link without leaving the current session."
+
+[node name="Conditions" type="GridContainer" parent="Tool/Margin/Content/Tools/Simulator/Body"]
+layout_mode = 2
+columns = 2
+theme_override_constants/h_separation = 12
+
+[node name="DownlinkLabel" type="Label" parent="Tool/Margin/Content/Tools/Simulator/Body/Conditions"]
+layout_mode = 2
+text = "Download (kbps)"
+size_flags_horizontal = 3
+
+[node name="Downlink" type="SpinBox" parent="Tool/Margin/Content/Tools/Simulator/Body/Conditions"]
+unique_name_in_owner = true
+layout_mode = 2
+custom_minimum_size = Vector2(130, 0)
+max_value = 1000000
+tooltip_text = "Server-to-client UDP payload limit in decimal kilobits per second. Zero is unlimited."
+
+[node name="UplinkLabel" type="Label" parent="Tool/Margin/Content/Tools/Simulator/Body/Conditions"]
+layout_mode = 2
+text = "Upload (kbps)"
+size_flags_horizontal = 3
+
+[node name="Uplink" type="SpinBox" parent="Tool/Margin/Content/Tools/Simulator/Body/Conditions"]
+unique_name_in_owner = true
+layout_mode = 2
+custom_minimum_size = Vector2(130, 0)
+max_value = 1000000
+tooltip_text = "Client-to-server UDP payload limit in decimal kilobits per second. Zero is unlimited."
+
+[node name="DelayLabel" type="Label" parent="Tool/Margin/Content/Tools/Simulator/Body/Conditions"]
+layout_mode = 2
+text = "One-way delay (ms)"
+size_flags_horizontal = 3
+
+[node name="Delay" type="SpinBox" parent="Tool/Margin/Content/Tools/Simulator/Body/Conditions"]
+unique_name_in_owner = true
+layout_mode = 2
+custom_minimum_size = Vector2(130, 0)
+min_value = 0
+max_value = 1000
+step = 1
+value = 0
+tooltip_text = "Delay added to every forwarded datagram, in each direction."
+
+[node name="JitterLabel" type="Label" parent="Tool/Margin/Content/Tools/Simulator/Body/Conditions"]
+layout_mode = 2
+text = "Jitter (±ms)"
+size_flags_horizontal = 3
+
+[node name="Jitter" type="SpinBox" parent="Tool/Margin/Content/Tools/Simulator/Body/Conditions"]
+unique_name_in_owner = true
+layout_mode = 2
+custom_minimum_size = Vector2(130, 0)
+min_value = 0
+max_value = 1000
+step = 1
+value = 0
+tooltip_text = "Random variation around the configured one-way delay."
+
+[node name="LossLabel" type="Label" parent="Tool/Margin/Content/Tools/Simulator/Body/Conditions"]
+layout_mode = 2
+text = "Packet loss (%)"
+size_flags_horizontal = 3
+
+[node name="Loss" type="SpinBox" parent="Tool/Margin/Content/Tools/Simulator/Body/Conditions"]
+unique_name_in_owner = true
+layout_mode = 2
+custom_minimum_size = Vector2(130, 0)
+min_value = 0
+max_value = 100
+step = 0.1
+value = 0
+tooltip_text = "Probability of dropping a datagram before forwarding."
+
+[node name="SaveProfileRow" type="HBoxContainer" parent="Tool/Margin/Content/Tools/Simulator/Body"]
+layout_mode = 2
+
+[node name="ProfileName" type="LineEdit" parent="Tool/Margin/Content/Tools/Simulator/Body/SaveProfileRow"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+placeholder_text = "Custom profile name"
+max_length = 48
+tooltip_text = "Enter a name for the profile. Saving under an existing custom name updates that entry."
+
+[node name="SaveProfile" type="Button" parent="Tool/Margin/Content/Tools/Simulator/Body/SaveProfileRow"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Save profile"
+tooltip_text = "Keep this profile in the preset list for later runs. The running link changes only when you Apply."
+
+[node name="SpikeSeparator" type="HSeparator" parent="Tool/Margin/Content/Tools/Simulator/Body"]
+layout_mode = 2
+
+[node name="SpikeHeading" type="Label" parent="Tool/Margin/Content/Tools/Simulator/Body"]
+layout_mode = 2
+text = "Lag spike"
+theme_override_colors/font_color = Color(0.68, 0.73, 0.80, 1)
+
+[node name="SpikeSettings" type="GridContainer" parent="Tool/Margin/Content/Tools/Simulator/Body"]
+layout_mode = 2
+columns = 2
+theme_override_constants/h_separation = 12
+
+[node name="SpikeExtraLabel" type="Label" parent="Tool/Margin/Content/Tools/Simulator/Body/SpikeSettings"]
+layout_mode = 2
+text = "Extra one-way delay (ms)"
+size_flags_horizontal = 3
+
+[node name="SpikeExtra" type="SpinBox" parent="Tool/Margin/Content/Tools/Simulator/Body/SpikeSettings"]
+unique_name_in_owner = true
+layout_mode = 2
+custom_minimum_size = Vector2(130, 0)
+min_value = 1
+max_value = 3000
+value = 250
+tooltip_text = "Additional delay on each affected leg while the spike runs."
+
+[node name="SpikeDirectionLabel" type="Label" parent="Tool/Margin/Content/Tools/Simulator/Body/SpikeSettings"]
+layout_mode = 2
+text = "Direction"
+size_flags_horizontal = 3
+
+[node name="SpikeDirection" type="OptionButton" parent="Tool/Margin/Content/Tools/Simulator/Body/SpikeSettings"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+tooltip_text = "Select the packet direction affected by the extra delay."
+
+[node name="SpikeDurationLabel" type="Label" parent="Tool/Margin/Content/Tools/Simulator/Body/SpikeSettings"]
+layout_mode = 2
+text = "Duration (ms)"
+size_flags_horizontal = 3
+
+[node name="SpikeDuration" type="SpinBox" parent="Tool/Margin/Content/Tools/Simulator/Body/SpikeSettings"]
+unique_name_in_owner = true
+layout_mode = 2
+custom_minimum_size = Vector2(130, 0)
+min_value = 100
+max_value = 30000
+step = 100
+value = 1000
+tooltip_text = "Time during which newly arriving datagrams receive extra delay."
+
+[node name="SpikeCountdownLabel" type="Label" parent="Tool/Margin/Content/Tools/Simulator/Body/SpikeSettings"]
+layout_mode = 2
+text = "Start delay (ms)"
+size_flags_horizontal = 3
+
+[node name="SpikeCountdown" type="SpinBox" parent="Tool/Margin/Content/Tools/Simulator/Body/SpikeSettings"]
+unique_name_in_owner = true
+layout_mode = 2
+custom_minimum_size = Vector2(130, 0)
+max_value = 10000
+step = 100
+value = 2000
+tooltip_text = "Time to focus the game before the lag spike starts."
+
+[node name="SpikeActions" type="HBoxContainer" parent="Tool/Margin/Content/Tools/Simulator/Body"]
+layout_mode = 2
+
+[node name="StartSpike" type="Button" parent="Tool/Margin/Content/Tools/Simulator/Body/SpikeActions"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Start lag spike"
+tooltip_text = "Schedule a temporary latency increase on the current connection."
+
+[node name="CancelSpike" type="Button" parent="Tool/Margin/Content/Tools/Simulator/Body/SpikeActions"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Cancel spike"
+tooltip_text = "Stop adding latency. Datagrams already queued keep their delivery times."
+
+[node name="OutageSeparator" type="HSeparator" parent="Tool/Margin/Content/Tools/Simulator/Body"]
+layout_mode = 2
+
+[node name="OutageHeading" type="Label" parent="Tool/Margin/Content/Tools/Simulator/Body"]
+layout_mode = 2
+text = "Connection outage"
+theme_override_colors/font_color = Color(0.68, 0.73, 0.80, 1)
+
+[node name="OutageSettings" type="GridContainer" parent="Tool/Margin/Content/Tools/Simulator/Body"]
+layout_mode = 2
+columns = 2
+theme_override_constants/h_separation = 12
+
+[node name="DirectionLabel" type="Label" parent="Tool/Margin/Content/Tools/Simulator/Body/OutageSettings"]
+layout_mode = 2
+text = "Direction"
+size_flags_horizontal = 3
+
+[node name="Direction" type="OptionButton" parent="Tool/Margin/Content/Tools/Simulator/Body/OutageSettings"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+tooltip_text = "Select guest to server, server to guest, or both directions."
+
+[node name="DurationLabel" type="Label" parent="Tool/Margin/Content/Tools/Simulator/Body/OutageSettings"]
+layout_mode = 2
+text = "Duration (ms)"
+size_flags_horizontal = 3
+
+[node name="Duration" type="SpinBox" parent="Tool/Margin/Content/Tools/Simulator/Body/OutageSettings"]
+unique_name_in_owner = true
+layout_mode = 2
+custom_minimum_size = Vector2(130, 0)
+min_value = 100
+max_value = 30000
+step = 100
+value = 1400
+tooltip_text = "Block traffic for this duration, then restore the applied profile."
+
+[node name="CountdownLabel" type="Label" parent="Tool/Margin/Content/Tools/Simulator/Body/OutageSettings"]
+layout_mode = 2
+text = "Start delay (ms)"
+size_flags_horizontal = 3
+
+[node name="Countdown" type="SpinBox" parent="Tool/Margin/Content/Tools/Simulator/Body/OutageSettings"]
+unique_name_in_owner = true
+layout_mode = 2
+custom_minimum_size = Vector2(130, 0)
+min_value = 0
+max_value = 10000
+step = 100
+value = 2000
+tooltip_text = "Time to focus the game before the outage starts."
+
+[node name="OutageActions" type="HBoxContainer" parent="Tool/Margin/Content/Tools/Simulator/Body"]
+layout_mode = 2
+
+[node name="StartOutage" type="Button" parent="Tool/Margin/Content/Tools/Simulator/Body/OutageActions"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Start outage"
+tooltip_text = "Arm a timed test. Focus the game and move while the countdown runs."
+
+[node name="DropLink" type="Button" parent="Tool/Margin/Content/Tools/Simulator/Body/OutageActions"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Drop link"
+tooltip_text = "Block both directions until you resume or the connection times out."
+
+[node name="ResumeLink" type="Button" parent="Tool/Margin/Content/Tools/Simulator/Body/OutageActions"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Resume link"
+tooltip_text = "Cancel a scheduled or active outage and restore the applied conditions."
+
+[node name="SessionSeparator" type="HSeparator" parent="Tool/Margin/Content/Tools/Simulator/Body"]
+layout_mode = 2
+
+[node name="SessionActions" type="HBoxContainer" parent="Tool/Margin/Content/Tools/Simulator/Body"]
+layout_mode = 2
+
+[node name="Disconnect" type="Button" parent="Tool/Margin/Content/Tools/Simulator/Body/SessionActions"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Disconnect"
+tooltip_text = "Leave the current guest session through the normal game flow."
+
+[node name="Reconnect" type="Button" parent="Tool/Margin/Content/Tools/Simulator/Body/SessionActions"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Reconnect"
+tooltip_text = "Join the last successful direct endpoint again."
+
+[node name="ResetCounters" type="Button" parent="Tool/Margin/Content/Tools/Simulator/Body/SessionActions"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Reset counters"
+tooltip_text = "Clear the relay's forwarded and dropped packet and byte totals."
+
+[node name="Scenarios" type="ScrollContainer" parent="Tool/Margin/Content/Tools"]
+unique_name_in_owner = true
+layout_mode = 2
+horizontal_scroll_mode = 0
+follow_focus = true
+script = ExtResource("scenarios")
+
+[node name="Body" type="VBoxContainer" parent="Tool/Margin/Content/Tools/Scenarios"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="ScenarioStatus" type="Label" parent="Tool/Margin/Content/Tools/Scenarios/Body"]
+unique_name_in_owner = true
+layout_mode = 2
+autowrap_mode = 3
+
+[node name="Starter" type="HBoxContainer" parent="Tool/Margin/Content/Tools/Scenarios/Body"]
+layout_mode = 2
+
+[node name="Templates" type="OptionButton" parent="Tool/Margin/Content/Tools/Scenarios/Body/Starter"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+fit_to_longest_item = false
+tooltip_text = "Choose a starter sequence, then load it as editable stages."
+
+[node name="LoadTemplate" type="Button" parent="Tool/Margin/Content/Tools/Scenarios/Body/Starter"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Load template"
+tooltip_text = "Replace the current draft with a fresh copy of the selected scenario."
+
+[node name="Steps" type="ItemList" parent="Tool/Margin/Content/Tools/Scenarios/Body"]
+unique_name_in_owner = true
+layout_mode = 2
+custom_minimum_size = Vector2(0, 120)
+
+[node name="StageEditor" type="GridContainer" parent="Tool/Margin/Content/Tools/Scenarios/Body"]
+layout_mode = 2
+columns = 2
+theme_override_constants/h_separation = 12
+
+[node name="ProfileLabel" type="Label" parent="Tool/Margin/Content/Tools/Scenarios/Body/StageEditor"]
+layout_mode = 2
+text = "Stage profile"
+size_flags_horizontal = 3
+
+[node name="StageProfile" type="OptionButton" parent="Tool/Margin/Content/Tools/Scenarios/Body/StageEditor"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+fit_to_longest_item = false
+tooltip_text = "Add or replace a stage using a snapshot of these profile values."
+
+[node name="DurationLabel" type="Label" parent="Tool/Margin/Content/Tools/Scenarios/Body/StageEditor"]
+layout_mode = 2
+text = "Stage duration (ms)"
+size_flags_horizontal = 3
+
+[node name="StageDuration" type="SpinBox" parent="Tool/Margin/Content/Tools/Scenarios/Body/StageEditor"]
+unique_name_in_owner = true
+layout_mode = 2
+step = 100
+value = 3000
+tooltip_text = "Time to keep these link conditions before advancing to the next stage."
+
+[node name="OutageLabel" type="Label" parent="Tool/Margin/Content/Tools/Scenarios/Body/StageEditor"]
+layout_mode = 2
+text = "Stage outage"
+size_flags_horizontal = 3
+
+[node name="StageOutage" type="OptionButton" parent="Tool/Margin/Content/Tools/Scenarios/Body/StageEditor"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+fit_to_longest_item = false
+tooltip_text = "Optionally block one or both directions while this stage runs."
+
+[node name="StageActions" type="HBoxContainer" parent="Tool/Margin/Content/Tools/Scenarios/Body"]
+layout_mode = 2
+
+[node name="AddStage" type="Button" parent="Tool/Margin/Content/Tools/Scenarios/Body/StageActions"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Add stage"
+tooltip_text = "Append the selected profile and duration to the scenario."
+
+[node name="ReplaceStage" type="Button" parent="Tool/Margin/Content/Tools/Scenarios/Body/StageActions"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Update"
+tooltip_text = "Replace the selected row with the stage fields above."
+
+[node name="RemoveStage" type="Button" parent="Tool/Margin/Content/Tools/Scenarios/Body/StageActions"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Remove"
+tooltip_text = "Delete the selected stage from the draft."
+
+[node name="MoveStageUp" type="Button" parent="Tool/Margin/Content/Tools/Scenarios/Body/StageActions"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Move up"
+tooltip_text = "Run the selected stage one position earlier."
+
+[node name="MoveStageDown" type="Button" parent="Tool/Margin/Content/Tools/Scenarios/Body/StageActions"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Move down"
+tooltip_text = "Run the selected stage one position later."
+
+[node name="RunSeparator" type="HSeparator" parent="Tool/Margin/Content/Tools/Scenarios/Body"]
+layout_mode = 2
+
+[node name="RunSettings" type="GridContainer" parent="Tool/Margin/Content/Tools/Scenarios/Body"]
+layout_mode = 2
+columns = 2
+theme_override_constants/h_separation = 12
+
+[node name="StartDelayLabel" type="Label" parent="Tool/Margin/Content/Tools/Scenarios/Body/RunSettings"]
+layout_mode = 2
+text = "Start delay (ms)"
+size_flags_horizontal = 3
+
+[node name="ScenarioStartDelay" type="SpinBox" parent="Tool/Margin/Content/Tools/Scenarios/Body/RunSettings"]
+unique_name_in_owner = true
+layout_mode = 2
+max_value = 10000
+step = 100
+value = 2000
+tooltip_text = "Time to focus the game before the first scenario stage."
+
+[node name="RunActions" type="HBoxContainer" parent="Tool/Margin/Content/Tools/Scenarios/Body"]
+layout_mode = 2
+
+[node name="RunScenario" type="Button" parent="Tool/Margin/Content/Tools/Scenarios/Body/RunActions"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Run scenario"
+tooltip_text = "Apply each stage in order on the active guest link."
+
+[node name="StopScenario" type="Button" parent="Tool/Margin/Content/Tools/Scenarios/Body/RunActions"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Stop scenario"
+tooltip_text = "Cancel the countdown or run and restore the previously applied profile."
+
+[node name="LoopScenario" type="CheckBox" parent="Tool/Margin/Content/Tools/Scenarios/Body/RunActions"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Loop"
+tooltip_text = "Repeat the stage order until stopped."
+
+[node name="Events" type="ScrollContainer" parent="Tool/Margin/Content/Tools"]
+layout_mode = 2
+horizontal_scroll_mode = 0
+
+[node name="Body" type="VBoxContainer" parent="Tool/Margin/Content/Tools/Events"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="EventTools" type="HBoxContainer" parent="Tool/Margin/Content/Tools/Events/Body"]
+layout_mode = 2
+
+[node name="EventHeading" type="Label" parent="Tool/Margin/Content/Tools/Events/Body/EventTools"]
+layout_mode = 2
+text = "Connection and replication events"
+size_flags_horizontal = 3
+
+[node name="CopyEvents" type="Button" parent="Tool/Margin/Content/Tools/Events/Body/EventTools"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Copy events"
+tooltip_text = "Copy the local event log to the clipboard."
+
+[node name="ClearEvents" type="Button" parent="Tool/Margin/Content/Tools/Events/Body/EventTools"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Clear"
+tooltip_text = "Clear the event log in this window."
+
+[node name="EventLog" type="TextEdit" parent="Tool/Margin/Content/Tools/Events/Body"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 3
+custom_minimum_size = Vector2(0, 312)
+editable = false
+wrap_mode = 1
+
+[node name="Feedback" type="Label" parent="Tool/Margin/Content"]
+layout_mode = 2
+unique_name_in_owner = true
+autowrap_mode = 3
+theme_override_colors/font_color = Color(0.68, 0.73, 0.80, 1)

@@ -9,6 +9,7 @@
 
 #include <godot_cpp/core/class_db.hpp>
 #include <godot_cpp/templates/hash_set.hpp>
+#include <godot_cpp/variant/utility_functions.hpp>
 
 namespace godot {
 
@@ -36,6 +37,63 @@ Vector2i oriented_size(const Vector2i &p_footprint, bool p_rotated) {
 }
 
 } // namespace
+
+void InventoryItemView::_bind_methods() {
+	ClassDB::bind_method(D_METHOD("get_id"), &InventoryItemView::get_id);
+	ClassDB::bind_method(D_METHOD("get_footprint"), &InventoryItemView::get_footprint);
+	ClassDB::bind_method(D_METHOD("get_origin"), &InventoryItemView::get_origin);
+	ClassDB::bind_method(D_METHOD("is_rotated"), &InventoryItemView::is_rotated);
+	ADD_PROPERTY(PropertyInfo(Variant::STRING_NAME, "id", PROPERTY_HINT_NONE, "",
+			PROPERTY_USAGE_EDITOR | PROPERTY_USAGE_READ_ONLY), "", "get_id");
+	ADD_PROPERTY(PropertyInfo(Variant::VECTOR2I, "footprint", PROPERTY_HINT_NONE, "",
+			PROPERTY_USAGE_EDITOR | PROPERTY_USAGE_READ_ONLY), "", "get_footprint");
+	ADD_PROPERTY(PropertyInfo(Variant::VECTOR2I, "origin", PROPERTY_HINT_NONE, "",
+			PROPERTY_USAGE_EDITOR | PROPERTY_USAGE_READ_ONLY), "", "get_origin");
+	ADD_PROPERTY(PropertyInfo(Variant::BOOL, "rotated", PROPERTY_HINT_NONE, "",
+			PROPERTY_USAGE_EDITOR | PROPERTY_USAGE_READ_ONLY), "", "is_rotated");
+}
+
+Ref<InventoryItemView> InventoryItemView::capture(const StringName &p_id, const Vector2i &p_footprint,
+		const Vector2i &p_origin, bool p_rotated) {
+	Ref<InventoryItemView> view;
+	view.instantiate();
+	view->id = p_id;
+	view->footprint = p_footprint;
+	view->origin = p_origin;
+	view->rotated = p_rotated;
+	return view;
+}
+
+StringName InventoryItemView::get_id() const {
+	return id;
+}
+
+Vector2i InventoryItemView::get_footprint() const {
+	return footprint;
+}
+
+Vector2i InventoryItemView::get_origin() const {
+	return origin;
+}
+
+bool InventoryItemView::is_rotated() const {
+	return rotated;
+}
+
+void Inventory::_bind_methods() {
+	ClassDB::bind_static_method(get_class_static(), D_METHOD("grid", "size"), &Inventory::grid);
+}
+
+Ref<SpatialInventory> Inventory::grid(const Vector2i &p_size) {
+	Ref<SpatialInventory> grid;
+	grid.instantiate();
+	if (grid->configure(p_size) != OK) {
+		UtilityFunctions::printerr("[Crimson] Could not create an inventory grid. Choose positive dimensions with at most ",
+				MAX_CELLS, " cells.");
+		return {};
+	}
+	return grid;
+}
 
 Vector2i SpatialInventory::Placement::extent() const {
 	return oriented_size(footprint, rotated);
@@ -259,6 +317,7 @@ void SpatialInventory::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("configure", "size"), &SpatialInventory::configure);
 	ClassDB::bind_method(D_METHOD("get_grid_size"), &SpatialInventory::get_grid_size);
 	ClassDB::bind_method(D_METHOD("get_placement_revision"), &SpatialInventory::get_placement_revision);
+	ClassDB::bind_method(D_METHOD("add", "id", "footprint"), &SpatialInventory::add);
 	ClassDB::bind_method(D_METHOD("try_place", "id", "footprint", "origin", "rotated"), &SpatialInventory::try_place, DEFVAL(false));
 	ClassDB::bind_method(D_METHOD("check_placement", "footprint", "origin", "rotated"), &SpatialInventory::check_placement, DEFVAL(false));
 	ClassDB::bind_method(D_METHOD("get_swap_target", "footprint", "origin", "rotated"), &SpatialInventory::get_swap_target, DEFVAL(false));
@@ -272,6 +331,8 @@ void SpatialInventory::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("get_item_at", "cell"), &SpatialInventory::get_item_at);
 	ClassDB::bind_method(D_METHOD("get_placement", "id"), &SpatialInventory::get_placement);
 	ClassDB::bind_method(D_METHOD("get_placements"), &SpatialInventory::get_placements);
+	ClassDB::bind_method(D_METHOD("items"), &SpatialInventory::items);
+	ClassDB::bind_method(D_METHOD("item_at", "cell"), &SpatialInventory::item_at);
 	ClassDB::bind_method(D_METHOD("find_first_fit", "footprint", "rotated", "start"), &SpatialInventory::find_first_fit, DEFVAL(false), DEFVAL(Vector2i()));
 	ClassDB::bind_method(D_METHOD("export_snapshot"), &SpatialInventory::export_snapshot);
 	ClassDB::bind_method(D_METHOD("import_snapshot", "snapshot"), &SpatialInventory::import_snapshot);
@@ -518,6 +579,24 @@ uint64_t SpatialInventory::get_placement_revision() const {
 	return placement_revision;
 }
 
+Error SpatialInventory::add(const StringName &p_id, const Vector2i &p_footprint) {
+	if (p_id.is_empty() || !is_positive_size(p_footprint)) {
+		return ERR_INVALID_PARAMETER;
+	}
+	if (state.size == Vector2i()) {
+		return ERR_UNCONFIGURED;
+	}
+	if (state.slots_by_id.has(p_id)) {
+		return ERR_ALREADY_EXISTS;
+	}
+	const Vector2i origin = find_first_fit(p_footprint);
+	if (origin.x < 0) {
+		return ERR_CANT_CREATE;
+	}
+	const Ref<SpatialInventory> keep_alive(this);
+	return try_place(p_id, p_footprint, origin);
+}
+
 Error SpatialInventory::try_place(const StringName &p_id, const Vector2i &p_footprint, const Vector2i &p_origin, bool p_rotated) {
 	const Error error = state.check_insert(p_id, p_origin, oriented_size(p_footprint, p_rotated));
 	if (error != OK) {
@@ -677,6 +756,30 @@ Array SpatialInventory::get_placements() const {
 		result[index++] = state.placement_at(entry.value).to_dictionary();
 	}
 	return result;
+}
+
+TypedArray<InventoryItemView> SpatialInventory::items() const {
+	TypedArray<InventoryItemView> views;
+	views.resize(state.slots_by_id.size());
+	int64_t index = 0;
+	for (const KeyValue<StringName, Slot> &entry : state.slots_by_id) {
+		const Placement &placement = state.placement_at(entry.value);
+		views[index++] = InventoryItemView::capture(placement.id, placement.footprint, placement.origin,
+				placement.rotated);
+	}
+	return views;
+}
+
+Ref<InventoryItemView> SpatialInventory::item_at(const Vector2i &p_cell) const {
+	if (p_cell.x < 0 || p_cell.y < 0 || p_cell.x >= state.size.x || p_cell.y >= state.size.y) {
+		return {};
+	}
+	const Slot slot = state.cells[size_t(p_cell.y) * state.size.x + p_cell.x];
+	if (slot == EMPTY_SLOT) {
+		return {};
+	}
+	const Placement &placement = state.placement_at(slot);
+	return InventoryItemView::capture(placement.id, placement.footprint, placement.origin, placement.rotated);
 }
 
 Vector2i SpatialInventory::find_first_fit(const Vector2i &p_footprint, bool p_rotated, const Vector2i &p_start) const {

@@ -4,6 +4,7 @@
 
 #include <godot_cpp/core/class_db.hpp>
 #include <godot_cpp/templates/hash_set.hpp>
+#include <godot_cpp/variant/utility_functions.hpp>
 
 #include <algorithm>
 #include <vector>
@@ -87,7 +88,7 @@ std::vector<SortItem> ordered_movable_items(const Dictionary &baseline, const Ha
 
 // Checks host policy for a candidate sorted placement.
 bool policy_allows(const Callable &policy, const Ref<SpatialInventory> &inventory, const StringName &id,
-        Vector2i footprint, Vector2i origin, bool rotated) {
+        Vector2i footprint, Vector2i origin, bool rotated, bool &invalid_reply) {
     Dictionary context;
     context["id"] = id;
     context["footprint"] = footprint;
@@ -98,29 +99,47 @@ bool policy_allows(const Callable &policy, const Ref<SpatialInventory> &inventor
     context["swap_id"] = StringName();
     context["action"] = StringName("place");
     const Variant result = policy.call(context);
-    return result.get_type() == Variant::STRING && String(result).is_empty();
+    invalid_reply = result.get_type() != Variant::STRING;
+    return !invalid_reply && String(result).is_empty();
+}
+
+// Report a missing configured policy where the sorter can only return a Godot error code.
+bool policy_available(const Callable &policy) {
+    if (policy.is_null() || policy.is_valid()) {
+        return true;
+    }
+    UtilityFunctions::printerr("[Crimson] Inventory sort placement policy is unavailable. Restore the policy before retrying.");
+    return false;
 }
 
 // Checks host policy for each proposed placement change.
 bool policy_allows_changes(const Callable &policy, const Array &changes) {
-    if (!policy.is_valid()) {
+    if (policy.is_null()) {
         return true;
     }
     for (int64_t index = 0; index < changes.size(); ++index) {
+        if (!policy_available(policy)) {
+            return false;
+        }
         const Dictionary row = changes[index];
         const Dictionary after = row["after"];
+        bool invalid_reply = false;
         if (!policy_allows(policy, Ref<SpatialInventory>(row["inventory"]), after["id"], after["footprint"],
-                    after["origin"], after["rotated"])) {
+                    after["origin"], after["rotated"], invalid_reply)) {
+            if (invalid_reply) {
+                UtilityFunctions::printerr("[Crimson] Inventory sort placement policy must return a String.");
+            }
             return false;
         }
     }
-    return true;
+    return policy_available(policy);
 }
 
 // Searches for a valid origin for one candidate orientation.
 Vector2i find_origin(const Ref<SpatialInventory> &staged, const Ref<SpatialInventory> &inventory,
-        const StringName &id, Vector2i footprint, bool rotated, const Callable &policy, Dictionary &first_fit_starts) {
-    if (!policy.is_valid()) {
+        const StringName &id, Vector2i footprint, bool rotated, const Callable &policy, Dictionary &first_fit_starts,
+        bool &invalid_reply) {
+    if (policy.is_null()) {
         const Vector2i extent = rotated ? Vector2i(footprint.y, footprint.x) : footprint;
         const Vector2i start = first_fit_starts.get(extent, Vector2i());
         if (start == NO_FIT) {
@@ -133,9 +152,12 @@ Vector2i find_origin(const Ref<SpatialInventory> &staged, const Ref<SpatialInven
     }
 
     Vector2i candidate = staged->find_first_fit(footprint, rotated);
-    while (candidate != NO_FIT) {
-        if (policy_allows(policy, inventory, id, footprint, candidate, rotated)) {
+    while (candidate != NO_FIT && policy.is_valid()) {
+        if (policy_allows(policy, inventory, id, footprint, candidate, rotated, invalid_reply)) {
             return candidate;
+        }
+        if (invalid_reply) {
+            return NO_FIT;
         }
         candidate = staged->find_first_fit(footprint, rotated, candidate + Vector2i(1, 0));
     }
@@ -150,14 +172,14 @@ bool earlier_cell(Vector2i left, Vector2i right) {
 // Chooses a free placement from the candidate orientations.
 Dictionary choose_placement(const Ref<SpatialInventory> &staged, const Ref<SpatialInventory> &inventory,
         const Dictionary &placement, bool allow_rotation, const Callable &policy, Dictionary &first_fit_starts,
-        bool prefer_current_orientation) {
+        bool prefer_current_orientation, bool &invalid_reply) {
     const StringName id = placement["id"];
     const Vector2i footprint = placement["footprint"];
     bool rotated = placement["rotated"];
-    Vector2i origin = find_origin(staged, inventory, id, footprint, rotated, policy, first_fit_starts);
-    if (allow_rotation && footprint.x != footprint.y && origin != Vector2i() &&
+    Vector2i origin = find_origin(staged, inventory, id, footprint, rotated, policy, first_fit_starts, invalid_reply);
+    if (!invalid_reply && allow_rotation && footprint.x != footprint.y && origin != Vector2i() &&
             (origin == NO_FIT || !prefer_current_orientation)) {
-        const Vector2i alternate = find_origin(staged, inventory, id, footprint, !rotated, policy, first_fit_starts);
+        const Vector2i alternate = find_origin(staged, inventory, id, footprint, !rotated, policy, first_fit_starts, invalid_reply);
         if (alternate != NO_FIT && (origin == NO_FIT || earlier_cell(alternate, origin))) {
             origin = alternate;
             rotated = !rotated;
@@ -207,8 +229,15 @@ PackedLayout pack_layout(const Ref<SpatialInventory> &inventory, Vector2i size, 
     Array changes;
     for (const SortItem &item : movable) {
         const Dictionary &before = item.placement;
+        bool invalid_reply = false;
         const Dictionary after = choose_placement(staged, inventory, before, allow_rotation, policy,
-                first_fit_starts, prefer_current_orientation);
+                first_fit_starts, prefer_current_orientation, invalid_reply);
+        if (invalid_reply) {
+            return {ERR_INVALID_DATA, {}, {}};
+        }
+        if (!policy_available(policy)) {
+            return {ERR_UNAUTHORIZED, {}, {}};
+        }
         if (after.is_empty()) {
             return {ERR_CANT_CREATE, {}, {}};
         }
@@ -246,6 +275,9 @@ Dictionary SpatialInventorySorter::build_preview(const Ref<SpatialInventory> &in
     if (size == Vector2i()) {
         return error_result(ERR_UNCONFIGURED);
     }
+    if (!policy_available(policy)) {
+        return error_result(ERR_UNAUTHORIZED);
+    }
     const uint64_t revision = inventory->get_placement_revision();
     const Dictionary baseline = index_placements(inventory->get_placements());
     HashSet<StringName> pinned;
@@ -265,6 +297,10 @@ Dictionary SpatialInventorySorter::build_preview(const Ref<SpatialInventory> &in
     PackedLayout packed = pack_layout(inventory, size, baseline, pinned, movable, allow_rotation, policy, false);
     if (packed.error == ERR_CANT_CREATE && allow_rotation) {
         packed = pack_layout(inventory, size, baseline, pinned, movable, true, policy, true);
+    }
+    if (packed.error == ERR_INVALID_DATA) {
+        UtilityFunctions::printerr("[Crimson] Inventory sort placement policy must return a String.");
+        return error_result(ERR_CANT_CREATE);
     }
     if (packed.error != OK) {
         return error_result(packed.error);

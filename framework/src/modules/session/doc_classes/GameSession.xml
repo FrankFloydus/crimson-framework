@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="GameSession" inherits="Node">
+	<brief_description>Owns one offline or networked session in a Godot multiplayer scope.</brief_description>
+	<description>Network sessions use ENet by default. A host and its guests use matching session node paths within their multiplayer scopes. Use the scene tree's normal multiplayer polling, or poll the configured [MultiplayerAPI] yourself when automatic polling is disabled. A guest becomes active once the host confirms admission.</description>
+	<signals>
+		<signal name="state_changed">
+			<param index="0" name="state" type="int" />
+			<description>Emitted when the session enters a new [enum State], including while waiting for admission.</description>
+		</signal>
+		<signal name="session_started">
+			<param index="0" name="state" type="int" />
+			<param index="1" name="local_peer_id" type="int" />
+			<description>Emitted after an offline or host session starts, or after the host admits this guest. The peer ID identifies the active connection.</description>
+		</signal>
+		<signal name="session_ended">
+			<param index="0" name="reason" type="StringName" />
+			<description>Emitted when a session ends or a pending connection fails. Reasons include [code]left[/code], [code]connection_failed[/code], [code]connection_timeout[/code], [code]protocol_mismatch[/code], [code]server_disconnected[/code], [code]transport_replaced[/code], and [code]transport_disconnected[/code]. Verified sessions can also report [code]authentication_failed[/code] or [code]authentication_replaced[/code]. Removing the session node closes it silently.</description>
+		</signal>
+		<signal name="peer_joined">
+			<param index="0" name="peer_id" type="int" />
+			<description>Emitted when an admitted remote peer enters this scope's roster. The peer ID identifies a connection.</description>
+		</signal>
+		<signal name="peer_left">
+			<param index="0" name="peer_id" type="int" />
+			<description>Emitted when a remote peer leaves the active roster. Ending the entire session clears the roster together.</description>
+		</signal>
+	</signals>
+	<constants>
+		<constant name="IDLE" value="0" enum="State">The session owns no transport.</constant>
+		<constant name="OFFLINE" value="1" enum="State">The local process owns an offline session and acts as authority.</constant>
+		<constant name="HOSTING" value="2" enum="State">The local process listens as the network authority.</constant>
+		<constant name="CONNECTING" value="3" enum="State">The guest is connecting or waiting for the host to confirm admission.</constant>
+		<constant name="CLIENT" value="4" enum="State">The host has admitted the local guest.</constant>
+	</constants>
+</class>

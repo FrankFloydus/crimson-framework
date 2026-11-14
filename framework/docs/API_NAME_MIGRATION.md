@@ -22,7 +22,7 @@ In a project copy, open `.scn` and `.res` files with the earlier addon build tha
 | --- | --- |
 | `Crimson` | `GameServices` |
 | `CrimsonCommandRouter` | `CommandRouter` |
-| `CrimsonDedicatedBoot` | `DedicatedServerBoot` |
+| `CrimsonDedicatedBoot` | Replace the scene's boot node with an ordinary root script calling `GameConfig.boot_server(self)`. |
 | `CrimsonENetSessionTransport` | `ENetSessionTransport` |
 | `CrimsonGame` | `GameRuntime` |
 | `CrimsonGameDefinition` | `GameDefinition` |

@@ -41,7 +41,9 @@ Use one coordinator per independent scope and give each scope distinct slots or 
 | `invalidate_world() -> bool` | Invalidate work from the current world before replacing it outside the save system. If active work has passed its cancellation gate, wait for completion and retry. |
 | `is_idle() -> bool` | Check whether work and terminal results are drained before changing or freeing the coordinator. |
 
-Request methods return a positive ticket on admission and `0` on rejection. Read `get_last_admission_error()` immediately after a rejected request to distinguish codes such as `Busy`, `Unconfigured`, `InvalidArgument`, `RecoveryRequiresNewSlot`, and `CommitUnknown`. A rejected request produces no ticket events.
+Request methods return a positive ticket on admission and `0` on rejection. Read `get_last_admission_error()` immediately after a rejected request to distinguish codes such as `Busy`, `Unconfigured`, `InvalidArgument`, `RecoveryRequiresNewSlot`, and `CommitUnknown`. Read `get_last_admission_message()` for the reason or recovery guidance. Both values describe the most recent rejection and are cleared when a request is admitted. A rejected request produces no ticket events.
+
+Synchronous setup failures also report their cause in Godot's console with a `[Crimson]` prefix. A failed reconfiguration retains the previously configured services.
 
 The coordinator runs one background job at a time. Save, list, and exact inspection admission share a capacity of three jobs including the active job. A single pending load can extend this by one. A load supersedes uncaptured autosaves, waits behind previously admitted work, and fences new saves and loads. The host still needs to capture any admitted manual saves that precede the load, or cancel their tickets. Call `capture_pending` once for each save you want to capture at a safe point. A prepared load retains its place in the queue until the host activates or cancels it.
 
@@ -77,6 +79,8 @@ Callbacks run synchronously on the main thread. Keep gameplay mutations, signals
 | `save_discard_candidate(candidate) -> void` | Optional host callback. Release a candidate after a staging or activation failure, cancellation, invalidation, or removal of a coordinator holding a prepared load. When supplied, this callback owns cleanup. |
 | `migration(old_data) -> Dictionary` | Return `{"ok": true, "value": upgraded_data}`. Use deterministic conversions. Missing links in the migration chain fail with `Incompatible`. |
 
+Callbacks can include a reason by returning `{"ok": false, "message": "..."}`. The coordinator appends up to 512 characters of nonblank message text to the operation or participant context and retains the coordinator's error code. `save_stage`, `save_link`, `save_validate_candidate`, and `save_publish` accept literal `true` as success. Returning a failure from `save_publish` must leave the active world unchanged.
+
 Capture and restore exchange data-only DTOs containing nulls, booleans, finite numbers, strings, arrays, and dictionaries with String keys. Encode integers outside ±9,007,199,254,740,991 as decimal strings. Encode engine-specific types explicitly in a DTO. Save metadata is bounded to 8 KiB. Other limits are listed in the [format guide](FORMAT.md).
 
 Current-scope envelopes must use registered participant IDs and supported participant versions. An older scope can rename or remove records in its scope migration chain. The resulting records must satisfy the current scope before participant migrations run. Migrations upgrade accepted data in memory. A subsequent save can persist the upgraded snapshot as a new generation.
@@ -92,3 +96,5 @@ The native `SavePresentation` class builds bounded metadata for named saves, for
 On Windows x86-64, `load_native_provider(path, configuration = "") -> bool` loads a trusted provider DLL after `configure` and before the first ticket. Pass an absolute DLL path or a Godot path that resolves to a real DLL on disk. The optional UTF-8 configuration is provider-defined and limited to 64 KiB. A provider can replace the store, codec, or both through the versioned C ABI. A replacement codec can still read reference GSAV frames through the built-in decoder. See the [native provider SDK](../sdk/README.md) for the header, example, and packaging requirements.
 
 Custom C++ builds can also replace both defaults with `SaveCoordinator::set_services(std::shared_ptr<Store>, std::shared_ptr<Codec>)` after configuring the app and before submitting requests. Implement the interfaces in [save_core.hpp](../save_core.hpp). Store implementations own expected-head checks, cancellation before publication, and pruning. Codecs own bounded encoding and decoding of the detached JSON data model. Service operations run on the worker thread and must remain independent of live Godot objects.
+
+The C++ overload `activate_prepared_load(ticket, diagnostic)` fills a Godot `String` with the activation failure or guidance after a successful backup restore. The asynchronous operation signal retains its usual contract.

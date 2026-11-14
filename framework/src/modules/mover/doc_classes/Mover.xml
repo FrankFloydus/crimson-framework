@@ -1,0 +1,45 @@
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="Mover" inherits="RefCounted">
+	<brief_description>Fixed-step movement for a CharacterBody3D or plain Node3D.</brief_description>
+	<description>
+		Attach to an existing body on the main thread, then give it a world-space velocity with [method move]. The body owns the attachment and advances it every physics tick. You can steer from game input, AI, or any other script. Issue steering before physics processing priority 100 within the same main-thread processing group to affect the current tick. The attachment uses [method CharacterBody3D.move_and_slide] for character collision or updates the world position directly for a plain [Node3D]. Keep pose and velocity writes in the mover while it is attached. Leaving the scene tree clears pending steering and motion state.
+	</description>
+	<methods>
+		<method name="attach" qualifiers="static">
+			<return type="Mover" />
+			<param index="0" name="body" type="Node3D" />
+			<param index="1" name="rule" type="MotionRule" default="null" />
+			<description>Attach to a [CharacterBody3D] or a [Node3D] without its own collision body. Use a main-thread process group. Omit [param rule] for unconstrained steering in three dimensions without gravity. A grounded rule requires a [CharacterBody3D] in grounded motion mode. Returns the existing attachment for a body that already has one, without changing its rule. Use [method use_rule] to replace the rule. Returns [code]null[/code] if the target or initial rule is invalid, or if the target cannot accept the attachment. A body outside the scene tree begins stepping when it enters a supported process group.</description>
+		</method>
+		<method name="for_node" qualifiers="static">
+			<return type="Mover" />
+			<param index="0" name="body" type="Node3D" />
+			<description>Get the attachment for this exact body without creating one. Returns [code]null[/code] if the body has no active attachment or the call is off the main thread.</description>
+		</method>
+		<method name="move">
+			<return type="int" enum="Error" />
+			<param index="0" name="world_velocity" type="Vector3" />
+			<description>Set the world-space steering target in metres per second. The target persists until replaced, stopped, or cleared by scene exit. A grounded rule projects steering onto the plane perpendicular to the body's up direction and uses its acceleration, braking, and air control to approach the target. Neutral movement applies the requested velocity directly. Returns [constant OK] on success, [constant ERR_INVALID_PARAMETER] for a nonfinite velocity, [constant ERR_UNAVAILABLE] when the attachment has retired, or [constant ERR_BUSY] when called off the main thread.</description>
+		</method>
+		<method name="stop">
+			<return type="int" enum="Error" />
+			<description>Clear steering. A grounded character brakes while on the floor and coasts while airborne. Gravity and collision continue. Returns [constant OK] on success, [constant ERR_UNAVAILABLE] when the attachment has retired, or [constant ERR_BUSY] when called off the main thread.</description>
+		</method>
+		<method name="jump">
+			<return type="int" enum="Error" />
+			<description>Queue one grounded jump attempt for the next live physics step. The body takes off only if it has floor support on that step. Airborne attempts expire immediately. Returns [constant OK] when queued, [constant ERR_BUSY] off the main thread, or [constant ERR_UNAVAILABLE] if jumps are disabled, the body is outside the scene tree, the attachment has retired, or a session owns the replayable simulation.</description>
+		</method>
+		<method name="get_velocity" qualifiers="const">
+			<return type="Vector3" />
+			<description>Read the actual world-space velocity from the last committed physics step, in metres per second. Returns zero before a step, after retirement, or when called off the main thread.</description>
+		</method>
+		<method name="use_rule">
+			<return type="int" enum="Error" />
+			<param index="0" name="rule" type="MotionRule" />
+			<description>Use a snapshot of [param rule] from the next step, or pass [code]null[/code] to restore neutral steering. Keeps the current steering request. Returns [constant OK] on success, [constant ERR_INVALID_PARAMETER] for a grounded rule on an incompatible body, [constant ERR_UNAVAILABLE] when the attachment has retired, or [constant ERR_BUSY] when called off the main thread.</description>
+		</method>
+	</methods>
+	<members>
+		<member name="velocity" type="Vector3" setter="" getter="get_velocity">Actual world-space velocity in metres per second from the last completed physics step.</member>
+	</members>
+</class>

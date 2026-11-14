@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="InventoryResult" inherits="RefCounted">
+	<brief_description>Terminal result of a coordinated inventory pickup.</brief_description>
+	<methods>
+		<method name="is_ok" qualifiers="const">
+			<return type="bool" />
+			<description>True when both the source consumption and backpack placement committed.</description>
+		</method>
+		<method name="get_code" qualifiers="const">
+			<return type="String" />
+			<description>Stable machine-readable outcome code.</description>
+		</method>
+		<method name="get_message" qualifiers="const">
+			<return type="String" />
+			<description>Human-readable explanation of the outcome.</description>
+		</method>
+		<method name="get_item_id" qualifiers="const">
+			<return type="StringName" />
+			<description>Committed item instance ID, or empty on failure.</description>
+		</method>
+		<method name="get_origin" qualifiers="const">
+			<return type="Vector2i" />
+			<description>Zero-based top-left cell of the committed placement, or (-1, -1) on failure.</description>
+		</method>
+		<method name="get_revision" qualifiers="const">
+			<return type="int" />
+			<description>Coordinator revision at commit, or -1 on failure.</description>
+		</method>
+	</methods>
+	<members>
+		<member name="ok" type="bool" getter="is_ok">True when both the source consumption and backpack placement committed.</member>
+		<member name="code" type="String" getter="get_code">Stable machine-readable outcome code.</member>
+		<member name="message" type="String" getter="get_message">Human-readable explanation of the outcome.</member>
+		<member name="item_id" type="StringName" getter="get_item_id">Committed item instance ID, or empty on failure.</member>
+		<member name="origin" type="Vector2i" getter="get_origin">Zero-based top-left cell of the committed placement, or (-1, -1) on failure.</member>
+		<member name="revision" type="int" getter="get_revision">Coordinator revision at commit, or -1 on failure.</member>
+	</members>
+</class>

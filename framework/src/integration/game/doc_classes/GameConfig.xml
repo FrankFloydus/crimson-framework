@@ -1,0 +1,68 @@
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="GameConfig" inherits="RefCounted">
+	<brief_description>Branchable code-first configuration.</brief_description>
+	<methods>
+		<method name="from_definition" qualifiers="static">
+			<return type="GameConfig" />
+			<param index="0" name="definition" type="GameDefinition" />
+			<description>Adapt a saved or legacy definition using a detached snapshot.</description>
+		</method>
+		<method name="lan">
+			<return type="GameConfig" />
+			<param index="0" name="players" type="int" />
+			<description>Select direct play with total capacity including the listen host. Defaults to two.</description>
+		</method>
+		<method name="steam">
+			<return type="GameConfig" />
+			<param index="0" name="settings" type="SteamConfig" />
+			<param index="1" name="players" type="int" />
+			<description>Select Steam listen play. Null settings use the launch app and invite-only visibility. Capacity defaults to two.</description>
+		</method>
+		<method name="steam_server">
+			<return type="GameConfig" />
+			<param index="0" name="settings" type="SteamServer" />
+			<param index="1" name="players" type="int" />
+			<description>Select a configured Steam dedicated server. Capacity defaults to two remote players.</description>
+		</method>
+		<method name="on_port">
+			<return type="GameConfig" />
+			<param index="0" name="port" type="int" />
+			<description>Set the configured UDP port, from 1 to 65535, on a branch.</description>
+		</method>
+		<method name="world_id">
+			<return type="GameConfig" />
+			<param index="0" name="id" type="StringName" />
+			<description>Set a durable starting world ID. The fixed-world default is start.</description>
+		</method>
+		<method name="with_world">
+			<return type="GameConfig" />
+			<param index="0" name="world" type="WorldDefinition" />
+			<description>Add a destination to a coordinated draft.</description>
+		</method>
+		<method name="provider">
+			<return type="GameConfig" />
+			<param index="0" name="provider" type="GameProvider" />
+			<description>Select an optional typed provider to run at boot.</description>
+		</method>
+		<method name="inventory">
+			<return type="GameConfig" />
+			<param index="0" name="settings" type="InventoryConfig" />
+			<description>Enable game-owned inventory on a coordinated profile.</description>
+		</method>
+		<method name="player_controls">
+			<return type="GameConfig" />
+			<param index="0" name="profile" type="PlayerControlProfile" default="null" />
+			<description>Returns a branch that enables authority-driven movement and look for fixed-world play. Omit [param profile] to read movement settings from one [MoverComponent] directly under the player scene's [CharacterBody3D] root. Boot reports invalid or missing scene setup through [method Game.boot_result]. Supply an explicit profile to use its movement settings instead. Enable prediction on compatible grounded capsules for client prediction and server reconciliation against immutable static collision. Use compatible player scenes and the same movement protocol on each peer. The authority captures movement rules and speed at boot. Attach local input through a [ControlsComponent] or [PlayerControlProfile] when the world is ready.</description>
+		</method>
+		<method name="boot">
+			<return type="Game" />
+			<param index="0" name="owner" type="Node" />
+			<description>Attach private services to a live scene-tree owner. Check the returned Game's boot_result for a configuration failure.</description>
+		</method>
+		<method name="boot_server">
+			<return type="Game" />
+			<param index="0" name="owner" type="Node" />
+			<description>Attach the game and native CLI launcher. The launcher runs for the explicit server role.</description>
+		</method>
+	</methods>
+</class>

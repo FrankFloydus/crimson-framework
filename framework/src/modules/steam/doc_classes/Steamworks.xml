@@ -1,0 +1,251 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="Steamworks" inherits="RefCounted">
+	<brief_description>
+		Accesses Steam features from an existing Godot owner.
+	</brief_description>
+	<description>
+		Call [method boot] on the main thread to use Steam features independently of the game runtime. The existing scene-tree owner controls the lifetime of the internal Steam callback client. The facade and its typed services belong to that attachment and retire when it exits or loses its native client generation.
+		Boot returns a facade even if startup fails. Read [method boot_result] for the startup diagnostic. Direct actions report their own availability. Typed accessors may return null when the client or requested service is unavailable.
+	</description>
+	<methods>
+		<method name="boot" qualifiers="static">
+			<return type="Steamworks" />
+			<param index="0" name="owner" type="Node" />
+			<param index="1" name="settings" type="SteamConfig" default="null" />
+			<description>
+				Attaches the internal Steam client beneath a live scene-tree owner on the main thread. With null settings, accepts the launch AppID. The returned facade retains the attachment outcome, including a missing runtime, invalid settings, or unsupported build.
+			</description>
+		</method>
+		<method name="boot_result" qualifiers="const">
+			<return type="SteamResult" />
+			<description>
+				Returns the original startup result. Use [method is_ready] when a view needs to observe current availability.
+			</description>
+		</method>
+		<method name="restart_through_steam_if_needed" qualifiers="static">
+			<return type="int" enum="Error" />
+			<param index="0" name="app_id" type="int" />
+			<description>
+				Opt into Valve's relaunch check before starting any Steam runtime. Supply a shipping AppID. [constant @GlobalScope.ERR_SKIP] means the process should quit while Steam starts the installed copy. The shared Spacewar AppID is rejected.
+			</description>
+		</method>
+		<method name="is_ready" qualifiers="const">
+			<return type="bool" />
+			<description>
+				Returns whether this attachment still owns a live Steam client generation.
+			</description>
+		</method>
+		<method name="get_app_id" qualifiers="const">
+			<return type="int" />
+			<description>
+				Returns the AppID verified by Steam for this attachment, or zero if unavailable.
+			</description>
+		</method>
+		<method name="is_online" qualifiers="const">
+			<return type="bool" />
+			<description>
+				Returns whether the exact attached client currently has a live connection to Steam. Offline Mode can still expose cached features when [method is_ready] is true.
+			</description>
+		</method>
+		<method name="get_local_steam_id" qualifiers="const">
+			<return type="String" />
+			<description>
+				Returns the signed-in SteamID64 as a decimal string, or an empty string if unavailable.
+			</description>
+		</method>
+		<method name="open_achievements" qualifiers="const">
+			<return type="SteamResult" />
+			<description>
+				Requests the Achievements pane using the attached Steam overlay. Success means the request was submitted. A busy result means the overlay is still loading, disabled, or inaccessible from this thread. A failed startup or detached scope returns its diagnostic. Observe the overlay to confirm display.
+			</description>
+		</method>
+		<method name="achievements" qualifiers="const">
+			<return type="SteamAchievements" />
+			<description>
+				Returns the single-achievement action facade for this attachment. Its unlock action submits storage and carries the original startup error when no stats service was attached.
+			</description>
+		</method>
+		<method name="apps" qualifiers="const">
+			<return type="SteamApps" />
+			<description>
+				Returns the app and DLC information for this exact attachment, or null when unavailable.
+			</description>
+		</method>
+		<method name="friends" qualifiers="const">
+			<return type="SteamFriends" />
+			<description>
+				Returns the friends and social data for this exact attachment, or null when unavailable.
+			</description>
+		</method>
+		<method name="overlay" qualifiers="const">
+			<return type="SteamOverlay" />
+			<description>
+				Returns the overlay controls and activation signals for this exact attachment, or null when unavailable.
+			</description>
+		</method>
+		<method name="utils" qualifiers="const">
+			<return type="SteamUtils" />
+			<description>
+				Returns the Steam utilities for this exact attachment, or null when unavailable.
+			</description>
+		</method>
+		<method name="diagnostics" qualifiers="const">
+			<return type="SteamDiagnostics" />
+			<description>
+				Returns the diagnostic controls for this exact attachment, or null when unavailable.
+			</description>
+		</method>
+		<method name="http" qualifiers="const">
+			<return type="SteamHttp" />
+			<description>
+				Returns the HTTP client for this exact attachment, or null when unavailable.
+			</description>
+		</method>
+		<method name="stats" qualifiers="const">
+			<return type="SteamStats" />
+			<description>
+				Returns the stats and achievement editing for this exact attachment, or null when unavailable.
+			</description>
+		</method>
+		<method name="leaderboards" qualifiers="const">
+			<return type="SteamLeaderboards" />
+			<description>
+				Returns the leaderboard service for this exact attachment, or null when unavailable.
+			</description>
+		</method>
+		<method name="cloud" qualifiers="const">
+			<return type="SteamCloud" />
+			<description>
+				Returns the cloud file service for this exact attachment, or null when unavailable.
+			</description>
+		</method>
+		<method name="timeline" qualifiers="const">
+			<return type="SteamTimeline" />
+			<description>
+				Returns the timeline event service for this exact attachment, or null when unavailable.
+			</description>
+		</method>
+		<method name="screenshots" qualifiers="const">
+			<return type="SteamScreenshots" />
+			<description>
+				Returns the screenshot service for this exact attachment, or null when unavailable.
+			</description>
+		</method>
+		<method name="remote_play" qualifiers="const">
+			<return type="SteamRemotePlay" />
+			<description>
+				Returns the Remote Play service for this exact attachment, or null when unavailable.
+			</description>
+		</method>
+		<method name="inventory" qualifiers="const">
+			<return type="SteamInventory" />
+			<description>
+				Returns the Steam Inventory service for this exact attachment, or null when unavailable.
+			</description>
+		</method>
+		<method name="lobbies" qualifiers="const">
+			<return type="SteamLobbies" />
+			<description>
+				Returns the lobby service for this exact attachment, or null when unavailable.
+			</description>
+		</method>
+		<method name="server_browser" qualifiers="const">
+			<return type="SteamServerBrowser" />
+			<description>
+				Returns the dedicated server browser for this exact attachment, or null when unavailable.
+			</description>
+		</method>
+		<method name="workshop" qualifiers="const">
+			<return type="SteamWorkshop" />
+			<description>
+				Returns the Workshop service for this exact attachment, or null when unavailable.
+			</description>
+		</method>
+		<method name="presence" qualifiers="const">
+			<return type="SteamPresence" />
+			<description>
+				Returns the rich presence service for this exact attachment, or null when unavailable.
+			</description>
+		</method>
+		<method name="music" qualifiers="const">
+			<return type="SteamMusic" />
+			<description>
+				Returns the music service for this exact attachment, or null when unavailable.
+			</description>
+		</method>
+		<method name="video" qualifiers="const">
+			<return type="SteamVideo" />
+			<description>
+				Returns the video service for this exact attachment, or null when unavailable.
+			</description>
+		</method>
+		<method name="device" qualifiers="const">
+			<return type="SteamDevice" />
+			<description>
+				Returns the device service for this exact attachment, or null when unavailable.
+			</description>
+		</method>
+		<method name="auth" qualifiers="const">
+			<return type="SteamAuth" />
+			<description>
+				Returns the authentication and ownership ticket service for this exact attachment, or null when unavailable.
+			</description>
+		</method>
+		<method name="input" qualifiers="const">
+			<return type="SteamInput" />
+			<description>
+				Returns the Steam Input service for this exact attachment, or null when unavailable.
+			</description>
+		</method>
+		<method name="browser" qualifiers="const">
+			<return type="SteamBrowser" />
+			<description>
+				Returns the Steam browser service for this exact attachment, or null when unavailable.
+			</description>
+		</method>
+		<method name="purchases" qualifiers="const">
+			<return type="SteamPurchases" />
+			<description>
+				Returns the purchase service for this exact attachment, or null when unavailable.
+			</description>
+		</method>
+		<method name="voice" qualifiers="const">
+			<return type="SteamVoice" />
+			<description>
+				Returns the voice service for this exact attachment, or null when unavailable.
+			</description>
+		</method>
+		<method name="parties" qualifiers="const">
+			<return type="SteamParties" />
+			<description>
+				Returns the Steam Parties service for this exact attachment, or null when unavailable.
+			</description>
+		</method>
+		<method name="messages" qualifiers="const">
+			<return type="SteamMessages" />
+			<description>
+				Returns the Steam Messages service for this exact attachment, or null when unavailable.
+			</description>
+		</method>
+		<method name="networking" qualifiers="const">
+			<return type="SteamNetworking" />
+			<description>
+				Returns the route diagnostics for this exact attachment, or null when unavailable.
+			</description>
+		</method>
+		<method name="sockets" qualifiers="const">
+			<return type="SteamSockets" />
+			<description>
+				Returns the standalone Steam Sockets service for this exact attachment, or null when unavailable.
+			</description>
+		</method>
+	</methods>
+	<signals>
+		<signal name="runtime_lost">
+			<description>
+				Emitted after an IPC failure retires the exact native client generation and invalidates its retained services. To recover a standalone scope, defer a fresh [method boot] until the callback returns.
+			</description>
+		</signal>
+	</signals>
+</class>

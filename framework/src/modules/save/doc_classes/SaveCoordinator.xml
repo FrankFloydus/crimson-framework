@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="SaveCoordinator" inherits="Node">
+	<brief_description>
+		Coordinates checkpoint capture, storage, and restore for a persistent game host.
+	</brief_description>
+	<description>
+		Submit checkpoint requests on the main thread. An admitted request returns a positive ticket and reports its result through [signal operation_finished]. A rejected request returns zero. Read the admission error and message on the same coordinator immediately after a rejection.
+	</description>
+	<methods>
+		<method name="get_last_admission_error" qualifiers="const">
+			<return type="String" />
+			<description>
+				Returns the stable code for the most recent admission or setup rejection, or an empty string when the coordinator has no recorded rejection. A later rejection replaces the code and a successful admission clears it. A call from outside the main thread returns [code]WrongThread[/code].
+			</description>
+		</method>
+		<method name="get_last_admission_message" qualifiers="const">
+			<return type="String" />
+			<description>
+				Returns the reason or recovery guidance for the rejection reported by [method get_last_admission_error]. Read it immediately after a request returns zero. A later rejection replaces the message and a successful admission clears it. A call from outside the main thread returns guidance to submit requests on the main thread.
+			</description>
+		</method>
+	</methods>
+</class>

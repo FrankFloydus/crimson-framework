@@ -11,9 +11,44 @@
 #include <godot_cpp/variant/array.hpp>
 #include <godot_cpp/variant/dictionary.hpp>
 #include <godot_cpp/variant/string_name.hpp>
+#include <godot_cpp/variant/typed_array.hpp>
 #include <godot_cpp/variant/vector2i.hpp>
 
 namespace godot {
+
+// Detached placement geometry for one item in a grid.
+class InventoryItemView : public RefCounted {
+	GDCLASS(InventoryItemView, RefCounted)
+
+	friend class SpatialInventory;
+
+	// Stable item instance ID.
+	StringName id;
+	// Unrotated width and height in cells.
+	Vector2i footprint;
+	// Top-left occupied cell when the snapshot was read.
+	Vector2i origin;
+	// Whether the placement swaps its footprint axes.
+	bool rotated = false;
+
+	// Capture a placement without retaining the originating grid.
+	static Ref<InventoryItemView> capture(const StringName &id, const Vector2i &footprint,
+			const Vector2i &origin, bool rotated);
+
+protected:
+	// Register the read-only snapshot properties.
+	static void _bind_methods();
+
+public:
+	// Return the item instance ID.
+	StringName get_id() const;
+	// Return the unrotated footprint in cells.
+	Vector2i get_footprint() const;
+	// Return the top-left occupied cell in the captured grid.
+	Vector2i get_origin() const;
+	// Return whether the captured footprint was rotated.
+	bool is_rotated() const;
+};
 
 class SpatialInventory : public RefCounted {
 	GDCLASS(SpatialInventory, RefCounted)
@@ -122,6 +157,8 @@ public:
 	Vector2i get_grid_size() const;
 	// Returns the current revision of committed grid edits.
 	uint64_t get_placement_revision() const;
+	// Places an unused item ID in the first legal unrotated rectangle.
+	Error add(const StringName &p_id, const Vector2i &p_footprint);
 	// Places an unused item ID at a valid free origin.
 	Error try_place(const StringName &p_id, const Vector2i &p_footprint, const Vector2i &p_origin, bool p_rotated = false);
 	// Checks whether a footprint can occupy the specified rectangle.
@@ -148,12 +185,29 @@ public:
 	Dictionary get_placement(const StringName &p_id) const;
 	// Returns the committed placement records in the grid.
 	Array get_placements() const;
+	// Captures every placement as a detached typed view.
+	TypedArray<InventoryItemView> items() const;
+	// Captures the placement occupying a cell, or returns null when empty.
+	Ref<InventoryItemView> item_at(const Vector2i &p_cell) const;
 	// Finds the first free origin for the oriented footprint.
 	Vector2i find_first_fit(const Vector2i &p_footprint, bool p_rotated = false, const Vector2i &p_start = Vector2i()) const;
 	// Returns a versioned snapshot of the model's committed state.
 	Dictionary export_snapshot() const;
 	// Validates a snapshot before replacing the model's committed state.
 	Error import_snapshot(const Dictionary &p_snapshot);
+};
+
+// Code-first factories for standalone inventory models.
+class Inventory : public RefCounted {
+	GDCLASS(Inventory, RefCounted)
+
+protected:
+	// Register the grid factory.
+	static void _bind_methods();
+
+public:
+	// Build an empty grid with the supplied dimensions, or return null for an invalid size.
+	static Ref<SpatialInventory> grid(const Vector2i &p_size);
 };
 
 } // namespace godot

@@ -133,6 +133,11 @@ Error query_error(EResult result) {
     }
 }
 
+// Preserve the exact Steam result when several SDK outcomes map to one Godot error.
+String workshop_failure(const char *action, EResult result) {
+    return String(action) + String(" (Steam EResult ") + String::num_int64(result) + String(").");
+}
+
 // Resolve the native order requested by the public query branch.
 EUGCQuery native_sort(SteamWorkshopQuery::Sort sort) {
     switch (sort) {
@@ -292,7 +297,7 @@ struct SteamWorkshopQueryCall {
         }
         if (Time::get_singleton()->get_ticks_msec() >= deadline) {
             release_query();
-            stop_observing(ERR_TIMEOUT);
+            stop_observing(ERR_TIMEOUT, "The Steam Workshop query did not complete before its deadline.");
             return;
         }
         SteamUGCQueryCompleted_t result{};
@@ -301,11 +306,20 @@ struct SteamWorkshopQueryCall {
         }
         if (!payload || result.m_handle != handle || result.m_eResult != k_EResultOK ||
                 result.m_unNumResultsReturned > kNumUGCResultsPerPage) {
-            const Error error = payload && result.m_handle == handle && result.m_eResult != k_EResultOK
-                    ? query_error(result.m_eResult)
-                    : ERR_CANT_CONNECT;
+            Error error = ERR_CANT_CONNECT;
+            String diagnostic;
+            if (!payload) {
+                diagnostic = "Steam did not provide a Workshop query completion.";
+            } else if (result.m_handle != handle) {
+                diagnostic = "Steam returned a completion for a different Workshop query.";
+            } else if (result.m_eResult != k_EResultOK) {
+                error = query_error(result.m_eResult);
+                diagnostic = workshop_failure("Steam rejected the Workshop query", result.m_eResult);
+            } else {
+                diagnostic = "Steam returned more Workshop rows than can fit in one query page.";
+            }
             release_query();
-            stop_observing(error, "Steam Workshop query failed (EResult " + String::num_int64(result.m_eResult) + ").");
+            stop_observing(error, diagnostic);
             return;
         }
 
@@ -316,23 +330,27 @@ struct SteamWorkshopQueryCall {
                 : nullptr;
         if (!get_row) {
             release_query();
-            stop_observing(ERR_UNAVAILABLE);
+            stop_observing(ERR_UNAVAILABLE, "The Steam Workshop result reader became unavailable before the query completed.");
             return;
         }
         if (published_id != k_PublishedFileIdInvalid) {
             SteamUGCDetails_t details{};
             Ref<SteamWorkshopItem> item;
             Error error = ERR_FILE_NOT_FOUND;
+            String diagnostic = "The requested Workshop item was absent from the result.";
             if (result.m_unNumResultsReturned == 1 && get_row(access.ugc, handle, 0, &details) &&
                     details.m_nPublishedFileId == published_id) {
                 item = copy_item(details);
                 error = item.is_valid() ? OK : ERR_FILE_NOT_FOUND;
                 if (details.m_eResult != k_EResultOK) {
                     error = query_error(details.m_eResult);
+                    diagnostic = workshop_failure("Steam could not read the requested Workshop item", details.m_eResult);
+                } else if (item.is_null()) {
+                    diagnostic = "The requested Workshop item was unavailable for this app or contained invalid data.";
                 }
             }
             release_query();
-            settle(SteamWorkshopItemResult::create(error, {}, item));
+            settle(SteamWorkshopItemResult::create(error, error == OK ? String() : diagnostic, item));
             return;
         }
 
@@ -658,9 +676,10 @@ struct SteamWorkshopScope : public std::enable_shared_from_this<SteamWorkshopSco
                         std::memcpy(&result, payload, sizeof(result));
                     }
                     if (!payload || result.m_nPublishedFileId != task->id) {
-                        task->fail(ERR_CANT_CONNECT);
+                        task->fail(ERR_CANT_CONNECT, "Steam did not confirm the requested Workshop subscription change.");
                     } else if (result.m_eResult != k_EResultOK) {
-                        task->fail(query_error(result.m_eResult));
+                        task->fail(query_error(result.m_eResult),
+                                workshop_failure("Steam rejected the Workshop subscription change", result.m_eResult));
                     } else if (task->action.is_valid()) {
                         task->finish(SteamWorkshopSubscriptionResult::create(OK, {},
                                 SteamWorkshopSubscription::create(decimal_id(task->id), subscribed)));
@@ -715,11 +734,12 @@ struct SteamWorkshopScope : public std::enable_shared_from_this<SteamWorkshopSco
                         std::memcpy(&result, payload, sizeof(result));
                     }
                     if (!payload || result.m_nPublishedFileId != task->id) {
-                        task->fail(ERR_CANT_CONNECT);
+                        task->fail(ERR_CANT_CONNECT, "Steam did not confirm the vote for the requested Workshop item.");
                     } else if (result.m_eResult != k_EResultOK) {
-                        task->fail(query_error(result.m_eResult));
+                        task->fail(query_error(result.m_eResult),
+                                workshop_failure("Steam rejected the Workshop vote", result.m_eResult));
                     } else if (result.m_bVoteUp != up) {
-                        task->fail(ERR_INVALID_DATA);
+                        task->fail(ERR_INVALID_DATA, "Steam acknowledged a different Workshop vote than the one submitted.");
                     } else if (task->action.is_valid()) {
                         task->finish(SteamWorkshopVoteResult::create(OK, {},
                                 SteamWorkshopVote::create(decimal_id(task->id), up)));
@@ -810,7 +830,8 @@ struct SteamWorkshopScope : public std::enable_shared_from_this<SteamWorkshopSco
                         return;
                     }
                     if (result.m_eResult != k_EResultOK) {
-                        task->fail(query_error(result.m_eResult));
+                        task->fail(query_error(result.m_eResult),
+                                workshop_failure("Steam could not download the Workshop item", result.m_eResult));
                         return;
                     }
                     const auto owner = weak.lock();
@@ -821,7 +842,8 @@ struct SteamWorkshopScope : public std::enable_shared_from_this<SteamWorkshopSco
                     owner->remember(task->id);
                     const auto installed = owner->read_install(owner->access(), task->id);
                     task->finish(SteamWorkshopInstallResult::create(installed.is_valid() ? OK : ERR_FILE_CANT_READ,
-                            {}, installed));
+                            installed.is_valid() ? String() : String("Steam completed the Workshop download, but its installation folder was unavailable."),
+                            installed));
                 });
         if (task->download_subscription == 0 || !download(workshop.ugc, task->id, high_priority)) {
             task->retire_download();

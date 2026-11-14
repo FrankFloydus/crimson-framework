@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="InputSwapAxis" inherits="InputModifier">
+	<brief_description>Routes the two components of a binding.</brief_description>
+	<description>Use on a Vector or Motion binding to change which source component becomes X or Y. The default swaps the source axes. Values and units are preserved.</description>
+	<members>
+		<member name="order" type="int" setter="set_order" getter="get_order" enum="InputSwapAxis.Order" default="1">Output component order. X then Y keeps the original order. Y then X exchanges the components.</member>
+	</members>
+	<constants>
+		<constant name="XY" value="0" enum="Order">Output X uses source X. Output Y uses source Y.</constant>
+		<constant name="YX" value="1" enum="Order">Output X uses source Y. Output Y uses source X.</constant>
+	</constants>
+</class>

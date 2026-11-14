@@ -5,11 +5,13 @@
 #include "integration/world_session/spawn_point.hpp"
 
 #include <godot_cpp/classes/camera3d.hpp>
+#include <godot_cpp/classes/engine.hpp>
 #include <godot_cpp/classes/marker3d.hpp>
 #include <godot_cpp/classes/scene_tree.hpp>
 #include <godot_cpp/classes/time.hpp>
 #include <godot_cpp/core/class_db.hpp>
 #include <godot_cpp/variant/callable_method_pointer.hpp>
+#include <godot_cpp/variant/utility_functions.hpp>
 
 #include <algorithm>
 #include <limits>
@@ -31,6 +33,7 @@ constexpr const char *players_name = "Players";
 constexpr const char *roster_method = "_crimson_world_session_roster_v1";
 // Immediate play sends only occupied peer and candidate pairs and supports a scoped denial.
 constexpr const char *offer_method = "_crimson_world_session_offer_v3";
+constexpr const char *movement_offer_method = "_crimson_world_session_offer_v5";
 constexpr const char *mounted_method = "_crimson_world_session_mounted_v3";
 constexpr const char *assignments_method = "_crimson_world_session_assignments_v3";
 constexpr const char *baseline_applied_method = "_crimson_world_session_baseline_applied_v3";
@@ -134,6 +137,9 @@ void WorldSession::_bind_methods() {
     ClassDB::bind_method(D_METHOD(roster_method, "roster"), &WorldSession::receive_roster);
     ClassDB::bind_method(D_METHOD(offer_method, "world_id", "epoch", "ticket", "candidate_count", "host_limit", "dedicated"),
             &WorldSession::receive_world_offer);
+    ClassDB::bind_method(D_METHOD(movement_offer_method, "world_id", "epoch", "ticket", "candidate_count", "host_limit", "dedicated", "tick_rate"),
+            &WorldSession::receive_movement_offer);
+    bind_movement_methods();
     ClassDB::bind_method(D_METHOD(mounted_method, "epoch", "ticket"), &WorldSession::receive_scene_mounted);
     ClassDB::bind_method(D_METHOD(assignments_method, "epoch", "ticket", "assignments"), &WorldSession::receive_assignments);
     ClassDB::bind_method(D_METHOD(baseline_applied_method, "epoch", "ticket"), &WorldSession::receive_baseline_applied);
@@ -158,6 +164,7 @@ void WorldSession::_enter_tree() {
     config["channel"] = 0;
     rpc_config(roster_method, config);
     rpc_config(offer_method, config);
+    rpc_config(movement_offer_method, config);
     rpc_config(assignments_method, config);
     rpc_config(join_ready_method, config);
     rpc_config(spawn_rejection_method, config);
@@ -165,6 +172,7 @@ void WorldSession::_enter_tree() {
     reports["rpc_mode"] = MultiplayerAPI::RPC_MODE_ANY_PEER;
     rpc_config(mounted_method, reports);
     rpc_config(baseline_applied_method, reports);
+    configure_movement_rpc();
 }
 
 void WorldSession::_ready() {
@@ -183,6 +191,7 @@ void WorldSession::_ready() {
         scene_loader->connect("load_sync_failed", callable_mp(this, &WorldSession::on_world_load_failed));
     }
     set_process(false);
+    set_physics_process(false);
 }
 
 void WorldSession::_exit_tree() {
@@ -239,6 +248,10 @@ int64_t WorldSession::get_world_epoch() const {
     return authority_epoch;
 }
 
+String WorldSession::get_last_end_detail() const {
+    return last_end_detail;
+}
+
 bool WorldSession::is_authority() const {
     return transport && transport->is_authority();
 }
@@ -287,6 +300,20 @@ Node3D *WorldSession::get_world() const {
 
 Node3D *WorldSession::get_local_player() const {
     return transport && active_mode != Mode::Dedicated ? get_player(transport->get_local_peer_id()) : nullptr;
+}
+
+int64_t WorldSession::get_local_player_number() const {
+    const Node3D *actor = get_local_player();
+    if (!actor) {
+        return 0;
+    }
+    const uint64_t actor_id = actor->get_instance_id();
+    for (size_t index = 0; index < slots.size(); ++index) {
+        if (slots[index].actor_id == actor_id) {
+            return static_cast<int64_t>(index) + 1;
+        }
+    }
+    return 0;
 }
 
 Node3D *WorldSession::get_player(int64_t peer_id) const {
@@ -382,6 +409,9 @@ Error WorldSession::start(Mode mode, const String &address,
 
 Error WorldSession::configure_start(Mode mode) {
     active_mode = mode;
+    if (movement.rule.is_valid() && mode != Mode::Join) {
+        motion_rate = Engine::get_singleton()->get_physics_ticks_per_second();
+    }
     const Ref<PackedScene> scene = definition->get_world_scene();
     player_scene = definition->get_player_scene();
     camera_path = definition->get_local_camera_path();
@@ -440,6 +470,15 @@ int64_t WorldSession::configure_candidate(Node *candidate) {
                 return ERR_INVALID_DATA;
             }
         }
+        if (anchors.empty()) {
+            const auto *markers = world->get_node_or_null(NodePath("SpawnPoints"));
+            if (!markers || markers->get_child_count() > max_spawn_candidates) {
+                return ERR_INVALID_DATA;
+            }
+            for (int index = 0; index < markers->get_child_count(); ++index) {
+                candidates.push_back(Object::cast_to<Marker3D>(markers->get_child(index)));
+            }
+        }
     } else {
         const NodePath markers_path = definition->get_spawn_points_path();
         auto *markers = world->get_node_or_null(markers_path);
@@ -470,6 +509,10 @@ int64_t WorldSession::configure_candidate(Node *candidate) {
     if (!first_actor) {
         return ERR_INVALID_DATA;
     }
+    if (movement.rule.is_valid() && !validate_movement_actor(first_actor)) {
+        memdelete(first_actor);
+        return ERR_INVALID_DATA;
+    }
     first_actor_id = first_actor->get_instance_id();
     world->set_name(world_name);
     auto *players = memnew(Node3D);
@@ -486,14 +529,22 @@ Error WorldSession::request_world() {
 }
 
 void WorldSession::on_world_loaded(const StringName &scene_id) {
-    if (player_limit == 0 || state != STARTING || scene_id != world_key || !get_world()) {
+    if (player_limit == 0 || state != STARTING || scene_id != world_key) {
+        return;
+    }
+    if (!get_world()) {
+        fail_session("scene_load_failed", "The starting world was no longer mounted after scene activation.");
         return;
     }
     if (active_mode == Mode::Join) {
         if (expected_candidates != static_cast<int64_t>(slots.size())) {
             fail_session("incompatible_world");
-        } else if (rpc_id(authority_peer, mounted_method, authority_epoch, join_ticket) != OK) {
-            fail_session("connection_failed");
+        } else {
+            const Error sent = rpc_id(authority_peer, mounted_method, authority_epoch, join_ticket);
+            if (sent != OK) {
+                fail_session("connection_failed", "Could not confirm the local world mount to the host (" +
+                        UtilityFunctions::error_string(sent) + String(")."));
+            }
         }
         return;
     }
@@ -510,17 +561,24 @@ void WorldSession::on_world_loaded(const StringName &scene_id) {
     }
     if (!spawned) {
         fail_session("spawn_failed");
-    } else if (!admission_held && (active_mode == Mode::Host || active_mode == Mode::Dedicated) &&
-            transport->set_accepting_connections(true) != OK) {
-        fail_session("connection_failed");
-    } else {
-        finish_start();
+        return;
     }
+    if (!admission_held && (active_mode == Mode::Host || active_mode == Mode::Dedicated)) {
+        const Error admission = transport->set_accepting_connections(true);
+        if (admission != OK) {
+            fail_session("connection_failed", "Could not open admission after mounting the starting world (" +
+                    UtilityFunctions::error_string(admission) + String(")."));
+            return;
+        }
+    }
+    finish_start();
 }
 
-void WorldSession::on_world_load_failed(const StringName &scene_id, int64_t error, const String &) {
+void WorldSession::on_world_load_failed(const StringName &scene_id, int64_t error, const String &message) {
     if (!mutating && player_limit != 0 && state == STARTING && scene_id == world_key) {
-        fail_session(error == ERR_INVALID_DATA ? "invalid_spawn_setup" : "scene_load_failed");
+        fail_session(error == ERR_INVALID_DATA ? "invalid_spawn_setup" : "scene_load_failed",
+                message.is_empty() ? "The scene loader reported " + UtilityFunctions::error_string(error) + String(".") :
+                                     message);
     }
 }
 
@@ -560,6 +618,15 @@ bool WorldSession::resolve_view(Node3D &actor, Node3D *&camera, Node3D *&hidden)
             collect_components(actor, cameras, 2);
             if (cameras.size() == 1) {
                 camera = cameras.front();
+            }
+            for (int index = 0; index < actor.get_child_count(); ++index) {
+                auto *child = Object::cast_to<Node3D>(actor.get_child(index));
+                if (child && child->is_in_group("crimson_local_hidden")) {
+                    if (hidden) {
+                        return false;
+                    }
+                    hidden = child;
+                }
             }
         }
     } else {
@@ -605,6 +672,9 @@ bool WorldSession::apply_roster(const PackedInt32Array &next) {
             return false;
         }
         additions[index].reset(actor);
+        if (movement.rule.is_valid() && !validate_movement_actor(actor)) {
+            return false;
+        }
         actor->set_name(String("Peer_") + String::num_int64(next[index]));
         actor->set_transform(slot.pose);
         if (next[index] == local_peer) {
@@ -637,6 +707,7 @@ bool WorldSession::apply_roster(const PackedInt32Array &next) {
         }
         slot.peer = next[index];
         slot.actor_id = 0;
+        reset_slot_movement(slot);
         if (additions[index]) {
             slot.actor_id = additions[index]->get_instance_id();
             const uint64_t added_id = slot.actor_id;
@@ -647,6 +718,9 @@ bool WorldSession::apply_roster(const PackedInt32Array &next) {
             }
             Node3D *actor = find_spatial(added_id);
             if (!actor || actor->is_queued_for_deletion() || actor->get_parent() != players) {
+                return false;
+            }
+            if (movement.rule.is_valid() && !attach_movement(slot, actor)) {
                 return false;
             }
             if (active_mode == Mode::Dedicated) {
@@ -738,6 +812,10 @@ void WorldSession::publish_roster(const PackedInt32Array &roster, int32_t joinin
             assignments.append(static_cast<int32_t>(index));
         }
     }
+    if (movement.rule.is_valid()) {
+        send_movement_roster(assignments);
+        return;
+    }
     for (int32_t recipient : transport->get_connected_peer_ids()) {
         if (roster.has(recipient)) {
             const auto pending = pending_guests.find(recipient);
@@ -755,6 +833,24 @@ void WorldSession::receive_roster(const PackedInt32Array &roster) {
 
 void WorldSession::receive_world_offer(const StringName &received_world, int64_t epoch, int64_t ticket,
         int64_t candidate_count, int64_t host_limit, bool dedicated) {
+    accept_world_offer(received_world, epoch, ticket, candidate_count, host_limit, dedicated, false);
+}
+
+void WorldSession::receive_movement_offer(const StringName &received_world, int64_t epoch, int64_t ticket,
+        int64_t candidate_count, int64_t host_limit, bool dedicated, int32_t tick_rate) {
+    if (state != STARTING || join_ticket != 0 || !accepts_authority_rpc()) {
+        return;
+    }
+    if (tick_rate < 1 || tick_rate > 1000 || tick_rate != Engine::get_singleton()->get_physics_ticks_per_second()) {
+        fail_session("incompatible_rules", "The server and client must use the same physics tick rate for player movement.");
+        return;
+    }
+    motion_rate = tick_rate;
+    accept_world_offer(received_world, epoch, ticket, candidate_count, host_limit, dedicated, true);
+}
+
+void WorldSession::accept_world_offer(const StringName &received_world, int64_t epoch, int64_t ticket,
+        int64_t candidate_count, int64_t host_limit, bool dedicated, bool controlled) {
     if (player_limit == 0 || state != STARTING || join_ticket != 0 || !accepts_authority_rpc()) {
         return;
     }
@@ -763,7 +859,7 @@ void WorldSession::receive_world_offer(const StringName &received_world, int64_t
         fail_session("incompatible_world");
         return;
     }
-    if (host_limit != player_limit) {
+    if (host_limit != player_limit || controlled != movement.rule.is_valid()) {
         fail_session("incompatible_rules");
         return;
     }
@@ -772,32 +868,40 @@ void WorldSession::receive_world_offer(const StringName &received_world, int64_t
     expected_candidates = candidate_count;
     remote_dedicated = dedicated;
     start_spawn_deadline(2.0 * guest_stage_timeout_ms / 1000.0);
-    if (request_world() != OK) {
-        fail_session("scene_load_failed");
+    const Error requested = request_world();
+    if (requested != OK) {
+        fail_session("scene_load_failed", "The scene loader rejected the starting world (" +
+                UtilityFunctions::error_string(requested) + String(")."));
     }
 }
 
 void WorldSession::receive_assignments(int64_t epoch, int64_t ticket, const PackedInt32Array &assignments) {
-    if (player_limit == 0 || !accepts_authority_rpc() || !get_world() || epoch != authority_epoch ||
+    if (movement.rule.is_valid() || player_limit == 0 || !accepts_authority_rpc() || !get_world() || epoch != authority_epoch ||
             (state == STARTING ? join_ticket == 0 || ticket != join_ticket : ticket != 0)) {
         return;
     }
-    if (assignments.size() < 2 || assignments.size() % 2 != 0 || assignments.size() > player_limit * 2) {
+    PackedInt32Array roster;
+    if (!expand_assignments(assignments, roster)) {
         fail_session("invalid_roster");
         return;
     }
-    PackedInt32Array roster;
+    apply_authority_roster(roster);
+}
+
+bool WorldSession::expand_assignments(const PackedInt32Array &assignments, PackedInt32Array &roster) const {
+    if (assignments.size() < 2 || assignments.size() % 2 != 0 || assignments.size() > player_limit * 2) {
+        return false;
+    }
     roster.resize(slots.size());
     for (int64_t index = 0; index < assignments.size(); index += 2) {
         const int32_t peer = assignments[index];
         const int32_t point = assignments[index + 1];
         if (peer <= 0 || point < 0 || point >= roster.size() || roster[point] != 0) {
-            fail_session("invalid_roster");
-            return;
+            return false;
         }
         roster.set(point, peer);
     }
-    apply_authority_roster(roster);
+    return valid_roster(roster);
 }
 
 int32_t WorldSession::reporting_guest(int64_t epoch, int64_t ticket, GuestPhase phase) const {
@@ -877,6 +981,12 @@ void WorldSession::apply_authority_roster(const PackedInt32Array &roster) {
         fail_session("invalid_roster");
         return;
     }
+    if (commit_authority_roster(roster)) {
+        acknowledge_roster();
+    }
+}
+
+bool WorldSession::commit_authority_roster(const PackedInt32Array &roster) {
     bool applied;
     {
         const Mutation guard(mutating);
@@ -884,8 +994,11 @@ void WorldSession::apply_authority_roster(const PackedInt32Array &roster) {
     }
     if (!applied) {
         fail_session("spawn_failed");
-        return;
     }
+    return applied;
+}
+
+void WorldSession::acknowledge_roster() {
     if (state == STARTING) {
         if (player_limit == 0) {
             finish_start();
@@ -901,6 +1014,10 @@ void WorldSession::apply_authority_roster(const PackedInt32Array &roster) {
 void WorldSession::finish_start() {
     clear_spawn_deadline();
     state = RUNNING;
+    set_physics_process(movement.rule.is_valid());
+    if (movement.rule.is_valid() && active_mode == Mode::Join) {
+        set_process(true);
+    }
     emit_signal("state_changed", state);
 }
 
@@ -914,12 +1031,21 @@ void WorldSession::on_transport_ended(const StringName &reason) {
     if (state == IDLE) {
         return;
     }
-    const StringName resolved = failure_reason.is_empty() ? reason : failure_reason;
+    const bool local_failure = !failure_reason.is_empty();
+    const StringName resolved = local_failure ? failure_reason : reason;
+    const String detail = failure_detail;
     {
         const Mutation guard(mutating);
         clear_world();
         state = IDLE;
         emit_signal("state_changed", state);
+    }
+    last_end_detail = detail;
+    if (!scene_loader && local_failure) {
+        const String explanation = !detail.is_empty() ? detail : resolved == StringName("spawn_timeout") ?
+                String("The host did not provide the local player's spawn assignment in time.") :
+                String("The world session could not apply the required player assignments.");
+        UtilityFunctions::printerr("[Crimson] World session ended (", resolved, "). ", explanation);
     }
     emit_signal("session_ended", resolved);
 }
@@ -936,8 +1062,12 @@ void WorldSession::on_peer_joined(int64_t peer_id) {
         }
         const int64_t ticket = ++next_ticket;
         pending_guests.emplace(peer, PendingGuest{ ticket, Time::get_singleton()->get_ticks_msec() + guest_stage_timeout_ms });
-        if (rpc_id(peer, offer_method, world_key, authority_epoch, ticket, int64_t(slots.size()), player_limit,
-                    active_mode == Mode::Dedicated) != OK) {
+        const Error offered = movement.rule.is_valid() ?
+                rpc_id(peer, movement_offer_method, world_key, authority_epoch, ticket, int64_t(slots.size()),
+                        player_limit, active_mode == Mode::Dedicated, motion_rate) :
+                rpc_id(peer, offer_method, world_key, authority_epoch, ticket, int64_t(slots.size()),
+                        player_limit, active_mode == Mode::Dedicated);
+        if (offered != OK) {
             reject_spawn(peer, "connection_failed");
         } else {
             set_process(true);
@@ -969,7 +1099,11 @@ void WorldSession::on_peer_left(int64_t peer_id) {
     }
 }
 
-void WorldSession::_process(double) {
+void WorldSession::_process(double delta) {
+    if (state == RUNNING && movement.rule.is_valid() && active_mode == Mode::Join) {
+        interpolate_movement(delta);
+        return;
+    }
     if (state != RUNNING || transport->get_state() != session::GameSession::HOSTING) {
         return;
     }
@@ -1010,14 +1144,16 @@ void WorldSession::start_spawn_deadline(double seconds) {
     spawn_deadline->connect("timeout", callable_mp(this, &WorldSession::on_spawn_timeout));
 }
 
-void WorldSession::fail_session(const StringName &reason) {
+void WorldSession::fail_session(const StringName &reason, const String &detail) {
     if (state != IDLE) {
         failure_reason = reason;
+        failure_detail = detail;
         transport->leave();
     }
 }
 
 void WorldSession::clear_world(bool exiting) {
+    clear_movement();
     clear_spawn_deadline();
     if (Node3D *staged_actor = find_spatial(first_actor_id)) {
         memdelete(staged_actor);
@@ -1055,6 +1191,7 @@ void WorldSession::clear_world(bool exiting) {
     pending_guests.clear();
     set_process(false);
     failure_reason = StringName();
+    failure_detail = String();
 }
 
 } // namespace crimson::integration

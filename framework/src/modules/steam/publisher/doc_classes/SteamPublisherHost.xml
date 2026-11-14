@@ -2,7 +2,7 @@
 <!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
 <class name="SteamPublisherHost" inherits="Node">
 	<brief_description>Resolves secrets and owns the trusted publisher transport.</brief_description>
-	<description>Attach a subclass on the trusted backend and override [method _resolve_secret]. Production requests use verified HTTPS to the fixed Steam partner origin. Test builds replace the transport with a local override and open no sockets.</description>
+	<description>Attach a scripted subclass from the trusted backend's code and override [method _resolve_secret]. Production requests use verified HTTPS to the fixed Steam partner origin. Test builds replace the transport with a local override and open no sockets.</description>
 	<tutorials>
 	</tutorials>
 	<methods>

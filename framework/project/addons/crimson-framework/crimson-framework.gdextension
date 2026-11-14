@@ -13,10 +13,9 @@ windows.release.x86_64.single = "./bin/crimson_framework.windows.template_releas
 
 [icons]
 
-SteamClient = "./images/bi_steam.png"
+SteamConfig = "./images/bi_steam.png"
 SteamRuntimeNode = "./images/bi_steam.png"
 SteamDedicatedRuntimeNode = "./images/bi_steam.png"
-SteamPublisherHost = "./images/bi_steam.png"
 GameVoice = "./images/bi_steam.png"
 SteamProvider = "./images/bi_steam.png"
 SteamSessionTransport = "./images/bi_steam.png"

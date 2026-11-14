@@ -158,7 +158,10 @@ String SpatialInventoryContainers::placement_policy(const Dictionary &context) c
             return reason;
         }
     }
-    if (host_placement_policy.is_valid()) {
+    if (!host_placement_policy.is_null()) {
+        if (!host_placement_policy.is_valid()) {
+            return "The container placement policy is unavailable.";
+        }
         const Variant reason = host_placement_policy.call(context);
         return reason.get_type() == Variant::STRING ? String(reason) : String("Container placement policy must return a String.");
     }

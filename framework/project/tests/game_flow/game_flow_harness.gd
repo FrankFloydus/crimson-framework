@@ -56,9 +56,9 @@ func _configure_game(authority: bool = true, provider: GameServiceProvider = nul
 
 
 # Register the game's authoritative store before opening a match.
-func _register_authority_store() -> bool:
+func _register_authority_store(validate_restore := Callable()) -> bool:
 	var coordinator := _game.get_transactions()
-	return _expect(coordinator.register_store(STORE, {"score": 0, "player": ""}, _prepare_score) == OK,
+	return _expect(coordinator.register_store(STORE, {"score": 0, "player": ""}, _prepare_score, validate_restore) == OK,
 		"Register the authoritative score store.")
 
 

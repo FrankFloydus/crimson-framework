@@ -133,15 +133,15 @@ private:
     // Finds an allowed free position for the proposed item placement.
     Position find_position(const Grid &source, const Grid &destination, const godot::Dictionary &placement) const;
     // Commits stack edits with the expected source and target placements.
-    godot::Error commit_placed_merge(const Adapter &adapter, const godot::Dictionary &plan,
+    Status commit_placed_merge(const Adapter &adapter, const godot::Dictionary &plan,
             const Grid &source, const godot::Dictionary &placement,
             const Grid &destination, const godot::Dictionary &target);
     // Checks that the source placement still matches the planned action.
-    bool matches_source(const Grid &source, const godot::Dictionary &placement, const Grid &destination = {}) const;
+    Status check_source(const Grid &source, const godot::Dictionary &placement, const Grid &destination = {}) const;
     // Checks that the stack key still matches the expected key.
     bool matches_stack(const Adapter &adapter, const godot::StringName &id, const godot::StringName &key) const;
     // Checks whether the host operation guard allows the source and destination.
-    bool guard_allows(const Grid &source, const Grid &destination) const;
+    Status check_guard(const Grid &source, const Grid &destination) const;
     // Returns the current quantity represented by a placed item.
     int64_t placed_units(const Grid &source, const godot::StringName &id) const;
     // Finalizes transfer reporting with updated source and refresh information.

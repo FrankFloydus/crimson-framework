@@ -1,0 +1,10 @@
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="Locomotion" inherits="Object">
+	<brief_description>Factory for built-in motion rules.</brief_description>
+	<methods>
+		<method name="ground" qualifiers="static">
+			<return type="MotionRule" />
+			<description>Create a grounded rule with gravity scale 1.0 and a 5 m/s jump. Use it with a [CharacterBody3D] in grounded motion mode. The rule uses the body's up direction, gravity and floor collision settings.</description>
+		</method>
+	</methods>
+</class>

@@ -10,6 +10,7 @@
 #include <godot_cpp/core/class_db.hpp>
 #include <godot_cpp/core/object.hpp>
 #include <godot_cpp/variant/array.hpp>
+#include <godot_cpp/variant/utility_functions.hpp>
 
 #include <algorithm>
 #include <charconv>
@@ -28,6 +29,8 @@ constexpr size_t max_events = 24;
 constexpr size_t max_participants = 64;
 constexpr size_t max_migrations = 256;
 constexpr size_t max_metadata_bytes = 8192;
+constexpr const char *invalid_slot_message =
+        "Profile and slot IDs must start with a lowercase letter or digit and use up to 64 lowercase letters, digits, underscores, or hyphens.";
 
 // Schema and live adapter binding for one checkpoint participant.
 struct Participant {
@@ -135,10 +138,10 @@ Generation parse_generation(const std::string &sequence, const std::string &id) 
 }
 
 // Resolve a required Godot object or raise the supplied failure code.
-Object *live_object(uint64_t id, const char *code) {
+Object *live_object(uint64_t id, const char *code, const std::string &message) {
     Object *object = id ? ObjectDB::get_instance(id) : nullptr;
     if (object == nullptr) {
-        throw SaveError(code, "A registered host or participant is no longer available.");
+        throw SaveError(code, message);
     }
     return object;
 }
@@ -148,23 +151,41 @@ bool valid_adapter(Object *adapter) {
     return adapter && adapter->has_method("save_capture") && adapter->has_method("save_stage");
 }
 
+// Preserve explicit callback failure detail while keeping the coordinator's action and code.
+std::string callback_failure(const Dictionary &result, const std::string &message) {
+    const Variant ok = result.get("ok", Variant());
+    const Variant detail = result.get("message", Variant());
+    if (ok.get_type() == Variant::BOOL && !static_cast<bool>(ok) && detail.get_type() == Variant::STRING) {
+        const String explanation = String(detail).strip_edges();
+        if (!explanation.is_empty()) {
+            return message + " " + utf8(explanation.left(512));
+        }
+    }
+    return message;
+}
+
 // Extract a successful callback's value or raise its operation failure.
 Variant result_value(const Variant &result, const char *code, const std::string &message) {
     if (result.get_type() == Variant::DICTIONARY) {
-        Dictionary value = result;
-        Variant ok = value.get("ok", false);
+        const Dictionary value = result;
+        const Variant ok = value.get("ok", Variant());
         if (ok.get_type() == Variant::BOOL && static_cast<bool>(ok) && value.has("value")) {
             return value["value"];
         }
+        throw SaveError(code, callback_failure(value, message));
     }
     throw SaveError(code, message);
 }
 
-// Require an explicit boolean success from a restore callback.
+// Require explicit success from a restore callback, with optional structured failure detail.
 void require_true(const Variant &value, const std::string &message) {
-    if (value.get_type() != Variant::BOOL || !static_cast<bool>(value)) {
-        throw SaveError("RestoreFailed", message);
+    if (value.get_type() == Variant::BOOL && static_cast<bool>(value)) {
+        return;
     }
+    if (value.get_type() == Variant::DICTIONARY) {
+        throw SaveError("RestoreFailed", callback_failure(Dictionary(value), message));
+    }
+    throw SaveError("RestoreFailed", message);
 }
 
 // Convert a worker outcome to the Godot result shape for its operation kind.
@@ -222,6 +243,8 @@ struct SaveCoordinator::Impl {
     bool load_fence = false;
     // Machine-readable reason for the most recent rejected request.
     std::string admission_error;
+    // Human-readable reason retained for native orchestrators.
+    std::string admission_message;
     // Declared participants and their current live bindings.
     std::map<std::string, Participant> participants;
     // Whole-scope upgrade callbacks indexed by their source versions.
@@ -292,25 +315,42 @@ struct SaveCoordinator::Impl {
     }
 
     // Remember the admission error and return an invalid ticket.
-    int64_t reject(const std::string &code) {
+    int64_t reject(const std::string &code, const std::string &message) {
         admission_error = code;
+        admission_message = message;
         return 0;
+    }
+
+    // Report a synchronous setup rejection, which has no ticket or terminal signal.
+    bool reject_setup(const char *method, const std::string &code, const std::string &message) {
+        if (on_main()) {
+            reject(code, message);
+        }
+        UtilityFunctions::printerr("[Crimson] SaveCoordinator.", method, ": ", godot_string(message));
+        return false;
     }
 
     // Check configuration, callback fences, and queue limits before admission.
     bool can_admit(Kind kind) {
-        if (in_callback || (load_fence && requires_world(kind))) {
-            reject("Busy");
+        if (in_callback) {
+            reject("Busy", "A checkpoint callback is still running. Submit the request after it returns.");
+            return false;
+        }
+        if (load_fence && requires_world(kind)) {
+            reject("Busy", "A checkpoint load is already pending. Wait for it to finish before retrying.");
             return false;
         }
         if (!store || !codec || versions.app_id.empty() || versions.scope_id.empty() ||
                 (requires_world(kind) && !bound_world())) {
-            reject("Unconfigured");
+            reject("Unconfigured", "The checkpoint coordinator is missing its storage configuration or live checkpoint bindings.");
             return false;
         }
-        if (completions.size() + progress.size() >= max_events ||
-                next_ticket == std::numeric_limits<int64_t>::max()) {
-            reject("Busy");
+        if (completions.size() + progress.size() >= max_events) {
+            reject("Busy", "The checkpoint event queue is full. Wait for pending operations to finish.");
+            return false;
+        }
+        if (next_ticket == std::numeric_limits<int64_t>::max()) {
+            reject("Busy", "The checkpoint coordinator has exhausted its operation tickets. Start a new game instance.");
             return false;
         }
         return true;
@@ -322,7 +362,7 @@ struct SaveCoordinator::Impl {
             try {
                 worker = std::make_unique<SaveWorker>(store, codec);
             } catch (const std::exception &) {
-                return reject("WorkerUnavailable");
+                return reject("WorkerUnavailable", "The checkpoint coordinator could not start its storage worker.");
             }
         }
         const int64_t ticket = next_ticket++;
@@ -337,6 +377,7 @@ struct SaveCoordinator::Impl {
         }
         queue.push_back(std::move(pending));
         admission_error.clear();
+        admission_message.clear();
         progress.emplace_back(ticket, "Queued");
         return ticket;
     }
@@ -385,7 +426,8 @@ struct SaveCoordinator::Impl {
         size_t remaining = limits.max_file_bytes - 1024 - meta.dump().size();
         Json records = Json::array();
         for (const auto &[id, registration] : participants) {
-            Object *adapter = live_object(registration.adapter, "CaptureFailed");
+            Object *adapter = live_object(registration.adapter, "CaptureFailed",
+                    "The capture adapter for participant " + id + " is no longer available.");
             const Variant data = result_value(adapter->call("save_capture"), "CaptureFailed",
                     "Capture failed for participant " + id + ".");
             if (remaining <= 256) {
@@ -420,7 +462,7 @@ struct SaveCoordinator::Impl {
             operation.control->check_cancelled();
             auto it = scope_migrations.find(version);
             if (it == scope_migrations.end() || !it->second.is_valid()) {
-                throw SaveError("Incompatible", "A required scope migration is unavailable.");
+                throw SaveError("Incompatible", "The scope migration from version " + std::to_string(version) + " is unavailable.");
             }
             const Variant value = result_value(it->second.call(to_variant(records)), "MigrationFailed",
                     "The scope migration rejected this checkpoint.");
@@ -468,7 +510,8 @@ struct SaveCoordinator::Impl {
                 if (registration.required) {
                     throw SaveError("MissingParticipant", "Required participant data is missing for " + id + ".");
                 }
-                Object *adapter = live_object(registration.adapter, "RestoreFailed");
+                Object *adapter = live_object(registration.adapter, "RestoreFailed",
+                        "The restore adapter for participant " + id + " is no longer available.");
                 if (!adapter->has_method("save_default")) {
                     throw SaveError("MissingParticipant", "The optional participant has no default for " + id + ".");
                 }
@@ -488,7 +531,8 @@ struct SaveCoordinator::Impl {
             while (version < registration.version) {
                 auto migration = registration.migrations.find(version);
                 if (migration == registration.migrations.end() || !migration->second.is_valid()) {
-                    throw SaveError("Incompatible", "A required migration is unavailable for " + id + ".");
+                    throw SaveError("Incompatible", "The migration from version " + std::to_string(version) +
+                            " is unavailable for participant " + id + ".");
                 }
                 const Variant migrated = result_value(migration->second.call(to_variant(value)), "MigrationFailed",
                         "The migration rejected participant " + id + ".");
@@ -530,7 +574,7 @@ struct SaveCoordinator::Impl {
             progress.emplace_back(operation.ticket, "Migrating");
             auto payloads = prepare_payloads(outcome.value, operation);
             progress.emplace_back(operation.ticket, "Staging");
-            Object *host_object = live_object(host, "RestoreFailed");
+            Object *host_object = live_object(host, "RestoreFailed", "The restore host is no longer available to create a candidate.");
             candidate = result_value(host_object->call("save_create_candidate"), "RestoreFailed",
                     "The host could not create a detached candidate.");
             owns_candidate = true;
@@ -542,12 +586,14 @@ struct SaveCoordinator::Impl {
                 }
             }
             for (const auto &[id, registration] : participants) {
-                Object *adapter = live_object(registration.adapter, "RestoreFailed");
+                Object *adapter = live_object(registration.adapter, "RestoreFailed",
+                        "The staging adapter for participant " + id + " is no longer available.");
                 require_true(adapter->call("save_stage", to_variant(payloads.at(id)), candidate),
                         "Staging failed for participant " + id + ".");
             }
             for (const auto &[id, registration] : participants) {
-                Object *adapter = live_object(registration.adapter, "RestoreFailed");
+                Object *adapter = live_object(registration.adapter, "RestoreFailed",
+                        "The linking adapter for participant " + id + " is no longer available.");
                 if (adapter->has_method("save_link")) {
                     require_true(adapter->call("save_link", candidate), "Linking failed for participant " + id + ".");
                 }
@@ -587,7 +633,7 @@ struct SaveCoordinator::Impl {
     }
 
     // Validate a staged candidate, then publish it or preserve the validated slot head.
-    bool finish_prepared(bool publish) {
+    bool finish_prepared(bool publish, String *diagnostic = nullptr) {
         CallbackGuard guard(in_callback);
         Outcome outcome = std::move(prepared->result);
         try {
@@ -598,7 +644,7 @@ struct SaveCoordinator::Impl {
             if (!publish && outcome.historical) {
                 throw SaveError("Incompatible", "The selected checkpoint is no longer the slot head.");
             }
-            Object *host_object = live_object(prepared->host, "RestoreFailed");
+            Object *host_object = live_object(prepared->host, "RestoreFailed", "The restore host is no longer available to validate the candidate.");
             if (prepared->candidate.get_type() == Variant::OBJECT) {
                 Object *object = prepared->candidate;
                 Node *node = Object::cast_to<Node>(object);
@@ -623,7 +669,7 @@ struct SaveCoordinator::Impl {
                 throw SaveError("Cancelled", "The load was cancelled.");
             }
             if (publish) {
-                host_object = live_object(prepared->host, "RestoreFailed");
+                host_object = live_object(prepared->host, "RestoreFailed", "The restore host is no longer available to publish the candidate.");
                 require_true(host_object->call("save_publish", prepared->candidate), "The host rejected checkpoint publication.");
                 ++epoch;
                 recovered_slot.swap(staged_recovery);
@@ -636,6 +682,13 @@ struct SaveCoordinator::Impl {
             outcome = {nullptr, "RestoreFailed", "The prepared checkpoint could not be finalized.", {}};
         }
         const bool ok = outcome.code == "Ok";
+        if (diagnostic) {
+            if (!ok) {
+                *diagnostic = godot_string(outcome.message);
+            } else if (publish && outcome.historical) {
+                *diagnostic = "The restore selected a backup generation. Save to a different slot.";
+            }
+        }
         if (!ok || !publish) {
             discard_candidate(prepared->candidate, prepared->host);
         }
@@ -775,44 +828,55 @@ void SaveCoordinator::_process(double) {
 
 bool SaveCoordinator::configure(const String &app_id, const String &root) {
     if (!impl->mutable_services()) {
-        return false;
+        return impl->reject_setup("configure", "Busy", "Configure save services on the main thread before submitting requests.");
     }
-    const auto id = utf8(app_id);
+    auto id = utf8(app_id);
+    if (!valid_id(id, true)) {
+        return impl->reject_setup("configure", "InvalidArgument", "Use a valid lowercase application ID.");
+    }
     const auto path = utf8(root);
-    if (!valid_id(id, true) || path.rfind("user://", 0) != 0 || path.size() <= 7 ||
+    if (path.rfind("user://", 0) != 0 || path.size() <= 7 ||
             path.find('\0') != std::string::npos || path.find("..") != std::string::npos ||
             path.find('\\') != std::string::npos || path.find(':', 7) != std::string::npos ||
             path.find("//", 7) != std::string::npos || path[7] == '/') {
-        impl->reject("InvalidArgument");
-        return false;
+        return impl->reject_setup("configure", "InvalidArgument", "Choose a canonical subdirectory under user:// for the save root.");
     }
     try {
         const String native = ProjectSettings::get_singleton()->globalize_path(root);
-        impl->store = make_local_store(std::filesystem::u8path(utf8(native)));
-        impl->codec = make_json_codec();
-        impl->versions.app_id = id;
+        auto store = make_local_store(std::filesystem::u8path(utf8(native)));
+        auto codec = make_json_codec();
+        impl->versions.app_id = std::move(id);
+        impl->store = std::move(store);
+        impl->codec = std::move(codec);
+        impl->admission_error.clear();
+        impl->admission_message.clear();
         return true;
     } catch (const SaveError &error) {
-        impl->reject(error.code);
+        return impl->reject_setup("configure", error.code, error.what());
     } catch (const std::exception &) {
-        impl->reject("IoError");
+        return impl->reject_setup("configure", "IoError", "The local save store or codec could not be initialized.");
     }
-    return false;
 }
 
 bool SaveCoordinator::configure_scope(const String &scope_id, int64_t version) {
-    if (!impl->mutable_schema() || !valid_id(utf8(scope_id), true) || !valid_version(version)) {
-        return false;
+    if (!impl->mutable_schema()) {
+        return impl->reject_setup("configure_scope", "Busy", "Configure the save scope on the main thread before admitting a save or load.");
     }
-    impl->versions.scope_id = utf8(scope_id);
+    const auto id = utf8(scope_id);
+    if (!valid_id(id, true) || !valid_version(version)) {
+        return impl->reject_setup("configure_scope", "InvalidArgument", "Use a valid lowercase scope ID and a positive schema version.");
+    }
+    impl->versions.scope_id = id;
     impl->versions.scope_version = static_cast<int>(version);
     return true;
 }
 
 bool SaveCoordinator::set_host(Object *host) {
-    if (!impl->mutable_bindings() || !host || !host->has_method("save_create_candidate") ||
-            !host->has_method("save_publish")) {
-        return false;
+    if (!impl->mutable_bindings()) {
+        return impl->reject_setup("set_host", "Busy", "Wait for saves, loads, and callbacks to finish before rebinding the host on the main thread.");
+    }
+    if (!host || !host->has_method("save_create_candidate") || !host->has_method("save_publish")) {
+        return impl->reject_setup("set_host", "InvalidArgument", "Supply a live host with save_create_candidate() and save_publish() methods.");
     }
     impl->host = host->get_instance_id();
     ++impl->epoch;
@@ -820,12 +884,18 @@ bool SaveCoordinator::set_host(Object *host) {
 }
 
 bool SaveCoordinator::declare_participant(const String &id, int64_t version, bool required) {
-    if (!impl->mutable_schema() || !valid_version(version) || impl->participants.size() >= max_participants) {
-        return false;
+    if (!impl->mutable_schema()) {
+        return impl->reject_setup("declare_participant", "Busy", "Declare participant schemas on the main thread before admitting a save or load.");
+    }
+    if (impl->participants.size() >= max_participants) {
+        return impl->reject_setup("declare_participant", "LimitExceeded", "The checkpoint participant limit has been reached.");
     }
     const std::string name = utf8(id);
-    if (!valid_id(name, true) || impl->participants.count(name)) {
-        return false;
+    if (!valid_id(name, true) || !valid_version(version)) {
+        return impl->reject_setup("declare_participant", "InvalidArgument", "Use a valid lowercase participant ID and a positive schema version.");
+    }
+    if (impl->participants.count(name)) {
+        return impl->reject_setup("declare_participant", "AlreadyExists", "A checkpoint participant already uses ID '" + name + "'.");
     }
     impl->participants.emplace(name, Participant{0, static_cast<int>(version), required, {}});
     impl->versions.participants.emplace(name, static_cast<int>(version));
@@ -833,12 +903,15 @@ bool SaveCoordinator::declare_participant(const String &id, int64_t version, boo
 }
 
 bool SaveCoordinator::bind_participant(const String &id, Object *adapter) {
-    if (!impl->mutable_bindings() || !valid_adapter(adapter)) {
-        return false;
+    if (!impl->mutable_bindings()) {
+        return impl->reject_setup("bind_participant", "Busy", "Wait for saves, loads, and callbacks to finish before binding a participant on the main thread.");
+    }
+    if (!valid_adapter(adapter)) {
+        return impl->reject_setup("bind_participant", "InvalidArgument", "Supply a live adapter with save_capture() and save_stage() methods.");
     }
     auto participant = impl->participants.find(utf8(id));
     if (participant == impl->participants.end()) {
-        return false;
+        return impl->reject_setup("bind_participant", "NotFound", "Declare the participant ID before binding its adapter.");
     }
     participant->second.adapter = adapter->get_instance_id();
     ++impl->epoch;
@@ -846,29 +919,48 @@ bool SaveCoordinator::bind_participant(const String &id, Object *adapter) {
 }
 
 bool SaveCoordinator::register_participant(const String &id, int64_t version, Object *adapter, bool required) {
-    return impl->mutable_bindings() && valid_adapter(adapter) && declare_participant(id, version, required) &&
-            bind_participant(id, adapter);
+    if (!impl->mutable_bindings()) {
+        return impl->reject_setup("register_participant", "Busy", "Wait for saves, loads, and callbacks to finish before registering a participant on the main thread.");
+    }
+    if (!valid_adapter(adapter)) {
+        return impl->reject_setup("register_participant", "InvalidArgument", "Supply a live adapter with save_capture() and save_stage() methods.");
+    }
+    return declare_participant(id, version, required) && bind_participant(id, adapter);
 }
 
 bool SaveCoordinator::register_migration(const String &id, int64_t from, const Callable &migration) {
-    if (!impl->mutable_schema() || !valid_version(from) || !migration.is_valid()) {
-        return false;
+    if (!impl->mutable_schema()) {
+        return impl->reject_setup("register_migration", "Busy", "Register migrations on the main thread before admitting a save or load.");
     }
     const auto participant = impl->participants.find(utf8(id));
-    if (participant == impl->participants.end() || from >= participant->second.version ||
-            impl->migration_count >= max_migrations ||
-            !participant->second.migrations.emplace(static_cast<int>(from), migration).second) {
-        return false;
+    if (participant == impl->participants.end()) {
+        return impl->reject_setup("register_migration", "NotFound", "Declare the participant ID before registering a migration for it.");
+    }
+    if (!valid_version(from) || from >= participant->second.version || !migration.is_valid()) {
+        return impl->reject_setup("register_migration", "InvalidArgument", "Supply a valid callback and a positive version earlier than the participant version.");
+    }
+    if (impl->migration_count >= max_migrations) {
+        return impl->reject_setup("register_migration", "LimitExceeded", "The checkpoint migration limit has been reached.");
+    }
+    if (!participant->second.migrations.emplace(static_cast<int>(from), migration).second) {
+        return impl->reject_setup("register_migration", "AlreadyExists", "A migration already handles that version for the participant.");
     }
     ++impl->migration_count;
     return true;
 }
 
 bool SaveCoordinator::register_scope_migration(int64_t from, const Callable &migration) {
-    if (!impl->mutable_schema() || !valid_version(from) || from >= impl->versions.scope_version ||
-            !migration.is_valid() || impl->migration_count >= max_migrations ||
-            !impl->scope_migrations.emplace(static_cast<int>(from), migration).second) {
-        return false;
+    if (!impl->mutable_schema()) {
+        return impl->reject_setup("register_scope_migration", "Busy", "Register migrations on the main thread before admitting a save or load.");
+    }
+    if (!valid_version(from) || from >= impl->versions.scope_version || !migration.is_valid()) {
+        return impl->reject_setup("register_scope_migration", "InvalidArgument", "Supply a valid callback and a positive version earlier than the scope version.");
+    }
+    if (impl->migration_count >= max_migrations) {
+        return impl->reject_setup("register_scope_migration", "LimitExceeded", "The checkpoint migration limit has been reached.");
+    }
+    if (!impl->scope_migrations.emplace(static_cast<int>(from), migration).second) {
+        return impl->reject_setup("register_scope_migration", "AlreadyExists", "A migration already handles that scope version.");
     }
     ++impl->migration_count;
     return true;
@@ -883,29 +975,29 @@ int64_t SaveCoordinator::queue_save(const String &profile, const String &slot, c
     pending.job.key = {utf8(profile), utf8(slot)};
     pending.autosave = autosave;
     if (!valid_id(pending.job.key.profile) || !valid_id(pending.job.key.slot)) {
-        return impl->reject("InvalidArgument");
+        return impl->reject("InvalidArgument", invalid_slot_message);
     }
     if (impl->unresolved_slots.count(pending.job.key)) {
-        return impl->reject("CommitUnknown");
+        return impl->reject("CommitUnknown", "A previous write to this slot is unresolved. Inspect the exact generation before retrying.");
     }
     if (impl->recovered_slot == pending.job.key) {
-        return impl->reject("RecoveryRequiresNewSlot");
+        return impl->reject("RecoveryRequiresNewSlot", "The active checkpoint was restored from a backup. Save to a different slot.");
     }
 
     const auto superseded = autosave ? std::find_if(impl->queue.begin(), impl->queue.end(), [&](const Pending &old) {
         return old.autosave && !old.captured && old.epoch == impl->epoch && old.job.key == pending.job.key;
     }) : impl->queue.end();
     if (superseded == impl->queue.end() && impl->count() >= max_pending_jobs) {
-        return impl->reject("Busy");
+        return impl->reject("Busy", "The checkpoint save queue is full. Wait for pending storage operations before retrying.");
     }
     try {
         Limits metadata_limits = impl->limits;
         metadata_limits.max_file_bytes = max_metadata_bytes;
         pending.job.envelope = to_json(metadata, metadata_limits);
     } catch (const SaveError &error) {
-        return impl->reject(error.code);
+        return impl->reject(error.code, error.what());
     } catch (const std::exception &) {
-        return impl->reject("InvalidData");
+        return impl->reject("InvalidData", "Checkpoint metadata could not be converted to JSON-compatible data.");
     }
     if (superseded != impl->queue.end()) {
         impl->finish_pending(*superseded, "Superseded", "A more recent autosave replaced this intent.");
@@ -940,13 +1032,13 @@ int64_t SaveCoordinator::queue_load(const String &profile, const String &slot,
     pending.job.prepare_only = prepare_only;
     pending.job.key = {utf8(profile), utf8(slot)};
     if (!valid_id(pending.job.key.profile) || !valid_id(pending.job.key.slot)) {
-        return impl->reject("InvalidArgument");
+        return impl->reject("InvalidArgument", invalid_slot_message);
     }
     if (!sequence.is_empty() || !id.is_empty()) {
         try {
             pending.job.selection = parse_generation(utf8(sequence), utf8(id));
         } catch (const SaveError &error) {
-            return impl->reject(error.code);
+            return impl->reject(error.code, error.what());
         }
     }
     auto it = impl->queue.begin();
@@ -969,20 +1061,23 @@ int64_t SaveCoordinator::request_list(const String &profile, const String &slot,
         return 0;
     }
     if (impl->count() >= max_pending_jobs) {
-        return impl->reject("Busy");
+        return impl->reject("Busy", "The checkpoint queue is full. Wait for pending operations before listing the slot.");
     }
     Pending pending;
     pending.job.kind = Kind::List;
     pending.job.key = {utf8(profile), utf8(slot)};
-    if (!valid_id(pending.job.key.profile) || !valid_id(pending.job.key.slot) || limit < 1) {
-        return impl->reject("InvalidArgument");
+    if (!valid_id(pending.job.key.profile) || !valid_id(pending.job.key.slot)) {
+        return impl->reject("InvalidArgument", invalid_slot_message);
+    }
+    if (limit < 1) {
+        return impl->reject("InvalidArgument", "The checkpoint list page size must be positive.");
     }
     pending.job.page_size = static_cast<size_t>(std::min<int64_t>(limit, 16));
     if (!before_sequence.is_empty() || !before_id.is_empty()) {
         try {
             pending.job.selection = parse_generation(utf8(before_sequence), utf8(before_id));
         } catch (const SaveError &error) {
-            return impl->reject(error.code);
+            return impl->reject(error.code, error.what());
         }
     }
     return impl->admit(std::move(pending));
@@ -994,18 +1089,18 @@ int64_t SaveCoordinator::request_inspect_generation(const String &profile, const
         return 0;
     }
     if (impl->count() >= max_pending_jobs) {
-        return impl->reject("Busy");
+        return impl->reject("Busy", "The checkpoint queue is full. Wait for pending operations before inspecting a generation.");
     }
     Pending pending;
     pending.job.kind = Kind::Inspect;
     pending.job.key = {utf8(profile), utf8(slot)};
     if (!valid_id(pending.job.key.profile) || !valid_id(pending.job.key.slot)) {
-        return impl->reject("InvalidArgument");
+        return impl->reject("InvalidArgument", invalid_slot_message);
     }
     try {
         pending.job.selection = parse_generation(utf8(sequence), utf8(id));
     } catch (const SaveError &error) {
-        return impl->reject(error.code);
+        return impl->reject(error.code, error.what());
     }
     return impl->admit(std::move(pending));
 }
@@ -1067,6 +1162,11 @@ String SaveCoordinator::get_last_admission_error() const {
     return impl->on_main() ? godot_string(impl->admission_error) : String("WrongThread");
 }
 
+String SaveCoordinator::get_last_admission_message() const {
+    return impl->on_main() ? godot_string(impl->admission_message) :
+                            String("Submit checkpoint operations from the main thread.");
+}
+
 bool SaveCoordinator::is_idle() const {
     return impl->on_main() && impl->count() == 0 && impl->completions.empty() && impl->pending_delivery == 0;
 }
@@ -1093,8 +1193,11 @@ bool SaveCoordinator::invalidate_world() {
 }
 
 bool SaveCoordinator::set_services(std::shared_ptr<Store> store, std::shared_ptr<Codec> codec) {
-    if (!impl->mutable_services() || !store || !codec) {
-        return false;
+    if (!impl->mutable_services()) {
+        return impl->reject_setup("set_services", "Busy", "Install save services on the main thread before submitting requests.");
+    }
+    if (!store || !codec) {
+        return impl->reject_setup("set_services", "InvalidArgument", "Supply both a checkpoint store and a codec.");
     }
     impl->store = std::move(store);
     impl->codec = std::move(codec);
@@ -1110,33 +1213,52 @@ Variant SaveCoordinator::get_prepared_candidate(int64_t ticket) const {
 }
 
 bool SaveCoordinator::activate_prepared_load(int64_t ticket) {
-    if (!impl->on_main() || impl->in_callback || !impl->prepared || !impl->active ||
-            !impl->active->prepare_only || impl->active->ticket != ticket || impl->active->control->cancelled()) {
+    String diagnostic;
+    const bool activated = activate_prepared_load(ticket, diagnostic);
+    if (!activated) {
+        UtilityFunctions::printerr("[Crimson] SaveCoordinator.activate_prepared_load: ", diagnostic);
+    }
+    return activated;
+}
+
+bool SaveCoordinator::activate_prepared_load(int64_t ticket, String &diagnostic) {
+    if (!impl->on_main()) {
+        diagnostic = "Activate a prepared checkpoint on the main thread.";
         return false;
     }
-    return impl->finish_prepared(true);
+    if (impl->in_callback) {
+        diagnostic = "A checkpoint callback is still running.";
+        return false;
+    }
+    if (!impl->prepared || !impl->active || !impl->active->prepare_only || impl->active->ticket != ticket) {
+        diagnostic = "The selected checkpoint is no longer prepared for activation.";
+        return false;
+    }
+    if (impl->active->control->cancelled()) {
+        diagnostic = "The prepared checkpoint was cancelled before activation.";
+        return false;
+    }
+    diagnostic = String();
+    return impl->finish_prepared(true, &diagnostic);
 }
 
 bool SaveCoordinator::validate_prepared_load_for_save(int64_t ticket) {
-    if (!impl->on_main() || impl->in_callback || !impl->prepared || !impl->active ||
-            !impl->active->prepare_only || !impl->active->selection || impl->active->ticket != ticket ||
-            impl->active->control->cancelled()) {
-        return false;
+    if (!impl->on_main() || impl->in_callback) {
+        return impl->reject_setup("validate_prepared_load_for_save", "Busy", "Validate a checkpoint on the main thread after its callbacks finish.");
+    }
+    if (!impl->prepared || !impl->active || !impl->active->prepare_only || !impl->active->selection ||
+            impl->active->ticket != ticket || impl->active->control->cancelled()) {
+        return impl->reject_setup("validate_prepared_load_for_save", "InvalidArgument", "Supply an active, prepared ticket selected by exact generation identity.");
     }
     return impl->finish_prepared(false);
 }
 
 bool SaveCoordinator::load_native_provider(const String &path, const String &configuration) {
-    if (!impl->on_main()) {
-        return false;
-    }
     if (!impl->mutable_services()) {
-        impl->reject("Busy");
-        return false;
+        return impl->reject_setup("load_native_provider", "Busy", "Install a native provider on the main thread before submitting requests.");
     }
     if (!impl->store || !impl->codec) {
-        impl->reject("Unconfigured");
-        return false;
+        return impl->reject_setup("load_native_provider", "Unconfigured", "Configure the save coordinator before installing a native provider.");
     }
     try {
         const String native = ProjectSettings::get_singleton()->globalize_path(path);
@@ -1149,13 +1271,13 @@ bool SaveCoordinator::load_native_provider(const String &path, const String &con
             impl->codec = std::move(services.codec);
         }
         impl->admission_error.clear();
+        impl->admission_message.clear();
         return true;
     } catch (const SaveError &error) {
-        impl->reject(error.code);
+        return impl->reject_setup("load_native_provider", error.code, error.what());
     } catch (const std::exception &) {
-        impl->reject("IoError");
+        return impl->reject_setup("load_native_provider", "IoError", "The native save provider could not be initialized.");
     }
-    return false;
 }
 
 void SaveCoordinator::_bind_methods() {
@@ -1177,7 +1299,8 @@ void SaveCoordinator::_bind_methods() {
     ClassDB::bind_method(D_METHOD("request_prepare_load", "profile", "slot", "sequence", "generation_id"),
             &SaveCoordinator::request_prepare_load, DEFVAL(String()), DEFVAL(String()));
     ClassDB::bind_method(D_METHOD("get_prepared_candidate", "ticket"), &SaveCoordinator::get_prepared_candidate);
-    ClassDB::bind_method(D_METHOD("activate_prepared_load", "ticket"), &SaveCoordinator::activate_prepared_load);
+    ClassDB::bind_method(D_METHOD("activate_prepared_load", "ticket"),
+            static_cast<bool (SaveCoordinator::*)(int64_t)>(&SaveCoordinator::activate_prepared_load));
     ClassDB::bind_method(D_METHOD("validate_prepared_load_for_save", "ticket"), &SaveCoordinator::validate_prepared_load_for_save);
     ClassDB::bind_method(D_METHOD("request_list", "profile", "slot", "before_sequence", "before_generation_id", "limit"),
             &SaveCoordinator::request_list, DEFVAL(String()), DEFVAL(String()), DEFVAL(16));
@@ -1188,6 +1311,7 @@ void SaveCoordinator::_bind_methods() {
     ClassDB::bind_method(D_METHOD("capture_pending", "revision"), &SaveCoordinator::capture_pending, DEFVAL(String()));
     ClassDB::bind_method(D_METHOD("cancel", "ticket"), &SaveCoordinator::cancel);
     ClassDB::bind_method(D_METHOD("get_last_admission_error"), &SaveCoordinator::get_last_admission_error);
+    ClassDB::bind_method(D_METHOD("get_last_admission_message"), &SaveCoordinator::get_last_admission_message);
     ClassDB::bind_method(D_METHOD("is_idle"), &SaveCoordinator::is_idle);
     ClassDB::bind_method(D_METHOD("invalidate_world"), &SaveCoordinator::invalidate_world);
     ADD_SIGNAL(MethodInfo("operation_progress", PropertyInfo(Variant::INT, "ticket"), PropertyInfo(Variant::STRING, "phase")));

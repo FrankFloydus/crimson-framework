@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="InputInvert" inherits="InputModifier">
+	<brief_description>Flips the sign of selected components.</brief_description>
+	<description>Use on Axis, Vector, and Motion bindings. For example, flip a mouse motion binding's Y component to author inverted look. Scalar actions read X.</description>
+	<members>
+		<member name="x" type="bool" setter="set_x" getter="get_x" default="true">Invert X. This is the component read by a scalar action.</member>
+		<member name="y" type="bool" setter="set_y" getter="get_y" default="false">Invert Y. This affects vector and relative mouse motion values.</member>
+	</members>
+</class>

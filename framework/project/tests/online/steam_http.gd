@@ -56,8 +56,9 @@ func _run() -> void:
 			"A client without usable Steam cannot expose HTTP.")
 		var detached := SteamHttp.new()
 		var result: SteamHttpResponseResult = await detached.fetch("http://127.0.0.1:1")
-		_check(not detached.is_available() and result.error == ERR_UNAVAILABLE,
-			"An unattached standalone facade fails without opening a request.")
+		var reason := "client scope" if mode == "missing" else "Steamworks disabled"
+		_check(not detached.is_available() and result.error == ERR_UNAVAILABLE and reason in result.message,
+			"An unattached standalone facade explains why Steam HTTP is unavailable.")
 	client.stop()
 	client.queue_free()
 	await process_frame
@@ -70,15 +71,17 @@ func _run() -> void:
 func _check_requests(client: SteamClient, base: String, untrusted_https: String, trusted_https: String) -> void:
 	var http := client.http()
 	var request := http.request(base + "/ok")
-	var rejected: SteamHttpResponseResult = await request.with_timeout(0).send().wait()
-	_check(rejected.error == ERR_INVALID_PARAMETER and rejected.value == null,
-		"An invalid branch settles before opening the request.")
+	var rejected: SteamHttpResponseResult = await request.with_timeout(0).with_header("Content-Length", "42").send().wait()
+	_check(rejected.error == ERR_INVALID_PARAMETER and rejected.value == null and "timeout" in rejected.message,
+		"An invalid branch retains the first rejected setting before opening a request.")
 	var forbidden: SteamHttpResponseResult = await request.with_header("Content-Length", "42").send().wait()
-	_check(forbidden.error == ERR_INVALID_PARAMETER, "Steam HTTP owns request framing.")
+	_check(forbidden.error == ERR_INVALID_PARAMETER and "reserved for framing" in forbidden.message,
+		"Steam HTTP explains why the caller cannot change framing headers.")
 	var control: SteamHttpResponseResult = await request.with_header("X-Crimson-Test", "line\nline").send().wait()
 	_check(control.error == ERR_INVALID_PARAMETER, "Header values cannot contain control characters.")
 	var bad_scheme: SteamHttpResponseResult = await http.fetch("file:///test")
-	_check(bad_scheme.error == ERR_INVALID_PARAMETER, "Requests require an absolute HTTP(S) URL.")
+	_check(bad_scheme.error == ERR_INVALID_PARAMETER and "absolute HTTP or HTTPS URL" in bad_scheme.message,
+		"Invalid URL results explain the required scheme.")
 
 	var fetched: SteamHttpResponseResult = await http.fetch(base + "/ok")
 	_check_response(_matches(fetched, 200, "crimson-http-ok") and fetched.value.is_successful(),
@@ -119,7 +122,7 @@ func _check_requests(client: SteamClient, base: String, untrusted_https: String,
 
 	var large := http.request(base + "/large")
 	var bounded: SteamHttpResponseResult = await large.with_max_response_bytes(4096).send().wait()
-	_check_response(bounded.error == ERR_PARAMETER_RANGE_ERROR and bounded.value == null,
+	_check_response(bounded.error == ERR_PARAMETER_RANGE_ERROR and bounded.value == null and "byte limit" in bounded.message,
 		"An oversized response fails without publishing partial bytes.", bounded)
 	var unmodified: SteamHttpResponseResult = await large.send().wait()
 	_check_response(unmodified.ok and unmodified.value.is_successful() and unmodified.value.get_body().size() == 16384,
@@ -127,13 +130,14 @@ func _check_requests(client: SteamClient, base: String, untrusted_https: String,
 	await _check_options_and_json(http, base)
 
 	var delayed: SteamHttpResponseResult = await http.request(base + "/slow").with_timeout(300).send().wait()
-	_check(delayed.error == ERR_TIMEOUT and delayed.value == null,
+	_check(delayed.error == ERR_TIMEOUT and delayed.value == null
+		and ("deadline" in delayed.message or "timed out" in delayed.message),
 		"A stalled response expires with a transport timeout and no HTTP status.")
 	var cancelled := http.request(base + "/slow").send()
 	_check(cancelled.cancel() == OK and cancelled.cancel() == ERR_DOES_NOT_EXIST,
 		"Cancellation settles the native request exactly once.")
 	var cancellation: SteamHttpResponseResult = await cancelled.wait()
-	_check(cancellation.error == ERR_SKIP and cancellation.value == null,
+	_check(cancellation.error == ERR_SKIP and cancellation.value == null and "cancelled" in cancellation.message,
 		"An explicitly cancelled request has no HTTP response.")
 
 	var active: Array[SteamHttpResponseOperation] = []

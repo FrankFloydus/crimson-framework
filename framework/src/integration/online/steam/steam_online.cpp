@@ -1195,6 +1195,9 @@ void GameInvites::_bind_methods() {
     // Deliver a detached locator to the persistent menu for user confirmation.
     ADD_SIGNAL(MethodInfo("received", PropertyInfo(Variant::OBJECT, "invite", PROPERTY_HINT_NONE, "",
                                              PROPERTY_USAGE_DEFAULT, "SteamInvite")));
+    // Observe replacements and explicit clearing through the Game facade.
+    ADD_SIGNAL(MethodInfo("changed", PropertyInfo(Variant::OBJECT, "invite", PROPERTY_HINT_NONE, "",
+                                             PROPERTY_USAGE_DEFAULT, "SteamInvite")));
 }
 
 bool GameInvites::is_available() const {
@@ -1230,10 +1233,20 @@ Ref<SteamInvite> GameInvites::pending() const {
     return is_available() ? last_invite : Ref<SteamInvite>();
 }
 
+bool GameInvites::discard(const Ref<SteamInvite> &invite) {
+    if (invite.is_null() || pending() != invite) {
+        return false;
+    }
+    const Ref<GameInvites> keep_alive(this);
+    last_invite.unref();
+    emit_signal("changed", Ref<SteamInvite>());
+    return true;
+}
+
 bool GameInvites::receive(const Ref<SteamListing> &listing, const String &sender) {
 #ifdef CRIMSON_WITH_STEAM
     const uint64_t now = Time::get_singleton()->get_ticks_msec();
-    if (listing.is_null() || (last_invite.is_valid() && last_invite->listing->get_id() == listing->get_id() &&
+    if (listing.is_null() || (last_invite_listing == listing->get_id() &&
                 now - last_invite_msec < invite_deduplication_ms)) {
         return false;
     }
@@ -1241,9 +1254,14 @@ bool GameInvites::receive(const Ref<SteamListing> &listing, const String &sender
     invite.instantiate();
     invite->listing = listing;
     invite->from_steam_id = sender;
+    const Ref<GameInvites> keep_alive(this);
     last_invite = invite;
+    last_invite_listing = listing->get_id();
     last_invite_msec = now;
     emit_signal("received", invite);
+    if (last_invite == invite) {
+        emit_signal("changed", invite);
+    }
     return true;
 #else
     return false;
@@ -1251,9 +1269,15 @@ bool GameInvites::receive(const Ref<SteamListing> &listing, const String &sender
 }
 
 void GameInvites::detach() {
+    const Ref<GameInvites> keep_alive(this);
     directory_id = ObjectID();
+    const bool had_invite = last_invite.is_valid();
     last_invite.unref();
+    last_invite_listing = String();
     last_invite_msec = 0;
+    if (had_invite) {
+        emit_signal("changed", Ref<SteamInvite>());
+    }
 }
 
 void SteamScope::_bind_methods() {
@@ -1531,12 +1555,12 @@ void SteamOnlineDirectory::retire_attachment() {
         retire_membership();
     }
 #endif
-    invite_gateway->detach();
     auto *client = Object::cast_to<steam::SteamClient>(ObjectDB::get_instance(steam_scope->client_id));
     if (client) {
         client->retire_scope_generation(steam_scope->attachment);
     }
     steam_scope->lobby_service->detach();
+    invite_gateway->detach();
 }
 
 bool SteamOnlineDirectory::is_game_available() const { return is_available(); }

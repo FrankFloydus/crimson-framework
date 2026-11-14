@@ -1,0 +1,9 @@
+; Copyright Francesco Di Blasi 2026 - All Rights Reserved
+
+[gd_scene format=3]
+
+[node name="TestWorld" type="Node3D"]
+
+[node name="SpawnPoints" type="Node3D" parent="."]
+
+[node name="Spawn" type="Marker3D" parent="SpawnPoints"]

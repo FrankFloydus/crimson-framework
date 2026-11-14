@@ -1,0 +1,43 @@
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="MotionRule" inherits="Resource">
+	<brief_description>Editable settings for neutral or grounded movement.</brief_description>
+	<description>A mover takes a snapshot when you attach or call [method Mover.use_rule]. Multiple bodies can share a resource and retain independent runtime state. Use [method Locomotion.ground] to start with grounded movement.</description>
+	<methods>
+		<method name="get_gravity_scale" qualifiers="const">
+			<return type="float" />
+			<description>Read the multiplier for grounded gravity.</description>
+		</method>
+		<method name="get_jump_speed" qualifiers="const">
+			<return type="float" />
+			<description>Read the grounded takeoff speed in metres per second. Zero disables jumping.</description>
+		</method>
+		<method name="is_grounded" qualifiers="const">
+			<return type="bool" />
+			<description>Return whether this rule constrains steering to the body's support plane and applies gravity.</description>
+		</method>
+		<method name="set_gravity_scale">
+			<return type="void" />
+			<param index="0" name="scale" type="float" />
+			<description>Set a finite, nonnegative multiplier for the gravity vector supplied by the body. An invalid value leaves the previous multiplier in place.</description>
+		</method>
+		<method name="set_grounded">
+			<return type="void" />
+			<param index="0" name="enabled" type="bool" />
+			<description>Enable or disable support-plane steering and gravity. Enable this for bodies using grounded [CharacterBody3D] motion.</description>
+		</method>
+		<method name="set_jump_speed">
+			<return type="void" />
+			<param index="0" name="speed" type="float" />
+			<description>Set a finite takeoff speed from 0 to 1000 metres per second. An invalid value leaves the previous speed in place.</description>
+		</method>
+	</methods>
+	<members>
+		<member name="acceleration" type="float" setter="set_acceleration" getter="get_acceleration" default="40.0">Ground steering acceleration in metres per second squared, from 0 to 1000. Zero removes steering acceleration. [member air_control] scales this value in the air. Invalid values leave the previous value in place.</member>
+		<member name="air_control" type="float" setter="set_air_control" getter="get_air_control" default="0.4">Fraction of steering acceleration available while airborne, from 0 to 1. Zero preserves existing horizontal momentum until collision. One applies full steering acceleration. Invalid values leave the previous value in place.</member>
+		<member name="deceleration" type="float" setter="set_deceleration" getter="get_deceleration" default="40.0">Base ground braking rate in metres per second squared when input requests a lower speed or stops. Accepts 0 to 1000. Zero leaves only friction to brake. Invalid values leave the previous value in place.</member>
+		<member name="gravity_scale" type="float" setter="set_gravity_scale" getter="get_gravity_scale" default="1.0">Multiplier for the body's gravity projected onto its up axis. Applies only when [member grounded] is enabled. Set to zero to keep grounded steering without gravity.</member>
+		<member name="grounded" type="bool" setter="set_grounded" getter="is_grounded" default="false">Constrain steering to the plane perpendicular to the body's up axis and apply gravity along that axis. Requires a [CharacterBody3D] in grounded motion mode.</member>
+		<member name="ground_friction" type="float" setter="set_ground_friction" getter="get_ground_friction" default="8.0">Ground turning and braking coefficient in inverse seconds, from 0 to 100. Higher values redirect momentum and increase speed-dependent braking. Invalid values leave the previous value in place.</member>
+		<member name="jump_speed" type="float" setter="set_jump_speed" getter="get_jump_speed" default="5.0">Upward takeoff speed in metres per second. Applies to a grounded jump on floor contact. Set to zero to disable jumps.</member>
+	</members>
+</class>
