@@ -7,13 +7,13 @@
 
 ## Added
 
-- Added `state.control.stun` to the project tag catalog and saved a Find Tag node in the stationary player demo graph for editor inspection. `Pending push`
+- Added `state.control.stun` to the project tag catalog and saved a Find Tag node in the stationary player demo graph for editor inspection. `2f62248b0a290950eaa7b3acac407cff311b9708`
 
-- Added a Gameplay Tags category and picker-backed unwired tag inputs in Visual Script. [Gameplay Tags](src/modules/gameplay_tags/README.md) `Pending push`
+- Added a Gameplay Tags category and picker-backed unwired tag inputs in Visual Script. [Gameplay Tags](src/modules/gameplay_tags/README.md) `2f62248b0a290950eaa7b3acac407cff311b9708`
 
-- Added Gameplay Tag and Gameplay Tag Container Inspector chips, a shared catalog picker, Godot bindings for tags and nested queries, and typed Gameplay Tags calls in Visual Script. [Gameplay Tags](src/modules/gameplay_tags/README.md) `Pending push`
+- Added Gameplay Tag and Gameplay Tag Container Inspector chips, a shared catalog picker, Godot bindings for tags and nested queries, and typed Gameplay Tags calls in Visual Script. [Gameplay Tags](src/modules/gameplay_tags/README.md) `2f62248b0a290950eaa7b3acac407cff311b9708`
 
-- Added native Gameplay Tags, including scoped catalogs, hierarchical matching, and explicit tag containers. Recorded the gameplay system roadmap. [Gameplay Tags](src/modules/gameplay_tags/README.md) `Pending push`
+- Added native Gameplay Tags, including scoped catalogs, hierarchical matching, and explicit tag containers. Recorded the gameplay system roadmap. [Gameplay Tags](src/modules/gameplay_tags/README.md) `2f62248b0a290950eaa7b3acac407cff311b9708`
 
 - Added a read-only React Flow viewer to the docs and a stock Godot exporter for saved Visual Script graphs. The first graph tutorial embeds an interactive graph that readers can copy into a new Visual Script. `d70776d8be9eaee51a5fbfa0ce2318f2bf966e7b`
 
@@ -311,7 +311,7 @@
 
 ## Fixed
 
-- Matched Gameplay Tags picker checkboxes to the selected hierarchy, including checked ancestors, subtree clearing, and parent fallback. Changed the Inspector container to a clickable field with square, wrapping chips. [Gameplay Tags](src/modules/gameplay_tags/README.md) `Pending push`
+- Matched Gameplay Tags picker checkboxes to the selected hierarchy, including checked ancestors, subtree clearing, and parent fallback. Changed the Inspector container to a clickable field with square, wrapping chips. [Gameplay Tags](src/modules/gameplay_tags/README.md) `2f62248b0a290950eaa7b3acac407cff311b9708`
 
 - Fixed the standalone demo launch smoke test to stage addon editor assets before Godot imports the demo. `b9c0727fb254f15e3b09b63e2249543e7eb12735`
 
