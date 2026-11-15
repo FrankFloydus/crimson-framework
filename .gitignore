@@ -7,6 +7,7 @@
 # Ignore library files but not the gdextension file
 /framework/bin/**
 /framework/project/addons/crimson-framework/bin/
+/framework/crimson_framework.windows.template_*.x86_64.dll
 
 # Local Steamworks SDKs
 /framework/vendor/steamworks/

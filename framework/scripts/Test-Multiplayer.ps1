@@ -399,7 +399,7 @@ common/physics_interpolation=true
         New-Item -ItemType Directory -Path $demoProject | Out-Null
         Copy-Item -LiteralPath (Join-Path $project 'addons') -Destination $demoProject -Recurse
         $demoAddon = Join-Path $demoProject 'addons/crimson-framework'
-        foreach ($entry in @('images', 'input')) {
+        foreach ($entry in @('editor', 'images', 'input')) {
             $assetDirectory = Join-Path $sourceAddon $entry
             if (Test-Path -LiteralPath $assetDirectory) {
                 Copy-Item -LiteralPath $assetDirectory -Destination $demoAddon -Recurse

@@ -184,7 +184,7 @@ class InputActionMap : public godot::Resource {
 
     // Identity read by Controls. Gameplay is active at boot.
     godot::StringName id = InputAction::DEFAULT_MAP;
-    // Optional readable title for tools.
+    // Optional title in the Input Map editor.
     godot::String display_name;
     // Declared actions and physical slots in authoring order.
     godot::TypedArray<InputActionMapping> mappings;

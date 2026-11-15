@@ -155,7 +155,7 @@ The demo opens in first person for FPS / Shoulder Aim. The other styles start wi
 
 Under **Ground Movement**, **Move Speed** sets the full-input speed and defaults to **6 m/s**. **Network → Predict Movement** enables prediction for the demo's static level geometry. Select **CollisionShape3D** to edit the capsule or **Camera3D** to change the aim view position.
 
-Open the **On Foot** map in the Inspector to view its **Mappings** and the keys, mouse inputs, and gamepad bindings assigned to each action. Expand **Player Setup** on **Controls** to change action assignments, mouse sensitivity, stick look speed, or pointer capture. [Demo map](player/on_foot.tres) · [Demo layout](player/player_input.tres)
+Select **Controls** in the same scene and click **Edit Input Map**. The **On Foot** map shows one row for each key, mouse input, or gamepad binding. Use the device icon to capture input or the adjacent picker to choose it. Expand **Player Setup** on **Controls** to change action assignments, mouse sensitivity, stick look speed, or pointer capture. [Demo map](player/on_foot.tres) · [Demo layout](player/player_input.tres)
 
 The [demo session setup](session/network_simulator_session.gd) and [native dedicated server scene](../../../server/main.tscn) use movement settings from the same player scene. Restart the host and guests after editing the player scene so they pick up the same settings.
 

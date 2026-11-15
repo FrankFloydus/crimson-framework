@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="VisualScript" inherits="ScriptExtension">
+	<brief_description>A Crimson graph script that attaches to a Godot node.</brief_description>
+	<description>Choose Crimson Visual Script in Godot's Attach Script dialog to create a [code].crimsonscript[/code] file and edit its graph. A script declares the native Godot node type it extends. Each compatible scene node that uses the file runs the graph in its own instance. Mark an instance variable as Exported to show it in the node's Inspector. The scene stores each node's override. A node without an override uses the graph default. Use a Custom Script graph node to run a synchronous GDScript body with named input and output pins. Its editor uses Godot's language server to suggest members of the typed [code]owner[/code] and the current instance's [code]graph[/code].</description>
+	<methods>
+		<method name="get_graph" qualifiers="const">
+			<return type="Dictionary" />
+			<description>Returns a copy of the authored graph data for editor and tool integration. A new script has a version 1 graph with empty [code]nodes[/code] and [code]connections[/code] arrays.</description>
+		</method>
+		<method name="get_graph_base" qualifiers="const">
+			<return type="StringName" />
+			<description>Returns the name of the native Godot class that the graph script extends. A new script defaults to [Node].</description>
+		</method>
+		<method name="set_graph">
+			<return type="void" />
+			<param index="0" name="graph" type="Dictionary" />
+			<description>Replaces the authored graph data with a copy of [param graph]. Supply the graph format version, node records, and connections between their ports. Include any authored declarations such as variables or functions. The editor can hold incomplete drafts. The runtime reports graph errors through Godot's output.</description>
+		</method>
+		<method name="set_graph_base">
+			<return type="void" />
+			<param index="0" name="base" type="StringName" />
+			<description>Sets the name of the native Godot node class that the graph script extends. Attach the script to that class or a class derived from it. Godot's Attach Script dialog sets this value from the selected base.</description>
+		</method>
+	</methods>
+</class>

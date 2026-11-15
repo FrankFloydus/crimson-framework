@@ -21,7 +21,7 @@
 		<member name="id" type="StringName" setter="set_id" getter="get_id" default="&amp;&quot;&quot;">Stable, nonempty identifier unique across the layout. Preserve this value when changing the physical event so saved rebinding profiles still identify this slot.</member>
 		<member name="modifiers" type="InputModifier[]" setter="set_modifiers" getter="get_modifiers" default="[]">Transforms applied from first to last, after reading the raw source and applying any compatibility contribution. The action combines the result with its other bindings. Choose modifiers compatible with the action's value kind.</member>
 		<member name="mouse_axes" type="int" setter="set_mouse_axes" getter="get_mouse_axes" enum="InputBinding.MouseAxes" default="0">Screen axes read from an existing [InputEventMouseMotion] source. An axis retains its screen position, so Mouse Y gives [code]Vector2(0, dy)[/code]. Changing this field preserves the gain. Use [method set_mouse_motion] to create a new mouse source with identity gain.</member>
-		<member name="stick" type="int" setter="set_stick" getter="get_stick" enum="InputBinding.Stick" default="0">Paired X and Y axes on the assigned gamepad. Use a whole stick with a Vector action. Selecting a stick clears [member event]. Edit the binding resource to change a whole-stick source.</member>
+		<member name="stick" type="int" setter="set_stick" getter="get_stick" enum="InputBinding.Stick" default="0">Paired X and Y axes on the assigned gamepad. Use a whole stick with a Vector action. Selecting a stick clears [member event]. Change whole-stick bindings in the Input Map editor.</member>
 	</members>
 	<constants>
 		<constant name="NONE" value="0" enum="Stick">Use the single event slot.</constant>

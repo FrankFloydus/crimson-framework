@@ -11,7 +11,7 @@ func _ready() -> void:
     controls.on_press(&"interact", interact)
 ```
 
-For composite actions, add standalone `InputActionMap` resources to an `InputLayout`. Select a map resource in Godot's FileSystem and edit **Mappings** in the Inspector. Expand a mapping to assign an action and edit **Bindings**. To start with first-person defaults, add `res://addons/crimson-framework/input/fps.tres` to the layout's **Maps**.
+For composite actions, assign standalone **Input Map** resources to an `InputLayout`. Open a map in **Project → Tools → Input Maps** to author its bindings. To start with first-person defaults, add `res://addons/crimson-framework/input/fps.tres` to the layout’s **Maps**. The [editor guide](editor/README.md) walks through authoring and testing bindings.
 
 ```gdscript
 var layout := InputLayout.create().add_move(&"move").add_mouse_motion(&"look")
@@ -20,6 +20,8 @@ controls.capture_pointer()
 ```
 
 An `InputAction` resource describes a value, such as a button, one-dimensional axis, two-dimensional vector, or relative pointer motion. An `InputActionMapping` assigns that resource a script-facing ID and a list of physical bindings in one `InputActionMap`. Each `InputBinding` has a stable slot ID and can apply an ordered modifier chain. For example, a stick binding can apply Dead Zone followed by Swap Axis. For code-built layouts, `add_move()` supplies WASD and left-stick defaults, `add_right_stick()` supplies a normalized stick vector, and `add_mouse_motion()` supplies captured relative motion in unscaled screen pixels.
+
+In the Input Map editor, select a binding and drag a modifier by its title above or below another modifier. Crimson applies the stack from top to bottom. You can also use the up and down buttons or undo the reorder with **Ctrl+Z**.
 
 A 2D action reads an X and a Y component. A whole stick supplies both. A key, button, or one direction of a gamepad axis starts on positive X. Apply **Swap Axis** to send it to Y, then **Invert** on Y if it should point in the negative direction. Mouse motion bindings offer **Mouse X** for horizontal movement, **Mouse Y** for vertical movement, and **Mouse XY** for both. In code, `binding.set_mouse_motion(InputBinding.MOUSE_Y)` assigns vertical motion in screen pixels before modifiers run.
 

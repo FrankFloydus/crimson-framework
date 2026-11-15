@@ -6,7 +6,7 @@ The demo's player scene enables prediction and reconciliation for grounded capsu
 
 ## Configure the same game on each peer
 
-Add one `MoverComponent` and one `ControlsComponent` directly under the player scene's `CharacterBody3D`. In the mover's Inspector, turn on **Predict Movement**. Assign the layout on **Controls**. Edit the layout's map resources in the Inspector to change bindings. Pass the same scene on every peer. [Player controls setup](PLAYER_CONTROLS.md)
+Add one `MoverComponent` and one `ControlsComponent` directly under the player scene's `CharacterBody3D`. In the mover's Inspector, turn on **Predict Movement**. Assign the layout on **Controls** and use **Edit Input Map** to edit its bindings. Pass the same scene on every peer. [Player controls setup](PLAYER_CONTROLS.md)
 
 ```gdscript
 var game: Game

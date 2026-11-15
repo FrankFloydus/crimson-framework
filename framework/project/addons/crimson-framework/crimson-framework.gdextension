@@ -13,6 +13,7 @@ windows.release.x86_64.single = "./bin/crimson_framework.windows.template_releas
 
 [icons]
 
+VisualScript = "./images/visual_script.png"
 SteamConfig = "./images/bi_steam.png"
 SteamRuntimeNode = "./images/bi_steam.png"
 SteamDedicatedRuntimeNode = "./images/bi_steam.png"

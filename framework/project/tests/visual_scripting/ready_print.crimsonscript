@@ -1,0 +1,22 @@
+{
+"base": &"Node",
+"graph": {
+"connections": [{
+"from": 1,
+"from_pin": "then",
+"to": 2,
+"to_pin": "in"
+}],
+"nodes": [{
+"id": 1,
+"kind": "ready",
+"position": Vector2(0, 0)
+}, {
+"id": 2,
+"kind": "print",
+"message": "Hello World",
+"position": Vector2(240, 0)
+}],
+"version": 1
+}
+}

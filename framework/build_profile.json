@@ -11,6 +11,7 @@
     "ButtonGroup",
     "CheckBox",
     "CheckButton",
+    "ColorPickerButton",
     "ConfirmationDialog",
     "CapsuleShape3D",
     "EditorDebuggerPlugin",

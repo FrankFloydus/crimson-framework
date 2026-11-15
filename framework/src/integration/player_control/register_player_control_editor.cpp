@@ -5,6 +5,7 @@
 #ifdef DEBUG_ENABLED
 
 #include "integration/player_control/controls_component.hpp"
+#include "modules/input/editor/register_input_editor.hpp"
 #include "modules/mover/register_mover_editor.hpp"
 
 #include <godot_cpp/classes/button.hpp>
@@ -149,6 +150,14 @@ class PlayerControlProfileInspector : public EditorInspectorPlugin {
 
     bool creating_stock_editor = false; ///< Prevent recursion when Godot resolves the normal enum editor.
 
+    // Resolve the selected Controls node or profile again when the button is pressed.
+    void edit_input_actions(uint64_t owner_id) {
+        if (auto *owner = ObjectDB::get_instance(ObjectID(owner_id))) {
+            const Ref<InputLayout> layout = owner->get("input_layout");
+            input::open_input_actions(layout, owner);
+        }
+    }
+
 protected:
     // These tools are private to the Godot editor.
     static void _bind_methods() {}
@@ -157,6 +166,17 @@ public:
     // Add authoring help only to the profile and controls component.
     bool _can_handle(Object *object) const override {
         return !creating_stock_editor && (Object::cast_to<PlayerControlProfile>(object) || Object::cast_to<ControlsComponent>(object));
+    }
+
+    // Lead with binding authoring, while the Inspector still owns the assigned layout picker.
+    void _parse_begin(Object *object) override {
+        auto *button = memnew(Button);
+        button->set_text("Edit Input Map");
+        button->set_tooltip_text("Open the floating editor for action maps and bindings.\n"
+                "Create or open a layout here if this player has none.");
+        button->connect("pressed", callable_mp(this, &PlayerControlProfileInspector::edit_input_actions)
+                .bind(object->get_instance_id()));
+        add_custom_control(button);
     }
 
     // Keep the stock style editor and replace action names with typed selectors.

@@ -1,0 +1,12 @@
+{
+"base": &"Node",
+"graph": {
+"connections": [{"from": 1, "from_pin": &"then", "to": 2, "to_pin": &"in"}, {"from": 3, "from_pin": &"value", "to": 2, "to_pin": &"arg_1"}],
+"nodes": [
+{"id": 1, "kind": &"ready"},
+{"id": 2, "kind": &"call_method", "member": {"class": &"Object", "name": &"set_meta", "inputs": [{"id": &"arg_0", "label": "Name", "type": 21}, {"id": &"arg_1", "label": "Value", "type": 0}]}, "values": {&"arg_0": &"preloaded"}},
+{"id": 3, "kind": &"preload_resource", "class": &"Resource", "asset_class": &"Gradient", "values": {&"asset": {"path": "res://tests/visual_scripting/preload_resource_asset.tres", "uid": ""}}}
+],
+"version": 1
+}
+}

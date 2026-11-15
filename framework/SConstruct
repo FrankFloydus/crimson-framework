@@ -55,14 +55,20 @@ if steam_sdk.lower() != "off" and (steam_override or os.path.isdir(steam_sdk)):
         env.Append(CPPPATH=[sdr_include, os.path.join(sdr_include, "steam")],
                    CPPDEFINES=["CRIMSON_WITH_STEAM_SDR"])
 sources = Glob("src/*.cpp")
+sources += Glob("src/editor/ui/*.cpp")
 for module in ("inventory", "save", "session", "scene_manager", "match_runtime", "network",
-               "input", "input/rebinding", "mover",
+               "input", "input/editor", "input/rebinding", "mover", "visual_scripting", "visual_scripting/editor",
                "steam", "steam/client", "steam/client/workshop", "steam/commerce", "steam/lobbies", "steam/runtime",
                "steam/server"):
     sources += Glob(f"src/modules/{module}/*.cpp")
 sources += ["src/integration/register_integration.cpp"]
+builtin_method_generator = File("scripts/generate_visual_script_builtin_methods.py")
+builtin_method_api = File("godot-cpp/gdextension/extension_api-4-7.json")
+sources += env.Command("src/gen/visual_script_builtin_methods.gen.cpp", [builtin_method_generator, builtin_method_api],
+                       '"$BUILTIN_METHOD_PYTHON" "${SOURCES[0]}" "$TARGET" "${SOURCES[1]}"',
+                       BUILTIN_METHOD_PYTHON=sys.executable)
 doc_xml = []
-for module in ("inventory", "session", "save", "steam", "input", "input/rebinding", "mover", "network"):
+for module in ("inventory", "session", "save", "steam", "input", "input/rebinding", "mover", "network", "visual_scripting"):
     doc_xml += Glob(f"src/modules/{module}/doc_classes/*.xml")
 steam_publisher = ARGUMENTS.get("steam_publisher", "no")
 steam_publisher_tests = ARGUMENTS.get("steam_publisher_tests", "no")

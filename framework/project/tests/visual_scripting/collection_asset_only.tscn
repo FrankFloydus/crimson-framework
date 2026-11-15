@@ -1,0 +1,5 @@
+; Copyright Francesco Di Blasi 2026 - All Rights Reserved
+
+[gd_scene format=3]
+
+[node name="CollectionAssetOnly" type="Node3D"]

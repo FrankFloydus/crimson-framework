@@ -23,6 +23,7 @@ Paths in this guide are relative to `framework/`. Open the guide for each area y
 | Fixed-world sessions, spawn placement, and local views | [World Session](src/integration/world_session/AGENTS.md) |
 | Online directories and Steam provider composition | [Online](src/integration/online/AGENTS.md) |
 | Standalone Steamworks services and SDK lifecycle | [Steamworks](src/modules/steam/AGENTS.md) |
+| Attachable graph scripts, scene startup, and graph editor | [Visual scripting](docs/VISUAL_SCRIPTING.md) |
 | Original co-op FPS demo | [Demo project](project/demo/AGENTS.md) |
 
 - `src/register_types.cpp` is the GDExtension entry point. Keep each module's class registration in its own registration code.

@@ -1,0 +1,45 @@
+; Copyright Francesco Di Blasi 2026 - All Rights Reserved
+
+{
+"base": &"Node",
+"graph": {
+	"version": 1,
+	"variables": [
+		{"id": 1, "name": "show_message", "pin": {"id": &"value", "label": "Value", "type": 1}, "value": true}
+	],
+	"functions": [
+		{
+			"id": 1, "name": "announce",
+			"inputs": [{"id": &"message", "label": "Message", "type": 4}],
+			"outputs": [],
+			"graph": {
+				"locals": [],
+				"nodes": [
+					{"id": 1, "kind": &"function_entry", "definition": 1, "position": Vector2(0, 0)},
+					{"id": 2, "kind": &"print", "position": Vector2(256, 0)},
+					{"id": 3, "kind": &"return", "definition": 1, "position": Vector2(512, 0)}
+				],
+				"connections": [
+					{"from": 1, "from_pin": &"then", "to": 2, "to_pin": &"in"},
+					{"from": 1, "from_pin": &"message", "to": 2, "to_pin": &"message"},
+					{"from": 2, "from_pin": &"then", "to": 3, "to_pin": &"in"}
+				]
+			}
+		}
+	],
+	"nodes": [
+		{"id": 1, "kind": &"ready", "position": Vector2(0, 0)},
+		{"id": 2, "kind": &"get_variable", "scope": &"instance", "variable": 1, "position": Vector2(0, 160)},
+		{"id": 3, "kind": &"branch", "position": Vector2(272, 0)},
+		{
+			"id": 4, "kind": &"call_function", "definition": 1, "position": Vector2(544, 0),
+			"values": {&"message": "The training room is ready."}
+		}
+	],
+	"connections": [
+		{"from": 1, "from_pin": &"then", "to": 3, "to_pin": &"in"},
+		{"from": 2, "from_pin": &"value", "to": 3, "to_pin": &"condition"},
+		{"from": 3, "from_pin": &"true", "to": 4, "to_pin": &"in"}
+	]
+}
+}

@@ -1,6 +1,8 @@
 [gd_scene format=3 uid="uid://83jn4tm202ux"]
 
+[ext_resource type="Script" uid="uid://dxltvtdstwvh7" path="res://demo/player/stationary_player.crimsonscript" id="1_2agjb"]
 [ext_resource type="InputLayout" uid="uid://susjx4j7g6v2" path="res://demo/player/player_input.tres" id="1_player_input"]
+[ext_resource type="Script" uid="uid://3yuq6i2dg0cv" path="res://demo/player/light.gd" id="2_swvh0"]
 
 [sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_2agjb"]
 sky_horizon_color = Color(0.66224277, 0.6717428, 0.6867428, 1)
@@ -91,10 +93,12 @@ emission_energy_multiplier = 0.3
 
 [node name="StationaryPlayer" type="CharacterBody3D" unique_id=1988449701]
 collision_layer = 0
+script = ExtResource("1_2agjb")
 
 [node name="Light" type="DirectionalLight3D" parent="." unique_id=1218966216]
 transform = Transform3D(-0.8660254, -0.43301278, 0.25, 0, 0.49999997, 0.86602545, -0.50000006, 0.75, -0.43301266, 0, 0, 0)
 shadow_enabled = true
+script = ExtResource("2_swvh0")
 
 [node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=945301858]
 environment = SubResource("Environment_w2y4y")

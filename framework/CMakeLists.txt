@@ -33,6 +33,7 @@ endif()
 get_target_property(binding_suffix godot::cpp GODOTCPP_SUFFIX)
 
 file(GLOB module_sources CONFIGURE_DEPENDS
+    "src/editor/ui/*.cpp"
     "src/modules/inventory/*.cpp"
     "src/modules/save/*.cpp"
     "src/modules/session/*.cpp"
@@ -40,8 +41,11 @@ file(GLOB module_sources CONFIGURE_DEPENDS
     "src/modules/match_runtime/*.cpp"
     "src/modules/network/*.cpp"
     "src/modules/input/*.cpp"
+    "src/modules/input/editor/*.cpp"
     "src/modules/input/rebinding/*.cpp"
     "src/modules/mover/*.cpp"
+    "src/modules/visual_scripting/*.cpp"
+    "src/modules/visual_scripting/editor/*.cpp"
     "src/modules/steam/*.cpp"
     "src/modules/steam/client/*.cpp"
     "src/modules/steam/client/workshop/*.cpp"
@@ -59,6 +63,7 @@ file(GLOB module_docs CONFIGURE_DEPENDS
     "src/modules/input/doc_classes/*.xml"
     "src/modules/input/rebinding/doc_classes/*.xml"
     "src/modules/mover/doc_classes/*.xml"
+    "src/modules/visual_scripting/doc_classes/*.xml"
     "src/modules/network/doc_classes/*.xml"
 )
 foreach(area IN ITEMS game world_session adapters online online/steam player_control)
@@ -69,6 +74,15 @@ foreach(area IN ITEMS game world_session adapters online online/steam player_con
 endforeach()
 add_library(crimson_framework SHARED src/register_types.cpp ${module_sources} ${integration_sources})
 find_package(Python3 REQUIRED COMPONENTS Interpreter)
+set(builtin_method_source "${CMAKE_CURRENT_BINARY_DIR}/gen/visual_script_builtin_methods.gen.cpp")
+set(builtin_method_generator "${CMAKE_CURRENT_SOURCE_DIR}/scripts/generate_visual_script_builtin_methods.py")
+set(builtin_method_api "${CMAKE_CURRENT_SOURCE_DIR}/godot-cpp/gdextension/extension_api-4-7.json")
+add_custom_command(OUTPUT "${builtin_method_source}"
+    COMMAND "${Python3_EXECUTABLE}" "${builtin_method_generator}" "${builtin_method_source}" "${builtin_method_api}"
+    DEPENDS "${builtin_method_generator}" "${builtin_method_api}"
+    VERBATIM
+)
+target_sources(crimson_framework PRIVATE "${builtin_method_source}")
 add_custom_target(crimson_check_native_text
     COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/scripts/check_native_text.py"
     VERBATIM

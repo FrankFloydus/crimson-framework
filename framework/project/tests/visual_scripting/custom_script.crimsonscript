@@ -1,0 +1,83 @@
+; Copyright Francesco Di Blasi 2026 - All Rights Reserved
+
+{
+"base": &"AudioStreamPlayer3D",
+"graph": {
+	"version": 1,
+	"nodes": [
+		{"id": 1, "kind": "custom_event", "definition": 1, "position": Vector2(0, 0)},
+		{
+			"id": 2, "kind": "custom_script", "position": Vector2(260, 0),
+			"inputs": [{"id": &"input_1", "label": "rounds", "type": 2},
+				{"id": &"input_2", "label": "alarm", "type": 24, "class": &"AudioStream"}],
+			"outputs": [{"id": &"output_1", "label": "remaining", "type": 2},
+				{"id": &"output_2", "label": "depleted", "type": 1}],
+			"values": {&"input_2": {"path": "res://tests/visual_scripting/custom_script_alarm.tres"}},
+			"code": "owner.volume_db = -12.0\nowner.stream = alarm\ngraph.ammo = graph.cap_rounds(graph.ammo - rounds)\ngraph.magazine_changed(graph.ammo)\nremaining = graph.ammo\ndepleted = remaining == 0"
+		},
+		{
+			"id": 3, "kind": "call_method", "position": Vector2(520, 0),
+			"member": {"class": &"Object", "name": &"set_meta", "inputs": [
+				{"id": &"arg_0", "label": "Name", "type": 21}, {"id": &"arg_1", "label": "Value", "type": 0}
+			]},
+			"values": {&"arg_0": &"remaining"}
+		},
+		{
+			"id": 4, "kind": "call_method", "position": Vector2(780, 0),
+			"member": {"class": &"Object", "name": &"set_meta", "inputs": [
+				{"id": &"arg_0", "label": "Name", "type": 21}, {"id": &"arg_1", "label": "Value", "type": 0}
+			]},
+			"values": {&"arg_0": &"depleted"}
+		},
+		{"id": 5, "kind": "custom_event", "definition": 2, "position": Vector2(0, 260)},
+		{
+			"id": 6, "kind": "call_method", "position": Vector2(260, 260),
+			"member": {"class": &"Object", "name": &"set_meta", "inputs": [
+				{"id": &"arg_0", "label": "Name", "type": 21}, {"id": &"arg_1", "label": "Value", "type": 0}
+			]},
+			"values": {&"arg_0": &"event_payload"}
+		}
+	],
+	"connections": [
+		{"from": 1, "from_pin": &"then", "to": 2, "to_pin": &"in"},
+		{"from": 1, "from_pin": &"rounds", "to": 2, "to_pin": &"input_1"},
+		{"from": 2, "from_pin": &"then", "to": 3, "to_pin": &"in"},
+		{"from": 2, "from_pin": &"output_1", "to": 3, "to_pin": &"arg_1"},
+		{"from": 3, "from_pin": &"then", "to": 4, "to_pin": &"in"},
+		{"from": 2, "from_pin": &"output_2", "to": 4, "to_pin": &"arg_1"},
+		{"from": 5, "from_pin": &"then", "to": 6, "to_pin": &"in"},
+		{"from": 5, "from_pin": &"amount", "to": 6, "to_pin": &"arg_1"}
+	],
+	"variables": [{"id": 1, "name": &"ammo", "pin": {"id": &"value", "label": "Ammo", "type": 2}, "value": 6}],
+	"events": [
+		{"id": 1, "name": &"consume_ammo", "inputs": [{"id": &"rounds", "label": "Rounds", "type": 2}]},
+		{"id": 2, "name": &"magazine_changed", "inputs": [{"id": &"amount", "label": "Amount", "type": 2}]}
+	],
+	"functions": [
+		{
+			"id": 1, "name": &"cap_rounds",
+			"inputs": [{"id": &"count", "label": "Count", "type": 2}],
+			"outputs": [{"id": &"result", "label": "Result", "type": 2}],
+			"graph": {
+				"version": 1,
+				"nodes": [
+					{"id": 1, "kind": "function_entry", "position": Vector2(0, 0)},
+					{"id": 2, "kind": "operator", "operator": "less", "position": Vector2(270, 120),
+						"pin": {"id": &"value", "label": "Rounds", "type": 2}, "values": {&"b": 0}},
+					{"id": 3, "kind": "branch", "position": Vector2(530, 0)},
+					{"id": 4, "kind": "return", "position": Vector2(800, 0), "values": {&"result": 0}},
+					{"id": 5, "kind": "return", "position": Vector2(800, 200)}
+				],
+				"connections": [
+					{"from": 1, "from_pin": &"then", "to": 3, "to_pin": &"in"},
+					{"from": 1, "from_pin": &"count", "to": 2, "to_pin": &"a"},
+					{"from": 2, "from_pin": &"result", "to": 3, "to_pin": &"condition"},
+					{"from": 3, "from_pin": &"true", "to": 4, "to_pin": &"in"},
+					{"from": 3, "from_pin": &"false", "to": 5, "to_pin": &"in"},
+					{"from": 1, "from_pin": &"count", "to": 5, "to_pin": &"result"}
+				]
+			}
+		}
+	]
+}
+}

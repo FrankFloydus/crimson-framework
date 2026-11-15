@@ -1,0 +1,79 @@
+; Copyright Francesco Di Blasi 2026 - All Rights Reserved
+
+{
+"base": &"Area3D",
+"graph": {
+	"version": 1,
+	"nodes": [
+		{
+			"id": 1, "kind": "native_signal", "position": Vector2(0, 0),
+			"class": &"Area3D", "signal": &"body_entered", "source": NodePath("."),
+			"inputs": [{"id": &"arg_0", "label": "Body", "type": 24, "class": &"Node3D"}]
+		},
+		{"id": 2, "kind": "call_function", "definition": 1, "position": Vector2(320, 0)}
+	],
+	"connections": [
+		{"from": 1, "from_pin": &"then", "to": 2, "to_pin": &"in"},
+		{"from": 1, "from_pin": &"arg_0", "to": 2, "to_pin": &"body"}
+	],
+	"functions": [
+		{
+			"id": 1, "name": &"apply_pickup",
+			"inputs": [{"id": &"body", "label": "Body", "type": 24, "class": &"Node3D"}],
+			"outputs": [],
+			"graph": {
+				"version": 1,
+				"nodes": [
+					{"id": 1, "kind": "function_entry", "position": Vector2(0, 0)},
+					{
+						"id": 2, "kind": "call_method", "position": Vector2(272, 0),
+						"member": {"class": &"Object", "name": &"get_meta", "const": true, "inputs": [
+							{"id": &"arg_0", "label": "Name", "type": 21},
+							{"id": &"arg_1", "label": "Default", "type": 0, "default": null}
+						], "output": {"id": &"result", "label": "Result", "type": 0}},
+						"values": {&"arg_0": &"health", &"arg_1": 0}
+					},
+					{
+						"id": 3, "kind": "operator", "operator": "less", "position": Vector2(528, 192),
+						"pin": {"id": &"value", "label": "Health", "type": 2}, "values": {&"b": 75}
+					},
+					{"id": 4, "kind": "branch", "position": Vector2(784, 0)},
+					{
+						"id": 5, "kind": "operator", "operator": "add", "position": Vector2(784, 208),
+						"pin": {"id": &"value", "label": "Health", "type": 2}, "values": {&"b": 25}
+					},
+					{
+						"id": 6, "kind": "call_method", "position": Vector2(1056, 0),
+						"member": {"class": &"Object", "name": &"set_meta", "inputs": [
+							{"id": &"arg_0", "label": "Name", "type": 21},
+							{"id": &"arg_1", "label": "Value", "type": 0}
+						]},
+						"values": {&"arg_0": &"health"}
+					},
+					{
+						"id": 7, "kind": "call_method", "position": Vector2(1056, 256),
+						"member": {"class": &"Object", "name": &"set_meta", "inputs": [
+							{"id": &"arg_0", "label": "Name", "type": 21},
+							{"id": &"arg_1", "label": "Value", "type": 0}
+						]},
+						"values": {&"arg_0": &"health", &"arg_1": 100}
+					}
+				],
+				"connections": [
+					{"from": 1, "from_pin": &"then", "to": 2, "to_pin": &"in"},
+					{"from": 1, "from_pin": &"body", "to": 2, "to_pin": &"target"},
+					{"from": 2, "from_pin": &"then", "to": 4, "to_pin": &"in"},
+					{"from": 2, "from_pin": &"result", "to": 3, "to_pin": &"a"},
+					{"from": 3, "from_pin": &"result", "to": 4, "to_pin": &"condition"},
+					{"from": 4, "from_pin": &"true", "to": 6, "to_pin": &"in"},
+					{"from": 2, "from_pin": &"result", "to": 5, "to_pin": &"a"},
+					{"from": 5, "from_pin": &"result", "to": 6, "to_pin": &"arg_1"},
+					{"from": 1, "from_pin": &"body", "to": 6, "to_pin": &"target"},
+					{"from": 4, "from_pin": &"false", "to": 7, "to_pin": &"in"},
+					{"from": 1, "from_pin": &"body", "to": 7, "to_pin": &"target"}
+				]
+			}
+		}
+	]
+}
+}

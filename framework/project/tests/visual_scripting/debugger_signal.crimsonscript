@@ -1,0 +1,28 @@
+; Copyright Francesco Di Blasi 2026 - All Rights Reserved
+
+{
+"base": &"Node",
+"graph": {
+	"version": 1,
+	"nodes": [
+		{"id": 1, "kind": &"ready", "position": Vector2(0, 0)},
+		{"id": 2, "kind": &"scene_node", "source": NodePath("Volume"), "class": &"HSlider", "position": Vector2(0, 160)},
+		{
+			"id": 3, "kind": &"set_property", "position": Vector2(300, 0),
+			"member": {"class": &"Range", "name": &"value", "inputs": [{"id": &"value", "label": "Value", "type": 3}]},
+			"values": {&"value": 27.0}
+		},
+		{
+			"id": 4, "kind": &"native_signal", "class": &"Range", "signal": &"value_changed",
+			"source": NodePath("Volume"), "position": Vector2(0, 380),
+			"inputs": [{"id": &"arg_0", "label": "Value", "type": 3}]
+		},
+		{"id": 5, "kind": &"print", "message": "Signal graph resumed.", "position": Vector2(300, 380)}
+	],
+	"connections": [
+		{"from": 1, "from_pin": &"then", "to": 3, "to_pin": &"in"},
+		{"from": 2, "from_pin": &"node", "to": 3, "to_pin": &"target"},
+		{"from": 4, "from_pin": &"then", "to": 5, "to_pin": &"in"}
+	]
+}
+}

@@ -4,7 +4,7 @@
 
 ## Edit the demo player in Godot
 
-Open the [demo's On Foot map](../project/demo/player/on_foot.tres) in the Inspector. In **Mappings**, expand the entry whose **ID** is `jump`. In **Bindings**, expand the keyboard binding and edit its **Event** to change the jump key. Save and start a new session to try it. Select **Controls** in the [player scene](../project/demo/player/stationary_player.tscn) and expand **Player Setup** to change action assignments, look sensitivity, or pointer capture.
+Open the [player scene](../project/demo/player/stationary_player.tscn) and select **Controls → Edit Input Map** to open the demo’s **On Foot** map. To change the jump key, expand **Jump**, click the device icon beside **Space Bar**, and press the new key. Click **Save** and start a new session to try it. Expand **Player Setup** on the Controls node to change action assignments, look sensitivity, or pointer capture. [Input Map editor](../src/modules/input/editor/README.md)
 
 Select **Mover** and open **Controller → Controller Style** to choose how movement input and camera look turn the body. Hover any option in the dropdown to see what it does. **Forward Direction** appears in the same group for **FPS / Shoulder Aim**. Expand **Ground Movement** for **Move Speed**, acceleration, deceleration, friction, and gravity. **Air Movement** contains air control, **Jumping** contains takeoff speed, and **Network** contains **Predict Movement**. The client and dedicated server use the same authored movement settings.
 
@@ -44,7 +44,7 @@ Boot on a mounted body. `player.is_ready()` reports whether the controller is li
 
 ## Author the profile in Godot
 
-Create an **InputLayout** resource. Add the addon's `addons/crimson-framework/input/fps.tres` to **Maps**. It supplies `move` (WASD and left stick), `jump` (Space), `mouse_aim` (Mouse XY), and `stick_aim` (right stick). Save a copy of the map in your project to customize its mappings and bindings in the Inspector. The W binding uses **Swap Axis** and **Invert** for negative Y. A mouse-motion binding can read Mouse X, Mouse Y, or both. [Input guide](../src/modules/input/README.md)
+Create an **InputLayout** resource. Add the addon’s `addons/crimson-framework/input/fps.tres` to **Maps**. It supplies `move` (WASD and left stick), `jump` (Space), `mouse_aim` (Mouse XY), and `stick_aim` (right stick). Save a separate map in your project when you want to customize its bindings. Select W to see how **Swap Axis** moves the key’s value onto Y and **Invert** makes it negative. Select the mouse binding and choose **Mouse X**, **Mouse Y**, or **Mouse XY** to read horizontal, vertical, or both components of relative motion. [Input Map editor](../src/modules/input/editor/README.md)
 
 Create a **PlayerControlProfile** resource and assign the layout under **Input Layout**. Customize the action assignments or look settings only when the defaults need to change. Use the movement fields on the profile when it supplies movement settings directly.
 

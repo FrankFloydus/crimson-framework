@@ -1,0 +1,8 @@
+; Copyright Francesco Di Blasi 2026 - All Rights Reserved
+
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://tests/visual_scripting/custom_script.crimsonscript" id="1_graph"]
+
+[node name="CustomScriptOwner" type="AudioStreamPlayer3D"]
+script = ExtResource("1_graph")

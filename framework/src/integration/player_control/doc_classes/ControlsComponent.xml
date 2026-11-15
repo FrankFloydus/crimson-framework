@@ -3,7 +3,7 @@
 <class name="ControlsComponent" inherits="Node" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
     <brief_description>Inspector settings for a local player's input and look.</brief_description>
     <description>
-        Add one ControlsComponent directly under a [CharacterBody3D]. Choose Edit Input Actions in the Inspector to open the layout editor. Player Setup contains action assignments, look rates, and pointer capture for this character. Boot the component once the body is mounted and assigned to this local player. This lets the game activate local input at the same point it selects the player's view. Use a [MoverComponent] on the same body to author movement settings.
+        Add one ControlsComponent directly under a [CharacterBody3D]. Choose Edit Input Map in the Inspector to open the input map editor. Player Setup contains action assignments, look rates, and pointer capture for this character. Boot the component once the body is mounted and assigned to this local player. This lets the game activate local input at the same point it selects the player's view. Use a [MoverComponent] on the same body to author movement settings.
     </description>
     <methods>
         <method name="boot" qualifiers="const">

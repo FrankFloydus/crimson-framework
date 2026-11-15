@@ -1,0 +1,70 @@
+; Copyright Francesco Di Blasi 2026 - All Rights Reserved
+
+{
+"base": &"Node3D",
+"graph": {
+	"version": 1,
+	"nodes": [
+		{"id": 1, "kind": "ready", "position": Vector2(0, 0)},
+		{"id": 9, "kind": "create_node", "class": &"AudioStreamPlayer3D", "position": Vector2(248, 0)},
+		{
+			"id": 2, "kind": "set_property", "position": Vector2(544, 0),
+			"member": {"class": &"AudioStreamPlayer3D", "name": &"stream", "inputs": [
+				{"id": &"value", "label": "Stream", "type": 24, "class": &"AudioStream"}
+			]},
+			"values": {&"value": {"path": "res://tests/visual_scripting/ready_chime.wav", "uid": "uid://dci6nxdqe4xer"}}
+		},
+		{
+			"id": 3, "kind": "set_property", "position": Vector2(840, 0),
+			"member": {"class": &"AudioStreamPlayer3D", "name": &"volume_db", "inputs": [
+				{"id": &"value", "label": "Volume dB", "type": 3}
+			]},
+			"values": {&"value": -6.0}
+		},
+		{
+			"id": 4, "kind": "get_property", "position": Vector2(840, 248),
+			"member": {"class": &"AudioStreamPlayer3D", "name": &"volume_db", "inputs": [],
+				"output": {"id": &"value", "label": "Volume dB", "type": 3}}
+		},
+		{
+			"id": 5, "kind": "set_property", "position": Vector2(1136, 0),
+			"member": {"class": &"AudioStreamPlayer3D", "name": &"max_db", "inputs": [
+				{"id": &"value", "label": "Max dB", "type": 3}
+			]}
+		},
+		{
+			"id": 6, "kind": "set_property", "position": Vector2(1432, 0),
+			"member": {"class": &"Node3D", "name": &"position", "inputs": [
+				{"id": &"value", "label": "Position", "type": 9}
+			]},
+			"values": {&"value": Vector3(0, 0, -2)}
+		},
+		{"id": 10, "kind": "add_child", "position": Vector2(1728, 0)},
+		{
+			"id": 7, "kind": "call_method", "position": Vector2(2024, 0),
+			"member": {"class": &"AudioStreamPlayer3D", "name": &"play", "inputs": [
+				{"id": &"arg_0", "label": "From Position", "type": 3, "default": 0.0}
+			]}
+		},
+		{"id": 8, "kind": "print", "message": "CRIMSON_VISUAL_SCRIPT_AUDIO_READY", "position": Vector2(2320, 0)}
+	],
+	"connections": [
+		{"from": 1, "from_pin": "then", "to": 9, "to_pin": "in"},
+		{"from": 9, "from_pin": "then", "to": 2, "to_pin": "in"},
+		{"from": 9, "from_pin": "node", "to": 2, "to_pin": "target"},
+		{"from": 9, "from_pin": "node", "to": 3, "to_pin": "target"},
+		{"from": 9, "from_pin": "node", "to": 4, "to_pin": "target"},
+		{"from": 9, "from_pin": "node", "to": 5, "to_pin": "target"},
+		{"from": 9, "from_pin": "node", "to": 6, "to_pin": "target"},
+		{"from": 9, "from_pin": "node", "to": 10, "to_pin": "node"},
+		{"from": 9, "from_pin": "node", "to": 7, "to_pin": "target"},
+		{"from": 2, "from_pin": "then", "to": 3, "to_pin": "in"},
+		{"from": 3, "from_pin": "then", "to": 5, "to_pin": "in"},
+		{"from": 4, "from_pin": "value", "to": 5, "to_pin": "value"},
+		{"from": 5, "from_pin": "then", "to": 6, "to_pin": "in"},
+		{"from": 6, "from_pin": "then", "to": 10, "to_pin": "in"},
+		{"from": 10, "from_pin": "then", "to": 7, "to_pin": "in"},
+		{"from": 7, "from_pin": "then", "to": 8, "to_pin": "in"}
+	]
+}
+}

@@ -14,7 +14,7 @@ Arrow keys, Tab, or the D-pad move focus. Confirm activates the focused action. 
 
 Solo, LAN hosts, and LAN guests attach the overlay after their local player is ready. Rebinding changes that client's controls. Opening the overlay stops sending new steering and look intent from that player while the multiplayer session continues.
 
-Open the demo's **On Foot** map in the Inspector to change the `settings` and `move` bindings. The default layout binds `settings` to **Escape** and gamepad **Start**. A custom layout without a `settings` button skips this overlay. A layout with `settings` but with no `move/key_up` slot shows Resume without the Move Forward row. [Input guide](../../../src/modules/input/README.md)
+Use **Edit Input Actions** on the demo's Controls component to change the default `settings` and `move` bindings. For a new layout, **Add FPS Defaults** supplies `move/key_up`, and **Add Settings Shortcut** adds a `settings` Button action bound to **Escape** and gamepad **Start**. A custom layout without a `settings` button skips this overlay. A layout with `settings` but no `move/key_up` slot shows Resume without the Move Forward row. [Input Actions editor](../../../src/modules/input/editor/README.md)
 
 [NetworkDebugger](network_debugger.tscn) opens a separate developer window with its own compact theme. Press **F8** or controller **View** to open it. The focused tool owns input and releases the gameplay pointer. Choose **Focus game** to restore gameplay while charts keep updating. Press **F8** or **View** in the game to return to the open tool. **Escape**, controller **B**, or the title-bar close button dismisses the window. If Controls is open, finish or cancel rebinding before opening the debugger.
 

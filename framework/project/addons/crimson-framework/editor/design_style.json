@@ -1,0 +1,86 @@
+{
+  "copyright": "Copyright Francesco Di Blasi 2026 - All Rights Reserved",
+  "title": "Design Style",
+  "intro": "Use these rules to build Crimson editor tools with a consistent layout, typography, and interaction behavior. Measurements use logical pixels and scale with the Godot editor.",
+  "sections": [
+    {
+      "title": "Spacing",
+      "description": "Use a small spacing scale to show which controls belong together. Align labels and edges across the same pane.",
+      "items": [
+        {"label": "xxs", "token": "xxs", "description": "Example use within compact labels or between related marks."},
+        {"label": "xs", "token": "xs", "description": "Example use between closely related controls and small button content."},
+        {"label": "sm", "token": "sm", "description": "Example inset between popup rows and the popup frame."},
+        {"label": "md", "token": "md", "description": "Example gap between peers, an icon and its label, or adjacent dialog actions."},
+        {"label": "lg", "token": "lg", "description": "Example gap between small groups, cards, or toolbar regions."},
+        {"label": "xl", "token": "xl", "description": "Example gutter around work panes and settings forms."},
+        {"label": "xxl", "token": "xxl", "description": "Example inset around confirmation panels and catalog sections."},
+        {"label": "Measured exceptions", "description": "Use the reference inset where a component needs it. The compact Select uses a 5 px anchor gap. Graph sockets use their native position and maintain space for labels."}
+      ]
+    },
+    {
+      "title": "Typography",
+      "description": "Use the bundled Inter Variable for editor UI. Keep body and labels compact, and use weight and spacing for hierarchy.",
+      "items": [
+        {"label": "Body and commands", "specimen": "type_body", "value": "12–13 px", "description": "Use for fields, menu commands, action rows, and graph port labels."},
+        {"label": "Secondary copy", "specimen": "type_secondary", "value": "11 px", "description": "Use for hints and section labels. Keep it visibly distinct from disabled content."},
+        {"label": "Workspace title", "specimen": "type_title", "value": "16 px", "description": "Use for the active panel title. Give the title enough room before the first row."},
+        {"label": "Content tabs", "specimen": "content_tabs", "value": "Inter 14 / 510", "description": "Use a thin underline the width of the active label and retain a quieter baseline across the tab strip."}
+      ]
+    },
+    {
+      "title": "Colors",
+      "description": "Use surface and text roles consistently. Keep status and type colors local to the element they describe.",
+      "items": [
+        {"label": "Canvas", "swatch": "#0f0f11", "description": "The editor shell and canvas."},
+        {"label": "Sidebar", "swatch": "#121213", "description": "Recessed navigation and secondary regions."},
+        {"label": "Workspace", "swatch": "#19191b", "description": "The main content or editing surface."},
+        {"label": "Search popup frame", "swatch": "#212122", "description": "The header and outside surface of a search popup."},
+        {"label": "Command menu", "swatch": "#1f1f20", "description": "The surface shared by command menus and search results."},
+        {"label": "Main text", "swatch": "#e8e7ea", "description": "Labels and content that need normal emphasis."},
+        {"label": "Muted text", "swatch": "#a0a0a6", "description": "Metadata, hints, and inline descriptions."},
+        {"label": "Primary action", "swatch": "#5e6ad2", "description": "The most important action in the current group."},
+        {"label": "Destructive confirmation", "swatch": "#f34e52", "description": "The explicit action that removes authored data."}
+      ]
+    },
+    {
+      "title": "Shape",
+      "items": [
+        {"label": "Controls", "specimen": "radius_control", "value": "8 px corners", "description": "Use for fields, select triggers, and active rows."},
+        {"label": "Popup and dialog shell", "specimen": "radius_popup", "value": "12 px corners", "description": "Give the outer surface one subtle edge. Dialog corners reveal the dimmed owner content."},
+        {"label": "Pills and utility buttons", "specimen": "pill_actions", "description": "Use half the control height as the radius for compact primary actions, switches, and circular tools."},
+        {"label": "Graph pins", "specimen": "graph_pins", "description": "Use a dot for single values, a grid for arrays, paired columns for dictionaries, a list mark for enums, and a directional mark for execution. Fill a connected pin."}
+      ]
+    },
+    {
+      "title": "Interaction states",
+      "items": [
+        {"label": "Hover", "specimen": "hover_state", "description": "Use a small change in surface or text. Keep the control in place."},
+        {"label": "Active and selected", "specimen": "selected_state", "description": "Distinguish an open control from a committed option. In a Select, keep the trailing check on the committed value as the highlight moves."},
+        {"label": "Keyboard", "specimen": "keyboard_state", "description": "Keep native keyboard navigation and return focus on dismissal. Use the current row, active tab, or caret for orientation."},
+        {"label": "Read-only and disabled", "specimen": "field_states", "description": "Keep readable values and useful tooltips. Use a forbidden cursor for disabled interactions."}
+      ]
+    },
+    {
+      "title": "Patterns",
+      "items": [
+        {"label": "Tree and Inspector", "specimen": "tree_inspector", "description": "Use a shared tree for hierarchy. Keep each binding on one row, and put settings for the selected row in the adjacent Inspector."},
+        {"label": "Menus and pickers", "specimen": "menu_pattern", "description": "Group related commands. Add a separator between distinct groups. Use search for long or categorized choices."},
+        {"label": "Editor dialog", "specimen": "dialog_actions", "description": "Put the prompt or form in the owning workbench, with the footer on the right. Cancel restores the previous context. Use a larger destructive action only when the operation removes authored data."},
+        {"label": "Graph", "specimen": "graph_anatomy", "description": "Keep nodes and pins on the canvas. Put properties, variables, and debug information in their task-specific panes."}
+      ]
+    },
+    {
+      "title": "Component anatomy",
+      "items": [
+        {"label": "Atoms", "specimen": "atomic_controls", "description": "A button, field, checkbox, or another individual control covers one interaction or purpose."},
+        {"label": "Molecules", "specimen": "field_anatomy", "description": "Combine atoms into a reusable pattern such as a labeled field, asset row, picker, or dialog footer."},
+        {"label": "Tool compositions", "specimen": "tool_workbench", "description": "Bring reusable patterns together in a workbench. The Input Map owns actions and bindings. Visual Script owns graph authoring and debugging."},
+        {"label": "Button", "specimen": "button_anatomy", "description": "A label or recognizable icon, a click target, and native command state. Give an icon-only button an accessible label."},
+        {"label": "Select", "specimen": "select_anatomy", "description": "A trigger with the current value, an anchored popup, one row per option, and a trailing selection check."},
+        {"label": "Field", "specimen": "field_anatomy", "description": "A concise caption, its input, and useful help. Show correction text near an invalid value."},
+        {"label": "Dialog", "specimen": "dialog_anatomy", "description": "A scrim, rounded panel, title, optional form or explanation, and a footer with clearly labeled actions."},
+        {"label": "Graph node", "specimen": "graph_anatomy", "description": "A title, optional role or type accent, and typed rows with aligned pins. Compact variable getters use a single pill."}
+      ]
+    }
+  ]
+}

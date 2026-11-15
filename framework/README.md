@@ -18,6 +18,7 @@ For existing projects, follow the [Godot class-name migration guide](docs/API_NA
 | Network | [Network module](src/modules/network/README.md) | Recipient-specific world baselines, committed state deltas, and typed binary messages. |
 | Input | [Input module](src/modules/input/README.md) | Local input layouts, device assignment, action routing, and rebinding. |
 | Mover | [Mover module](src/modules/mover/README.md) | Movement rules and simulation for bodies driven by local input, AI, or scripts. |
+| Visual scripting | [Visual scripting guide](docs/VISUAL_SCRIPTING.md) | Attachable graphs with scene references, events, flow control, typed variables, functions, and macros. |
 | Immediate play | [Public API](docs/PUBLIC_API.md#start-a-game) | Inspector and fluent game setup, listen-session rules, and component-based player spawning. |
 | Game Flow integration | [Public API](docs/PUBLIC_API.md) | `GameRuntime` composes the modules and owns session, scene, and checkpoint coordination. |
 | Steamworks | [Steamworks guide](docs/STEAMWORKS.md) · [Run the Steam tests](docs/STEAM_TESTING.md) | Standalone typed Steam services, listen and dedicated multiplayer, and a separate trusted publisher build. |

@@ -1,0 +1,9 @@
+{
+"base": &"Node",
+"graph": {
+"connections": [{"from": 1, "from_pin": &"then", "to": 2, "to_pin": &"in"}, {"from": 2, "from_pin": &"then", "to": 3, "to_pin": &"in"}],
+"nodes": [{"id": 1, "kind": &"ready"}, {"id": 2, "kind": &"delay", "values": {"duration": 0.01}}, {"id": 3, "kind": &"print", "message": "Delay resumed."}],
+"version": 1
+},
+"copyright": "Copyright Francesco Di Blasi 2026 - All Rights Reserved"
+}

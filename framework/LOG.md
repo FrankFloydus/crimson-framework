@@ -7,9 +7,75 @@
 
 ## Added
 
-- Added an authored native dedicated server entry. The headless Godot server boots from its scene without a GDScript bootstrap and shares the demo player and world. [Dedicated server](../server/AGENTS.md) `f83da634214894e38ca02b52fad5f450f035bf6c`
+- Added a read-only React Flow viewer to the docs and a stock Godot exporter for saved Visual Script graphs. The first graph tutorial embeds an interactive graph that readers can copy into a new Visual Script. `Pending push`
+
+- Added an illustrated Visual Scripting node catalog with individual pin references, example wiring, and automated stock Godot captures. Kept one short tutorial, separated conceptual guides from setup steps, and reduced emphasis on routine labels. `Pending push`
+
+- Expanded the customer Visual Scripting guides with pin-level node references, illustrated editor and gameplay checkpoints for all three tutorials, and reproducible Godot screenshot tooling. `Pending push`
+
+- Added the customer Visual Scripting guide with a Godot editor walkthrough, language and node documentation, troubleshooting, and runnable tutorials. Captured the editor images from an isolated Godot project. `Pending push`
+
+- Added runtime Load Resource with typed results and success/failure paths. Expanded Preload Resource authoring to saved scenes, scripts, and other Godot resources with native thumbnails when available. [Visual scripting](docs/VISUAL_SCRIPTING.md) `Pending push`
+- Added Create from Script to construct a saved GDScript from typed initializer inputs and use its instance and members in the graph. [Visual scripting](docs/VISUAL_SCRIPTING.md) `Pending push`
+
+- Added typed asset drops onto the Visual Script canvas and optional Inspector groups, units, and range controls for exported variables. [Visual scripting](docs/VISUAL_SCRIPTING.md) `Pending push`
+
+- Added typed singleton and Autoload references, casts, Input Map polling, Make and Break value nodes, collection construction and edits, resource preloads, and Event Graph waits. [Visual scripting](docs/VISUAL_SCRIPTING.md) `Pending push`
+
+- Added Godot global constants such as `KEY_ESCAPE` to the Visual Script picker. Search for a symbol or browse its enum group, then wire the constant's value into the graph. [Visual scripting](docs/VISUAL_SCRIPTING.md#read-properties-and-call-methods) `Pending push`
+
+- Added a distinct Visual Script resource icon for `.crimsonscript` assets in Godot. [Visual scripting](docs/VISUAL_SCRIPTING.md) `Pending push`
+
+- Added Inspector export for Visual Script instance variables. Each attached node can save its own override while the graph reads and writes the same variable. [Visual scripting](docs/VISUAL_SCRIPTING.md#give-each-scene-node-its-own-setting) `Pending push`
+
+- Added typed Godot value methods, global utility functions, native static and variadic calls, and members from typed scene scripts to the Visual Script picker. [Visual scripting](docs/VISUAL_SCRIPTING.md#read-properties-and-call-methods) `Pending push`
+
+- Added typed resource defaults and collection-aware For Each pins. A loop over scene assets offers PackedScene methods from Item. Selective export keeps scenes referenced only by a collection default. [Visual scripting](docs/VISUAL_SCRIPTING.md) `Pending push`
+
+- Added variable container conversion with typed Array elements and Dictionary keys and values. Type changes show their effect on defaults and wires before applying as one undoable edit. [Visual scripting](docs/VISUAL_SCRIPTING.md#edit-collection-defaults-and-enums) `Pending push`
+
+- Added drag reordering for Visual Script declarations, enum members, and collection defaults, and for Input Map actions, bindings, and modifiers. Moving an entry keeps its graph references or binding ID. [Visual scripting](docs/VISUAL_SCRIPTING.md#edit-collection-defaults-and-enums) [Input Map](src/modules/input/editor/README.md) `Pending push`
+
+- Added direct variable-to-pin drops in Visual Script. Dropping a getter or Ctrl-dropping a setter onto a compatible pin inserts the node and its connection in one undoable action. [Visual scripting](docs/VISUAL_SCRIPTING.md) `Pending push`
 
 - Added reusable Input Action and Input Map resources, an FPS preset, separate Mouse X, Mouse Y, and Mouse XY binding sources, and ordered Invert, Scale, Normalize, and Response Curve modifiers. [Input guide](src/modules/input/README.md) `f83da634214894e38ca02b52fad5f450f035bf6c`
+
+- Added an authored native dedicated server entry. The headless Godot server boots from its scene without a GDScript bootstrap and shares the demo player and world. [Dedicated server](../server/AGENTS.md) `f83da634214894e38ca02b52fad5f450f035bf6c`
+
+- Added editable Visual Script Custom Script card names in **Details** and a code badge on the upper right of each card. [Custom Script](docs/VISUAL_SCRIPTING.md#write-a-custom-script-node) `Pending push`
+
+- Added `#@input` and `#@output` declarations to Custom Script. Pins declared in code work alongside pins from **Details** and appear in stock GDScript autocomplete. [Declare pins in code](docs/VISUAL_SCRIPTING.md#declare-pins-in-code) `Pending push`
+
+- Added the Visual Script Custom Script node with typed pins, inline GDScript editing, stock Godot autocomplete and diagnostics, and access to the live graph's declarations. [Custom Script](docs/VISUAL_SCRIPTING.md#write-a-custom-script-node) `Pending push`
+
+- Added rename, cut, copy, duplicate, delete, and descriptions for Visual Script declarations. Native methods and signals show descriptions in the picker and on graph cards. [Visual scripting](docs/VISUAL_SCRIPTING.md) `Pending push`
+
+- Added 24 comparable FPS handler benchmarks across combat, items, movement, and objectives. The shared runner checks all state changes and records Crimson, Orchestrator, and paired GDScript timings. [FPS benchmark](docs/VISUAL_SCRIPTING.md#benchmark-24-fps-gameplay-handlers) `Pending push`
+
+- Added a gameplay graph benchmark that measures a health pickup's Godot signal, authored function, and native reads and writes. The harness checks each player's final health and can compare Crimson and an external Orchestrator release with the same GDScript reference. [Visual scripting checks](docs/VISUAL_SCRIPTING.md#benchmark-a-health-pickup) `Pending push`
+
+- Added a repeatable million-iteration Visual Script and GDScript benchmark with matched batches, checksum verification, and timings for the installed release DLL. [Visual scripting checks](docs/VISUAL_SCRIPTING.md#run-the-visual-scripting-checks) `Pending push`
+
+- Added hover inspection and persistent pin watches in the Visual Script debugger. The paused view shows the active card, readable values, and where each input came from. [Watch a pin](docs/VISUAL_SCRIPTING.md#watch-a-pin) `Pending push`
+
+- Added native Godot breakpoints, live pin and variable inspection, and stepping for Crimson Visual Scripts. Added row editors for array and dictionary defaults, and authored enums in **My Script**. [Visual scripting](docs/VISUAL_SCRIPTING.md) `Pending push`
+
+- Added visual graph clipboard, search and reference navigation, Quick Jumps, comment frames, dependency selection, and wire editing tools with batch connect, bypass, insertion, exchange, highlighting and sweep cutting. [Graph tools](docs/VISUAL_SCRIPTING.md#edit-and-navigate-a-larger-graph) `Pending push`
+
+- Added **Switch on Enum** for native Godot class enums and **Add Custom Event** in the Event Graph picker. [Visual scripting guide](docs/VISUAL_SCRIPTING.md) `Pending push`
+
+- Added native signals to the visual script's typed object pin picker. The resulting event connects to the object and exposes its sender and typed signal arguments. [Visual scripting guide](docs/VISUAL_SCRIPTING.md#react-to-an-event) `Pending push`
+
+- Added a Visual Script workspace with scene references, typed instance and local variables, function and macro graphs, and native and custom event authoring. Added flow nodes, graph extraction, and an example that runs a typed function from a branch. [Visual scripting guide](docs/VISUAL_SCRIPTING.md) `Pending push`
+
+- Added typed Godot property and method nodes to the visual script editor. Drag an object output into empty space to browse its members, or drop an audio asset into the resource field on **Set Stream**. [Visual scripting guide](docs/VISUAL_SCRIPTING.md#play-a-sound-when-a-scene-starts) `Pending push`
+
+- Added Crimson Visual Script as a Godot scripting language. Create a script on a scene node, connect On Ready to Print, and browse native Godot node classes in the graph editor. [Visual scripting guide](docs/VISUAL_SCRIPTING.md) `Pending push`
+
+
+- Added a native editor component catalog with reusable controls and compositions, and an Input Map editor for standalone map and action assets. The demo layout now references the On Foot map and retains existing rebind slot IDs. [Input guide](src/modules/input/README.md) `Pending push`
+
+- Added a floating Input Actions editor with action maps, typed actions, and physical binding authoring. Local Controls can enable maps independently while keeping the same action and rebinding IDs. [Input editor guide](src/modules/input/editor/README.md) `Pending push`
 
 - Added four player controller styles on the Mover component and profile, with independent camera aim and body facing in fixed-world multiplayer. Added a target selection call for Lock-On and wrapped Inspector tooltips for the style options and Mover values. [Player controls](docs/PLAYER_CONTROLS.md) `f83da634214894e38ca02b52fad5f450f035bf6c`
 
@@ -90,7 +156,94 @@
 
 ## Changed
 
+- Allowed handbook graphs to paste into existing Visual Scripts. Resolve declaration clashes when pasting and convert duplicate lifecycle entries to wired Custom Events. [Visual scripting](docs/VISUAL_SCRIPTING.md#edit-and-navigate-a-larger-graph) `Pending push`
+
+- Added a gray hover highlight to execution pin rows and tightened typography in Visual Script graph context menus. [Visual scripting](docs/VISUAL_SCRIPTING.md#find-your-way-around-the-graph-editor) `Pending push`
+
+- Made Visual Script Details compact and responsive, added live toolbar search with results below the field, framed functions when opening them, and moved Sequence output editing onto the card. [Visual scripting](docs/VISUAL_SCRIPTING.md) `Pending push`
+
+- Made Make Dictionary infer key and value types independently. Add Pin now gives each new input its established type. [Visual scripting](docs/VISUAL_SCRIPTING.md) `Pending push`
+
+- Updated Make Array and Make Dictionary with collection icons, inferred pin colors, an Add Pin command, and undoable removal from the input pin's context menu. Displayed Self as a compact card. [Visual scripting](docs/VISUAL_SCRIPTING.md) `Pending push`
+
+- Simplified the Visual Script toolbar with a graph breadcrumb and centered search. Search dims nonmatching canvas cards while open. [Visual scripting](docs/VISUAL_SCRIPTING.md) `Pending push`
+- Enabled automatic saving for committed graph edits and moved Reload from Disk into Graph Tools. The editor keeps pending edits if the script changed on disk. [Visual scripting](docs/VISUAL_SCRIPTING.md) `Pending push`
+- Made declaration group hover span the full row and put variable export controls before the names, with types aligned on the right. [Visual scripting](docs/VISUAL_SCRIPTING.md) `Pending push`
+
+- Removed the Event Graph row from the Visual Script sidebar. Open it from Graph Tools while editing a function or macro. [Visual scripting](docs/VISUAL_SCRIPTING.md) `Pending push`
+
+- Moved Visual Script into Godot's main editor toolbar after Asset Store. The graph uses Godot's Scene dock for node drops and keeps its draft when switching screens. [Visual scripting](docs/VISUAL_SCRIPTING.md) `Pending push`
+- Placed script declarations above Details in the right sidebar and removed the My Script heading, leaving the canvas on the left. [Visual scripting](docs/VISUAL_SCRIPTING.md) `Pending push`
+
+- Made Visual Script Details sections collapsible and compacted the node picker. Wires remain visible while choosing a node, and socket and label hover share a type-colored highlight. [Visual scripting](docs/VISUAL_SCRIPTING.md) `Pending push`
+
+- Show the Visual Script's native base class and Godot icon in the graph toolbar so authors can see which nodes can use the graph. [Visual scripting](docs/VISUAL_SCRIPTING.md#find-your-way-around-the-graph-editor) `Pending push`
+
+- Moved Visual Script node defaults beside their input labels and sized the fields to their values. Paired outputs stay on the same row. [Visual scripting](docs/VISUAL_SCRIPTING.md#find-your-way-around-the-graph-editor) `Pending push`
+
+- Put a dragged pin's own actions directly at the top of the Visual Script picker and group inherited actions under their declaring classes. [Visual scripting](docs/VISUAL_SCRIPTING.md#read-properties-and-call-methods) `Pending push`
+
+- Flattened Visual Script picker actions for the dragged pin, added a Context Sensitive toggle, and made scene reference cards compact with typed pin tooltips. [Visual scripting](docs/VISUAL_SCRIPTING.md) `Pending push`
+
+- Updated typed collection markers in My Script. Arrays show their element type, and Dictionaries show their key and value colors in one icon. [Visual scripting](docs/VISUAL_SCRIPTING.md#edit-collection-defaults-and-enums) `Pending push`
+
+- Ranked the remaining Visual Script gaps by player and author impact and implementation effort, with Inspector-exported variables first. `Pending push`
+
+- Compared Orchestrator 2.5 stable and the local Crimson Visual Script implementation in both directions across the runtime, node catalog, editor, and debugger. `Pending push`
+
+- Made Array defaults use one row per value and Dictionary defaults use labelled key and value fields. Removed the duplicate variable-node commands from Details and reused the shared typed Select for collection entries. [Visual scripting](docs/VISUAL_SCRIPTING.md#edit-collection-defaults-and-enums) `Pending push`
+
+- Strengthened Visual Script node role colors, grouped the toolbar commands, and distinguished current graphs, sections, and declarations in My Script. Interactive data pin labels highlight their sockets on hover. [Visual scripting](docs/VISUAL_SCRIPTING.md) `Pending push`
+
+- Compared stock gameplay behaviors, starter projects, and editable visual scripting examples in Unreal, GameMaker, and Construct with Crimson's current components and addon packaging. `Pending push`
+
+- Installed the approved editor redesign in the local Godot project. Matched compact Select density to the Linear reference, kept matching command density in Input Map's action menus, and improved filtered results and the Design Style layout at higher editor scales. [Editor components](src/editor/ui/README.md) `Pending push`
+
+- Compared public visual scripting feedback and studies with Crimson's graph editor to identify opportunities in gameplay examples, node discovery, reuse across scripts, debugging, and review. `Pending push`
+
 - Isolated framework, gameplay, and Steam behavior tests from editable demo assets. Tests supply their own scenes, input mappings, and settings. The module suite boots without the demo, and live demo startup is a separate check. [Test guidance](AGENTS.md#verification) `f83da634214894e38ca02b52fad5f450f035bf6c`
+
+- Redesigned the Visual Script and Input Map editors and their shared component catalog. Added a reusable spacing scale and Design Style guide, unified command and Select popup styling, and reused shared dialogs, field rows, and graph card states. The offline review gallery now opens screenshots in a full-window viewer. [Editor components](src/editor/ui/README.md) `Pending push`
+
+- Refined Visual Script cards and debugging with typed headers, a two-level grid, compact property reads on Self, full-card hatching for disabled nodes, a compact pause badge, and aligned debugger values. [Visual scripting](docs/VISUAL_SCRIPTING.md) `Pending push`
+
+- Added shortcut keycaps to editor tooltips and linked the staged Godot and Linear evidence from the offline review gallery. [Editor components](src/editor/ui/README.md) `Pending push`
+
+- Fixed Input Map group and selection contrast, the active capture icon, rounded empty states, and the native asset save dialog's corner artifacts and button styles. [Input Map editor](src/modules/input/editor/README.md) `Pending push`
+
+- Replaced Input Map's Choose Action Asset window with a styled project asset search. Refined Visual Script Details to distinguish text fields and type choices, and moved Custom Script diagnostics into a popup opened from the code editor header. [Visual scripting](docs/VISUAL_SCRIPTING.md) `Pending push`
+
+- Aligned the Visual Script and Input Map editors with the shared editor library. Added a reusable graph node to the component catalog and made scene signals easier to scan and add from Details. [Editor components](src/editor/ui/README.md) `Pending push`
+
+- Reduced Visual Script argument and slot allocations, linked signal callbacks to compiled entries, reused native checks for compatible objects, and compiled eligible integer and boolean operands for native calls. On the 24-case FPS suite, the release took 52.1% less time than its starting build and 25.9% less time than Orchestrator 2.5 stable by geometric mean. [FPS benchmark](docs/VISUAL_SCRIPTING.md#benchmark-24-fps-gameplay-handlers) `Pending push`
+
+- Compiled native signal signatures and linked authored function input slots ahead of dispatch. Common native calls use a small stack buffer for argument pointers. Live debugging retains named pin snapshots, and each reentrant call keeps its own frame. [Gameplay benchmark](docs/VISUAL_SCRIPTING.md#benchmark-a-health-pickup) `Pending push`
+
+- Removed the C++ wrapper lookup from Visual Script owner checks and wrote loop indices directly into their compiled slots. The same million-iteration benchmark fell from 107.948 ms to 76.525 ms in fresh paired runs. Added coverage for a native signal handler detaching the active script. [Visual scripting checks](docs/VISUAL_SCRIPTING.md#run-the-visual-scripting-checks) `Pending push`
+
+- Compiled typed integer and boolean expressions feeding Visual Script branches and variable setters, and advanced through cached execution edges without copying them. The million-iteration release benchmark dropped from 1,815.482 ms to 110.597 ms; live debugging still uses the authored graph. [Visual scripting checks](docs/VISUAL_SCRIPTING.md#run-the-visual-scripting-checks) `Pending push`
+
+- Visual Script resolves node operations, pin connections, and variable slots when a graph is prepared. Running actions reuse value storage while the debugger still shows the original graph and pin identities. [Visual scripting checks](docs/VISUAL_SCRIPTING.md#run-the-visual-scripting-checks) `Pending push`
+
+- Added cursor previews for scene nodes and declarations dragged from the sidebar. Drop a variable for a getter or hold Ctrl for a setter; one click places a node from the picker. [Visual scripting](docs/VISUAL_SCRIPTING.md#find-your-way-around-the-graph-editor) `Pending push`
+
+- Made **Shake Node Off Wire** work during ordinary drags, including groups on separate routes, with one Undo for movement and wire reconnection. Branch Auto Insert now keeps the original flow on True and preserves the Condition wire. [Visual scripting](docs/VISUAL_SCRIPTING.md#work-with-several-wires) `Pending push`
+
+- Moved Visual Script Continue and Step controls into the graph and added a resizable live values and call stack panel. Connected data pins now fill with their type color. [Visual scripting](docs/VISUAL_SCRIPTING.md#pause-and-inspect-a-running-graph) `Pending push`
+
+- Split graph editing, pin, and wire actions from the creation picker. Added compile disable for linear actions and function and macro settings on call cards. [Visual scripting](docs/VISUAL_SCRIPTING.md) `Pending push`
+
+- Applied the approved framed Visual Script workspace using a dark palette, compact controls, and type-colored borders for variable nodes. [Graph editor](docs/VISUAL_SCRIPTING.md#find-your-way-around-the-graph-editor) `Pending push`
+
+- Restyled the visual script workspace with a compact toolbar, distinct node silhouettes, clearer execution sockets, a stronger selection outline, and compact asset fields. Graph-node deletion takes effect immediately and supports Undo. [Graph editor](docs/VISUAL_SCRIPTING.md#find-your-way-around-the-graph-editor) `Pending push`
+
+- Gave Visual Script nodes distinct role headers and outlines that stay visible when zoomed out. Grouped the Details fields and added a searchable type picker that uses pin colors. [Graph editor](docs/VISUAL_SCRIPTING.md#find-your-way-around-the-graph-editor) `Pending push`
+
+- Moved Promote to Variable to the top of the pin drag picker and let variable nodes open the variable's full Details from the canvas. [Variables in the graph](docs/VISUAL_SCRIPTING.md#store-a-setting-and-call-a-function) `Pending push`
+
+- Updated the Visual Script node picker and canvas with member groups by declaring class, typed pins, reroutes, wire replacement, and alignment commands. [Graph editor](docs/VISUAL_SCRIPTING.md#find-your-way-around-the-graph-editor) `Pending push`
+
+- Removed the Input Map header and moved Save and map commands to the footer. The demo and FPS map use explicit modifiers for directional bindings and retain their rebinding slot IDs. [Input Map editor](src/modules/input/editor/README.md) `Pending push`
 
 - Grouped player speed and direction under Ground Movement and prediction under Network. Forward Direction explains the view, character, and world choices. `f83da634214894e38ca02b52fad5f450f035bf6c`
 
@@ -141,6 +294,8 @@
 
 ## Removed
 
+- Removed the experimental Inventory V2 API, prototype scenes, artwork, and tests. The original spatial inventory is the supported implementation. `Pending push`
+
 - Retired the unused online provider, its native SDK wiring, and its integration fixtures. The Steam and ENet launch paths remain available. `e5c51b338dafe38b5693dca206909e0aa2657699`
 
 - Retired the demo's Quake asset importers, playback backdrop, BSP shaders, and runtime asset dependency. `Superseded before publication`
@@ -148,9 +303,80 @@
 
 ## Fixed
 
-- Restored visible remote player models and made the network spike check wait for the application probe separately from relay forwarding. `f83da634214894e38ca02b52fad5f450f035bf6c`
+- Fixed the standalone demo launch smoke test to stage addon editor assets before Godot imports the demo. `Pending push`
+
+- Corrected the ControlsComponent class reference to use the current Edit Input Map button label. `Pending push`
+
+- Carried inferred Visual Script pin types through adaptable nodes, including constructor collections, reroutes, lookups, and For Each. Collection sockets show the resolved element, key, and value colors. [Visual scripting](docs/VISUAL_SCRIPTING.md#choose-which-nodes-run) `Pending push`
+
+- Reduced pointer hit-testing work during middle-button Visual Script canvas pans. Added a stock Godot stress test for dense graphs. [Visual scripting checks](project/tests/visual_scripting/QA.md) `Pending push`
+
+- Fixed dark corner artifacts on shared Crimson editor popups. `Pending push`
+
+- Fixed FileSystem drops dismissing the Add Reference choices on the first click. The graph shows those choices in its own editor surface and uses the same input routing as the canvas. [Visual scripting](docs/VISUAL_SCRIPTING.md) `Pending push`
+
+- Fixed the Visual Script picker so typing and spaces stay in the search field while canvas shortcuts are inactive. [Visual scripting](docs/VISUAL_SCRIPTING.md) `Pending push`
+- Fixed the Scene dock's attached Visual Script button to show the Crimson icon while retaining Godot's script-opening action. [Visual scripting](docs/VISUAL_SCRIPTING.md) `Pending push`
+
+- Report the required node type when Godot cannot attach an existing `.crimsonscript` to a node in the editor. Verified compatible drops through the native Scene dock. [Visual scripting](docs/VISUAL_SCRIPTING.md#print-a-message-when-a-scene-starts) `Pending push`
+
+- Fixed loss of pending collection and enum text during structural edits and graph Undo/Redo. Added a 28-case interaction matrix, including equal Array entries, Dictionary key type changes, and optional function and macro defaults. [Adversarial checks](project/tests/visual_scripting/QA.md) `Pending push`
+
+- Fixed Visual Script collection editing so applying one field or dragging a row preserves neighboring drafts. Added stock editor checks for rejected values, repeated reorders, undo/redo, and reopening saved collections. [Collection defaults and enums](docs/VISUAL_SCRIPTING.md#edit-collection-defaults-and-enums) `Pending push`
+
+- Fixed Visual Script previews so Auto Insert and Shake Off show the replacement route during a drag and restore the original route when the drag is interrupted. Added tests for drag cancellation, debugger restart, and node lifecycle callbacks. [Visual scripting](docs/VISUAL_SCRIPTING.md) `Pending push`
+
+- Fixed Visual Script default editing for missing asset references, overflowing enum numbers, and successive color changes. [Adversarial checks](project/tests/visual_scripting/QA.md) `Pending push`
+
+- Preserved in-progress Array, Dictionary, and enum field text while applying another field. Reordering keeps that text with its row and accepts the insertion gap between rows. [Visual scripting](docs/VISUAL_SCRIPTING.md#edit-collection-defaults-and-enums) `Pending push`
+
+- Made Shake Off show the bypass as soon as the gesture is detected. Auto Insert shows only the proposed replacement wires while the card is over its target, and restores the original when the card moves away or focus changes. The move and wire edit remain one undo step. [Visual scripting](docs/VISUAL_SCRIPTING.md#work-with-several-wires) `Pending push`
+
+- Fixed Array, Dictionary, and enum member drag reordering in the floating Visual Script editor. Details and My Script show an inset insertion line and share the pointer badge with Input Map. [Visual scripting](docs/VISUAL_SCRIPTING.md#edit-collection-defaults-and-enums) `Pending push`
+
+- Made Graph Tools Auto Insert use the topmost available compatible pins. Shake Off recognizes short back-and-forth motion and can bypass a node with one linked execution route even when it has other unused pins. [Visual scripting](docs/VISUAL_SCRIPTING.md#work-with-several-wires) `Pending push`
+
+- Added compatible variable drop feedback using the graph's existing green connection check. [Visual scripting](docs/VISUAL_SCRIPTING.md) `Pending push`
+
+- Kept Space repeats out of Godot's canvas pan handler so left-drag remains available for box selection after switching windows. [Visual scripting](docs/VISUAL_SCRIPTING.md) `Pending push`
+
+- Composited rounded popups and tooltips inside Crimson editor windows so their corners reveal the underlying content on Windows Forward+. Kept file dialogs on the editor's normal native-window path. [Editor components](src/editor/ui/README.md) `Pending push`
 
 - Fixed broken unit labels in the Mover Inspector. Both Windows native builds check first-party C++ text to prevent the same encoding error in other strings. `f83da634214894e38ca02b52fad5f450f035bf6c`
+
+- Restored visible remote player models and made the network spike check wait for the application probe separately from relay forwarding. `f83da634214894e38ca02b52fad5f450f035bf6c`
+
+- Fixed the Custom Script badge stretching across the card. The badge is drawn at the upper-right corner at a fixed size relative to the graph zoom. [Custom Script](docs/VISUAL_SCRIPTING.md#write-a-custom-script-node) `Pending push`
+
+- Restored Visual Script wire rendering after saving and reopening the graph editor. The canvas rebuilds its connections from saved pin IDs once the ports are available, avoiding Godot's out-of-bounds port errors. [Graph editor](docs/VISUAL_SCRIPTING.md#find-your-way-around-the-graph-editor) `Pending push`
+
+- Cancelled unfinished Visual Script wire drags when the graph loses focus or is rebuilt. Compatible inputs show a check while dragging. Shift adds to the graph selection and Ctrl removes. [Graph editor](docs/VISUAL_SCRIPTING.md#find-your-way-around-the-graph-editor) `Pending push`
+
+- Gave each Visual Script signal subscription its own connection identity. Two event nodes can receive the same signal, and a handler captured for delivery cannot execute after its graph is detached. [Visual scripting](docs/VISUAL_SCRIPTING.md#react-to-an-event) `Pending push`
+
+- Defined Visual Script integer division and remainder for the minimum 64-bit integer divided by -1. The quotient wraps to the minimum value and the remainder is zero, avoiding a native arithmetic trap. [Visual scripting checks](docs/VISUAL_SCRIPTING.md#run-the-visual-scripting-checks) `Pending push`
+
+- Restored the pre-loop pin value when the same producer runs both before and inside a Visual Script loop. Variable writes and state changes such as Flip Flop still carry forward. [Visual scripting flow control](docs/VISUAL_SCRIPTING.md#choose-which-nodes-run) `Pending push`
+
+- Fixed broken punctuation in graph debugger tooltips and units in the Mover Inspector. Both Windows native builds check first-party C++ text to prevent the same encoding error in other strings. `Pending push`
+
+- Kept private parameter producers inside collapsed graphs and preserved the size of comment frames when moving them. Filled connected execution sockets for immediate visual feedback. [Visual scripting](docs/VISUAL_SCRIPTING.md) `Pending push`
+
+- Fixed graph positions reverting when renaming an event after moving it, and deferred canvas rebuilds until Godot releases the node drag. Fixed double duplication from Ctrl+D. Enabled direct wire insertion by default and made it detect wire overlap with the dragged card. [Graph tools](docs/VISUAL_SCRIPTING.md#work-with-several-wires) `Pending push`
+
+- Kept Visual Script editor labels in one language when Godot uses a translated editor locale. [Graph editor](docs/VISUAL_SCRIPTING.md#find-your-way-around-the-graph-editor) `Pending push`
+
+- Made **Q** straighten the connected socket heights and rendered each reroute as a single typed dot. Verified that a data reroute can feed multiple inputs. [Graph editor](docs/VISUAL_SCRIPTING.md#find-your-way-around-the-graph-editor) `Pending push`
+
+- Made the center of a Visual Script reroute a drag target separate from the wire sockets. [Graph editor](docs/VISUAL_SCRIPTING.md#find-your-way-around-the-graph-editor) `Pending push`
+
+- Fixed visual script window startup and limited graph resource pickers to saved project assets, including imported audio files. [Visual scripting guide](docs/VISUAL_SCRIPTING.md#play-a-sound-when-a-scene-starts) `Pending push`
+
+- Added confirmation before removing an action, binding, or modifier from an Input Map. `Pending push`
+
+- Corrected punctuation in the Input Map editor and component catalog by decoding UTF-8 labels explicitly. `Pending push`
+
+- Restored the Input Map search icon and initial pane proportions. Kept rich Select previews within their popup rows and showed the selected icon and description in the closed field. `Pending push`
 
 - Serialized guest startup in the Windows LAN launcher and capped frame rate and worker threads in its staged multi-window project. The launcher stops opening windows after a process crashes and preserves per-process logs. [Demo guide](project/demo/README.md#start-from-the-command-line) `f83da634214894e38ca02b52fad5f450f035bf6c`
 

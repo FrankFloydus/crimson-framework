@@ -1,0 +1,452 @@
+{
+"base": &"Node",
+"graph": {
+"connections": [],
+"copyright": "Copyright Francesco Di Blasi 2026 - All Rights Reserved",
+"functions": [{
+"graph": {
+"connections": [{
+"from": 1,
+"from_pin": &"then",
+"to": 2,
+"to_pin": &"in"
+}, {
+"from": 1,
+"from_pin": &"initial_checksum",
+"to": 2,
+"to_pin": &"value"
+}, {
+"from": 2,
+"from_pin": &"then",
+"to": 3,
+"to_pin": &"in"
+}, {
+"from": 1,
+"from_pin": &"first_index",
+"to": 3,
+"to_pin": &"first"
+}, {
+"from": 1,
+"from_pin": &"last_index",
+"to": 3,
+"to_pin": &"last"
+}, {
+"from": 3,
+"from_pin": &"index",
+"to": 5,
+"to_pin": &"a"
+}, {
+"from": 4,
+"from_pin": &"value",
+"to": 6,
+"to_pin": &"a"
+}, {
+"from": 5,
+"from_pin": &"result",
+"to": 7,
+"to_pin": &"a"
+}, {
+"from": 6,
+"from_pin": &"result",
+"to": 7,
+"to_pin": &"b"
+}, {
+"from": 7,
+"from_pin": &"result",
+"to": 8,
+"to_pin": &"a"
+}, {
+"from": 3,
+"from_pin": &"body",
+"to": 9,
+"to_pin": &"in"
+}, {
+"from": 8,
+"from_pin": &"result",
+"to": 9,
+"to_pin": &"value"
+}, {
+"from": 9,
+"from_pin": &"then",
+"to": 12,
+"to_pin": &"in"
+}, {
+"from": 10,
+"from_pin": &"value",
+"to": 11,
+"to_pin": &"a"
+}, {
+"from": 11,
+"from_pin": &"result",
+"to": 12,
+"to_pin": &"condition"
+}, {
+"from": 4,
+"from_pin": &"value",
+"to": 13,
+"to_pin": &"a"
+}, {
+"from": 10,
+"from_pin": &"value",
+"to": 14,
+"to_pin": &"a"
+}, {
+"from": 13,
+"from_pin": &"result",
+"to": 15,
+"to_pin": &"a"
+}, {
+"from": 14,
+"from_pin": &"result",
+"to": 15,
+"to_pin": &"b"
+}, {
+"from": 15,
+"from_pin": &"result",
+"to": 16,
+"to_pin": &"a"
+}, {
+"from": 16,
+"from_pin": &"result",
+"to": 17,
+"to_pin": &"a"
+}, {
+"from": 12,
+"from_pin": &"true",
+"to": 18,
+"to_pin": &"in"
+}, {
+"from": 17,
+"from_pin": &"result",
+"to": 18,
+"to_pin": &"value"
+}, {
+"from": 10,
+"from_pin": &"value",
+"to": 19,
+"to_pin": &"a"
+}, {
+"from": 13,
+"from_pin": &"result",
+"to": 20,
+"to_pin": &"a"
+}, {
+"from": 19,
+"from_pin": &"result",
+"to": 20,
+"to_pin": &"b"
+}, {
+"from": 20,
+"from_pin": &"result",
+"to": 21,
+"to_pin": &"a"
+}, {
+"from": 21,
+"from_pin": &"result",
+"to": 22,
+"to_pin": &"a"
+}, {
+"from": 12,
+"from_pin": &"false",
+"to": 23,
+"to_pin": &"in"
+}, {
+"from": 22,
+"from_pin": &"result",
+"to": 23,
+"to_pin": &"value"
+}, {
+"from": 3,
+"from_pin": &"completed",
+"to": 24,
+"to_pin": &"in"
+}, {
+"from": 4,
+"from_pin": &"value",
+"to": 24,
+"to_pin": &"checksum"
+}],
+"locals": [{
+"id": 1,
+"name": &"checksum",
+"pin": {
+"id": &"value",
+"label": "value",
+"type": 2
+},
+"value": 0
+}, {
+"id": 2,
+"name": &"sample",
+"pin": {
+"id": &"value",
+"label": "value",
+"type": 2
+},
+"value": 0
+}],
+"nodes": [{
+"id": 1,
+"kind": &"function_entry",
+"position": Vector2(0, 200)
+}, {
+"id": 2,
+"kind": &"set_variable",
+"position": Vector2(230, 200),
+"scope": "local",
+"variable": 1
+}, {
+"id": 3,
+"kind": &"for",
+"position": Vector2(460, 200),
+"values": {
+&"step": 1
+}
+}, {
+"id": 4,
+"kind": &"get_variable",
+"position": Vector2(455, 710),
+"scope": "local",
+"variable": 1
+}, {
+"id": 5,
+"kind": &"operator",
+"operator": "multiply",
+"pin": {
+"id": &"value",
+"label": "value",
+"type": 2
+},
+"position": Vector2(690, 485),
+"values": {
+&"b": 31
+}
+}, {
+"id": 6,
+"kind": &"operator",
+"operator": "modulo",
+"pin": {
+"id": &"value",
+"label": "value",
+"type": 2
+},
+"position": Vector2(690, 625),
+"values": {
+&"b": 97
+}
+}, {
+"id": 7,
+"kind": &"operator",
+"operator": "add",
+"pin": {
+"id": &"value",
+"label": "value",
+"type": 2
+},
+"position": Vector2(905, 495),
+"values": {
+&"b": 0
+}
+}, {
+"id": 8,
+"kind": &"operator",
+"operator": "modulo",
+"pin": {
+"id": &"value",
+"label": "value",
+"type": 2
+},
+"position": Vector2(1115, 490),
+"values": {
+&"b": 251
+}
+}, {
+"id": 9,
+"kind": &"set_variable",
+"position": Vector2(1350, 200),
+"scope": "local",
+"variable": 2
+}, {
+"id": 10,
+"kind": &"get_variable",
+"position": Vector2(1350, 405),
+"scope": "local",
+"variable": 2
+}, {
+"id": 11,
+"kind": &"operator",
+"operator": "less",
+"pin": {
+"id": &"value",
+"label": "value",
+"type": 2
+},
+"position": Vector2(1560, 405),
+"values": {
+&"b": 125
+}
+}, {
+"id": 12,
+"kind": &"branch",
+"position": Vector2(1765, 200)
+}, {
+"id": 13,
+"kind": &"operator",
+"operator": "multiply",
+"pin": {
+"id": &"value",
+"label": "value",
+"type": 2
+},
+"position": Vector2(690, 800),
+"values": {
+&"b": 3
+}
+}, {
+"id": 14,
+"kind": &"operator",
+"operator": "multiply",
+"pin": {
+"id": &"value",
+"label": "value",
+"type": 2
+},
+"position": Vector2(1560, 705),
+"values": {
+&"b": 7
+}
+}, {
+"id": 15,
+"kind": &"operator",
+"operator": "add",
+"pin": {
+"id": &"value",
+"label": "value",
+"type": 2
+},
+"position": Vector2(1765, 700),
+"values": {
+&"b": 0
+}
+}, {
+"id": 16,
+"kind": &"operator",
+"operator": "add",
+"pin": {
+"id": &"value",
+"label": "value",
+"type": 2
+},
+"position": Vector2(1975, 700),
+"values": {
+&"b": 3
+}
+}, {
+"id": 17,
+"kind": &"operator",
+"operator": "modulo",
+"pin": {
+"id": &"value",
+"label": "value",
+"type": 2
+},
+"position": Vector2(2185, 700),
+"values": {
+&"b": 104729
+}
+}, {
+"id": 18,
+"kind": &"set_variable",
+"position": Vector2(2425, 200),
+"scope": "local",
+"variable": 1
+}, {
+"id": 19,
+"kind": &"operator",
+"operator": "multiply",
+"pin": {
+"id": &"value",
+"label": "value",
+"type": 2
+},
+"position": Vector2(1560, 980),
+"values": {
+&"b": 3
+}
+}, {
+"id": 20,
+"kind": &"operator",
+"operator": "add",
+"pin": {
+"id": &"value",
+"label": "value",
+"type": 2
+},
+"position": Vector2(1765, 980),
+"values": {
+&"b": 0
+}
+}, {
+"id": 21,
+"kind": &"operator",
+"operator": "add",
+"pin": {
+"id": &"value",
+"label": "value",
+"type": 2
+},
+"position": Vector2(1975, 980),
+"values": {
+&"b": 11
+}
+}, {
+"id": 22,
+"kind": &"operator",
+"operator": "modulo",
+"pin": {
+"id": &"value",
+"label": "value",
+"type": 2
+},
+"position": Vector2(2185, 980),
+"values": {
+&"b": 104729
+}
+}, {
+"id": 23,
+"kind": &"set_variable",
+"position": Vector2(2425, 420),
+"scope": "local",
+"variable": 1
+}, {
+"id": 24,
+"kind": &"return",
+"position": Vector2(760, 20)
+}],
+"version": 1
+},
+"id": 1,
+"inputs": [{
+"id": &"first_index",
+"label": "first_index",
+"type": 2
+}, {
+"id": &"last_index",
+"label": "last_index",
+"type": 2
+}, {
+"id": &"initial_checksum",
+"label": "initial_checksum",
+"type": 2
+}],
+"name": &"run_batch",
+"outputs": [{
+"id": &"checksum",
+"label": "checksum",
+"type": 2
+}]
+}],
+"nodes": [],
+"version": 1
+}
+}

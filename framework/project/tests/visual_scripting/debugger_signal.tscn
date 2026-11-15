@@ -1,0 +1,10 @@
+; Copyright Francesco Di Blasi 2026 - All Rights Reserved
+
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://tests/visual_scripting/debugger_signal.crimsonscript" id="1_signal"]
+
+[node name="DebuggerSignal" type="Node"]
+script = ExtResource("1_signal")
+
+[node name="Volume" type="HSlider" parent="."]

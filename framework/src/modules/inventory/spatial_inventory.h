@@ -52,7 +52,6 @@ public:
 
 class SpatialInventory : public RefCounted {
 	GDCLASS(SpatialInventory, RefCounted)
-
 	using Slot = uint32_t;
 	// Sentinel for an empty cell or absent slot.
 	static constexpr Slot EMPTY_SLOT = 0;

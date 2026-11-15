@@ -1,0 +1,14 @@
+{
+"base": &"Node",
+"graph": {
+"connections": [],
+"nodes": [],
+"variables": [{
+"id": 1,
+"name": "pickup_scenes",
+"pin": {"id": &"value", "label": "Value", "type": 28, "element": {"type": 24, "class": &"PackedScene"}},
+"value": [{"path": "res://tests/visual_scripting/collection_asset_only.tscn", "uid": ""}]
+}],
+"version": 1
+}
+}

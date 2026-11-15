@@ -21,7 +21,7 @@
 		</method>
 	</methods>
 	<members>
-		<member name="display_name" type="String" setter="set_display_name" getter="get_display_name" default="&quot;&quot;">Optional readable title for tools. A blank title uses the map ID.</member>
+		<member name="display_name" type="String" setter="set_display_name" getter="get_display_name" default="&quot;&quot;">Optional title shown by the Input Map editor. A blank title uses the map ID.</member>
 		<member name="id" type="StringName" setter="set_id" getter="get_id" default="&amp;&quot;Gameplay&quot;">Case-sensitive activation ID passed to [method Controls.set_map_enabled]. Must be nonempty and unique within the layout.</member>
 		<member name="mappings" type="InputActionMapping[]" setter="set_mappings" getter="get_mappings" default="[]">Action definitions and their physical slots, in authoring order.</member>
 	</members>

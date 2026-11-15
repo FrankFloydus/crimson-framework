@@ -1,0 +1,7 @@
+; Copyright Francesco Di Blasi 2026 - All Rights Reserved
+
+[gd_resource type="AudioStreamWAV" format=3]
+
+[resource]
+mix_rate = 8000
+data = PackedByteArray(128, 129, 128, 127)
