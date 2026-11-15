@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="GameplayTagQuery" inherits="RefCounted">
+	<brief_description>A reusable predicate over gameplay tag containers.</brief_description>
+	<description>Use a query to share a tag condition between actions. Tag groups check explicit requirements using hierarchical or exact matching. Query groups combine child predicates. Factories capture their operands when called, so later edits to a requirement container leave the query unchanged. A default query has no condition and always fails.</description>
+	<methods>
+		<method name="all_queries" qualifiers="static">
+			<return type="GameplayTagQuery" />
+			<param index="0" name="queries" type="GameplayTagQuery[]" />
+			<description>Creates a query that requires every child in [param queries] to match. An empty array passes. A null child makes the factory return [code]null[/code].</description>
+		</method>
+		<method name="all_tags" qualifiers="static">
+			<return type="GameplayTagQuery" />
+			<param index="0" name="terms" type="GameplayTagContainer" />
+			<param index="1" name="exact" type="bool" default="false" />
+			<description>Creates a query that requires every explicit tag in [param terms]. An empty container passes. Enable [param exact] to require explicit membership of each tag. A missing container makes the factory return [code]null[/code].</description>
+		</method>
+		<method name="any_queries" qualifiers="static">
+			<return type="GameplayTagQuery" />
+			<param index="0" name="queries" type="GameplayTagQuery[]" />
+			<description>Creates a query that requires at least one child in [param queries] to match. An empty array fails. A null child makes the factory return [code]null[/code].</description>
+		</method>
+		<method name="any_tags" qualifiers="static">
+			<return type="GameplayTagQuery" />
+			<param index="0" name="terms" type="GameplayTagContainer" />
+			<param index="1" name="exact" type="bool" default="false" />
+			<description>Creates a query that requires at least one explicit tag in [param terms]. An empty container fails. Enable [param exact] to test explicit membership. A missing container makes the factory return [code]null[/code].</description>
+		</method>
+		<method name="matches" qualifiers="const">
+			<return type="bool" />
+			<param index="0" name="tags" type="GameplayTagContainer" />
+			<description>Tests [param tags] against the query. A missing subject container or an unset query fails.</description>
+		</method>
+		<method name="no_queries" qualifiers="static">
+			<return type="GameplayTagQuery" />
+			<param index="0" name="queries" type="GameplayTagQuery[]" />
+			<description>Creates a query that passes when none of [param queries] match. An empty array passes. A null child makes the factory return [code]null[/code].</description>
+		</method>
+		<method name="no_tags" qualifiers="static">
+			<return type="GameplayTagQuery" />
+			<param index="0" name="terms" type="GameplayTagContainer" />
+			<param index="1" name="exact" type="bool" default="false" />
+			<description>Creates a query that passes when no explicit requirement from [param terms] is met. An empty container passes. Enable [param exact] to check absence of explicit membership. A missing container makes the factory return [code]null[/code].</description>
+		</method>
+	</methods>
+</class>

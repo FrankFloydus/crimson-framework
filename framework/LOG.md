@@ -7,6 +7,14 @@
 
 ## Added
 
+- Added `state.control.stun` to the project tag catalog and saved a Find Tag node in the stationary player demo graph for editor inspection. `Pending push`
+
+- Added a Gameplay Tags category and picker-backed unwired tag inputs in Visual Script. [Gameplay Tags](src/modules/gameplay_tags/README.md) `Pending push`
+
+- Added Gameplay Tag and Gameplay Tag Container Inspector chips, a shared catalog picker, Godot bindings for tags and nested queries, and typed Gameplay Tags calls in Visual Script. [Gameplay Tags](src/modules/gameplay_tags/README.md) `Pending push`
+
+- Added native Gameplay Tags, including scoped catalogs, hierarchical matching, and explicit tag containers. Recorded the gameplay system roadmap. [Gameplay Tags](src/modules/gameplay_tags/README.md) `Pending push`
+
 - Added a read-only React Flow viewer to the docs and a stock Godot exporter for saved Visual Script graphs. The first graph tutorial embeds an interactive graph that readers can copy into a new Visual Script. `d70776d8be9eaee51a5fbfa0ce2318f2bf966e7b`
 
 - Added an illustrated Visual Scripting node catalog with individual pin references, example wiring, and automated stock Godot captures. Kept one short tutorial, separated conceptual guides from setup steps, and reduced emphasis on routine labels. `d70776d8be9eaee51a5fbfa0ce2318f2bf966e7b`
@@ -302,6 +310,8 @@
 - Retired the local FPS prototype and its dedicated tests before publishing the initial framework snapshot. `847cccea9473b7561001ea2c399eba1fd651a0ab`
 
 ## Fixed
+
+- Matched Gameplay Tags picker checkboxes to the selected hierarchy, including checked ancestors, subtree clearing, and parent fallback. Changed the Inspector container to a clickable field with square, wrapping chips. [Gameplay Tags](src/modules/gameplay_tags/README.md) `Pending push`
 
 - Fixed the standalone demo launch smoke test to stage addon editor assets before Godot imports the demo. `b9c0727fb254f15e3b09b63e2249543e7eb12735`
 

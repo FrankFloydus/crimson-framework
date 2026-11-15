@@ -23,6 +23,10 @@ For example, `steam.stats().achievements()` returns `Array[SteamAchievement]`, s
 
 [Laravel application bootstrap](https://laravel.com/framework/docs/routing#routing-customization) · [Laravel service providers](https://laravel.com/docs/13.x/providers) · [Laravel query builder](https://laravel.com/docs/13.x/queries) · [Laravel fluent HTTP client](https://laravel.com/docs/13.x/http-client)
 
+## Gameplay tags
+
+Export a `GameplayTag` for one label or a `GameplayTagContainer` for a set. The Godot Inspector lets you pick tags from the project's catalog. Use `GameplayTag.find()` to resolve a declared path and `GameplayTagContainer.has()` to test whether a held tag satisfies a parent path. Use `has_exact()` when the path itself must be explicit. Build a `GameplayTagQuery` for reusable any, all, or none conditions. The same types and methods are available in Visual Script. [Gameplay Tags guide](../src/modules/gameplay_tags/README.md)
+
 ## Start a game
 
 For local movement, look, and key rebinding, see [Default player controls](PLAYER_CONTROLS.md). Author movement on the player scene's `MoverComponent` and local input on its `ControlsComponent`. Use [Controller Style](PLAYER_CONTROLS.md#choose-how-the-body-turns) to choose how movement turns the character. `PlayerControl.lock_on(target)` sets the target for the Lock-On style, and `clear_lock_on()` clears it. Call `GameConfig.player_controls()` to use the scene's movement settings for [networked movement](MOVEMENT_NETWORKING.md). Supplying a `PlayerControlProfile` explicitly uses its movement settings. Enable **Predict Movement** on a compatible grounded capsule to opt into prediction and reconciliation.

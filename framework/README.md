@@ -10,6 +10,7 @@ For existing projects, follow the [Godot class-name migration guide](docs/API_NA
 
 | Module | Source | Responsibility |
 | --- | --- | --- |
+| Gameplay Tags | [Gameplay Tags module](src/modules/gameplay_tags/README.md) | Hierarchical tag sets, reusable queries, and an Inspector picker shared by GDScript and Visual Script. |
 | Inventory | [Inventory module](src/modules/inventory/README.md) | Grid placement and snapshots, stack operations, containers, sorting, equipment, staging, wallet balances, and trade. |
 | Save | [Save module](src/modules/save/README.md) | SaveCoordinator, detached capture and restore, schema migration, generation storage, provider ABI, and save metadata and previews. |
 | Game session | [Game session module](src/modules/session/README.md) | Offline sessions, ENet host and join, peer lifecycle, connection admission, and server authority. |

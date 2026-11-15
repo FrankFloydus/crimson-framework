@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="GameplayTag" inherits="Resource">
+	<brief_description>A canonical name for a gameplay state, definition, or event.</brief_description>
+	<description>Use a gameplay tag to name a concept shared by several systems. A path such as [code]state.control.stun[/code] matches itself and its ancestors [code]state.control[/code] and [code]state[/code]. Export a [GameplayTag] to choose it with the Inspector picker. The saved Resource stores the canonical path. Compare tag values with [method matches_exact].</description>
+	<methods>
+		<method name="as_container" qualifiers="const">
+			<return type="GameplayTagContainer" />
+			<description>Returns an independent container holding this tag as its only explicit member. An invalid tag produces an empty container.</description>
+		</method>
+		<method name="find" qualifiers="static">
+			<return type="GameplayTag" />
+			<param index="0" name="name" type="StringName" />
+			<description>Looks up [param name] in the project catalog, including implied ancestors and rename redirects. Returns [code]null[/code] for an unknown name or invalid path.</description>
+		</method>
+		<method name="from_name" qualifiers="static">
+			<return type="GameplayTag" />
+			<param index="0" name="name" type="StringName" />
+			<description>Creates a tag from [param name] and applies project rename redirects. The path can be absent from the catalog. Returns [code]null[/code] for empty paths, empty segments, or characters outside ASCII letters, digits, underscores, and segment-separating dots.</description>
+		</method>
+		<method name="get_tag_name" qualifiers="const">
+			<return type="StringName" />
+			<description>Returns the lowercase dot-separated path, or an empty name if the tag is invalid.</description>
+		</method>
+		<method name="is_valid" qualifiers="const">
+			<return type="bool" />
+			<description>Returns whether the tag holds a valid path. Validity describes path syntax. Use [method find] to check registration.</description>
+		</method>
+		<method name="leaf_name" qualifiers="const">
+			<return type="StringName" />
+			<description>Returns the final path segment, or an empty name if the tag is invalid.</description>
+		</method>
+		<method name="match_depth" qualifiers="const">
+			<return type="int" />
+			<param index="0" name="other" type="GameplayTag" />
+			<description>Counts the whole segments this tag shares with [param other], starting at the root. Returns [code]0[/code] when the roots differ or either operand is invalid or missing.</description>
+		</method>
+		<method name="matches" qualifiers="const">
+			<return type="bool" />
+			<param index="0" name="required" type="GameplayTag" />
+			<description>Returns whether this tag is equal to or descends from [param required]. A stun can satisfy a general control-impairment requirement. Returns [code]false[/code] for an invalid or missing operand.</description>
+		</method>
+		<method name="matches_exact" qualifiers="const">
+			<return type="bool" />
+			<param index="0" name="required" type="GameplayTag" />
+			<description>Returns whether both tags hold the same valid canonical path. Returns [code]false[/code] if either operand is invalid or missing.</description>
+		</method>
+		<method name="parent" qualifiers="const">
+			<return type="GameplayTag" />
+			<description>Returns the direct parent of this tag. Returns [code]null[/code] for a root tag or an invalid tag.</description>
+		</method>
+	</methods>
+</class>

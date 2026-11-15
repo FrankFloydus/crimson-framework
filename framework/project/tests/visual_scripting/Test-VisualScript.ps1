@@ -373,6 +373,54 @@ enabled=PackedStringArray("res://addons/visual_script_test/plugin.cfg")
         }
         Write-Host $resourceCase.Message
     }
+
+}
+
+# Run tag editor fixtures with their own catalog, scene, editor layout, and application data.
+function Test-GameplayTagsEditor {
+    param([string]$Project, [string]$Area)
+
+    $cases = @(
+        @{ File = 'editor_ui.gd'; Phase = 'gameplay-tags-inspector'; Pass = 'CRIMSON_GAMEPLAY_TAG_EDITOR_UI_PASSED'; Dap = '36718'; Lsp = '36717' },
+        @{ File = 'visual_script_editor.gd'; Phase = 'gameplay-tags-graph'; Pass = 'CRIMSON_VISUAL_SCRIPT_GAMEPLAY_TAG_PICKER_PASSED'; Dap = '36728'; Lsp = '36727' }
+    )
+    foreach ($case in $cases) {
+        $isolatedArea = Join-Path $Area $case.Phase
+        $isolatedProject = Join-Path $isolatedArea 'project'
+        $addons = Join-Path $isolatedProject 'addons'
+        $plugin = Join-Path $addons 'gameplay_tags_test'
+        $metadata = Join-Path $isolatedProject '.godot'
+        New-Item -ItemType Directory -Path $plugin, $metadata -Force | Out-Null
+        Copy-Item -LiteralPath (Join-Path $Project 'addons/crimson-framework') -Destination $addons -Recurse
+        Copy-Item -LiteralPath (Join-Path $PSScriptRoot "../gameplay_tags/$($case.File)") -Destination $plugin
+        @"
+; Copyright Francesco Di Blasi 2026 - All Rights Reserved
+
+[plugin]
+
+name="Crimson Gameplay Tags Fixture"
+script="$($case.File)"
+"@ | Set-Content -Encoding utf8NoBOM -LiteralPath (Join-Path $plugin 'plugin.cfg')
+        @'
+config_version=5
+
+[application]
+config/name="Crimson Gameplay Tags Test"
+
+[editor_plugins]
+enabled=PackedStringArray("res://addons/gameplay_tags_test/plugin.cfg")
+
+[rendering]
+renderer/rendering_method="gl_compatibility"
+'@ | Set-Content -Encoding utf8NoBOM -LiteralPath (Join-Path $isolatedProject 'project.godot')
+        Set-Content -Encoding utf8NoBOM -LiteralPath (Join-Path $metadata 'extension_list.cfg') -Value 'res://addons/crimson-framework/crimson-framework.gdextension'
+        $arguments = @('--editor', '--dap-port', $case.Dap, '--lsp-port', $case.Lsp, '--quit-after', '2400')
+        $output = Invoke-VisualScriptGodot -Project $isolatedProject -Area $isolatedArea -Phase $case.Phase -Arguments $arguments
+        if ($output -notmatch ('(?m)^' + $case.Pass + '\r?$')) {
+            throw "Gameplay Tags editor checks did not finish. See $isolatedArea."
+        }
+        Write-Host $case.Pass
+    }
 }
 
 # Test the docked Visual Script screen and native pointer/focus in an isolated project.
@@ -482,6 +530,11 @@ foreach ($variant in $Target) {
     foreach ($entry in $fixtureFiles) {
         Copy-Item -LiteralPath (Join-Path $PSScriptRoot $entry) -Destination $fixture
     }
+    $tagsFixture = Join-Path $project 'tests/gameplay_tags'
+    New-Item -ItemType Directory -Path $tagsFixture -Force | Out-Null
+    foreach ($entry in @('inspector_preview.gd', 'inspector_preview.tscn', 'runtime.gd')) {
+        Copy-Item -LiteralPath (Join-Path $PSScriptRoot "../gameplay_tags/$entry") -Destination $tagsFixture
+    }
     @'
 config_version=5
 
@@ -518,6 +571,12 @@ script = ExtResource("1")
     $importArgs = @('--editor', '--import', '--frame-delay', '1000')
     Invoke-VisualScriptGodot -Project $project -Area $area -Phase 'import' -Arguments $importArgs | Out-Null
     Test-VisualScriptRuntime -Project $project -Area $area -Prefix 'source'
+    $tagsArgs = @('--script', 'res://tests/gameplay_tags/runtime.gd')
+    $tagsResult = Invoke-VisualScriptGodot -Project $project -Area $area -Phase 'gameplay-tags' -Arguments $tagsArgs
+    if ($tagsResult -notmatch '(?m)^CRIMSON_GAMEPLAY_TAGS_RUNTIME_PASSED\r?$') {
+        throw "Gameplay Tags runtime and typed graph checks did not finish. See $area."
+    }
+    Write-Host "CRIMSON_GAMEPLAY_TAGS_RUNTIME_PASSED $variant"
     Test-VisualScriptNodeMatrices -Project $project -Area $area
     Test-GodotSignatureCatalog -Project $project -Area $area
     Test-CustomScriptFailure -Project $project -Area $area -Phase 'custom-suspension'
@@ -536,6 +595,7 @@ script = ExtResource("1")
     }
     if ($VerifyEditor -and $variant -eq 'template_debug') {
         Test-VisualScriptEditor -Project $project -Area $area
+        Test-GameplayTagsEditor -Project $project -Area $area
     }
     if ($VerifyNativeFocus -and $variant -eq 'template_debug') {
         Test-VisualScriptNativeFocus -Project $project -Area $area

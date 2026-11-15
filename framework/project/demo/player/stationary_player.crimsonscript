@@ -5,7 +5,7 @@
 "id": 1,
 "members": [],
 "position": Vector2(2580, 260),
-"size": Vector2(239.99902, 119.99994),
+"size": Vector2(239.99927, 119.99991),
 "title": "Comment"
 }],
 "connections": [{
@@ -756,6 +756,28 @@ owner.add_child(audio)",
 "id": 74,
 "kind": "foreach",
 "position": Vector2(2320, -275)
+}, {
+"id": 75,
+"kind": "call_method",
+"member": {
+"class": &"GameplayTag",
+"inputs": [{
+"id": &"arg_0",
+"label": "Name",
+"type": 21
+}],
+"name": &"find",
+"output": {
+"class": &"GameplayTag",
+"hint": 17,
+"hint_string": "GameplayTag",
+"id": &"result",
+"label": "Result",
+"type": 24
+},
+"static": true
+},
+"position": Vector2(700, 300)
 }],
 &"variables": [{
 "id": 4,

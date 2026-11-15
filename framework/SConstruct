@@ -56,7 +56,8 @@ if steam_sdk.lower() != "off" and (steam_override or os.path.isdir(steam_sdk)):
                    CPPDEFINES=["CRIMSON_WITH_STEAM_SDR"])
 sources = Glob("src/*.cpp")
 sources += Glob("src/editor/ui/*.cpp")
-for module in ("inventory", "save", "session", "scene_manager", "match_runtime", "network",
+for module in ("gameplay_tags", "gameplay_tags/bindings", "gameplay_tags/editor",
+               "inventory", "save", "session", "scene_manager", "match_runtime", "network",
                "input", "input/editor", "input/rebinding", "mover", "visual_scripting", "visual_scripting/editor",
                "steam", "steam/client", "steam/client/workshop", "steam/commerce", "steam/lobbies", "steam/runtime",
                "steam/server"):
@@ -68,7 +69,7 @@ sources += env.Command("src/gen/visual_script_builtin_methods.gen.cpp", [builtin
                        '"$BUILTIN_METHOD_PYTHON" "${SOURCES[0]}" "$TARGET" "${SOURCES[1]}"',
                        BUILTIN_METHOD_PYTHON=sys.executable)
 doc_xml = []
-for module in ("inventory", "session", "save", "steam", "input", "input/rebinding", "mover", "network", "visual_scripting"):
+for module in ("gameplay_tags", "inventory", "session", "save", "steam", "input", "input/rebinding", "mover", "network", "visual_scripting"):
     doc_xml += Glob(f"src/modules/{module}/doc_classes/*.xml")
 steam_publisher = ARGUMENTS.get("steam_publisher", "no")
 steam_publisher_tests = ARGUMENTS.get("steam_publisher_tests", "no")

@@ -47,6 +47,18 @@ bool valid_resource_collection_storage(const godot::Dictionary &pin, const godot
 /// Load the saved resources into a class-constrained Godot collection.
 bool load_resource_collection(const godot::Dictionary &pin, const godot::Variant &stored, godot::Variant &loaded);
 
+/// Identify pins that can persist catalog names in place of Resource references.
+enum class GameplayTagLiteralType { NONE, TAG, CONTAINER, TAG_ARRAY };
+
+/// Read exactly the native tag or collection type declared by the pin.
+GameplayTagLiteralType gameplay_tag_literal_type(const godot::Dictionary &pin);
+
+/// Recognize name-backed defaults while leaving normal resource references on the asset path.
+bool is_gameplay_tag_literal(const godot::Dictionary &pin, const godot::Variant &stored);
+
+/// Build a detached runtime value from a tag default using the registered Gameplay Tags factories.
+bool resolve_gameplay_tag_literal(const godot::Dictionary &pin, const godot::Variant &stored, godot::Variant &loaded);
+
 /// Report external pin assets in the format Godot expects for dependency editing and selective export.
 godot::PackedStringArray graph_asset_dependencies(const godot::Dictionary &graph, bool add_types);
 

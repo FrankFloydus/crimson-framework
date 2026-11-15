@@ -50,6 +50,8 @@ Edit an unwired input's default beside its pin label. For example, enter **First
 
 When you select a variable, **Instance Variable** opens in **Details**. Expand other sections, such as **Inspector** or **Signals**, when you need them. Click **Type** to browse the color coded categories or search for a Godot class such as `Node3D`.
 
+Choose `GameplayTag` or `GameplayTagContainer` for an exported variable to assign it with the tag picker on the attached node. Open **Gameplay Tags** in the node picker to find tag, container, catalog, and query methods. Click an unwired tag or container input to choose a default from the catalog. Connect **Get Tags** to **For Each** to call tag methods on each item. [Gameplay Tags guide](../src/modules/gameplay_tags/README.md)
+
 ## Edit and navigate a larger graph
 
 Right-click a node to edit it. Right-click a node in a selection to edit the whole selection. The **Graph Tools** menu holds graph-wide commands such as **Paste Nodes**, **Find Nodes**, and the automatic wiring settings. Hover a data pin label to highlight the pin, then right-click it for actions such as **Promote to Variable**. The blank-canvas picker creates nodes, including **Add Custom Event** in the Event Graph.

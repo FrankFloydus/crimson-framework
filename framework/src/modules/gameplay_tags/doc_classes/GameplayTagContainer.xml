@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="GameplayTagContainer" inherits="Resource">
+	<brief_description>A set of explicit gameplay tags with hierarchical and exact matching.</brief_description>
+	<description>Use a container for the several tags a character has or an action requires. A character with [code]state.control.stun[/code] satisfies a hierarchical check for [code]state.control[/code]. An exact check for [code]state.control[/code] requires its own explicit entry. Export a container to manage its entries in the Inspector. Use [method copy] when independent runtime owners need to modify a shared resource.</description>
+	<methods>
+		<method name="add">
+			<return type="bool" />
+			<param index="0" name="tag" type="GameplayTag" />
+			<description>Adds [param tag] as an explicit member. Returns whether the set changed. An invalid tag, a missing tag, or an existing explicit member leaves the set unchanged.</description>
+		</method>
+		<method name="add_leaf">
+			<return type="bool" />
+			<param index="0" name="tag" type="GameplayTag" />
+			<description>Adds [param tag] and removes its explicit ancestors. Returns [code]true[/code] when [param tag] was already exact or was added. An invalid or missing tag, or one already implied by a descendant, returns [code]false[/code].</description>
+		</method>
+		<method name="append">
+			<return type="void" />
+			<param index="0" name="other" type="GameplayTagContainer" />
+			<description>Appends missing explicit members from [param other] in their insertion order. A missing container leaves the set unchanged.</description>
+		</method>
+		<method name="append_matching">
+			<return type="void" />
+			<param index="0" name="source" type="GameplayTagContainer" />
+			<param index="1" name="required" type="GameplayTagContainer" />
+			<description>Appends the explicit members of [param source] that satisfy any explicit tag in [param required]. A source tag satisfies a requirement if it is equal to or descends from it. A missing argument leaves the set unchanged.</description>
+		</method>
+		<method name="clear">
+			<return type="void" />
+			<description>Removes every explicit tag.</description>
+		</method>
+		<method name="copy" qualifiers="const">
+			<return type="GameplayTagContainer" />
+			<description>Returns a new container with the same explicit members and order. Subsequent changes to either container are independent.</description>
+		</method>
+		<method name="equals" qualifiers="const">
+			<return type="bool" />
+			<param index="0" name="other" type="GameplayTagContainer" />
+			<description>Compares explicit membership regardless of order. Returns [code]false[/code] for a missing container.</description>
+		</method>
+		<method name="filter" qualifiers="const">
+			<return type="GameplayTagContainer" />
+			<param index="0" name="required" type="GameplayTagContainer" />
+			<description>Returns a new container holding the explicit tags that satisfy any explicit requirement in [param required]. A held tag satisfies an equal tag or one of its ancestors. A missing requirement container returns an empty result.</description>
+		</method>
+		<method name="filter_exact" qualifiers="const">
+			<return type="GameplayTagContainer" />
+			<param index="0" name="required" type="GameplayTagContainer" />
+			<description>Returns a new container holding explicit members present in both sets, in this container's insertion order. A missing requirement container returns an empty result.</description>
+		</method>
+		<method name="from_tags" qualifiers="static">
+			<return type="GameplayTagContainer" />
+			<param index="0" name="tags" type="GameplayTag[]" />
+			<description>Creates an independent container from [param tags] in input order. Invalid, missing, and duplicate entries are ignored.</description>
+		</method>
+		<method name="get_tags" qualifiers="const">
+			<return type="GameplayTag[]" />
+			<description>Returns explicit members in insertion order as independent tag values. Editing the returned array leaves the container unchanged.</description>
+		</method>
+		<method name="has" qualifiers="const">
+			<return type="bool" />
+			<param index="0" name="tag" type="GameplayTag" />
+			<description>Returns whether an explicit member equals or descends from [param tag]. Returns [code]false[/code] for an invalid or missing tag.</description>
+		</method>
+		<method name="has_all" qualifiers="const">
+			<return type="bool" />
+			<param index="0" name="required" type="GameplayTagContainer" />
+			<description>Returns whether every explicit tag in [param required] is satisfied by an equal or descendant member. An empty requirement set passes. A missing container fails.</description>
+		</method>
+		<method name="has_all_exact" qualifiers="const">
+			<return type="bool" />
+			<param index="0" name="required" type="GameplayTagContainer" />
+			<description>Returns whether every explicit tag in [param required] is an exact member. An empty requirement set passes. A missing container fails.</description>
+		</method>
+		<method name="has_any" qualifiers="const">
+			<return type="bool" />
+			<param index="0" name="required" type="GameplayTagContainer" />
+			<description>Returns whether at least one explicit tag in [param required] is satisfied by an equal or descendant member. An empty or missing requirement container fails.</description>
+		</method>
+		<method name="has_any_exact" qualifiers="const">
+			<return type="bool" />
+			<param index="0" name="required" type="GameplayTagContainer" />
+			<description>Returns whether at least one explicit tag in [param required] is an exact member. An empty or missing requirement container fails.</description>
+		</method>
+		<method name="has_exact" qualifiers="const">
+			<return type="bool" />
+			<param index="0" name="tag" type="GameplayTag" />
+			<description>Returns whether [param tag] is explicitly present. Returns [code]false[/code] for an invalid or missing tag.</description>
+		</method>
+		<method name="is_empty" qualifiers="const">
+			<return type="bool" />
+			<description>Returns whether the container has zero explicit entries.</description>
+		</method>
+		<method name="matches_query" qualifiers="const">
+			<return type="bool" />
+			<param index="0" name="query" type="GameplayTagQuery" />
+			<description>Evaluates [param query] against this container. A missing or unset query fails.</description>
+		</method>
+		<method name="remove">
+			<return type="bool" />
+			<param index="0" name="tag" type="GameplayTag" />
+			<description>Removes [param tag] only if it is explicitly present and returns whether the set changed. A remaining descendant still satisfies hierarchical checks for the removed tag.</description>
+		</method>
+		<method name="remove_all">
+			<return type="void" />
+			<param index="0" name="other" type="GameplayTagContainer" />
+			<description>Removes every explicit member also explicitly held by [param other]. A missing container leaves the set unchanged.</description>
+		</method>
+		<method name="size" qualifiers="const">
+			<return type="int" />
+			<description>Returns the number of explicit members.</description>
+		</method>
+		<method name="with_parents" qualifiers="const">
+			<return type="GameplayTagContainer" />
+			<description>Returns a new container holding the explicit members and all of their implied ancestors as explicit entries.</description>
+		</method>
+	</methods>
+</class>

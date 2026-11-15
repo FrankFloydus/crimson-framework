@@ -230,6 +230,27 @@ bool is_pin(const Dictionary &pin, const StringName &id) {
            (type != Variant::OBJECT || is_runtime_class(read_name(pin, "class")));
 }
 
+/// Lift the native ClassDB array hint into the graph's typed element descriptor.
+Dictionary native_array_element(const String &name) {
+    if (name.is_empty()) {
+        return {};
+    }
+    Dictionary element;
+    if (is_runtime_class(name)) {
+        element["type"] = Variant::OBJECT;
+        element["class"] = StringName(name);
+        return element;
+    }
+    for (int type = Variant::BOOL; type < Variant::VARIANT_MAX; ++type) {
+        const auto builtin = static_cast<Variant::Type>(type);
+        if (builtin != Variant::OBJECT && Variant::get_type_name(builtin) == name) {
+            element["type"] = type;
+            return element;
+        }
+    }
+    return {};
+}
+
 /// Build a pin from the engine's property, argument or result metadata.
 Dictionary make_pin(const Dictionary &metadata, const StringName &id, const String &label) {
     const auto type = read_type(metadata);
@@ -249,6 +270,11 @@ Dictionary make_pin(const Dictionary &metadata, const StringName &id, const Stri
             name = hint_string;
         }
         pin["class"] = is_runtime_class(name) ? name : StringName("Object");
+    } else if (type == Variant::ARRAY && hint == PROPERTY_HINT_ARRAY_TYPE) {
+        const Dictionary element = native_array_element(hint_string);
+        if (!element.is_empty()) {
+            pin["element"] = element;
+        }
     } else if (const StringName enumeration = reflected_enum(metadata); !enumeration.is_empty()) {
         pin["enum_type"] = enumeration;
     }
@@ -306,7 +332,8 @@ bool is_public_property(const Dictionary &property) {
 bool same_type(const Dictionary &left, const Dictionary &right) {
     const auto type = read_type(left);
     return type == read_type(right) && (type != Variant::OBJECT ||
-           read_name(left, "class") == read_name(right, "class"));
+           read_name(left, "class") == read_name(right, "class")) &&
+           (!left.has("element") || left.get("element", Variant()) == right.get("element", Variant()));
 }
 
 /// Map the result metadata to a pin, leaving out a void result.

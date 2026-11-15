@@ -4,6 +4,7 @@
 #include "modules/visual_scripting/visual_script_graph.hpp"
 #include "modules/visual_scripting/visual_script_members.hpp"
 
+#include <godot_cpp/classes/class_db_singleton.hpp>
 #include <godot_cpp/classes/resource_loader.hpp>
 #include <godot_cpp/classes/resource_uid.hpp>
 #include <godot_cpp/classes/script.hpp>
@@ -351,6 +352,77 @@ Ref<Resource> load_resource_path(const String &path, const StringName &expected_
     if (resolved.is_empty() || !loader->exists(resolved)) return {};
     const Ref<Resource> resource = loader->load(resolved);
     return resource.is_valid() && resource->is_class(expected_class) ? resource : Ref<Resource>();
+}
+
+GameplayTagLiteralType gameplay_tag_literal_type(const Dictionary &pin) {
+    const int64_t type = pin.get("type", Variant::NIL);
+    if (type == Variant::OBJECT) {
+        const StringName class_name = pin.get("class", StringName());
+        if (class_name == StringName("GameplayTag")) {
+            return GameplayTagLiteralType::TAG;
+        }
+        if (class_name == StringName("GameplayTagContainer")) {
+            return GameplayTagLiteralType::CONTAINER;
+        }
+    } else if (type == Variant::ARRAY) {
+        const Variant descriptor = pin.get("element", Variant());
+        if (descriptor.get_type() == Variant::DICTIONARY) {
+            const Dictionary element = descriptor;
+            if (int64_t(element.get("type", Variant::NIL)) == Variant::OBJECT &&
+                    StringName(element.get("class", StringName())) == StringName("GameplayTag")) {
+                return GameplayTagLiteralType::TAG_ARRAY;
+            }
+        }
+        if (descriptor.get_type() == Variant::NIL &&
+                int64_t(pin.get("hint", 0)) == PROPERTY_HINT_ARRAY_TYPE &&
+                String(pin.get("hint_string", String())) == "GameplayTag") {
+            return GameplayTagLiteralType::TAG_ARRAY;
+        }
+    }
+    return GameplayTagLiteralType::NONE;
+}
+
+bool is_gameplay_tag_literal(const Dictionary &pin, const Variant &stored) {
+    if (stored.get_type() == Variant::STRING_NAME) {
+        return gameplay_tag_literal_type(pin) == GameplayTagLiteralType::TAG;
+    }
+    if (stored.get_type() == Variant::PACKED_STRING_ARRAY) {
+        const auto type = gameplay_tag_literal_type(pin);
+        return type == GameplayTagLiteralType::CONTAINER || type == GameplayTagLiteralType::TAG_ARRAY;
+    }
+    return false;
+}
+
+bool resolve_gameplay_tag_literal(const Dictionary &pin, const Variant &stored, Variant &loaded) {
+    auto *classes = ClassDBSingleton::get_singleton();
+    const StringName tag_class("GameplayTag");
+    const StringName tag_factory("from_name");
+    if (stored.get_type() == Variant::STRING_NAME) {
+        const StringName path = stored;
+        if (path.is_empty()) {
+            loaded = Variant();
+            return true;
+        }
+        loaded = classes->class_call_static(tag_class, tag_factory, path);
+        return loaded.get_validated_object() != nullptr;
+    }
+
+    const PackedStringArray paths = stored;
+    Array tags;
+    tags.set_typed(Variant::OBJECT, tag_class, Variant());
+    for (const String &path : paths) {
+        const Variant tag = classes->class_call_static(tag_class, tag_factory, StringName(path));
+        if (!tag.get_validated_object()) {
+            return false;
+        }
+        tags.append(tag);
+    }
+    if (gameplay_tag_literal_type(pin) == GameplayTagLiteralType::TAG_ARRAY) {
+        loaded = tags;
+        return true;
+    }
+    loaded = classes->class_call_static("GameplayTagContainer", "from_tags", tags);
+    return loaded.get_validated_object() != nullptr;
 }
 
 bool resource_collection_pin(const Dictionary &pin) {

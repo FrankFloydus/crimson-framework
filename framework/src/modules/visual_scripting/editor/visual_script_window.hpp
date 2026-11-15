@@ -661,7 +661,7 @@ class VisualScriptWindow final : public godot::Control {
     /// Append a Sequence output or remove it with its wires, preserving surviving branch order.
     void edit_sequence_pins(int64_t id, const godot::StringName &remove_pin);
     /// Persist a typed literal on a reflected pin and report whether the graph accepted it.
-    bool set_literal(const godot::Variant &value, int64_t id, const godot::StringName &pin);
+    bool set_literal(const godot::Variant &value, int64_t id, const godot::StringName &pin, bool merge = true);
     /// Refresh visual pin types and slot contracts after a literal change without replacing focused controls.
     void refresh_pin_presentations();
     /// Persist a checkbox value on a Boolean pin.

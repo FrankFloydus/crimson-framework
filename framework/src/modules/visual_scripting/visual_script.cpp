@@ -935,7 +935,11 @@ Variant fresh_value(const Variant &value) {
 
 /// Load a typed asset or copy a literal into runtime state.
 bool resolve_literal(const Dictionary &pin, const Variant &literal, Variant &value) {
-    if (asset_literal(pin, literal)) {
+    if (is_gameplay_tag_literal(pin, literal)) {
+        if (!resolve_gameplay_tag_literal(pin, literal, value)) {
+            return false;
+        }
+    } else if (asset_literal(pin, literal)) {
         const Ref<Resource> asset = load_asset_reference(literal, name_field(pin, "class"));
         if (asset.is_null()) {
             return false;
@@ -1194,7 +1198,7 @@ String read_variables(const Variant &records, Variables &output) {
         }
         const Dictionary pin = raw_pin;
         Variant initial;
-        if (asset_literal(pin, value)) {
+        if (asset_literal(pin, value) || is_gameplay_tag_literal(pin, value)) {
             initial = fresh_value(value);
         } else if (resource_collection_pin(pin) && valid_resource_collection_storage(pin, value)) {
             initial = fresh_value(value);
@@ -1703,7 +1707,7 @@ String compile_program(const Dictionary &root, const Dictionary &graph, const St
             }
             if (input.source == InputSource::VALUE) {
                 const auto literal_type = input.literal.get_type();
-                if (asset_literal(pin, input.literal) ||
+                if (asset_literal(pin, input.literal) || is_gameplay_tag_literal(pin, input.literal) ||
                         (resource_collection_pin(pin) && valid_resource_collection_storage(pin, input.literal))) input.source = InputSource::ASSET;
                 else if (literal_type == Variant::ARRAY || literal_type == Variant::DICTIONARY) {
                     if (input.type.collection && !resolve_collection_value(pin, input.literal, input.literal)) {
@@ -1740,7 +1744,8 @@ String compile_program(const Dictionary &root, const Dictionary &graph, const St
         if (node.op == Op::GET_VARIABLE && !node.outputs.empty() && node.variable != no_slot) {
             const auto &variables = node.local ? program.locals : members;
             const Dictionary &pin = node.outputs.begin()->second.pin;
-            node.variable_asset = asset_literal(pin, variables.values[node.variable]) || resource_collection_pin(pin);
+            node.variable_asset = asset_literal(pin, variables.values[node.variable]) ||
+                    is_gameplay_tag_literal(pin, variables.values[node.variable]) || resource_collection_pin(pin);
         }
         if (kind == StringName("native_signal") ||
                 (node.op == Op::AWAIT_SIGNAL && !name_field(record, "signal").is_empty())) {
@@ -3435,7 +3440,8 @@ Variant custom_variable(CustomInvocation &invocation, bool local, int64_t id, co
         }
         return {};
     }
-    if (asset_literal(pin, stored) || (resource_collection_pin(pin) && !pin_accepts_value(pin, stored))) {
+    if (asset_literal(pin, stored) || is_gameplay_tag_literal(pin, stored) ||
+            (resource_collection_pin(pin) && !pin_accepts_value(pin, stored))) {
         Variant loaded;
         if (!resolve_literal(pin, stored, loaded)) {
             invocation.fail("Custom Script could not load the graph variable's resource.");
@@ -4296,7 +4302,8 @@ const VisualScriptExports::Variable *find_export(const VisualScriptExports &expo
 /// Fetch a public variable from the current instance slots, resolving lazy resource defaults.
 bool get_export_value(Runtime &runtime, const VisualScriptExports::Variable &property, Variant &value) {
     Variant &slot = runtime.variables.values[runtime.variables.indices.at(property.id)];
-    if (asset_literal(property.pin, slot) || (resource_collection_pin(property.pin) && !pin_accepts_value(property.pin, slot))) {
+    if (asset_literal(property.pin, slot) || is_gameplay_tag_literal(property.pin, slot) ||
+            (resource_collection_pin(property.pin) && !pin_accepts_value(property.pin, slot))) {
         const Variant initial = slot;
         Variant loaded;
         if (!resolve_literal(property.pin, initial, loaded)) return false;

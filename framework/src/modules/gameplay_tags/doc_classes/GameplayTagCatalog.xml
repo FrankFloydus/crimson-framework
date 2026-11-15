@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="GameplayTagCatalog" inherits="RefCounted">
+	<brief_description>A registry of declared paths and their implied parents.</brief_description>
+	<description>Use [method project] to read the catalog used by the Inspector picker. A standalone catalog can register names for a tool or an isolated gameplay context. Registering a leaf makes all of its ancestors available for lookup. The project edit methods persist definitions and redirects. They return [constant ERR_INVALID_DATA] when existing declarations contain invalid paths, and propagate configuration save errors.</description>
+	<methods>
+		<method name="add_project_tag" qualifiers="static">
+			<return type="int" enum="Error" />
+			<param index="0" name="name" type="StringName" />
+			<description>Declares [param name] in the project catalog and saves the project configuration. Returns [constant OK] on success. An invalid path returns [constant ERR_INVALID_PARAMETER]. An existing declaration or a path that recreates a previous redirect source returns [constant ERR_ALREADY_EXISTS]. Conflicting redirects return [constant ERR_BUSY]. An attempt outside the editor returns [constant ERR_UNAUTHORIZED].</description>
+		</method>
+		<method name="children" qualifiers="const">
+			<return type="GameplayTag[]" />
+			<param index="0" name="tag" type="GameplayTag" />
+			<description>Returns immediate children of [param tag] in lexical order. A missing or unregistered tag yields an empty array.</description>
+		</method>
+		<method name="descendants" qualifiers="const">
+			<return type="GameplayTag[]" />
+			<param index="0" name="tag" type="GameplayTag" />
+			<description>Returns all proper descendants of [param tag] in lexical order. A missing or unregistered tag yields an empty array.</description>
+		</method>
+		<method name="find" qualifiers="const">
+			<return type="GameplayTag" />
+			<param index="0" name="name" type="StringName" />
+			<description>Returns the registered tag for [param name], resolving case and catalog redirects. Returns [code]null[/code] for a malformed or unregistered name.</description>
+		</method>
+		<method name="get_tags" qualifiers="const">
+			<return type="GameplayTag[]" />
+			<param index="0" name="declared_only" type="bool" default="false" />
+			<description>Lists catalog tags in lexical order. Pass [code]true[/code] for [param declared_only] to omit ancestors created solely by a descendant declaration.</description>
+		</method>
+		<method name="is_declared" qualifiers="const">
+			<return type="bool" />
+			<param index="0" name="tag" type="GameplayTag" />
+			<description>Returns whether [param tag] was explicitly declared. An implied-only ancestor, a missing tag, or an unregistered tag returns [code]false[/code].</description>
+		</method>
+		<method name="project" qualifiers="static">
+			<return type="GameplayTagCatalog" />
+			<description>Returns an independent snapshot of the project catalog and its rename redirects. Request another snapshot to read later catalog edits. The snapshot omits malformed declarations and uses redirects only when the saved table passes validation.</description>
+		</method>
+		<method name="register_tag">
+			<return type="GameplayTag" />
+			<param index="0" name="name" type="StringName" />
+			<description>Adds [param name] and its implied ancestors to this catalog instance. Registering an implied ancestor makes it explicitly declared. Returns [code]null[/code] for a malformed name or a path that recreates a previous redirect source. Changes affect this instance only.</description>
+		</method>
+		<method name="remove_project_tag" qualifiers="static">
+			<return type="int" enum="Error" />
+			<param index="0" name="name" type="StringName" />
+			<description>Removes [param name] from the project catalog and saves the configuration. Returns [constant OK] on success. An invalid path returns [constant ERR_INVALID_PARAMETER] and a missing declaration returns [constant ERR_DOES_NOT_EXIST]. Descendants or conflicting redirects return [constant ERR_BUSY]. An attempt outside the editor returns [constant ERR_UNAUTHORIZED]. Existing resources can retain the removed path.</description>
+		</method>
+		<method name="rename_project_tag" qualifiers="static">
+			<return type="int" enum="Error" />
+			<param index="0" name="old_name" type="StringName" />
+			<param index="1" name="new_name" type="StringName" />
+			<param index="2" name="include_children" type="bool" default="false" />
+			<description>Renames [param old_name] to [param new_name] and saves redirects from previous paths. Enable [param include_children] to rename an entire branch. Returns [constant OK] on success. A missing source returns [constant ERR_DOES_NOT_EXIST]. A branch rename without descendant selection or conflicting redirects returns [constant ERR_BUSY]. An occupied destination returns [constant ERR_ALREADY_EXISTS]. An invalid path or moving a branch into itself returns [constant ERR_INVALID_PARAMETER]. An attempt outside the editor returns [constant ERR_UNAUTHORIZED].</description>
+		</method>
+	</methods>
+</class>

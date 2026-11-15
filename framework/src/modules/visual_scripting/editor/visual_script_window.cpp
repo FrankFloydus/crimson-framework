@@ -17,6 +17,7 @@
 #include "modules/visual_scripting/editor/visual_script_organization.hpp"
 #include "modules/visual_scripting/editor/visual_script_wire_tools.hpp"
 #include "modules/visual_scripting/editor/visual_script_panels.hpp"
+#include "modules/visual_scripting/editor/visual_script_tag_field.hpp"
 #include "modules/visual_scripting/visual_script_assets.hpp"
 #include "modules/visual_scripting/visual_script_builtin_data.hpp"
 #include "modules/visual_scripting/visual_script_cast_input.hpp"
@@ -1191,6 +1192,10 @@ void present_node_pins(VisualScriptGraphNode *widget, const Dictionary &document
 /// Pick a concise visual label while retaining the native signature in the descriptor.
 String member_title(const StringName &kind, const Dictionary &member) {
     const String name = String(member.get("name", StringName())).capitalize();
+    if (kind == StringName(call_method_kind) && StringName(member.get("class", StringName())) == StringName("GameplayTag") &&
+            StringName(member.get("name", StringName())) == StringName("find")) {
+        return "Find Tag";
+    }
     if (kind == StringName(get_property_kind)) {
         return "Get " + name;
     }
@@ -1198,6 +1203,15 @@ String member_title(const StringName &kind, const Dictionary &member) {
         return "Set " + name;
     }
     return name;
+}
+
+/// Group the declared tag methods by role in the Gameplay Tags category.
+String gameplay_tag_scope(const StringName &owner) {
+    if (owner == StringName("GameplayTag")) return "Tag";
+    if (owner == StringName("GameplayTagContainer")) return "Container";
+    if (owner == StringName("GameplayTagCatalog")) return "Catalog";
+    if (owner == StringName("GameplayTagQuery")) return "Query";
+    return {};
 }
 
 /// Use Godot's const flag for the reflected method indicator.
@@ -1430,6 +1444,14 @@ Variant literal_value(const Dictionary &node, const Dictionary &pin) {
     return values.get(pin.get("id", StringName()), pin.get("default", Variant()));
 }
 
+/// Compare the graph operation independently of moves and edits to other input values.
+Dictionary literal_owner(const Dictionary &node) {
+    Dictionary owner = node.duplicate();
+    owner.erase("position");
+    owner.erase("values");
+    return owner;
+}
+
 /// Determine whether the graph owner can supply an unconnected receiver.
 bool accepts_owner(const Ref<VisualScript> &script, const StringName &expected) {
     return script.is_valid() && (expected.is_empty() ||
@@ -1606,6 +1628,7 @@ void register_visual_script_canvas() {
     GDREGISTER_INTERNAL_CLASS(VisualScriptCanvas);
     GDREGISTER_INTERNAL_CLASS(VisualScriptGraphNode);
     register_visual_script_asset_field();
+    register_visual_script_tag_field();
     register_visual_script_panels();
 }
 
@@ -2920,6 +2943,32 @@ void VisualScriptWindow::add_literal(HBoxContainer *row, int64_t id, const Dicti
     const String label = pin.get("label", String());
     const Variant value = literal_value(node, pin);
     const String help = label + String(". ") + type_label(pin) + String(" literal used when the pin has no wire.");
+    const auto tag_kind = tag_field_kind(pin, node);
+    if (!preload && tag_kind != TagFieldKind::NONE) {
+        const Ref<VisualScript> owner_script = script;
+        const int64_t owner_graph = active_graph;
+        const Dictionary owner_node = literal_owner(node);
+        auto *field = tag_field(row, tag_kind, value,
+                [this, owner_script, owner_graph, owner_node, id, pin, pin_id](const Variant &next, const Variant &previous) {
+                    if (script != owner_script || active_graph != owner_graph) return false;
+                    const Dictionary latest_document = script->get_graph();
+                    const Dictionary latest_graph = current_graph(latest_document);
+                    const Dictionary latest_node = find_graph_record(graph_array(latest_graph, "nodes"), id);
+                    if (literal_owner(latest_node) != owner_node) return false;
+                    for (const Dictionary &current_pin : graph_pins(latest_document, latest_graph, latest_node, false,
+                            script->get_graph_base())) {
+                        if (current_pin == pin) {
+                            return literal_value(latest_node, current_pin) == previous && set_literal(next, id, pin_id, false);
+                        }
+                    }
+                    return false;
+                });
+        field->set_name(field_name);
+        field->set_accessibility_description(help);
+        ui::style_graph_inline_control(field, "GraphLiteralSelect");
+        size_pin_editor(field, 110, 168);
+        return;
+    }
     if (pin.get("input_action", false)) {
         Array values = Array::make(StringName());
         PackedStringArray labels;
@@ -3104,7 +3153,7 @@ void VisualScriptWindow::edit_sequence_pins(int64_t id, const StringName &remove
     }
 }
 
-bool VisualScriptWindow::set_literal(const Variant &value, int64_t id, const StringName &pin) {
+bool VisualScriptWindow::set_literal(const Variant &value, int64_t id, const StringName &pin, bool merge) {
     if (script.is_null()) {
         return false;
     }
@@ -3130,7 +3179,7 @@ bool VisualScriptWindow::set_literal(const Variant &value, int64_t id, const Str
         node["values"] = values;
         nodes[index] = node;
         next["nodes"] = nodes;
-        if (!commit_graph(String("Edit Graph Pin ") + String::num_int64(id) + String(" ") + String(pin), next, false, true)) {
+        if (!commit_graph(String("Edit Graph Pin ") + String::num_int64(id) + String(" ") + String(pin), next, false, merge)) {
             return false;
         }
         if (shape_changed || lane_changed) {
@@ -3363,6 +3412,14 @@ void VisualScriptWindow::refresh_palette_members() {
             native_owners.sort();
             for (const String &owner : native_owners) {
                 catalog_options.append_array(find_native_static_members(owner));
+                if (!gameplay_tag_scope(owner).is_empty()) {
+                    for (const Dictionary &entry : find_native_members(owner)) {
+                        const Dictionary member = entry.get("member", Dictionary());
+                        if (StringName(member.get("class", StringName())) == StringName(owner)) {
+                            catalog_options.append(entry);
+                        }
+                    }
+                }
             }
         }
         member_options.append_array(catalog_options);
@@ -4378,6 +4435,7 @@ void VisualScriptWindow::add_members(TreeItem *root, const Dictionary &document,
     TreeItem *builtin_group = nullptr;
     TreeItem *global_group = nullptr;
     TreeItem *static_group = nullptr;
+    TreeItem *tag_group = nullptr;
     std::map<std::pair<TreeItem *, String>, TreeItem *> scopes;
     std::map<StringName, TreeItem *> inherited_classes;
     std::set<std::tuple<StringName, String, String>> receiver_members;
@@ -4403,7 +4461,8 @@ void VisualScriptWindow::add_members(TreeItem *root, const Dictionary &document,
             continue;
         }
         const bool native_static = static_method && !builtin && !utility && script_name.is_empty();
-        const String catalog = utility ? "Global Functions" : builtin ? "Built-in Types" :
+        const String tag_scope = script_name.is_empty() ? gameplay_tag_scope(declaring_class) : String();
+        const String catalog = !tag_scope.is_empty() ? "Gameplay Tags" : utility ? "Global Functions" : builtin ? "Built-in Types" :
                 native_static ? "Native Static Methods" : "Self";
         if (!matches_query(label, query) && !matches_query(declaration, query) && !matches_query(native_name, query) &&
                 !matches_query(qualified_name, query) && !matches_query(catalog, query) &&
@@ -4444,7 +4503,10 @@ void VisualScriptWindow::add_members(TreeItem *root, const Dictionary &document,
             group = global_group;
         } else {
             TreeItem *parent = root;
-            if (builtin) {
+            if (!tag_scope.is_empty()) {
+                if (!tag_group) tag_group = category(results, root, "Gameplay Tags");
+                parent = tag_group;
+            } else if (builtin) {
                 if (!builtin_group) {
                     builtin_group = category(results, root, "Built-in Types");
                 }
@@ -4455,9 +4517,10 @@ void VisualScriptWindow::add_members(TreeItem *root, const Dictionary &document,
                 }
                 parent = static_group;
             }
-            auto *&scope = scopes[{parent, declaration}];
+            const String section = !tag_scope.is_empty() ? tag_scope : declaration;
+            auto *&scope = scopes[{parent, section}];
             if (!scope) {
-                scope = category(results, parent, declaration);
+                scope = category(results, parent, section);
                 scope->set_collapsed(query.is_empty() && parent != root);
             }
             group = scope;
