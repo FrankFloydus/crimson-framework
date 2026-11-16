@@ -452,7 +452,7 @@ Dictionary graph_node(int64_t id, const String &kind, const Vector2 &position, i
 }
 
 /// A new function and macro open with the entry and return already present.
-Dictionary default_body(int64_t definition, bool macro) {
+Dictionary default_body(int64_t definition, bool macro, const Dictionary &return_values = {}) {
     Dictionary wire;
     wire["from"] = 1;
     wire["from_pin"] = StringName("then");
@@ -460,8 +460,11 @@ Dictionary default_body(int64_t definition, bool macro) {
     wire["to_pin"] = StringName("in");
     Dictionary body;
     body["definition"] = definition;
-    body["nodes"] = Array::make(graph_node(1, macro ? "macro_entry" : "function_entry", Vector2(0, 0), definition),
-            graph_node(2, "return", Vector2(440, 0), definition));
+    Dictionary return_node = graph_node(2, "return", Vector2(440, 0), definition);
+    if (!return_values.is_empty()) {
+        return_node["values"] = return_values;
+    }
+    body["nodes"] = Array::make(graph_node(1, macro ? "macro_entry" : "function_entry", Vector2(0, 0), definition), return_node);
     body["connections"] = Array::make(wire);
     body["locals"] = Array();
     return body;
@@ -2526,18 +2529,49 @@ void VisualScriptPanels::select_graph_node(const Dictionary &node) {
     rebuild_details();
 }
 
-Dictionary VisualScriptPanels::new_custom_event(const Dictionary &source, int64_t &event_id) const {
+Dictionary VisualScriptPanels::new_custom_event(const Dictionary &source, int64_t &event_id, const String &name,
+        const Array &inputs) const {
     event_id = script.is_valid() ? next_definition_id(source) : 0;
     if (event_id == 0) {
         return source;
     }
     Dictionary declaration;
     declaration["id"] = event_id;
-    declaration["name"] = make_name(source, 0, "events", "event", script->get_graph_base());
-    declaration["inputs"] = Array();
+    declaration["name"] = name.is_empty() ? make_name(source, 0, "events", "event", script->get_graph_base()) : name;
+    declaration["inputs"] = inputs;
     Array events = records(source, "events").duplicate();
     events.append(declaration);
     return with_declarations(source, 0, "events", events);
+}
+
+bool VisualScriptPanels::can_create_named_callable(const String &name) const {
+    return script.is_valid() && name.is_valid_identifier() &&
+            !declaration_name_used(document, 0, "functions", 0, name, script->get_graph_base());
+}
+
+bool VisualScriptPanels::create_named_function(const String &name, const Array &inputs, const Array &outputs,
+        const Dictionary &return_values) {
+    if (!on_commit || !can_create_named_callable(name)) {
+        return false;
+    }
+    const int64_t id = next_definition_id(document);
+    if (id == 0) {
+        return false;
+    }
+    Dictionary record;
+    record["id"] = id;
+    record["name"] = name;
+    record["inputs"] = inputs;
+    record["outputs"] = outputs;
+    record["graph"] = default_body(id, false, return_values);
+    Array functions = records(document, "functions").duplicate();
+    functions.append(record);
+    on_commit("Add " + name.capitalize(), with_declarations(document, 0, "functions", functions));
+    show_declaration("functions", id);
+    if (on_open_graph) {
+        on_open_graph(id);
+    }
+    return true;
 }
 
 void VisualScriptPanels::show_declaration(const StringName &key, int64_t id) {

@@ -10,6 +10,8 @@ For existing projects, follow the [Godot class-name migration guide](docs/API_NA
 
 | Module | Source | Responsibility |
 | --- | --- | --- |
+| Gameplay Attributes | [Gameplay Attributes module](src/modules/attributes/README.md) | Project-wide attribute definitions, generated C++ helpers, and authoritative numeric state with coordinated replication. |
+| Gameplay Abilities | [Gameplay Abilities module](src/modules/abilities/README.md) | Script-defined actions granted to an actor, with a fresh instance for each activation. |
 | Gameplay Tags | [Gameplay Tags module](src/modules/gameplay_tags/README.md) | Hierarchical tag sets, reusable queries, and an Inspector picker shared by GDScript and Visual Script. |
 | Inventory | [Inventory module](src/modules/inventory/README.md) | Grid placement and snapshots, stack operations, containers, sorting, equipment, staging, wallet balances, and trade. |
 | Save | [Save module](src/modules/save/README.md) | SaveCoordinator, detached capture and restore, schema migration, generation storage, provider ABI, and save metadata and previews. |

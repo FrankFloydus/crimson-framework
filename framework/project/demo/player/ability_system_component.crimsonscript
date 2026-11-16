@@ -1,0 +1,8 @@
+{
+"base": &"AbilitySystemComponent",
+"graph": {
+"connections": [],
+"nodes": [],
+"version": 1
+}
+}

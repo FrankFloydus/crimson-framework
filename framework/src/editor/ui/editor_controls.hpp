@@ -326,6 +326,8 @@ public:
     void set_popup_width_limit(int logical_width);
     /// Give option text room to load at its full width while preserving a narrow trigger.
     void set_popup_minimum_width(int logical_width);
+    /// Name the content filtered by a searchable picker.
+    void set_search_placeholder(const godot::String &text);
     /// Return the anchor button for compact presentation overrides.
     godot::Button *get_trigger() const;
     /// Return the selected stable ID, or an empty name when no value is selected.

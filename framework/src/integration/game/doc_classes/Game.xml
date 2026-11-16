@@ -117,6 +117,11 @@
 			<param index="2" name="requires_primary" type="bool" />
 			<description>Register a game-owned command before coordinated play. The authority runs its handler. Possession is optional by default.</description>
 		</method>
+		<method name="bind_ability_system">
+			<return type="int" enum="Error" />
+			<param index="0" name="component" type="AbilitySystemComponent" />
+			<description>Bind the mounted actor's ability system to this coordinated match. Call on the authority and guests when their actor enters this game's scene branch. The authority can give, activate, cancel, and clear abilities after the world is ready. A game can use this binding with any attribute source. Submit player requests through [method perform] and validate the current character in the authority command handler. Returns [constant ERR_UNAVAILABLE] outside a live coordinated attachment or during recovery, [constant ERR_INVALID_PARAMETER] for a missing or foreign component, or [constant ERR_ALREADY_IN_USE] for a previously scoped component. Match retirement cancels active executions. Use a fresh actor component for a new match.</description>
+		</method>
 		<method name="transactions">
 			<return type="TransactionCoordinator" />
 			<description>Return the authority coordinator for game-owned store setup, or null when unavailable.</description>
@@ -134,6 +139,10 @@
 		<method name="inventory">
 			<return type="GameInventory" />
 			<description>Return the configured inventory service, or null when disabled.</description>
+		</method>
+		<method name="attributes">
+			<return type="MatchAttributes" />
+			<description>Return the live coordinated match's gameplay attributes service. Returns null when [method GameConfig.attributes] was omitted or the game attachment has retired.</description>
 		</method>
 		<method name="codecs" qualifiers="const">
 			<return type="NetworkCodecs" />

@@ -10,6 +10,7 @@
 #include <godot_cpp/variant/packed_string_array.hpp>
 
 #include <cstdint>
+#include <functional>
 #include <map>
 
 namespace crimson::replication {
@@ -24,6 +25,8 @@ public:
 
     // Set the authority's synchronous recipient-specific projection callback.
     godot::Error set_projector(const godot::Callable &callback);
+    // Install a native, read-only validator for a complete detached client view.
+    void set_projection_validator(std::function<bool(const godot::Dictionary &)> validator);
     // Begin an authority world epoch and invalidate every registered peer stream.
     godot::Error advance_world(int64_t world_epoch, int64_t committed_revision);
     // Register a connected, admitted remote peer with its current player binding.
@@ -106,6 +109,8 @@ private:
     godot::Ref<godot::MultiplayerPeer> transport;
     // Game-supplied per-player visibility and projection policy.
     godot::Callable projector;
+    // Native consumer contract checked before acknowledging or publishing state.
+    std::function<bool(const godot::Dictionary &)> projection_validator;
     // Admitted authority-side streams indexed by transport peer ID.
     std::map<int64_t, PeerStream> peers;
     // Current local client projection and stream cursor.

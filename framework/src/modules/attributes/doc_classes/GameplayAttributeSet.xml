@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="GameplayAttributeSet" inherits="RefCounted">
+	<brief_description>Provides live access to one attribute set assigned to an actor.</brief_description>
+	<description>Get this view from [method AbilitySystemComponent.get_attribute_set]. Refer to attributes by their local IDs, such as [code]health[/code] in the [code]main_set[/code] set. The component owns access to live values. The view cannot access them after the component is freed or its match retires.</description>
+	<methods>
+		<method name="get_id" qualifiers="const">
+			<return type="StringName" />
+			<description>Returns the authored ID of this set.</description>
+		</method>
+		<method name="get_attribute" qualifiers="const">
+			<return type="GameplayAttributeValue" />
+			<param index="0" name="attribute_id" type="StringName" />
+			<description>Returns a detached reading for local [param attribute_id]. Returns null for an unknown ID, an unavailable source, or a value outside the recipient's visibility.</description>
+		</method>
+		<method name="set_base">
+			<return type="int" enum="Error" />
+			<param index="0" name="attribute_id" type="StringName" />
+			<param index="1" name="value" type="float" />
+			<description>Replaces the base of local [param attribute_id] with finite [param value], in the attribute's units. Returns [code]OK[/code] when the source accepts the edit. Returns a Godot error when the ID, value, or authority is invalid, or when the source cannot commit.</description>
+		</method>
+		<method name="add_base">
+			<return type="int" enum="Error" />
+			<param index="0" name="attribute_id" type="StringName" />
+			<param index="1" name="delta" type="float" />
+			<description>Adds finite [param delta], in the attribute's units, to the base of local [param attribute_id]. Returns [code]OK[/code] on success or a Godot error when the edit is rejected or the result is non-finite.</description>
+		</method>
+		<method name="watch_attribute">
+			<return type="GameplayAttributeWatch" />
+			<param index="0" name="attribute_id" type="StringName" />
+			<description>Creates a watch for local [param attribute_id]. Returns null when the ID is empty or uses a qualified set prefix. Retain the watch while listening for confirmed readings.</description>
+		</method>
+	</methods>
+</class>

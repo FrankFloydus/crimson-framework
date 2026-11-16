@@ -3,11 +3,13 @@
 #include "integration/game/game.hpp"
 
 #include "integration/adapters/game_inventory.hpp"
+#include "integration/adapters/match_attributes.hpp"
 #include "integration/game/crimson_game.hpp"
 #include "integration/game/game_network_diagnostics.hpp"
 #include "integration/online/steam/steam_code_first.hpp"
 #include "integration/online/steam/steam_online.hpp"
 #include "integration/player_control/player_control.hpp"
+#include "modules/attributes/ability_system_component.hpp"
 #include "modules/mover/mover_component.hpp"
 #include "modules/network/network_codec.hpp"
 #include "modules/steam/client/steam_config.hpp"
@@ -20,6 +22,7 @@
 #include <godot_cpp/core/memory.hpp>
 #include <godot_cpp/variant/utility_functions.hpp>
 
+#include <algorithm>
 #include <utility>
 
 using namespace godot;
@@ -105,6 +108,7 @@ void GameConfig::_bind_methods() {
     ClassDB::bind_method(D_METHOD("with_world", "world"), &GameConfig::with_world);
     ClassDB::bind_method(D_METHOD("provider", "provider"), &GameConfig::provider);
     ClassDB::bind_method(D_METHOD("inventory", "settings"), &GameConfig::inventory);
+    ClassDB::bind_method(D_METHOD("attributes"), &GameConfig::attributes);
     ClassDB::bind_method(D_METHOD("player_controls", "profile"), &GameConfig::player_controls, DEFVAL(Ref<PlayerControlProfile>()));
     ClassDB::bind_method(D_METHOD("boot", "owner"), &GameConfig::boot);
     ClassDB::bind_method(D_METHOD("boot_server", "owner"), &GameConfig::boot_server);
@@ -125,6 +129,7 @@ Ref<GameConfig> GameConfig::branch() const {
     auto draft = from_definition(definition);
     draft->overrides = overrides;
     draft->inventory_config = inventory_config;
+    draft->use_attributes = use_attributes;
     draft->control_profile = control_profile;
     draft->use_player_controls = use_player_controls;
     draft->coordinated = coordinated;
@@ -224,6 +229,12 @@ Ref<GameConfig> GameConfig::inventory(const Ref<InventoryConfig> &settings) cons
     return draft;
 }
 
+Ref<GameConfig> GameConfig::attributes() const {
+    auto draft = branch();
+    draft->use_attributes = true;
+    return draft;
+}
+
 Ref<GameConfig> GameConfig::player_controls(const Ref<PlayerControlProfile> &profile) const {
     auto draft = branch();
     draft->control_profile = profile;
@@ -249,6 +260,10 @@ Ref<Game> GameConfig::boot(Node *owner) const {
     }
     if (!coordinated && inventory_config.is_valid()) {
         game->boot_outcome = boot_failure("Use Game.campaign() for game-bound inventory.");
+        return game;
+    }
+    if (!coordinated && use_attributes) {
+        game->boot_outcome = boot_failure("Use Game.campaign() for game-bound Attributes.");
         return game;
     }
     if (use_player_controls && (coordinated || (control_profile.is_valid() && !control_profile->has_valid_motion_settings()))) {
@@ -366,6 +381,14 @@ Ref<Game> GameConfig::boot(Node *owner) const {
     }
     game->scene_actions.instantiate();
     game->scene_actions->service = attachment;
+    if (use_attributes) {
+        runtime->attributes_service = MatchAttributes::attach(runtime);
+        if (runtime->attributes_service.is_null()) {
+            runtime->queue_free();
+            game->boot_outcome = boot_failure("Check the Gameplay Attributes definitions in Project Settings.");
+            return game;
+        }
+    }
     if (inventory_config.is_valid()) {
         game->inventory_service = GameInventory::attach(runtime, inventory_config);
         if (game->inventory_service.is_null()) {
@@ -437,10 +460,12 @@ void Game::_bind_methods() {
     ClassDB::bind_method(D_METHOD("perform", "name", "payload"), &Game::perform, DEFVAL(Dictionary()));
     ClassDB::bind_method(D_METHOD("register_command", "name", "handler", "requires_primary"),
             &Game::register_command, DEFVAL(false));
+    ClassDB::bind_method(D_METHOD("bind_ability_system", "component"), &Game::bind_ability_system);
     ClassDB::bind_method(D_METHOD("transactions"), &Game::transactions);
     ClassDB::bind_method(D_METHOD("save_slot", "profile", "slot"), &Game::save_slot);
     ClassDB::bind_method(D_METHOD("scenes"), &Game::scenes);
     ClassDB::bind_method(D_METHOD("inventory"), &Game::inventory);
+    ClassDB::bind_method(D_METHOD("attributes"), &Game::attributes);
     ClassDB::bind_method(D_METHOD("codecs"), &Game::codecs);
     ClassDB::bind_method(D_METHOD("steam"), &Game::steam);
     ClassDB::bind_method(D_METHOD("get_phase"), &Game::get_phase);
@@ -530,8 +555,19 @@ Ref<GameResult> Game::boot_result() const {
 
 bool Game::uses_online() const { return online; }
 
-Error Game::prepare_authority() {
-    return inventory_service.is_valid() ? inventory_service->prepare() : OK;
+Ref<GameResult> Game::prepare_authority() {
+    auto *runtime = resolve_game();
+    if (!runtime) {
+        return reject("Unavailable", "The game attachment is unavailable.");
+    }
+    const auto configured_attributes = runtime->attributes_service;
+    if (configured_attributes.is_valid() && configured_attributes->prepare() != OK) {
+        return reject("AttributesUnavailable", "The game's Attributes could not prepare their authority store.");
+    }
+    if (inventory_service.is_valid() && inventory_service->prepare() != OK) {
+        return reject("InventoryUnavailable", "The game's inventory could not prepare its authority store.");
+    }
+    return {};
 }
 
 Variant Game::play() {
@@ -539,12 +575,12 @@ Variant Game::play() {
     if (!runtime) {
         return reject("Unavailable", "The game attachment is unavailable.");
     }
-    if (prepare_authority() != OK) {
-        return reject("InventoryUnavailable", "The game's inventory could not prepare its authority store.");
+    if (const auto failure = prepare_authority(); failure.is_valid()) {
+        return failure;
     }
     runtime = resolve_game();
     if (!runtime) {
-        return reject("Unavailable", "The game attachment retired during inventory setup.");
+        return reject("Unavailable", "The game attachment retired during authority setup.");
     }
     return await_operation(coordinated ? runtime->start_offline() : runtime->play_solo());
 }
@@ -577,6 +613,9 @@ Variant Game::leave() {
 
 void Game::on_phase_changed(int64_t phase) {
     const Ref<Game> keep_alive(this);
+    if (phase == TRANSITIONING || phase == RECOVERING || phase == IDLE) {
+        retire_ability_systems(phase == IDLE);
+    }
     emit_signal("phase_changed", phase);
 }
 
@@ -600,6 +639,7 @@ void Game::on_world_ready(const StringName &world, int64_t epoch) {
 }
 
 void Game::on_scope_closed() {
+    retire_ability_systems(true);
     if (codec_service.is_valid()) {
         codec_service->close();
     }
@@ -624,6 +664,54 @@ Error Game::register_command(const String &name, const Callable &handler, bool r
     return runtime ? runtime->register_command(name, handler, requires_primary) : ERR_UNAVAILABLE;
 }
 
+Error Game::bind_ability_system(attributes::AbilitySystemComponent *component) {
+    auto *runtime = resolve_game();
+    if (!runtime || !coordinated || runtime->immediate_active || runtime->cleaning || runtime->phase == GameRuntime::RECOVERING) {
+        return ERR_UNAVAILABLE;
+    }
+    if (!component || !component->is_inside_tree() || component->is_queued_for_deletion() || Game::for_node(component).ptr() != this) {
+        return ERR_INVALID_PARAMETER;
+    }
+    if (component->has_ability_authority_scope()) {
+        return ERR_ALREADY_IN_USE;
+    }
+
+    const ObjectID component_id(component->get_instance_id());
+    const ObjectID handle_id(get_instance_id());
+    const ObjectID coordinator_id(runtime->transactions->get_instance_id());
+    ability_systems.erase(std::remove_if(ability_systems.begin(), ability_systems.end(), [](ObjectID id) {
+        return ObjectDB::get_instance(id) == nullptr;
+    }), ability_systems.end());
+    ability_systems.push_back(component_id);
+    component->set_ability_authority([component_id, handle_id, coordinator_id]() {
+        if (!on_scene_thread()) {
+            return false;
+        }
+        auto *game = Object::cast_to<Game>(ObjectDB::get_instance(handle_id));
+        auto *actor = Object::cast_to<attributes::AbilitySystemComponent>(ObjectDB::get_instance(component_id));
+        const auto *current = game ? game->resolve_game() : nullptr;
+        return current && !current->cleaning && !current->publishing && current->phase == GameRuntime::RUNNING &&
+                current->is_authority() && ObjectID(current->transactions->get_instance_id()) == coordinator_id &&
+                actor && actor->is_inside_tree() && !actor->is_queued_for_deletion() && Game::for_node(actor).ptr() == game;
+    });
+    return OK;
+}
+
+void Game::retire_ability_systems(bool detach) {
+    const auto systems = detach ? std::exchange(ability_systems, {}) : ability_systems;
+    for (ObjectID id : systems) {
+        auto *component = Object::cast_to<attributes::AbilitySystemComponent>(ObjectDB::get_instance(id));
+        if (!component) {
+            continue;
+        }
+        if (detach) {
+            component->set_ability_authority({});
+        } else {
+            component->retire_ability_activations();
+        }
+    }
+}
+
 Ref<match_runtime::TransactionCoordinator> Game::transactions() const {
     const auto *runtime = resolve_game();
     return runtime ? runtime->get_transactions() : Ref<match_runtime::TransactionCoordinator>();
@@ -636,6 +724,11 @@ Ref<SaveSlot> Game::save_slot(const String &profile, const String &slot) {
 
 Ref<GameScenes> Game::scenes() const { return scene_actions; }
 Ref<GameInventory> Game::inventory() const { return resolve_game() ? inventory_service : Ref<GameInventory>(); }
+
+Ref<MatchAttributes> Game::attributes() const {
+    auto *runtime = resolve_game();
+    return runtime ? runtime->attributes_service : Ref<MatchAttributes>();
+}
 Ref<replication::NetworkCodecs> Game::codecs() const {
     return resolve_game() ? codec_service : Ref<replication::NetworkCodecs>();
 }

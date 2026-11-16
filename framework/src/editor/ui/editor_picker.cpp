@@ -540,6 +540,13 @@ void Picker::set_popup_minimum_width(int logical_width) {
     popup_width_minimum = std::max(0, logical_width);
 }
 
+void Picker::set_search_placeholder(const String &text) {
+    if (search) {
+        search->set_placeholder(text);
+        search->set_accessibility_name(text);
+    }
+}
+
 Button *Picker::get_trigger() const {
     return trigger;
 }

@@ -76,7 +76,13 @@ public:
     /// Show the settings of the selected canvas node.
     void select_graph_node(const godot::Dictionary &node);
     /// Prepare a named event declaration for the window to commit together with its entry node.
-    godot::Dictionary new_custom_event(const godot::Dictionary &source, int64_t &event_id) const;
+    godot::Dictionary new_custom_event(const godot::Dictionary &source, int64_t &event_id,
+            const godot::String &name = {}, const godot::Array &inputs = {}) const;
+    /// Check whether the script can declare a named method without replacing authored work.
+    bool can_create_named_callable(const godot::String &name) const;
+    /// Create and open a function with predeclared pins and return defaults.
+    bool create_named_function(const godot::String &name, const godot::Array &inputs, const godot::Array &outputs,
+            const godot::Dictionary &return_values);
     /// Select a My Script declaration, including one awaiting the window's next refresh.
     void show_declaration(const godot::StringName &section, int64_t id);
     /// Read the explicitly selected My Script declaration and its local owner, if any.

@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="GameplayAbilityActivation" inherits="RefCounted">
+	<brief_description>Context and completion handle for one ability activation.</brief_description>
+	<description>A [GameplayAbility] receives this handle in its script callbacks. Use it to read the granting component, actor, level, and saved default tag fields captured by the grant. Keep this handle while a run waits for a timer or another event. Call [method end] to finish this exact run.</description>
+	<methods>
+		<method name="end">
+			<return type="int" enum="Error" />
+			<description>Finishes the active run normally and calls the end callback with [code]canceled = false[/code]. Returns [code]OK[/code] when finished or an error if this activation is stale or unavailable.</description>
+		</method>
+		<method name="get_actor" qualifiers="const">
+			<return type="Node" />
+			<description>Returns the live actor, captured from the component's immediate parent when the attempt began. Returns [code]null[/code] when the actor is unavailable.</description>
+		</method>
+		<method name="get_component" qualifiers="const">
+			<return type="AbilitySystemComponent" />
+			<description>Returns the granting component, or [code]null[/code] when it is unavailable.</description>
+		</method>
+		<method name="get_default_tags" qualifiers="const">
+			<return type="GameplayTagContainer" />
+			<param index="0" name="field" type="int" enum="GameplayAbilityActivation.DefaultTagField" />
+			<description>Returns a detached copy of the tags in [param field] as captured when this ability was granted. A valid unset field returns an empty container. An unrecognized field returns [code]null[/code]. The captured defaults remain readable after the activation ends.</description>
+		</method>
+		<method name="get_level" qualifiers="const">
+			<return type="int" />
+			<description>Returns the level of the grant used for this attempt.</description>
+		</method>
+		<method name="is_active" qualifiers="const">
+			<return type="bool" />
+			<description>Returns whether this activation is currently running. A timer or signal callback can check this before completing a run.</description>
+		</method>
+	</methods>
+	<constants>
+		<constant name="ABILITY_TAGS" value="0" enum="DefaultTagField">Tags that classify the ability.</constant>
+		<constant name="ACTIVATION_REQUIRED_TAGS" value="1" enum="DefaultTagField">Tags a game rule can require for activation.</constant>
+		<constant name="ACTIVATION_BLOCKED_TAGS" value="2" enum="DefaultTagField">Tags a game rule can use to block activation.</constant>
+		<constant name="ACTIVATION_OWNED_TAGS" value="3" enum="DefaultTagField">Tags the game's rules can assign to the actor during activation.</constant>
+		<constant name="BLOCK_ABILITIES_WITH_TAGS" value="4" enum="DefaultTagField">Tags a game rule can use to identify other abilities to block.</constant>
+		<constant name="CANCEL_ABILITIES_WITH_TAGS" value="5" enum="DefaultTagField">Tags a game rule can use to identify other abilities to cancel.</constant>
+		<constant name="SOURCE_REQUIRED_TAGS" value="6" enum="DefaultTagField">Tags the game's rule can require on the source.</constant>
+		<constant name="SOURCE_BLOCKED_TAGS" value="7" enum="DefaultTagField">Tags the game's rule can use to reject the source.</constant>
+		<constant name="TARGET_REQUIRED_TAGS" value="8" enum="DefaultTagField">Tags the game's rule can require on the target.</constant>
+		<constant name="TARGET_BLOCKED_TAGS" value="9" enum="DefaultTagField">Tags the game's rule can use to reject the target.</constant>
+	</constants>
+</class>

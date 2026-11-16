@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="GameplayAbility" inherits="Node">
+	<brief_description>Base node for a script that performs an actor action.</brief_description>
+	<description>
+		Write a GDScript or Crimson Visual Script based on [GameplayAbility] and pass the script to [method AbilitySystemComponent.give_ability]. Each activation runs on a fresh instance under the component. The callbacks receive a [GameplayAbilityActivation] for that attempt.
+		Implement [code]on_activated(activation)[/code] to perform the action. Call [method GameplayAbilityActivation.end] when the action finishes, including immediately for a one-step action.
+		Optionally implement [code]on_can_activate(activation)[/code] and return a Boolean synchronously. The ability node is detached during this callback. Read the actor or its component through [code]activation[/code]. Returning false denies the attempt.
+		Optionally implement [code]on_canceled(activation)[/code] for interruption of an active run. This callback runs before [code]on_ended(activation, true)[/code].
+		Optionally implement [code]on_ended(activation, canceled)[/code] to clean up a run. The callback runs once for an accepted activation. The flag is [code]false[/code] on normal completion and [code]true[/code] for cancellation, revocation, or actor teardown.
+		The activation is already inactive when either terminal callback runs. Complete cleanup before returning from these callbacks.
+	</description>
+</class>

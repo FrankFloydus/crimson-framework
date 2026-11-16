@@ -1,0 +1,33 @@
+{
+"base": &"GameplayAbility",
+"graph": {
+"connections": [{
+"from": 1,
+"from_pin": &"then",
+"to": 2,
+"to_pin": &"in"
+}],
+&"events": [{
+"id": 1,
+"inputs": [{
+"class": &"GameplayAbilityActivation",
+"id": &"activation",
+"label": "Activation",
+"type": 24
+}],
+"name": "on_activated"
+}],
+"nodes": [{
+"definition": 1,
+"id": 1,
+"kind": "custom_event",
+"position": Vector2(-280, 300)
+}, {
+"id": 2,
+"kind": "print",
+"message": "Ability",
+"position": Vector2(-20, 300)
+}],
+"version": 1
+}
+}

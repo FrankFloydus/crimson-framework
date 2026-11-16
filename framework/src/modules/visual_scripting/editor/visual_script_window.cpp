@@ -8,6 +8,7 @@
 #include "editor/ui/editor_compositions.hpp"
 #include "editor/ui/editor_graph.hpp"
 #include "editor/ui/editor_spacing.hpp"
+#include "modules/abilities/editor/register_ability_defaults_editor.hpp"
 #include "modules/visual_scripting/editor/visual_script_authored_enums.hpp"
 #include "modules/visual_scripting/editor/visual_script_asset_field.hpp"
 #include "modules/visual_scripting/editor/visual_script_custom_code.hpp"
@@ -1214,6 +1215,20 @@ String gameplay_tag_scope(const StringName &owner) {
     return {};
 }
 
+/// Ability callback actions share the same public names as handwritten script methods.
+struct AbilityCallback {
+    const char *name; ///< The script method invoked by the ability component.
+    const char *title; ///< The action shown in the node picker.
+    const char *help; ///< Short description of when the callback runs.
+};
+
+constexpr AbilityCallback ability_callbacks[] = {
+    {"on_activated", "On Activated", "Run an accepted activation. Call End when the action completes."},
+    {"on_canceled", "On Canceled", "React when a started activation is canceled, before On Ended."},
+    {"on_ended", "On Ended", "React when an activation finishes or is canceled."},
+    {"on_can_activate", "Can Activate", "Return whether this activation may start."},
+};
+
 /// Use Godot's const flag for the reflected method indicator.
 bool is_const_method(const Dictionary &member) {
     if (member.has("const")) {
@@ -1259,6 +1274,9 @@ String declared_name(const Dictionary &declaration, const String &kind) {
         const String compact = declaration.get("compact_title", String());
         const String name = (kind == "call_function" || kind == "call_macro") && !compact.is_empty() ?
                 compact : String(declaration.get("name", String()));
+        if (kind == "custom_event" && name.begins_with("on_")) {
+            return name.capitalize();
+        }
         return (kind == "custom_event" ? String("On ") : kind == "emit_event" ? String("Emit ") : String()) +
                 (name.is_empty() ? String("Missing Declaration") : name);
     }
@@ -1851,6 +1869,11 @@ void VisualScriptWindow::build(const Callable &reveal) {
     results->connect("cell_selected", callable_mp(this, &VisualScriptWindow::palette_selection_changed));
     results->connect("item_mouse_selected", callable_mp(this, &VisualScriptWindow::palette_row_clicked));
     results->connect("item_activated", callable_mp(this, &VisualScriptWindow::insert_selected));
+    ability_defaults_button = ui::button(actions, "Ability Defaults", "Edit the gameplay tags for this ability script.",
+            callable_mp(this, &VisualScriptWindow::open_ability_defaults), ui::ButtonStyle::QUIET);
+    ability_defaults_button->set_name("GraphAbilityDefaults");
+    ability_defaults_button->set_theme_type_variation("GraphToolbarButton");
+    ability_defaults_button->hide();
     build_graph_menus(actions);
 
     problem_dialog = ui::editor_modal(this, surface, callable_mp(static_cast<Control *>(canvas), &Control::grab_focus).bind(false));
@@ -2295,6 +2318,14 @@ bool VisualScriptWindow::canvas_input_blocked() const {
 
 void VisualScriptWindow::refresh_commands() {
     const bool in_subgraph = script.is_valid() && active_graph != 0;
+    const bool is_ability = abilities::is_ability_defaults_script(script);
+    ability_defaults_button->set_visible(is_ability);
+    if (is_ability) {
+        const bool saved = abilities::is_saved_ability_defaults_script(script);
+        ability_defaults_button->set_disabled(!saved);
+        ui::tooltip(ability_defaults_button, saved ? "Edit the gameplay tags for this ability script." :
+                "Save the ability as a script file so Godot can assign its resource UID.");
+    }
     event_root->set_disabled(!in_subgraph);
     event_root->set_default_cursor_shape(in_subgraph ? Control::CURSOR_POINTING_HAND : Control::CURSOR_ARROW);
     String root_help = in_subgraph ? String("Return to the event graph.") : String("Event Graph");
@@ -2311,6 +2342,11 @@ void VisualScriptWindow::refresh_commands() {
         graph_caption->set_text(title);
         graph_caption->set_tooltip_text(title);
     }
+}
+
+void VisualScriptWindow::open_ability_defaults() {
+    prepare_modal();
+    abilities::open_ability_defaults_editor(script, ability_defaults_button);
 }
 
 Dictionary VisualScriptWindow::current_graph(const Dictionary &document) const {
@@ -4156,6 +4192,14 @@ void VisualScriptWindow::filter_palette(const String &text) {
             }
         }
     }
+    if (active_graph == 0 && free && !inserting_on_wire && ClassDB::is_parent_class(base, "GameplayAbility")) {
+        for (const auto &callback : ability_callbacks) {
+            if (panels->can_create_named_callable(callback.name)) {
+                offer("Gameplay Abilities", callback.title, callback.help,
+                        record_from("kind", "custom_event", "create_ability_callback", StringName(callback.name)), callback.name);
+            }
+        }
+    }
     if (receiver_member_count == 0 && !member_options.is_empty()) {
         add_members(root, document, graph, base, query, first);
     }
@@ -4665,6 +4709,10 @@ void VisualScriptWindow::insert_palette_result(const Dictionary &metadata) {
         insert_custom_event();
         return;
     }
+    if (metadata.has("create_ability_callback")) {
+        insert_ability_callback(metadata["create_ability_callback"]);
+        return;
+    }
     if (metadata.has("create_enum_switch")) {
         const StringName enum_type = metadata["create_enum_switch"];
         const Dictionary enum_switch = authored_enum_id(enum_type) > 0
@@ -4812,13 +4860,13 @@ void VisualScriptWindow::insert_node(const Dictionary &record, bool require_conn
     canvas->grab_focus();
 }
 
-void VisualScriptWindow::insert_custom_event() {
+void VisualScriptWindow::insert_custom_event(const String &name, const Array &inputs) {
     if (script.is_null() || active_graph != 0 || palette_filters_pin()) {
         return;
     }
     palette->hide();
     int64_t definition = 0;
-    Dictionary next = panels->new_custom_event(script->get_graph(), definition);
+    Dictionary next = panels->new_custom_event(script->get_graph(), definition, name, inputs);
     Array nodes = graph_array(next, "nodes").duplicate();
     const int64_t id = next_node_id(nodes);
     if (definition <= 0 || id <= 0) {
@@ -4827,10 +4875,33 @@ void VisualScriptWindow::insert_custom_event() {
     }
     nodes.append(record_from("id", id, "kind", "custom_event", "definition", definition, "position", insertion_position));
     next["nodes"] = nodes;
-    commit("Add Custom Event", next);
+    commit(name.is_empty() ? String("Add Custom Event") : "Add " + name.capitalize(), next);
     pending_pin = {};
     panels->show_declaration("events", definition);
     canvas->grab_focus();
+}
+
+void VisualScriptWindow::insert_ability_callback(const StringName &name) {
+    if (script.is_null() || active_graph != 0 || !pending_pin.pin.is_empty() ||
+            !ClassDB::is_parent_class(script->get_graph_base(), "GameplayAbility") ||
+            !panels->can_create_named_callable(String(name))) {
+        return;
+    }
+    Array inputs = Array::make(make_pin("activation", "Activation", Variant::OBJECT, "GameplayAbilityActivation"));
+    if (name == StringName("on_can_activate")) {
+        palette->hide();
+        const Array outputs = Array::make(make_pin("allowed", "Allowed", Variant::BOOL));
+        if (!panels->create_named_function(String(name), inputs, outputs, record_from("allowed", true))) {
+            show_problem("This script has no available function IDs.");
+            return;
+        }
+        canvas->grab_focus();
+    } else {
+        if (name == StringName("on_ended")) {
+            inputs.append(make_pin("canceled", "Canceled", Variant::BOOL));
+        }
+        insert_custom_event(String(name), inputs);
+    }
 }
 
 void VisualScriptWindow::set_message(const String &text, int64_t node_id) {

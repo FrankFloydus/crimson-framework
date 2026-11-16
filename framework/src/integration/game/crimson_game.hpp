@@ -24,6 +24,7 @@
 namespace crimson::integration {
 
 class GameVoice;
+class MatchAttributes;
 
 // Composes standalone modules into one Godot game, with an explicit authority and world lifecycle.
 class GameRuntime : public godot::Node {
@@ -33,6 +34,7 @@ class GameRuntime : public godot::Node {
     friend class Game;
     friend class GameConfig;
     friend class GameServiceContainer;
+    friend class MatchAttributes;
 
     // Resolved code-first transport override captured by the service scope at boot.
     godot::Ref<session::SessionTransport> code_first_transport;
@@ -44,6 +46,10 @@ class GameRuntime : public godot::Node {
     bool code_first_retired = false;
 
 public:
+    // Construct and destroy the runtime with its complete native adapter types.
+    GameRuntime();
+    ~GameRuntime() override;
+
     // Public readiness of the integrated game.
     enum Phase { IDLE, LOBBY, TRANSITIONING, RUNNING, RECOVERING };
 
@@ -253,6 +259,8 @@ private:
     checkpoint::SaveCoordinator *saves = nullptr;
     // Scene-tree-owned per-peer replication transport.
     replication::StateReplication *replication_node = nullptr;
+    // Optional schema, authority store, and confirmed character attributes for this attachment.
+    godot::Ref<MatchAttributes> attributes_service;
     // Scene-tree-owned command and world control transport.
     MatchNetwork *network = nullptr;
     // Persistent parent for the mounted world.

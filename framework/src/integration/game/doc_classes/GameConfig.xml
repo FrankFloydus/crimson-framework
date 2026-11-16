@@ -49,6 +49,10 @@
 			<param index="0" name="settings" type="InventoryConfig" />
 			<description>Enable game-owned inventory on a coordinated profile.</description>
 		</method>
+		<method name="attributes">
+			<return type="GameConfig" />
+			<description>Enable [MatchAttributes] on a branch of a coordinated game. Author the sets in Project Settings before booting. Use the same gameplay definitions on the authority and clients. Labels and display order can differ.</description>
+		</method>
 		<method name="player_controls">
 			<return type="GameConfig" />
 			<param index="0" name="profile" type="PlayerControlProfile" default="null" />

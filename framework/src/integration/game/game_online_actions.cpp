@@ -99,8 +99,8 @@ Ref<GameResult> Game::open_lobby(const String &bind_address) {
         return reject("GameBusy", "Leave the current session before opening a lobby.");
     }
     const Ref<Game> keep_alive(this);
-    if (prepare_authority() != OK) {
-        return reject("InventoryUnavailable", "The game's inventory could not prepare its authority store.");
+    if (const auto failure = prepare_authority(); failure.is_valid()) {
+        return failure;
     }
     runtime = resolve_game();
     if (!runtime || !runtime->can_start_session()) {

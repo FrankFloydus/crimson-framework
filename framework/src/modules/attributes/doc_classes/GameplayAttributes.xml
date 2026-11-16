@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="GameplayAttributes" inherits="RefCounted">
+	<brief_description>Reads, edits, and observes the attributes of one gameplay owner.</brief_description>
+	<description>This lower-level owner reads and watches qualified IDs such as [code]vitals.health[/code]. Use [method from_sets] to make an independent local owner without a scene node, or obtain a character's handle from the match. On a character scene, [AbilitySystemComponent] provides access to the assigned sets through scoped [GameplayAttributeSet] handles. Each attached attribute starts at zero. Game code can set a starting value and implement rules such as health limits. A replicated recipient handle provides read-only access to visible current values.</description>
+	<methods>
+		<method name="add_base">
+			<return type="int" enum="Error" />
+			<param index="0" name="id" type="StringName" />
+			<param index="1" name="delta" type="float" />
+			<description>Adds finite [param delta] to the base of [param id], in the attribute's units. Returns [code]OK[/code] for a successful edit, including an edit that ends at the existing value. Example failures include [code]ERR_INVALID_PARAMETER[/code] for non-finite arithmetic, [code]ERR_DOES_NOT_EXIST[/code] for an unknown attribute, [code]ERR_UNAUTHORIZED[/code] for a read-only recipient, and [code]ERR_BUSY[/code] from a publication callback.</description>
+		</method>
+		<method name="from_sets" qualifiers="static">
+			<return type="GameplayAttributes" />
+			<param index="0" name="set_ids" type="PackedStringArray" />
+			<description>Creates an independent local owner holding the project sets listed in [param set_ids]. Each attribute starts at zero. Set IDs are unqualified, such as [code]vitals[/code]. Returns [code]null[/code] if the registry is invalid or the requested set IDs are unknown or repeated. An empty list creates an empty owner.</description>
+		</method>
+		<method name="get_attribute" qualifiers="const">
+			<return type="GameplayAttributeValue" />
+			<param index="0" name="id" type="StringName" />
+			<description>Returns a detached reading for the exact qualified [param id], or [code]null[/code] when unavailable. For a replicated owner, this includes IDs outside the current recipient view.</description>
+		</method>
+		<method name="set_base">
+			<return type="int" enum="Error" />
+			<param index="0" name="id" type="StringName" />
+			<param index="1" name="value" type="float" />
+			<description>Replaces the base of [param id] with finite [param value], in the attribute's units. Use this for a starting value or to apply a calculated gameplay result. Returns [code]OK[/code] for a successful edit, including an edit that ends at the existing value. Returns an error for invalid input, an unavailable attribute, an edit on a read-only handle, or a rejected authority commit.</description>
+		</method>
+		<method name="watch_attribute">
+			<return type="GameplayAttributeWatch" />
+			<param index="0" name="id" type="StringName" />
+			<description>Creates an observation handle filtered to the exact qualified [param id]. Returns [code]null[/code] for an empty ID. A watch can be created before its first reading becomes available. Keep the returned reference to continue observing the attribute.</description>
+		</method>
+	</methods>
+	<signals>
+		<signal name="attribute_changed">
+			<param index="0" name="id" type="StringName" />
+			<param index="1" name="previous" type="GameplayAttributeValue" />
+			<param index="2" name="current" type="GameplayAttributeValue" />
+			<description>Emitted after a confirmed reading for [param id] changes or becomes available or unavailable. The values are detached. The signal uses [code]null[/code] for either missing reading. A committed edit that yields the same reading emits no change.</description>
+		</signal>
+	</signals>
+</class>

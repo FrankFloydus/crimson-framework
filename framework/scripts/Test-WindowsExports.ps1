@@ -62,12 +62,25 @@ foreach ($file in @($crimson, $steam)) {
     if (!(Test-Path -LiteralPath $source -PathType Leaf)) { throw "Build the debug DLL with Steamworks first. Missing $source." }
     Copy-Item -LiteralPath $source -Destination (Join-Path $addon 'bin')
 }
+$editorFonts = (New-Item -ItemType Directory -Path (Join-Path $addon 'editor/fonts')).FullName
+Copy-Item -LiteralPath (Join-Path $sourceAddon 'editor/fonts/InterVariable.ttf') -Destination $editorFonts
 
 @'
 config_version=5
 [application]
 config/name="Crimson Windows Export Fixture"
 run/main_scene="res://main.tscn"
+[crimson]
+gameplay_tags/definitions=PackedStringArray("ability.verify.export")
+gameplay_abilities/defaults={
+"version": 1,
+"entries": {
+"uid://cq0taic0j6ltf": {
+"path": "res://guard_ability.gd",
+"tags": {"ability_tags": PackedStringArray("ability.verify.export")}
+}
+}
+}
 [rendering]
 renderer/rendering_method="gl_compatibility"
 '@ | Set-Content -Encoding utf8NoBOM -LiteralPath (Join-Path $project 'project.godot')
@@ -82,10 +95,34 @@ script = ExtResource("1")
 @'
 extends Node
 
-# Verify the framework's native classes are available in the exported game.
+const GUARD_ABILITY: Script = preload("res://guard_ability.gd")
+
+## Run the ability once its component can enter the tree.
 func _ready() -> void:
-	get_tree().quit(0 if ClassDB.class_exists("GameRuntime") else 1)
+	_verify.call_deferred()
+
+## Check that the exported UID index resolves the saved ability defaults.
+func _verify() -> void:
+	var component := AbilitySystemComponent.new()
+	add_child(component)
+	var grant_id: int = component.give_ability(GUARD_ABILITY)
+	var passed: bool = ClassDB.class_exists("GameRuntime") and grant_id > 0 \
+		and component.try_activate_ability(grant_id) == OK and get_meta(&"guard_tag_observed", false)
+	get_tree().quit(0 if passed else 1)
 '@ | Set-Content -Encoding utf8NoBOM -LiteralPath (Join-Path $project 'boot.gd')
+
+@'
+extends GameplayAbility
+
+const GUARD_TAG: StringName = &"ability.verify.export"
+
+## Observe the ability's authored tag in the packaged runtime.
+func on_activated(activation: GameplayAbilityActivation) -> void:
+	var tags: GameplayTagContainer = activation.get_default_tags(GameplayAbilityActivation.ABILITY_TAGS)
+	activation.get_actor().set_meta(&"guard_tag_observed", tags.has_exact(GameplayTag.from_name(GUARD_TAG)))
+	activation.end()
+'@ | Set-Content -Encoding utf8NoBOM -LiteralPath (Join-Path $project 'guard_ability.gd')
+'uid://cq0taic0j6ltf' | Set-Content -Encoding utf8NoBOM -LiteralPath (Join-Path $project 'guard_ability.gd.uid')
 
 $presets = @(
     @{Name='direct'; Tags=''; Files=@()},

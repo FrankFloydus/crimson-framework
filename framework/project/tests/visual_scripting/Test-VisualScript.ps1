@@ -376,48 +376,57 @@ enabled=PackedStringArray("res://addons/visual_script_test/plugin.cfg")
 
 }
 
-# Run tag editor fixtures with their own catalog, scene, editor layout, and application data.
-function Test-GameplayTagsEditor {
+# Run each gameplay authoring fixture with its own registry, scene, and editor layout.
+function Test-GameplayAuthoringEditor {
     param([string]$Project, [string]$Area)
 
     $cases = @(
-        @{ File = 'editor_ui.gd'; Phase = 'gameplay-tags-inspector'; Pass = 'CRIMSON_GAMEPLAY_TAG_EDITOR_UI_PASSED'; Dap = '36718'; Lsp = '36717' },
-        @{ File = 'visual_script_editor.gd'; Phase = 'gameplay-tags-graph'; Pass = 'CRIMSON_VISUAL_SCRIPT_GAMEPLAY_TAG_PICKER_PASSED'; Dap = '36728'; Lsp = '36727' }
+        @{ Folder = 'gameplay_tags'; File = 'editor_ui.gd'; Phase = 'gameplay-tags-inspector'; Pass = 'CRIMSON_GAMEPLAY_TAG_EDITOR_UI_PASSED'; Dap = '36718'; Lsp = '36717' },
+        @{ Folder = 'gameplay_tags'; File = 'visual_script_editor.gd'; Phase = 'gameplay-tags-graph'; Pass = 'CRIMSON_VISUAL_SCRIPT_GAMEPLAY_TAG_PICKER_PASSED'; Dap = '36728'; Lsp = '36727' },
+        @{ Folder = 'gameplay_attributes'; File = 'editor_ui.gd'; Phase = 'gameplay-attributes-editor'; Pass = 'CRIMSON_GAMEPLAY_ATTRIBUTES_EDITOR_PASSED'; Dap = '36738'; Lsp = '36737' },
+        @{ Folder = 'gameplay_abilities'; File = 'editor_ui.gd'; Phase = 'gameplay-abilities-editor'; Pass = 'CRIMSON_VISUAL_SCRIPT_GAMEPLAY_ABILITY_EDITOR_PASSED'; Dap = '36748'; Lsp = '36747' },
+        @{ Folder = 'gameplay_abilities'; File = 'defaults_editor.gd'; Phase = 'ability-defaults-editor'; Pass = 'CRIMSON_ABILITY_DEFAULTS_EDITOR_PASSED'; Dap = '36758'; Lsp = '36757' }
     )
     foreach ($case in $cases) {
         $isolatedArea = Join-Path $Area $case.Phase
         $isolatedProject = Join-Path $isolatedArea 'project'
         $addons = Join-Path $isolatedProject 'addons'
-        $plugin = Join-Path $addons 'gameplay_tags_test'
+        $plugin = Join-Path $addons 'gameplay_authoring_test'
         $metadata = Join-Path $isolatedProject '.godot'
         New-Item -ItemType Directory -Path $plugin, $metadata -Force | Out-Null
         Copy-Item -LiteralPath (Join-Path $Project 'addons/crimson-framework') -Destination $addons -Recurse
-        Copy-Item -LiteralPath (Join-Path $PSScriptRoot "../gameplay_tags/$($case.File)") -Destination $plugin
+        Copy-Item -LiteralPath (Join-Path $PSScriptRoot "../$($case.Folder)/$($case.File)") -Destination $plugin
         @"
 ; Copyright Francesco Di Blasi 2026 - All Rights Reserved
 
 [plugin]
 
-name="Crimson Gameplay Tags Fixture"
+name="Crimson Gameplay Authoring Fixture"
+description="Exercises the Crimson gameplay authoring controls."
+author="Crimson"
+version="1.0"
 script="$($case.File)"
 "@ | Set-Content -Encoding utf8NoBOM -LiteralPath (Join-Path $plugin 'plugin.cfg')
         @'
 config_version=5
 
 [application]
-config/name="Crimson Gameplay Tags Test"
+config/name="Crimson Gameplay Authoring Test"
 
 [editor_plugins]
-enabled=PackedStringArray("res://addons/gameplay_tags_test/plugin.cfg")
+enabled=PackedStringArray("res://addons/gameplay_authoring_test/plugin.cfg")
 
 [rendering]
 renderer/rendering_method="gl_compatibility"
 '@ | Set-Content -Encoding utf8NoBOM -LiteralPath (Join-Path $isolatedProject 'project.godot')
         Set-Content -Encoding utf8NoBOM -LiteralPath (Join-Path $metadata 'extension_list.cfg') -Value 'res://addons/crimson-framework/crimson-framework.gdextension'
         $arguments = @('--editor', '--dap-port', $case.Dap, '--lsp-port', $case.Lsp, '--quit-after', '2400')
-        $output = Invoke-VisualScriptGodot -Project $isolatedProject -Area $isolatedArea -Phase $case.Phase -Arguments $arguments
+        # Godot 4.7 may report the editor debugger already detached while closing this headless fixture.
+        $expectedErrors = if ($case.Folder -eq 'gameplay_attributes') { '(?m)^ERROR: Plugin is not attached to debugger\.\r?$' }
+        $output = Invoke-VisualScriptGodot -Project $isolatedProject -Area $isolatedArea -Phase $case.Phase `
+            -Arguments $arguments -ExpectedErrors $expectedErrors
         if ($output -notmatch ('(?m)^' + $case.Pass + '\r?$')) {
-            throw "Gameplay Tags editor checks did not finish. See $isolatedArea."
+            throw "Gameplay authoring editor check '$($case.Phase)' did not finish. See $isolatedArea."
         }
         Write-Host $case.Pass
     }
@@ -595,7 +604,7 @@ script = ExtResource("1")
     }
     if ($VerifyEditor -and $variant -eq 'template_debug') {
         Test-VisualScriptEditor -Project $project -Area $area
-        Test-GameplayTagsEditor -Project $project -Area $area
+        Test-GameplayAuthoringEditor -Project $project -Area $area
     }
     if ($VerifyNativeFocus -and $variant -eq 'template_debug') {
         Test-VisualScriptNativeFocus -Project $project -Area $area

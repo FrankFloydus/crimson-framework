@@ -7,6 +7,14 @@
 
 ## Added
 
+- Added a shared Ability Defaults editor for GDScript and Visual Script, with UID-based storage and typed tag snapshots per grant. [Gameplay Abilities](src/modules/abilities/README.md) `Pending push`
+
+- Added script-defined Gameplay Abilities with actor-owned grants, per-execution instances, Visual Script authoring, and coordinated authority. [Gameplay Abilities](src/modules/abilities/README.md) `Pending push`
+
+- Added the Gameplay Attributes Project Settings tab, stable definitions, generated C++ accessors and subscriptions, and coordinated attribute replication. [Gameplay Attributes](src/modules/attributes/README.md) `Pending push`
+
+- Planned a Project Settings registry for Gameplay Attributes with stable IDs, generated C++ accessors and change subscriptions, and a coordinated replication milestone. [Gameplay Attributes proposal](docs/GAMEPLAY_ATTRIBUTES_PROPOSAL.md) `Pending push`
+
 - Added `state.control.stun` to the project tag catalog and saved a Find Tag node in the stationary player demo graph for editor inspection. `2f62248b0a290950eaa7b3acac407cff311b9708`
 
 - Added a Gameplay Tags category and picker-backed unwired tag inputs in Visual Script. [Gameplay Tags](src/modules/gameplay_tags/README.md) `2f62248b0a290950eaa7b3acac407cff311b9708`
@@ -164,6 +172,8 @@
 
 ## Changed
 
+- Added actor-owned Ability System Components for local and coordinated Attributes. Assign sets on the actor, then initialize values from gameplay code. [Gameplay Attributes](src/modules/attributes/README.md) `Pending push`
+
 - Allowed handbook graphs to paste into existing Visual Scripts. Resolve declaration clashes when pasting and convert duplicate lifecycle entries to wired Custom Events. [Visual scripting](docs/VISUAL_SCRIPTING.md#edit-and-navigate-a-larger-graph) `b9c0727fb254f15e3b09b63e2249543e7eb12735`
 
 - Added a gray hover highlight to execution pin rows and tightened typography in Visual Script graph context menus. [Visual scripting](docs/VISUAL_SCRIPTING.md#find-your-way-around-the-graph-editor) `b9c0727fb254f15e3b09b63e2249543e7eb12735`
@@ -302,6 +312,8 @@
 
 ## Removed
 
+- Removed the unpublished Attributes assets and documentation, and rebuilt and verified the Crimson 0.0.6 debug and release addon DLLs. `Superseded before publication`
+
 - Removed the experimental Inventory V2 API, prototype scenes, artwork, and tests. The original spatial inventory is the supported implementation. `b9c0727fb254f15e3b09b63e2249543e7eb12735`
 
 - Retired the unused online provider, its native SDK wiring, and its integration fixtures. The Steam and ENet launch paths remain available. `e5c51b338dafe38b5693dca206909e0aa2657699`
@@ -310,6 +322,8 @@
 - Retired the local FPS prototype and its dedicated tests before publishing the initial framework snapshot. `847cccea9473b7561001ea2c399eba1fd651a0ab`
 
 ## Fixed
+
+- Hid the Gameplay Attributes backing dictionary from General settings so sets are authored in the dedicated Gameplay Attributes tab. [Gameplay Attributes](src/modules/attributes/README.md) `Pending push`
 
 - Matched Gameplay Tags picker checkboxes to the selected hierarchy, including checked ancestors, subtree clearing, and parent fallback. Changed the Inspector container to a clickable field with square, wrapping chips. [Gameplay Tags](src/modules/gameplay_tags/README.md) `2f62248b0a290950eaa7b3acac407cff311b9708`
 

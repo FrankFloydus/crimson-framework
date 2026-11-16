@@ -1,6 +1,7 @@
 // Copyright Francesco Di Blasi 2026 - All Rights Reserved
 
 #include "integration/game/crimson_game.hpp"
+#include "integration/adapters/match_attributes.hpp"
 #include "integration/online/steam/steam_online.hpp"
 #include "integration/game/game_services.hpp"
 #include "integration/game/game_voice.hpp"
@@ -49,6 +50,9 @@ T *add_service(Node &owner, const StringName &name) {
 }
 
 } // namespace
+
+GameRuntime::GameRuntime() = default;
+GameRuntime::~GameRuntime() = default;
 
 void GameRuntime::_bind_methods() {
     ClassDB::bind_static_method(get_class_static(), D_METHOD("configure"), &GameRuntime::configure);
@@ -178,6 +182,17 @@ void GameRuntime::_ready() {
     loader->set_world_container(world_container);
     loader->set_manage_admission(false);
     replication_node->set_projector(callable_mp(this, &GameRuntime::project));
+    replication_node->set_projection_validator([this](const Dictionary &view) {
+        if (attributes_service.is_valid()) {
+            return attributes_service->validate_projection(view);
+        }
+        for (const Variant &key : view.keys()) {
+            if (MatchAttributes::reserved_projection_key(String(key))) {
+                return false;
+            }
+        }
+        return true;
+    });
     network->set_dispatcher(callable_mp(this, &GameRuntime::dispatch_remote));
     checkpoint_adapter.instantiate();
     reset_match();
@@ -1360,7 +1375,8 @@ Error GameRuntime::set_shared_stores(const PackedStringArray &store_ids) {
         return ERR_BUSY;
     }
     for (const String &store : store_ids) {
-        if (store.is_empty() || store == context_record || store == "crimson.inventory") {
+        if (store.is_empty() || store == context_record || store == "crimson.inventory" ||
+                MatchAttributes::reserved_projection_key(store)) {
             return ERR_INVALID_PARAMETER;
         }
     }
@@ -1409,6 +1425,14 @@ Dictionary GameRuntime::project(int64_t peer, const String &player, int64_t epoc
     context["character_id"] = possession->get_primary(player);
     context["possession_revision"] = possession->get_revision(player);
     view[context_record] = context;
+    for (const Variant &key : view.keys()) {
+        if (key.get_type() == Variant::STRING && MatchAttributes::reserved_projection_key(String(key))) {
+            return outcome(false, "InvalidProjection", "The game projector uses a reserved Attributes record ID.");
+        }
+    }
+    if (attributes_service.is_valid() && attributes_service->append_projection(player, view) != OK) {
+        return outcome(false, "InvalidProjection", "Committed attributes could not be projected for this player.");
+    }
     Dictionary result;
     result["ok"] = true;
     result["view"] = view;

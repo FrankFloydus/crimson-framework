@@ -3,6 +3,10 @@
 #include "editor/ui/register_editor_ui.hpp"
 #include "integration/register_integration.hpp"
 #include "integration/player_control/register_player_control_editor.hpp"
+#include "modules/abilities/editor/register_ability_defaults_editor.hpp"
+#include "modules/abilities/gameplay_ability.hpp"
+#include "modules/attributes/editor/register_attributes_editor.hpp"
+#include "modules/attributes/gameplay_attributes.hpp"
 #include "modules/gameplay_tags/bindings/gameplay_tag_resources.hpp"
 #include "modules/gameplay_tags/editor/register_gameplay_tags_editor.hpp"
 #include "modules/input/editor/register_input_editor.hpp"
@@ -29,6 +33,8 @@ namespace {
 // Register framework modules and integration adapters in dependency order.
 void initialize_crimson_framework(godot::ModuleInitializationLevel level) {
     crimson::gameplay_tags::bindings::register_gameplay_tag_bindings(level);
+    crimson::abilities::register_gameplay_abilities(level);
+    crimson::attributes::register_gameplay_attributes(level);
     crimson::inventory::register_types(level);
     crimson::save::initialize(level);
     crimson::session::register_types(level);
@@ -41,7 +47,9 @@ void initialize_crimson_framework(godot::ModuleInitializationLevel level) {
     crimson::visual_scripting::register_visual_scripting(level);
     crimson::integration::register_types(level);
     crimson::editor_ui::register_editor_ui(level);
+    crimson::attributes::register_attributes_editor(level);
     crimson::gameplay_tags::register_gameplay_tags_editor(level);
+    crimson::abilities::register_ability_defaults_editor(level);
     crimson::input::register_input_editor(level);
     crimson::mover::register_mover_editor(level);
     crimson::visual_scripting::register_visual_script_editor(level);
@@ -54,7 +62,9 @@ void uninitialize_crimson_framework(godot::ModuleInitializationLevel level) {
     crimson::visual_scripting::unregister_visual_script_editor(level);
     crimson::mover::unregister_mover_editor(level);
     crimson::input::unregister_input_editor(level);
+    crimson::abilities::unregister_ability_defaults_editor(level);
     crimson::gameplay_tags::unregister_gameplay_tags_editor(level);
+    crimson::attributes::unregister_attributes_editor(level);
     crimson::editor_ui::unregister_editor_ui(level);
     crimson::integration::unregister_types(level);
     crimson::visual_scripting::unregister_visual_scripting(level);

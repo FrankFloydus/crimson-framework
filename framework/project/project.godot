@@ -17,6 +17,16 @@ config/features=PackedStringArray("4.7", "GL Compatibility")
 [crimson]
 
 gameplay_tags/definitions=PackedStringArray("state.control.stun")
+gameplay_attributes/sets={
+"sets": [{
+"attributes": [{
+"id": "health",
+"visibility": "authority"
+}],
+"id": "main_set"
+}],
+"version": 1
+}
 
 [display]
 

@@ -120,6 +120,8 @@ func _verify() -> void:
 		return
 	if not _verify_godot_member_dispatch() or not _verify_global_constants():
 		return
+	if not _verify_gameplay_attributes():
+		return
 	if not _verify_singleton_sources():
 		return
 	if not _verify_packed_receiver_isolation():
@@ -225,6 +227,48 @@ func _engine_method(method_id: int, owner: StringName, method: StringName, argum
 		member_data["output"] = _pin(&"result", output_type)
 	member_data.merge(flags)
 	return _op(method_id, &"call_method", {"member": member_data, "values": values})
+
+
+## Resolve an attached set, apply a hit, and read it through native Visual Script calls.
+func _verify_gameplay_attributes() -> bool:
+	const ABILITY_SYSTEM: StringName = &"AbilitySystemComponent"
+	const ATTRIBUTE_SET: StringName = &"GameplayAttributeSet"
+	const ATTRIBUTE_VALUE: StringName = &"GameplayAttributeValue"
+	const HEALTH_ID: StringName = &"health"
+	ProjectSettings.set_setting("crimson/gameplay_attributes/sets", {
+		"version": 1, "sets": [{"id": "vitals", "attributes": [{"id": "health"}]}],
+	})
+	var attribute_key := _pin(&"arg_0", TYPE_STRING_NAME)
+	var numeric_input := [attribute_key, _pin(&"arg_1", TYPE_FLOAT)]
+	var graph_data := _graph([
+		_op(1, &"ready"),
+		_engine_method(2, ABILITY_SYSTEM, &"get_attribute_set", [attribute_key],
+			-1, {"output": _pin(&"result", TYPE_OBJECT, ATTRIBUTE_SET)}, {&"arg_0": &"vitals"}),
+		_engine_method(3, ATTRIBUTE_SET, &"set_base", numeric_input, TYPE_INT, {}, {&"arg_0": HEALTH_ID, &"arg_1": 100.0}),
+		_engine_method(4, ATTRIBUTE_SET, &"add_base", numeric_input,
+			TYPE_INT, {}, {&"arg_0": HEALTH_ID, &"arg_1": -25.0}),
+		_engine_method(5, ATTRIBUTE_SET, &"get_attribute", [attribute_key],
+			-1, {"output": _pin(&"result", TYPE_OBJECT, ATTRIBUTE_VALUE)}, {&"arg_0": HEALTH_ID}),
+		_engine_method(6, ATTRIBUTE_VALUE, &"get_current", [], TYPE_FLOAT),
+		_write_meta(7, &"confirmed_health"),
+		_op(8, &"scene_node", {"source": ^"AbilitySystemComponent", "class": ABILITY_SYSTEM}),
+	], [
+		_flow(1, 2), _flow(2, 3), _flow(3, 4), _flow(4, 5), _flow(5, 6), _flow(6, 7),
+		_wire(8, &"node", 2, &"target"),
+		_wire(2, &"result", 3, &"target"), _wire(2, &"result", 4, &"target"), _wire(2, &"result", 5, &"target"),
+		_wire(5, &"result", 6, &"target"), _wire(6, &"result", 7, &"arg_1"),
+	])
+	var graph_script := _script_for(&"Node", graph_data)
+	var actor: Node = Node.new()
+	var abilities: AbilitySystemComponent = AbilitySystemComponent.new()
+	abilities.name = "AbilitySystemComponent"
+	abilities.attribute_sets = PackedStringArray(["vitals"])
+	actor.add_child(abilities)
+	actor.set_script(graph_script)
+	root.add_child(actor)
+	var verified: bool = actor.get_meta(&"confirmed_health", 0.0) == 75.0
+	actor.free()
+	return verified or _fail("The Ability System component graph must set and read 75 health.")
 
 
 ## Check graph calls to built-in values, engine globals, and native Object methods in stock Godot.

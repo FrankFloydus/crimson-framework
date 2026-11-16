@@ -1,8 +1,9 @@
 [gd_scene format=3 uid="uid://83jn4tm202ux"]
 
-[ext_resource type="Script" uid="uid://dxltvtdstwvh7" path="res://demo/player/stationary_player.crimsonscript" id="1_2agjb"]
 [ext_resource type="InputLayout" uid="uid://susjx4j7g6v2" path="res://demo/player/player_input.tres" id="1_player_input"]
+[ext_resource type="Script" uid="uid://caxuxbhgwv0ra" path="res://demo/player/stationary_player.gd" id="1_swvh0"]
 [ext_resource type="Script" uid="uid://3yuq6i2dg0cv" path="res://demo/player/light.gd" id="2_swvh0"]
+[ext_resource type="Script" uid="uid://dg0iv3401vh01" path="res://demo/player/ability_system_component.crimsonscript" id="4_w2y4y"]
 
 [sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_2agjb"]
 sky_horizon_color = Color(0.66224277, 0.6717428, 0.6867428, 1)
@@ -93,7 +94,7 @@ emission_energy_multiplier = 0.3
 
 [node name="StationaryPlayer" type="CharacterBody3D" unique_id=1988449701]
 collision_layer = 0
-script = ExtResource("1_2agjb")
+script = ExtResource("1_swvh0")
 
 [node name="Light" type="DirectionalLight3D" parent="." unique_id=1218966216]
 transform = Transform3D(-0.8660254, -0.43301278, 0.25, 0, 0.49999997, 0.86602545, -0.50000006, 0.75, -0.43301266, 0, 0, 0)
@@ -111,6 +112,10 @@ predict_movement = true
 [node name="Controls" type="ControlsComponent" parent="." unique_id=430976207]
 input_layout = ExtResource("1_player_input")
 capture_pointer_on_boot = true
+
+[node name="AbilitySystemComponent" type="AbilitySystemComponent" parent="." unique_id=1020046579]
+attribute_sets = PackedStringArray("main_set")
+script = ExtResource("4_w2y4y")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="." unique_id=344085809]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.88, 0)

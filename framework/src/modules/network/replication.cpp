@@ -580,6 +580,10 @@ void StateReplication::_process(double) {
     }
 }
 
+void StateReplication::set_projection_validator(std::function<bool(const Dictionary &)> validator) {
+    projection_validator = std::move(validator);
+}
+
 void StateReplication::rpc_baseline(int64_t world_epoch, int64_t generation, int64_t baseline,
         int64_t committed_revision, const Dictionary &view) {
     refresh_transport();
@@ -591,12 +595,15 @@ void StateReplication::rpc_baseline(int64_t world_epoch, int64_t generation, int
 
     Dictionary detached;
     const bool copied = copy_view(view, detached);
-    const Error acknowledgment = copied ? rpc_id(server_id, ack_method, world_epoch, generation, baseline) : ERR_INVALID_DATA;
+    const bool valid = copied && (!projection_validator || projection_validator(detached));
+    const Error acknowledgment = valid ? rpc_id(server_id, ack_method, world_epoch, generation, baseline) : ERR_INVALID_DATA;
     if (acknowledgment != OK) {
         if (!baseline_rejection_reported) {
             baseline_rejection_reported = true;
             if (!copied) {
                 UtilityFunctions::printerr("[Crimson] Rejected the authority baseline because it violates the bounded plain-data contract.");
+            } else if (!valid) {
+                UtilityFunctions::printerr("[Crimson] Rejected the authority baseline because it is incompatible with this game's configured replication schema.");
             } else {
                 UtilityFunctions::printerr("[Crimson] Could not acknowledge the authority baseline (",
                         UtilityFunctions::error_string(acknowledgment), "). The client view is unavailable.");
@@ -645,6 +652,10 @@ void StateReplication::rpc_delta(int64_t world_epoch, int64_t generation, int64_
     Dictionary detached;
     if (!copy_view(candidate, detached)) {
         request_resync("The updated view violates the bounded plain-data contract.");
+        return;
+    }
+    if (projection_validator && !projection_validator(detached)) {
+        request_resync("The updated view is incompatible with this game's configured replication schema.");
         return;
     }
 

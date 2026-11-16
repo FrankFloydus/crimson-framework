@@ -6,6 +6,12 @@
 
 #include <godot_cpp/classes/node3d.hpp>
 
+#include <vector>
+
+namespace crimson::attributes {
+class AbilitySystemComponent;
+}
+
 namespace crimson::match_runtime {
 class TransactionCoordinator;
 }
@@ -27,6 +33,7 @@ class GameInvites;
 class SteamInvite;
 class GameVoice;
 class GameInventory;
+class MatchAttributes;
 class GameNetworkDiagnostics;
 class InventoryConfig;
 class PlayerControlProfile;
@@ -105,6 +112,8 @@ class GameConfig : public godot::RefCounted {
     godot::Ref<GameProvider> overrides;
     // Optional coordinated inventory feature settings.
     godot::Ref<InventoryConfig> inventory_config;
+    // Whether to enable the coordinated gameplay attribute store.
+    bool use_attributes = false;
     // Optional explicit fixed-world movement settings replacing scene discovery.
     godot::Ref<PlayerControlProfile> control_profile;
     // Whether to enable fixed-world movement from the profile or the player's Mover component.
@@ -148,6 +157,8 @@ public:
     godot::Ref<GameConfig> provider(const godot::Ref<GameProvider> &provider) const;
     // Enable a coordinated inventory feature on this draft.
     godot::Ref<GameConfig> inventory(const godot::Ref<InventoryConfig> &settings) const;
+    // Enable coordinated Attributes using the project's authored definition sets.
+    godot::Ref<GameConfig> attributes() const;
     // Enable authoritative movement using an explicit profile or the player scene's component.
     godot::Ref<GameConfig> player_controls(const godot::Ref<PlayerControlProfile> &profile = {}) const;
     // Attach to an existing scene owner and return a typed handle even when boot fails.
@@ -199,6 +210,8 @@ class Game : public godot::RefCounted {
     godot::Ref<steam::Steamworks> steam_service;
     // Pending leave request targeting the currently retiring session.
     godot::Ref<GameOperation> leave_operation;
+    // Weak identities of the actor ability systems scoped to the current match.
+    std::vector<godot::ObjectID> ability_systems;
     // Whether play uses the coordinated authority lifecycle.
     bool coordinated = false;
     // Whether hosting uses the configured online provider.
@@ -213,7 +226,7 @@ class Game : public godot::RefCounted {
     // Select the configured directory for a host action.
     bool uses_online() const;
     // Register configured authority-owned feature stores before entering a coordinated lobby.
-    godot::Error prepare_authority();
+    godot::Ref<GameResult> prepare_authority();
     // Observe the invitation gateway belonging to the exact attached provider.
     void observe_invites(GameRuntime &game);
     // Relay an invitation snapshot change to the code-first facade.
@@ -228,6 +241,8 @@ class Game : public godot::RefCounted {
     void on_world_ready(const godot::StringName &world, int64_t epoch);
     // Settle a pending leave when its scope leaves the tree.
     void on_scope_closed();
+    // Cancel live executions while the world is unavailable and detach on match retirement.
+    void retire_ability_systems(bool detach);
 
 protected:
     // Register the code-first action surface and lifecycle observations.
@@ -288,6 +303,8 @@ public:
     godot::Variant perform(const godot::String &name, const godot::Dictionary &payload = {});
     // Register one game-owned coordinated command before play.
     godot::Error register_command(const godot::String &name, const godot::Callable &handler, bool requires_primary = false);
+    // Restrict a mounted actor's ability mutations to this ready match authority.
+    godot::Error bind_ability_system(attributes::AbilitySystemComponent *component);
     // Resolve the authority coordinator to register game-owned stores.
     godot::Ref<match_runtime::TransactionCoordinator> transactions() const;
     // Select a save slot on the same coordinated game.
@@ -296,6 +313,8 @@ public:
     godot::Ref<GameScenes> scenes() const;
     // Resolve the configured coordinated inventory service.
     godot::Ref<GameInventory> inventory() const;
+    // Return this live attachment's coordinated Attributes service, if configured.
+    godot::Ref<MatchAttributes> attributes() const;
     // Return the game-owned gameplay codec registry while this attachment is live.
     godot::Ref<replication::NetworkCodecs> codecs() const;
     // Resolve the matching game Steam scope.

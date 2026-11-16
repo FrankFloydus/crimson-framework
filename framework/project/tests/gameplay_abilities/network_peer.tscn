@@ -1,0 +1,11 @@
+[gd_scene load_steps=2 format=3]
+; Copyright Francesco Di Blasi 2026 - All Rights Reserved
+
+[ext_resource type="Script" path="res://tests/gameplay_abilities/network_peer.gd" id="1"]
+
+[node name="AbilitiesNetworkFixture" type="Node"]
+script = ExtResource("1")
+
+[node name="HeroAbilities" type="AbilitySystemComponent" parent="."]
+
+[node name="AlternateAbilities" type="AbilitySystemComponent" parent="."]

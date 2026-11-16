@@ -286,6 +286,8 @@ class VisualScriptWindow final : public godot::Control {
     godot::TextureRect *graph_separator = nullptr;
     /// The current function or macro in the breadcrumb.
     godot::Label *graph_caption = nullptr;
+    /// Opens the shared Ability Defaults window for an ability script.
+    godot::Button *ability_defaults_button = nullptr;
     /// Anchored result panel for existing nodes and declaration references.
     godot::PanelContainer *navigation_search = nullptr;
     /// Editable search field in the graph toolbar.
@@ -505,6 +507,8 @@ class VisualScriptWindow final : public godot::Control {
     void show_problem(const godot::String &message);
     /// Refresh the title and current graph commands.
     void refresh_commands();
+    /// Open the current saved ability's tag defaults.
+    void open_ability_defaults();
     /// Commit one graph change, optionally merging successive edits to a text field.
     void commit(const godot::String &title, const godot::Dictionary &next, bool redraw = true, bool merge = false,
             const godot::Callable &redo_view = {}, const godot::Callable &undo_view = {});
@@ -636,7 +640,9 @@ class VisualScriptWindow final : public godot::Control {
     /// Insert the chosen constructor if the originating graph is still open.
     void insert_script_constructor(const godot::String &path, const godot::Ref<VisualScript> &owner, int64_t graph, godot::Vector2 point);
     /// Declare a custom event, place its entry, and open its declaration in Details.
-    void insert_custom_event();
+    void insert_custom_event(const godot::String &name = {}, const godot::Array &inputs = {});
+    /// Add the declared event or function for a GameplayAbility callback.
+    void insert_ability_callback(const godot::StringName &name);
     /// Declare a value and connect its getter or setter as one authoring action.
     void promote_pin(bool local);
     /// Collect stable IDs for the canvas's currently selected nodes.

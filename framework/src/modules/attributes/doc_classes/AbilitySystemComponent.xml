@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="AbilitySystemComponent" inherits="Node">
+	<brief_description>Grants and runs gameplay abilities and gives an actor access to its attribute sets.</brief_description>
+	<description>Add this component as a child of an actor. Use [method give_ability] to grant a [GameplayAbility] script. Keep its grant handle to start or cancel the ability or remove it from the actor. Select project attribute sets in the component's Inspector. A local component starts each assigned attribute at zero. Actor code can get a set in its Ready callback and supply starting values. A Match component reads its character through [method MatchAttributes.bind_component] and returns null readings while waiting for confirmed values. Use [method get_attribute_set] to work with local IDs inside one set.</description>
+	<methods>
+		<method name="give_ability">
+			<return type="int" />
+			<param index="0" name="definition" type="Script" />
+			<param index="1" name="level" type="int" default="1" />
+			<description>Grants an instantiable [GameplayAbility] script with an [code]on_activated[/code] callback at a positive [param level]. Returns a positive grant handle scoped to this component, or [code]0[/code] if the grant is invalid or unavailable. Use the returned handle for later runs of this grant.</description>
+		</method>
+		<method name="try_activate_ability">
+			<return type="int" enum="Error" />
+			<param index="0" name="handle" type="int" />
+			<description>Tries to start the granted ability. On success a new instance runs its activation callback. Returns [code]OK[/code] when accepted and an error if the grant is unknown, the ability is already running, the actor cannot activate it, or the component lacks authority.</description>
+		</method>
+		<method name="cancel_ability">
+			<return type="int" enum="Error" />
+			<param index="0" name="handle" type="int" />
+			<description>Cancels the active run for [param handle]. Calls the ability's optional [code]on_canceled[/code] callback, followed by [code]on_ended[/code] with [code]canceled = true[/code]. The grant remains available for a future run. Returns [code]OK[/code] when canceled or an error when the grant is unknown, inactive, or unavailable to this caller.</description>
+		</method>
+		<method name="clear_ability">
+			<return type="int" enum="Error" />
+			<param index="0" name="handle" type="int" />
+			<description>Removes the grant for [param handle] and cancels its active run. Returns [code]OK[/code] when removed or an error when the grant is unknown or unavailable to this caller.</description>
+		</method>
+		<method name="is_ability_active" qualifiers="const">
+			<return type="bool" />
+			<param index="0" name="handle" type="int" />
+			<description>Returns whether [param handle] identifies a grant with an active run on this component.</description>
+		</method>
+		<method name="get_ability_level" qualifiers="const">
+			<return type="int" />
+			<param index="0" name="handle" type="int" />
+			<description>Returns the level assigned when [param handle] was granted, or [code]0[/code] for an unknown grant.</description>
+		</method>
+		<method name="get_attribute_set" qualifiers="const">
+			<return type="GameplayAttributeSet" />
+			<param index="0" name="set_id" type="StringName" />
+			<description>Returns the live set for an assigned [param set_id], such as [code]main_set[/code]. Returns null before the component enters Ready or if the set is unassigned. You can obtain a configured Match set while its values are still unavailable.</description>
+		</method>
+		<method name="get_attribute" qualifiers="const">
+			<return type="GameplayAttributeValue" />
+			<param index="0" name="attribute_id" type="StringName" />
+			<description>Returns the detached confirmed reading for a full ID such as [code]main_set.health[/code], or null when unavailable, unassigned, or outside the recipient's visibility.</description>
+		</method>
+		<method name="set_base">
+			<return type="int" enum="Error" />
+			<param index="0" name="attribute_id" type="StringName" />
+			<param index="1" name="value" type="float" />
+			<description>Replaces the base of the full ID [param attribute_id] with finite [param value], in the attribute's units. Returns [code]OK[/code] on success or a Godot error for a read-only source, unavailable or unknown attribute, invalid input, or rejected commit.</description>
+		</method>
+		<method name="add_base">
+			<return type="int" enum="Error" />
+			<param index="0" name="attribute_id" type="StringName" />
+			<param index="1" name="delta" type="float" />
+			<description>Adds finite [param delta], in the attribute's units, to the base of the full ID [param attribute_id]. Returns [code]OK[/code] on success or a Godot error when the source rejects the edit, the attribute is unavailable, or the result is outside the finite numeric range.</description>
+		</method>
+		<method name="watch_attribute">
+			<return type="GameplayAttributeWatch" />
+			<param index="0" name="attribute_id" type="StringName" />
+			<description>Creates a filtered watch for the full ID [param attribute_id]. Returns null before Ready or when the ID has an unassigned set. Retain the watch to receive committed changes. A Match watch can observe the first confirmed reading.</description>
+		</method>
+	</methods>
+	<members>
+		<member name="attribute_sets" type="PackedStringArray" setter="set_attribute_sets" getter="get_attribute_sets" default="PackedStringArray()">The stable IDs of the project sets assigned to this actor. Choose them in the Inspector before the component starts.</member>
+		<member name="attribute_source" type="int" setter="set_attribute_source" getter="get_attribute_source" enum="AbilitySystemComponent.AttributeSource" default="0">Choose Local for independent actor values or Match to bind this actor to coordinated character values. Set the source before the component starts.</member>
+	</members>
+	<constants>
+		<constant name="LOCAL" value="0" enum="AttributeSource">Create local values for this actor instance.</constant>
+		<constant name="MATCH" value="1" enum="AttributeSource">Read the coordinated character after binding to its match.</constant>
+	</constants>
+</class>

@@ -1,0 +1,11 @@
+[gd_scene load_steps=2 format=3]
+; Copyright Francesco Di Blasi 2026 - All Rights Reserved
+
+[ext_resource type="Script" path="res://tests/gameplay_attributes/network_peer.gd" id="1"]
+
+[node name="AttributesNetworkFixture" type="Node"]
+script = ExtResource("1")
+
+[node name="AlphaAbilitySystem" type="AbilitySystemComponent" parent="."]
+attribute_source = 1
+attribute_sets = PackedStringArray("vitals")

@@ -10,6 +10,7 @@
 #include "integration/game/game_voice.hpp"
 #include "integration/adapters/inventory_transaction_adapter.hpp"
 #include "integration/adapters/game_inventory.hpp"
+#include "integration/adapters/match_attributes.hpp"
 #include "integration/world_session/local_view.hpp"
 #include "integration/game/multiplayer_rules.hpp"
 #include "integration/online/online_directory.hpp"
@@ -76,6 +77,7 @@ void register_types(godot::ModuleInitializationLevel level) {
         GDREGISTER_CLASS(WorldSessionDefinition);
         GDREGISTER_VIRTUAL_CLASS(WorldSession);
         register_inventory_integration();
+        register_attributes_integration();
         GDREGISTER_CLASS(WorldDefinition);
         GDREGISTER_CLASS(GameBindings);
         GDREGISTER_CLASS(GameProvider);

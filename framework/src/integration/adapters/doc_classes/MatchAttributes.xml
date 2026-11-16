@@ -1,0 +1,83 @@
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="MatchAttributes" inherits="RefCounted">
+	<brief_description>Authoritative character attributes with per-recipient match replication.</brief_description>
+	<description>
+		Enable Attributes with [method GameConfig.attributes] and author sets in Project Settings. Add an [AbilitySystemComponent] with Match as its attribute source to the actor scene. Use [method queue_add_component] on the authority to create the character and [method bind_component] on each participant to connect its actor to that character. The authority sees base and current. Clients see the latest confirmed current values they are allowed to read. Use [method for_character] to access a readable character directly.
+		An owner can see Owner and Observers attributes. Explicit observers can see Observers attributes. Authority attributes stay on the authority. Access uses the admitted player's ID from the coordinated game and is updated when the character's visibility policy commits.
+		Authority scripts can edit one value through [GameplayAttributes] or queue several changes in a [GameTransaction]. Queue character creation and its starting values in the same transaction when the character needs to be ready in one commit. Route player actions through the game's command handlers, then validate the action and apply game-specific limits on the authority.
+	</description>
+	<methods>
+		<method name="for_character">
+			<return type="GameplayAttributes" />
+			<param index="0" name="character_id" type="String" />
+			<description>Open the attribute handle for a character in the current match. Returns null when the character is unknown or has no readable values. A retained handle follows subsequent commits for the same character ID in that match. A retired match invalidates its handles.</description>
+		</method>
+		<method name="bind_component">
+			<return type="int" enum="Error" />
+			<param index="0" name="component" type="AbilitySystemComponent" />
+			<param index="1" name="character_id" type="String" />
+			<description>Attach a mounted Match component in this game to the indicated character ID. Use the same ID on the authority and each receiving peer. Bind before the first baseline or before the character becomes visible. Reads wait for committed, available values. Repeating the same binding returns [constant OK]. An invalid ID, detached component, wrong game, or Local component returns [constant ERR_INVALID_PARAMETER]. A component bound to a different character or retired match returns [constant ERR_ALREADY_IN_USE]. A retired or closing game returns [constant ERR_UNAVAILABLE].</description>
+		</method>
+		<method name="add_character">
+			<return type="int" enum="Error" />
+			<param index="0" name="character_id" type="String" />
+			<param index="1" name="sets" type="PackedStringArray" />
+			<param index="2" name="owner" type="String" default="&quot;&quot;" />
+			<param index="3" name="observers" type="PackedStringArray" default="PackedStringArray()" />
+			<description>Commit a new character with zero base and current values for every attribute in the supplied project sets. Supply an admitted player ID for [param owner] and the allowed player IDs in [param observers]. Empty defaults share no values. Returns [constant ERR_UNAUTHORIZED] outside an authority lobby or running match, or [constant ERR_INVALID_DATA] if preparation rejects the character, sets, or policy.</description>
+		</method>
+		<method name="remove_character">
+			<return type="int" enum="Error" />
+			<param index="0" name="character_id" type="String" />
+			<description>Remove a character's values and projected records in one authority commit. Returns [constant ERR_UNAUTHORIZED] outside an authority lobby or running match, or [constant ERR_INVALID_DATA] when the character does not exist.</description>
+		</method>
+		<method name="set_visibility">
+			<return type="int" enum="Error" />
+			<param index="0" name="character_id" type="String" />
+			<param index="1" name="owner" type="String" />
+			<param index="2" name="observers" type="PackedStringArray" />
+			<description>Commit a replacement owner and observer list. Pass an empty owner ID or observer list to revoke the corresponding access. Returns [constant ERR_UNAUTHORIZED] outside an authority lobby or running match, or [constant ERR_INVALID_DATA] when the character or policy is invalid.</description>
+		</method>
+		<method name="queue_add_character">
+			<return type="int" enum="Error" />
+			<param index="0" name="transaction" type="GameTransaction" />
+			<param index="1" name="character_id" type="String" />
+			<param index="2" name="sets" type="PackedStringArray" />
+			<param index="3" name="owner" type="String" default="&quot;&quot;" />
+			<param index="4" name="observers" type="PackedStringArray" default="PackedStringArray()" />
+			<description>Stage character creation with zero values in the active game's authority transaction. Call [method queue_base] with the same transaction to set game-specific starting values before the character is published. Empty owner and observer defaults share no values. Returns a staging error for an invalid transaction or character ID. Character and policy preparation can still reject the commit.</description>
+		</method>
+		<method name="queue_add_component">
+			<return type="int" enum="Error" />
+			<param index="0" name="transaction" type="GameTransaction" />
+			<param index="1" name="component" type="AbilitySystemComponent" />
+			<param index="2" name="character_id" type="String" />
+			<param index="3" name="owner" type="String" default="&quot;&quot;" />
+			<param index="4" name="observers" type="PackedStringArray" default="PackedStringArray()" />
+			<description>Stage character creation with the Match component's assigned sets. Pass a detached configured component or a component mounted in this game. Use [method queue_base] in the same transaction to set starting values. Call [method bind_component] separately when the component is mounted. Returns [constant ERR_UNAUTHORIZED] outside the active authority lobby or match, or [constant ERR_INVALID_PARAMETER] for an invalid transaction, character ID, or component. Invalid sets, character, or policy can still reject the commit.</description>
+		</method>
+		<method name="queue_remove_character">
+			<return type="int" enum="Error" />
+			<param index="0" name="transaction" type="GameTransaction" />
+			<param index="1" name="character_id" type="String" />
+			<description>Stage character removal in the active game's authority transaction. The character becomes unavailable after the commit succeeds. Returns a staging error for an invalid transaction or character ID.</description>
+		</method>
+		<method name="queue_visibility">
+			<return type="int" enum="Error" />
+			<param index="0" name="transaction" type="GameTransaction" />
+			<param index="1" name="character_id" type="String" />
+			<param index="2" name="owner" type="String" />
+			<param index="3" name="observers" type="PackedStringArray" />
+			<description>Stage replacement of the owner and observer list in the active game's authority transaction. Returns a staging error for an invalid transaction or character ID. The new access policy takes effect when the transaction commits.</description>
+		</method>
+		<method name="queue_base">
+			<return type="int" enum="Error" />
+			<param index="0" name="transaction" type="GameTransaction" />
+			<param index="1" name="character_id" type="String" />
+			<param index="2" name="attribute_id" type="StringName" />
+			<param index="3" name="operand" type="float" />
+			<param index="4" name="add" type="bool" default="false" />
+			<description>Stage a base replacement, or add [param operand] when [param add] is true. Use the qualified set and attribute ID. Apply any game-specific numeric limits in the authority code. Returns a staging error for an invalid transaction, character ID, unknown attribute ID, or nonfinite operand. Preparation rejects the entire transaction if the character has no such attribute or the result is nonfinite.</description>
+		</method>
+	</methods>
+</class>

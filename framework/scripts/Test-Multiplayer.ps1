@@ -107,11 +107,13 @@ function Invoke-DedicatedLaunchTest {
 
 # Start an ENet host, wait for its readiness marker, and run the matching client.
 function Invoke-TwoProcessTest {
+    [CmdletBinding()]
     param(
         [string]$Project,
         [string]$Area,
         [string]$Name,
-        [string]$Script,
+        [Parameter(Mandatory, ParameterSetName = 'Script')][string]$Script,
+        [Parameter(Mandatory, ParameterSetName = 'Scene')][string]$Scene,
         [string]$Ready,
         [string]$HostPassed,
         [string]$ClientPassed
@@ -119,7 +121,7 @@ function Invoke-TwoProcessTest {
 
     $socket = [Net.Sockets.UdpClient]::new([Net.IPEndPoint]::new([Net.IPAddress]::Loopback, 0))
     try { $port = [string]$socket.Client.LocalEndPoint.Port } finally { $socket.Dispose() }
-    $networkArguments = @('--script', $Script, '--')
+    $networkArguments = if ($Scene) { @($Scene, '--') } else { @('--script', $Script, '--') }
     $server = $null
     $client = $null
     try {
@@ -150,6 +152,72 @@ function Invoke-TwoProcessTest {
     } finally {
         Stop-TestGodot $client
         Stop-TestGodot $server
+    }
+}
+
+# Exercise coordinated Attributes with independent ENet processes, including schema rejection.
+function Invoke-GameplayAttributesNetworkTest {
+    param(
+        [string]$Project,
+        [string]$Area,
+        [ValidateSet('host', 'dedicated', 'mismatch-host')][string]$AuthorityRole = 'host'
+    )
+
+    $socket = [Net.Sockets.UdpClient]::new([Net.IPEndPoint]::new([Net.IPAddress]::Loopback, 0))
+    try { $port = [string]$socket.Client.LocalEndPoint.Port } finally { $socket.Dispose() }
+    $fixture = "gameplay-attributes-$AuthorityRole"
+    $arguments = @('res://tests/gameplay_attributes/network_peer.tscn', '--')
+    $clientRoles = if ($AuthorityRole -eq 'mismatch-host') { 'mismatch-client' } else { @('owner', 'observer') }
+    $runs = @()
+    try {
+        $authority = Start-TestGodot -Project $Project -Data (Join-Path $Area "$fixture-authority-data") `
+            -Arguments ($arguments + @($AuthorityRole, $port))
+        $errors = $authority.StandardError.ReadToEndAsync()
+        $runs += @{ Role = $AuthorityRole; Process = $authority; Stderr = $errors }
+        $prefix = [Collections.Generic.List[string]]::new()
+        $deadline = [Diagnostics.Stopwatch]::StartNew()
+        while ($true) {
+            $line = $authority.StandardOutput.ReadLineAsync()
+            $remaining = 12000 - [int]$deadline.ElapsedMilliseconds
+            if ($remaining -le 0 -or !$line.Wait($remaining) -or $null -eq $line.Result) {
+                $log = Join-Path $Area "$fixture-authority-start.log"
+                $stderr = if ($errors.IsCompletedSuccessfully) { $errors.Result } else { '' }
+                [IO.File]::WriteAllText($log, (($prefix.ToArray() + $stderr) -join [Environment]::NewLine))
+                throw "The attributes authority did not start listening. See $log."
+            }
+            $prefix.Add($line.Result)
+            if ($line.Result -eq "CRIMSON_ATTRIBUTES_NETWORK_READY $AuthorityRole") { break }
+        }
+        $runs[0]['Stdout'] = $authority.StandardOutput.ReadToEndAsync()
+        $runs[0]['Prefix'] = $prefix.ToArray()
+        foreach ($role in $clientRoles) {
+            $process = Start-TestGodot -Project $Project -Data (Join-Path $Area "$fixture-$role-data") `
+                -Arguments ($arguments + @($role, $port))
+            $runs += @{
+                Role = $role
+                Process = $process
+                Stdout = $process.StandardOutput.ReadToEndAsync()
+                Stderr = $process.StandardError.ReadToEndAsync()
+                Prefix = @()
+            }
+        }
+        $failures = @()
+        foreach ($run in $runs) {
+            try {
+                Assert-TestResult -Process $run.Process -Stdout $run.Stdout -Stderr $run.Stderr -Prefix $run.Prefix `
+                    -Log (Join-Path $Area "$fixture-$($run.Role).log") -Marker "CRIMSON_ATTRIBUTES_NETWORK_OK $($run.Role)"
+                if ($run.Role -eq 'mismatch-client') {
+                    $message = "[Crimson] Rejected the authority baseline because it is incompatible with this game's configured replication schema."
+                    $diagnostics = @($run.Stderr.Result -split '\r?\n' | Where-Object { $_ -ceq $message })
+                    if ($diagnostics.Count -ne 1) { throw "Expected one schema rejection. See $Area." }
+                }
+            } catch {
+                $failures += $_.Exception.Message
+            }
+        }
+        if ($failures) { throw ($failures -join [Environment]::NewLine) }
+    } finally {
+        foreach ($run in $runs) { Stop-TestGodot $run.Process }
     }
 }
 
@@ -315,7 +383,7 @@ common/physics_interpolation=true
 '@ | Set-Content -Encoding utf8NoBOM -LiteralPath (Join-Path $project 'project.godot')
     $testDestination = Join-Path $project 'tests'
     New-Item -ItemType Directory -Path $testDestination | Out-Null
-    foreach ($entry in @('fixtures', 'session', 'scene_load', 'match_runtime', 'replication', 'game_flow', 'player_controls', 'input', 'multiplayer_peer.gd')) {
+    foreach ($entry in @('fixtures', 'session', 'scene_load', 'match_runtime', 'replication', 'game_flow', 'gameplay_attributes', 'gameplay_abilities', 'player_controls', 'input', 'multiplayer_peer.gd')) {
         Copy-Item -LiteralPath (Join-Path $root "project/tests/$entry") -Destination $testDestination -Recurse
     }
 
@@ -332,6 +400,12 @@ common/physics_interpolation=true
     Invoke-TestGodot -Project $project -Area $area -Name 'action-maps' -Arguments @('--script', 'res://tests/player_controls/action_maps.gd') -Marker 'CRIMSON_ACTION_MAPS_TESTS_PASSED'
     Invoke-TestGodot -Project $project -Area $area -Name 'input-asset-migration' -Arguments @('--script', 'res://tests/input/asset_migration.gd') -Marker 'CRIMSON_INPUT_ASSET_MIGRATION_PASSED'
     Invoke-TestGodot -Project $project -Area $area -Name 'match-runtime' -Arguments @('--script', 'res://tests/match_runtime/test_match_runtime.gd') -Marker 'CRIMSON_MATCH_RUNTIME_TESTS_PASSED'
+    Invoke-TestGodot -Project $project -Area $area -Name 'gameplay-attributes' `
+        -Arguments @('--script', 'res://tests/gameplay_attributes/runtime.gd') -Marker 'CRIMSON_GAMEPLAY_ATTRIBUTES_RUNTIME_PASSED'
+    Invoke-TestGodot -Project $project -Area $area -Name 'gameplay-abilities' `
+        -Arguments @('--script', 'res://tests/gameplay_abilities/runtime.gd') -Marker 'CRIMSON_GAMEPLAY_ABILITIES_RUNTIME_PASSED'
+    Invoke-TestGodot -Project $project -Area $area -Name 'visual-script-gameplay-abilities' `
+        -Arguments @('--script', 'res://tests/gameplay_abilities/visual_runtime.gd') -Marker 'CRIMSON_VISUAL_SCRIPT_GAMEPLAY_ABILITIES_PASSED'
     Invoke-TestGodot -Project $project -Area $area -Name 'game-flow-offline' -Arguments @('--script', 'res://tests/game_flow/offline.gd') -Marker 'CRIMSON_GAME_FLOW_OFFLINE_PASSED'
     Invoke-TestGodot -Project $project -Area $area -Name 'game-code-first' -Arguments @('--script', 'res://tests/game_flow/code_first.gd') -Marker 'CRIMSON_CODE_FIRST_PASSED'
     $offlineLog = Join-Path $area 'game-flow-offline.log'
@@ -349,6 +423,11 @@ common/physics_interpolation=true
         -Ready 'CRIMSON_REPLICATION_HOST_READY' -HostPassed 'CRIMSON_REPLICATION_NETWORK_PASSED' -ClientPassed 'CRIMSON_REPLICATION_NETWORK_PASSED'
     Invoke-TwoProcessTest -Project $project -Area $area -Name 'game-flow-network' -Script 'res://tests/game_flow/network_peer.gd' `
         -Ready 'CRIMSON_GAME_FLOW_HOST_READY' -HostPassed 'CRIMSON_GAME_FLOW_NETWORK_PASSED' -ClientPassed 'CRIMSON_GAME_FLOW_NETWORK_PASSED'
+    Invoke-GameplayAttributesNetworkTest -Project $project -Area $area
+    Invoke-GameplayAttributesNetworkTest -Project $project -Area $area -AuthorityRole dedicated
+    Invoke-GameplayAttributesNetworkTest -Project $project -Area $area -AuthorityRole mismatch-host
+    Invoke-TwoProcessTest -Project $project -Area $area -Name 'gameplay-abilities-network' -Scene 'res://tests/gameplay_abilities/network_peer.tscn' `
+        -Ready 'CRIMSON_ABILITIES_NETWORK_READY host' -HostPassed 'CRIMSON_ABILITIES_NETWORK_OK host' -ClientPassed 'CRIMSON_ABILITIES_NETWORK_OK client'
     if ($CoreOnly) { continue }
 
     # Stage only the gameplay tools and their test-owned scenes after the module checks.

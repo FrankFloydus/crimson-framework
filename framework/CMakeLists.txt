@@ -34,6 +34,10 @@ get_target_property(binding_suffix godot::cpp GODOTCPP_SUFFIX)
 
 file(GLOB module_sources CONFIGURE_DEPENDS
     "src/editor/ui/*.cpp"
+    "src/modules/abilities/*.cpp"
+    "src/modules/abilities/editor/*.cpp"
+    "src/modules/attributes/*.cpp"
+    "src/modules/attributes/editor/*.cpp"
     "src/modules/gameplay_tags/*.cpp"
     "src/modules/gameplay_tags/bindings/*.cpp"
     "src/modules/gameplay_tags/editor/*.cpp"
@@ -59,6 +63,8 @@ file(GLOB module_sources CONFIGURE_DEPENDS
 )
 set(integration_sources src/integration/register_integration.cpp)
 file(GLOB module_docs CONFIGURE_DEPENDS
+    "src/modules/abilities/doc_classes/*.xml"
+    "src/modules/attributes/doc_classes/*.xml"
     "src/modules/gameplay_tags/doc_classes/*.xml"
     "src/modules/inventory/doc_classes/*.xml"
     "src/modules/save/doc_classes/*.xml"

@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="GameplayAttributeValue" inherits="RefCounted">
+	<brief_description>A detached reading of one gameplay attribute.</brief_description>
+	<description>Use the current reading for rules and presentation, such as updating a health display. Authority readings also expose the committed base. A recipient view exposes the confirmed current value for attributes that recipient can see. Call [method has_base] before using [method get_base].</description>
+	<methods>
+		<method name="get_base" qualifiers="const">
+			<return type="float" />
+			<description>Returns the committed base value, in the units chosen by the game. When [method has_base] is [code]false[/code], returns [code]0.0[/code] as a fallback.</description>
+		</method>
+		<method name="get_current" qualifiers="const">
+			<return type="float" />
+			<description>Returns the confirmed effective value, in the units chosen by the game. The standalone authority derives this reading from the committed base.</description>
+		</method>
+		<method name="has_base" qualifiers="const">
+			<return type="bool" />
+			<description>Returns whether the reading includes the authority's base value. Recipient readings provide the confirmed current value only.</description>
+		</method>
+	</methods>
+</class>

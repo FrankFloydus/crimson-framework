@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright Francesco Di Blasi 2026 - All Rights Reserved -->
+<class name="GameplayAttributeWatch" inherits="RefCounted">
+	<brief_description>A subscription to changes in one attribute on one owner.</brief_description>
+	<description>Create a watch with [method GameplayAttributes.watch_attribute] and keep a reference to it while listening. Read [method get_value] to initialize a display, then listen for [signal changed] to update it as confirmed values arrive.</description>
+	<methods>
+		<method name="get_value" qualifiers="const">
+			<return type="GameplayAttributeValue" />
+			<description>Returns the latest detached reading for the watched ID, or [code]null[/code] when the ID is unavailable. Use this method when first attaching a display or when binding it to a different owner.</description>
+		</method>
+	</methods>
+	<signals>
+		<signal name="changed">
+			<param index="0" name="previous" type="GameplayAttributeValue" />
+			<param index="1" name="current" type="GameplayAttributeValue" />
+			<description>Emitted after a committed change or a change in availability for the watched ID. A newly available reading has a [code]null[/code] [param previous] value. An unavailable reading has a [code]null[/code] [param current] value. Both readings are detached.</description>
+		</signal>
+	</signals>
+</class>
